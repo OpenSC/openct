@@ -2,7 +2,7 @@ DEBUG	= -Wall -g
 CFLAGS	= -I../../include $(DEBUG)
 LDFLAGS	= $(DEBUG)
 LIBS	= libcardreader.so
-OBJS	= buffer.o socket.o error.o conf.o
+OBJS	= buffer.o socket.o tlv.o error.o conf.o
 
 all:: $(LIBS)
 

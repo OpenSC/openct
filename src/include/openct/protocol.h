@@ -28,18 +28,10 @@
 
 /*
  * TLV items.
- *
- * Tag types are encoded in the highest two bits:
- *  00		integer
- *  01		ASCII string (must include NUL byte)
- *  10		opaque
- *  11		RFU
  */
-#define IFD_TAG_CARD_STATUS	0x00	/* IFD_CARD_* byte */
-#define IFD_TAG_READER_NAME	0x40	/* ASCII string */
-#define IFD_TAG_READER_UNITS	0x80	/* list if IFD_UNIT_* bytes */
-
-#define IFD_TAG_MAX		0xFF
+#define IFD_TAG_READER_NAME	0x00	/* ASCII string */
+#define IFD_TAG_READER_UNITS	0x01	/* list if IFD_UNIT_* bytes */
+#define IFD_TAG_CARD_STATUS	0x02	/* IFD_CARD_* byte */
 
 
 #endif /* IFDMGR_PROTOCOL_H */
