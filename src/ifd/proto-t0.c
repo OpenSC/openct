@@ -236,7 +236,7 @@ t0_xcv(ifd_protocol_t *prot,
 
 		/* Null byte to extend wait time */
 		if (byte == 0x60) {
-			usleep(10000);
+			usleep(50000);
 			if (++null_count > t0->max_nulls)
 				goto failed;
 			continue;

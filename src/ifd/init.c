@@ -12,6 +12,7 @@ extern void	ifd_etoken_register(void);
 extern void	ifd_ikey3k_register(void);
 extern void	ifd_kaan_register(void);
 extern void	ifd_towitoko_register(void);
+extern void	ifd_cardman_register(void);
 
 static void	configure_driver(ifd_conf_node_t *cf);
 
@@ -29,6 +30,7 @@ ifd_init(void)
 	ifd_ikey3k_register();
 	ifd_kaan_register();
 	ifd_towitoko_register();
+	ifd_cardman_register();
 
 	/* Register all builtin protocols */
 	ifd_protocol_register(&ifd_protocol_t0);

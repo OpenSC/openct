@@ -13,41 +13,90 @@
 /*
  * Send/receive USB control block
  */
-static int
-usb_control(ifd_device_t *dev, void *data, size_t len)
+int
+ifd_usb_control(ifd_device_t *dev,
+		int requesttype, int request,
+		int value, int index,
+		void *buffer, size_t len,
+		long timeout)
 {
-	ifd_usb_cmsg_t	*cmsg;
 	int		n;
 
-	cmsg = (ifd_usb_cmsg_t *) data;
-	if (len < sizeof(*cmsg) || cmsg->guard != IFD_DEVICE_TYPE_USB)
+	if (dev->type != IFD_DEVICE_TYPE_USB)
 		return -1;
+	if (timeout < 0)
+		timeout = 10000;
 
-	if ((ct_config.debug >= 3) && !(cmsg->requesttype & 0x80)) {
+	if ((ct_config.debug >= 3) && !(requesttype & 0x80)) {
 		ifd_debug(4, "usb req type=x%02x req=x%02x val=x%04x ind=x%04x len=%u",
-				cmsg->requesttype,
-				cmsg->request,
-				cmsg->value,
-				cmsg->index,
-				cmsg->len);
-		if (cmsg->len)
-			ifd_debug(4, "send %s", ct_hexdump(cmsg->data, cmsg->len));
+				requesttype,
+				request,
+				value,
+				index,
+				len);
+		if (len)
+			ifd_debug(4, "send %s", ct_hexdump(buffer, len));
 	}
 
-	n = ifd_sysdep_usb_control(dev->fd, cmsg, 10000);
+	n = ifd_sysdep_usb_control(dev->fd, requesttype, request, value, index,
+				buffer, len, timeout);
 
-	if ((ct_config.debug >= 3) && (cmsg->requesttype & 0x80)) {
-		ifd_debug(4, "usb req type=x%02x req=x%02x val=x%04x ind=x%04x len=%u",
-				cmsg->requesttype,
-				cmsg->request,
-				cmsg->value,
-				cmsg->index,
+	if ((ct_config.debug >= 3) && (requesttype & 0x80)) {
+		ifd_debug(4, "usb req type=x%02x req=x%02x val=x%04x ind=x%04x len=%d",
+				requesttype,
+				request,
+				value,
+				index,
 				n);
-		if (n >= 0)
-			ifd_debug(4, "recv %s", ct_hexdump(cmsg->data, n));
+		if (n > 0)
+			ifd_debug(4, "recv %s", ct_hexdump(buffer, n));
 	}
 
 	return n;
+}
+
+/*
+ * USB frame capture
+ */
+int
+ifd_usb_begin_capture(ifd_device_t *dev, int type, int endpoint,
+			size_t maxpacket, ifd_usb_capture_t **capret)
+{
+	if (dev->type != IFD_DEVICE_TYPE_USB)
+		return -1;
+
+	if (ct_config.debug >= 5)
+		ifd_debug(5, "usb capture type=%d ep=x%x maxpacket=%u",
+				type, endpoint, maxpacket);
+	return ifd_sysdep_usb_begin_capture(dev->fd, type, endpoint, maxpacket, capret);
+}
+
+int
+ifd_usb_capture(ifd_device_t *dev, ifd_usb_capture_t *cap,
+	       	void *buffer, size_t len, long timeout)
+{
+	int	rc;
+
+	if (dev->type != IFD_DEVICE_TYPE_USB)
+		return -1;
+
+	ifd_debug(5, "called, timeout=%ld ms.", timeout);
+	rc = ifd_sysdep_usb_capture(dev->fd, cap, buffer, len, timeout);
+	if (ct_config.debug >= 3) {
+		if (rc < 0)
+			ifd_debug(1, "usb capture: %s", ct_strerror(rc));
+		if (rc > 0)
+			ifd_debug(5, "recv %s", ct_hexdump(buffer, rc));
+	}
+	return rc;
+}
+
+int
+ifd_usb_end_capture(ifd_device_t *dev, ifd_usb_capture_t *cap)
+{
+	if (dev->type != IFD_DEVICE_TYPE_USB)
+		return -1;
+	return ifd_sysdep_usb_end_capture(dev->fd, cap);
 }
 
 /*
@@ -66,7 +115,6 @@ usb_poll_presence(ifd_device_t *dev, struct pollfd *p)
 }
 
 static struct ifd_device_ops	ifd_usb_ops = {
-	.control	= usb_control,
 	.poll_presence	= usb_poll_presence,
 };
 
@@ -86,6 +134,7 @@ ifd_open_usb(const char *device)
 
 	dev = ifd_device_new(device, &ifd_usb_ops, sizeof(*dev));
 	dev->type = IFD_DEVICE_TYPE_USB;
+	dev->timeout = 10000;
 	dev->fd = fd;
 
 	return dev;

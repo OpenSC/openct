@@ -11,11 +11,6 @@
 
 #define EG_TIMEOUT	1000
 
-static int	eg_control(ifd_device_t *dev, int requesttype, int request,
-			       int value, int index,
-			       void *buf, size_t len,
-			       long timeout);
-
 /*
  * Initialize the device
  */
@@ -73,12 +68,12 @@ eg_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 	int		rc;
 
 	/* Reset the device*/
-	rc = eg_control(dev, 0x40, 0x90, 0, 0, NULL, 0, EG_TIMEOUT);
+	rc = ifd_usb_control(dev, 0x40, 0x90, 0, 0, NULL, 0, EG_TIMEOUT);
 	if (rc < 0)
 		goto failed;
 
 	/* Fetch the ATR */
-	rc = eg_control(dev, 0xc0, 0x83, 0, 0, buffer, 0x23, EG_TIMEOUT);
+	rc = ifd_usb_control(dev, 0xc0, 0x83, 0, 0, buffer, 0x23, EG_TIMEOUT);
 	if (rc <= 0)
 		goto failed;
 
@@ -125,7 +120,7 @@ static unsigned char eg_status(ifd_reader_t *reader) {
      int rc;
      unsigned char stat;
      while (1) {
-        rc=eg_control(reader->device, 0xc0, 0xa0, 0, 0, &stat, 1, EG_TIMEOUT);
+        rc=ifd_usb_control(reader->device, 0xc0, 0xa0, 0, 0, &stat, 1, EG_TIMEOUT);
         if (rc != 1)
              return -1;
         stat &= 0xF0;
@@ -150,7 +145,7 @@ eg_transparent(ifd_reader_t *reader, int dad, const void *inbuffer, size_t inlen
 
      stat=eg_status(reader);
      if (stat != 0) {
-	rc = eg_control(reader->device, 0x40, 0x90, 0, 0, NULL, 0, EG_TIMEOUT);
+	rc = ifd_usb_control(reader->device, 0x40, 0x90, 0, 0, NULL, 0, EG_TIMEOUT);
 	if (rc < 0)
 		return -1;
      }
@@ -158,13 +153,13 @@ eg_transparent(ifd_reader_t *reader, int dad, const void *inbuffer, size_t inlen
          return -1;
      memset(cmdbuf,0,5);
      memmove(cmdbuf, inbuffer, inlen < 5 ? inlen : 5);
-     rc=eg_control(reader->device, 0x40, 0x80, 0, 0,
+     rc=ifd_usb_control(reader->device, 0x40, 0x80, 0, 0,
                     (void *) cmdbuf, 5, -1);
      if (rc != 5)
           return -1;
      stat=eg_status(reader);
      if (inlen > 5 && stat == 0x10) {
-          rc=eg_control(reader->device, 0x40, 0x82, 0, 0,
+          rc=ifd_usb_control(reader->device, 0x40, 0x82, 0, 0,
                          (void *) (((char *)inbuffer)+5), iso.lc, -1);
           if (rc != iso.lc) {
                return -1;
@@ -173,7 +168,7 @@ eg_transparent(ifd_reader_t *reader, int dad, const void *inbuffer, size_t inlen
           stat=eg_status(reader);
      }
      if (stat == 0x10) {
-          rc=eg_control(reader->device, 0xc0, 0x81, 0, 0,
+          rc=ifd_usb_control(reader->device, 0xc0, 0x81, 0, 0,
                          (void *) outbuffer, iso.le, EG_TIMEOUT);
           if (rc != iso.le) {
                return -1;
@@ -184,34 +179,12 @@ eg_transparent(ifd_reader_t *reader, int dad, const void *inbuffer, size_t inlen
        iso.le=0;
      if (stat != 0x20)
           return -1;
-     rc=eg_control(reader->device, 0xc0, 0x81, 0, 0,
+     rc=ifd_usb_control(reader->device, 0xc0, 0x81, 0, 0,
                     (void *) (((char *)outbuffer)+iso.le), 2, EG_TIMEOUT);
      if (rc != 2)
           return -1;
      ifd_debug(1, "returning a %d byte response", iso.le + 2);
      return iso.le+2;
-}
-
-/*
- * Send USB control message
- */
-int
-eg_control(ifd_device_t *dev, int requesttype, int request,
-	       int value, int index,
-	       void *buf, size_t len,
-	       long timeout)
-{
-	struct ifd_usb_cmsg cmsg;
-
-	cmsg.guard = IFD_DEVICE_TYPE_USB;
-	cmsg.requesttype = requesttype;
-	cmsg.request = request;
-	cmsg.value = value;
-	cmsg.index = index;
-	cmsg.data  = buf;
-	cmsg.len = len;
-
-	return ifd_device_control(dev, &cmsg, sizeof(cmsg));
 }
 
 /*

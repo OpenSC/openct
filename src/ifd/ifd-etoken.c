@@ -14,10 +14,6 @@
 #define ET_TIMEOUT	1000
 
 static int	et_magic(ifd_device_t *);
-static int	et_control(ifd_device_t *dev, int requesttype, int request,
-			       int value, int index,
-			       void *buf, size_t len,
-			       long timeout);
 
 /*
  * Initialize the device
@@ -52,10 +48,10 @@ et_magic(ifd_device_t *dev)
 	unsigned char cookie[] = { 0x00, 0x00, 0x01, 0x00, 0x88, 0x13 };
 	unsigned char buffer[256];
 
-	if (et_control(dev, 0x40, 0x03, 0, 0, NULL, 0, -1) < 0
-	 || et_control(dev, 0xc0, 0x83, 0, 0, buffer, 13, -1) != 13
-	 || et_control(dev, 0x40, 0x02, 0, 0, cookie, sizeof(cookie), -1) < 0
-	 || et_control(dev, 0xc0, 0x82, 0, 0, buffer, 1, -1) != 1
+	if (ifd_usb_control(dev, 0x40, 0x03, 0, 0, NULL, 0, -1) < 0
+	 || ifd_usb_control(dev, 0xc0, 0x83, 0, 0, buffer, 13, -1) != 13
+	 || ifd_usb_control(dev, 0x40, 0x02, 0, 0, cookie, sizeof(cookie), -1) < 0
+	 || ifd_usb_control(dev, 0xc0, 0x82, 0, 0, buffer, 1, -1) != 1
 	 || buffer[0] != 0)
 		return -1;
 
@@ -99,12 +95,12 @@ et_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 	int		rc, n;
 
 	/* Request the ATR */
-	rc = et_control(dev, 0x40, 0x01, 0, 0, NULL, 0, ET_TIMEOUT);
+	rc = ifd_usb_control(dev, 0x40, 0x01, 0, 0, NULL, 0, ET_TIMEOUT);
 	if (rc < 0)
 		goto failed;
 
 	/* Receive the ATR */
-	rc = et_control(dev, 0xc0, 0x81, 0, 0, buffer, 0x23, ET_TIMEOUT);
+	rc = ifd_usb_control(dev, 0xc0, 0x81, 0, 0, buffer, 0x23, ET_TIMEOUT);
 	if (rc <= 0)
 		goto failed;
 
@@ -132,37 +128,15 @@ failed:	ct_error("etoken: failed to activate token");
 static int
 et_send(ifd_reader_t *reader, unsigned int dad, const unsigned char *buffer, size_t len)
 {
-	return et_control(reader->device, 0x40, 0x06, 0, 0,
+	return ifd_usb_control(reader->device, 0x40, 0x06, 0, 0,
 				(void *) buffer, len, -1);
 }
 
 static int
 et_recv(ifd_reader_t *reader, unsigned int dad, unsigned char *buffer, size_t len, long timeout)
 {
-	return et_control(reader->device, 0xc0, 0x86, 0, 0,
+	return ifd_usb_control(reader->device, 0xc0, 0x86, 0, 0,
 				buffer, len, timeout);
-}
-
-/*
- * Send USB control message
- */
-int
-et_control(ifd_device_t *dev, int requesttype, int request,
-	       int value, int index,
-	       void *buf, size_t len,
-	       long timeout)
-{
-	struct ifd_usb_cmsg cmsg;
-
-	cmsg.guard = IFD_DEVICE_TYPE_USB;
-	cmsg.requesttype = requesttype;
-	cmsg.request = request;
-	cmsg.value = value;
-	cmsg.index = index;
-	cmsg.data  = buf;
-	cmsg.len = len;
-
-	return ifd_device_control(dev, &cmsg, sizeof(cmsg));
 }
 
 /*

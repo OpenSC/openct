@@ -169,16 +169,6 @@ ifd_serial_send(ifd_device_t *dev, const unsigned char *buffer, size_t len)
 	return total;
 }
 
-static long
-since(struct timeval *then)
-{
-	struct timeval	now, delta;
-
-	gettimeofday(&now, NULL);
-	timersub(&now, then, &delta);
-	return delta.tv_sec * 1000 + (delta.tv_usec % 1000);
-}
-
 static int
 ifd_serial_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeout)
 {
@@ -192,7 +182,7 @@ ifd_serial_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeo
 		struct pollfd pfd;
 		long wait;
 
-		if ((wait = timeout - since(&begin)) < 0)
+		if ((wait = timeout - ifd_time_elapsed(&begin)) < 0)
 			goto timeout;
 
 		pfd.fd = dev->fd;
@@ -220,7 +210,7 @@ ifd_serial_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeo
 timeout:/* Timeouts are a little special; they may happen e.g.
 	 * when trying to obtain the ATR */
 	if (!ct_config.hush_errors)
-		ct_error("%s: timed out while waiting for intput",
+		ct_error("%s: timed out while waiting for input",
 				dev->name);
 	return IFD_ERROR_TIMEOUT;
 }

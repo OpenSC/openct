@@ -5,6 +5,7 @@
  */
 
 #include <stdio.h>
+#include <sys/time.h>
 #include "internal.h"
 
 
@@ -50,4 +51,14 @@ ct_hexdump(const unsigned char *data, size_t len)
 		snprintf(string + i, 4, " %02x", *data++);
 	}
 	return string;
+}
+
+long
+ifd_time_elapsed(struct timeval *then)
+{
+	struct timeval	now, delta;
+
+	gettimeofday(&now, NULL);
+	timersub(&now, then, &delta);
+	return delta.tv_sec * 1000 + (delta.tv_usec % 1000);
 }

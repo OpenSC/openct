@@ -13,9 +13,12 @@
 #include <sys/sysmacros.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
+#include <sys/poll.h>
 #include <string.h>
 #include <stdio.h>
+#include <signal.h>
 #include <usb.h>
+#include <errno.h>
 #include "internal.h"
 
 int
@@ -75,22 +78,163 @@ ifd_sysdep_channel_to_name(unsigned int num)
  * USB control command
  */
 int
-ifd_sysdep_usb_control(int fd, ifd_usb_cmsg_t *cmsg, long timeout)
+ifd_sysdep_usb_control(int fd, int requesttype, int request,
+			int value, int index,
+			void *data, size_t len, long timeout)
 {
 	struct usbdevfs_ctrltransfer ctrl;
-	int	rc;
+	int		rc;
 
-	ctrl.requesttype = cmsg->requesttype;
-	ctrl.request = cmsg->request;
-	ctrl.value = cmsg->value;
-	ctrl.index = cmsg->index;
-	ctrl.length = cmsg->len;
-	ctrl.data = cmsg->data;
+	ctrl.requesttype = requesttype;
+	ctrl.request = request;
+	ctrl.value = value;
+	ctrl.index = index;
+	ctrl.length = len;
+	ctrl.data = data;
 	ctrl.timeout = timeout;
 
-	rc = ioctl(fd, USBDEVFS_CONTROL, &ctrl);
-	if (rc < 0)
-		ct_error("usb ioctl failed: %m");
+	if ((rc = ioctl(fd, USBDEVFS_CONTROL, &ctrl)) < 0) {
+		ct_error("usb_control failed: %m");
+		return IFD_ERROR_COMM_ERROR;
+	}
 
+	return 0;
+}
+
+/*
+ * USB URB capture
+ */
+struct ifd_usb_capture {
+	struct usbdevfs_urb urb;
+	int		type;
+	int		endpoint;
+	size_t		maxpacket;
+	unsigned int	interface;
+};
+
+static int
+usb_submit_urb(int fd, struct ifd_usb_capture *cap)
+{
+	/* Fill in the URB details */
+	ifd_debug(6, "submit urb %p", &cap->urb);
+	memset(&cap->urb, 0, sizeof(cap->urb));
+	cap->urb.type = cap->type;
+	cap->urb.endpoint = cap->endpoint;
+	cap->urb.buffer = (caddr_t) (cap + 1);
+	cap->urb.buffer_length = cap->maxpacket;
+	return ioctl(fd, USBDEVFS_SUBMITURB, &cap->urb);
+}
+
+int
+ifd_sysdep_usb_begin_capture(int fd,
+		int type, int endpoint, size_t maxpacket,
+	       	ifd_usb_capture_t **capret)
+{
+	ifd_usb_capture_t	*cap;
+	int			rc = 0;
+
+	cap = calloc(1, sizeof(*cap) + maxpacket);
+
+	/* Assume the interface # is 0 */
+	cap->interface = 0;
+	rc = ioctl(fd, USBDEVFS_CLAIMINTERFACE, &cap->interface);
+	if (rc < 0) {
+		ct_error("usb_claiminterface failed: %m");
+		free(cap);
+		return IFD_ERROR_COMM_ERROR;
+	}
+
+	cap->type = type;
+	cap->endpoint = endpoint;
+	cap->maxpacket = maxpacket;
+
+	if (usb_submit_urb(fd, cap) < 0) {
+		ct_error("usb_submiturb failed: %m");
+		ifd_sysdep_usb_end_capture(fd, cap);
+		return IFD_ERROR_COMM_ERROR;
+	}
+
+	*capret = cap;
+	return 0;
+}
+
+int
+ifd_sysdep_usb_capture(int fd,
+		ifd_usb_capture_t *cap,
+		void *buffer, size_t len,
+		long timeout)
+{
+	struct usbdevfs_urb	*purb;
+	struct timeval		begin;
+	size_t			copied;
+	int			rc = 0;
+
+	/* Loop until we've reaped the response to the
+	 * URB we sent */
+	copied = 0;
+	gettimeofday(&begin, NULL);
+	do {
+		struct pollfd	pfd;
+		long		wait;
+
+		if ((wait = timeout - ifd_time_elapsed(&begin)) <= 0)
+			return IFD_ERROR_TIMEOUT;
+
+		pfd.fd = fd;
+		pfd.events = POLLOUT;
+		if (poll(&pfd, 1, wait) != 1)
+			continue;
+
+		purb = NULL;
+		rc = ioctl(fd, USBDEVFS_REAPURBNDELAY, &purb);
+		if (rc < 0) {
+			if (errno == EAGAIN)
+				continue;
+			ct_error("usb_reapurb failed: %m");
+			return IFD_ERROR_COMM_ERROR;
+		}
+
+		if (purb != &cap->urb) {
+			ifd_debug(2, "reaped usb urb %p", purb);
+			continue;
+		}
+
+		if (purb->actual_length) {
+			ifd_debug(6, "usb reapurb: len=%u", purb->actual_length);
+			if ((copied = purb->actual_length) > len)
+				copied = len;
+			if (copied && buffer)
+				memcpy(buffer, purb->buffer, copied);
+		} else {
+			usleep(10000);
+		}
+
+		/* Re-submit URB */
+		usb_submit_urb(fd, cap);
+	} while (!copied);
+
+	return copied;
+}
+
+int
+ifd_sysdep_usb_end_capture(int fd, ifd_usb_capture_t *cap)
+{
+	int	rc = 0;
+
+	if (ioctl(fd, USBDEVFS_DISCARDURB, &cap->urb) < 0 && errno != EINVAL) {
+		ct_error("usb_discardurb failed: %m");
+		rc = IFD_ERROR_COMM_ERROR;
+	}
+	/* Discarding an URB will place it in the queue of completed
+	 * request, with urb->status == -1. So if we don't reap this
+	 * URB now, the next call to REAPURB will return this one,
+	 * clobbering random memory.
+	 */
+	(void) ioctl(fd, USBDEVFS_REAPURBNDELAY, &cap->urb);
+	if (ioctl(fd, USBDEVFS_RELEASEINTERFACE, &cap->interface) < 0) {
+		ct_error("usb_releaseinterface failed: %m");
+		rc = IFD_ERROR_COMM_ERROR;
+	}
+	free(cap);
 	return rc;
 }

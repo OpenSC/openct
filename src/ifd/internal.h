@@ -125,7 +125,12 @@ extern unsigned int	csum_crc_compute(const unsigned char *, size_t, unsigned cha
 /* Internal system dependent device functions */
 extern int		ifd_sysdep_device_type(const char *);
 extern const char *	ifd_sysdep_channel_to_name(unsigned int num);
-extern int		ifd_sysdep_usb_control(int, ifd_usb_cmsg_t *, long);
+extern int		ifd_sysdep_usb_control(int, int requesttype, int request,
+		                        int value, int index,
+					void *data, size_t len, long timeout);
+extern int		ifd_sysdep_usb_begin_capture(int, int, int, size_t, ifd_usb_capture_t **);
+extern int		ifd_sysdep_usb_capture(int, ifd_usb_capture_t *, void *, size_t, long);
+extern int		ifd_sysdep_usb_end_capture(int fd, ifd_usb_capture_t *cap);
 
 /* module.c */
 extern int		ifd_load_module(const char *, const char *);
@@ -133,6 +138,7 @@ extern int		ifd_load_module(const char *, const char *);
 /* utils.c */
 extern void		ifd_revert_bits(unsigned char *, size_t);
 extern unsigned int	ifd_count_bits(unsigned int);
+extern long		ifd_time_elapsed(struct timeval *);
 
 /* protocol.c */
 extern void		ifd_protocol_register(struct ifd_protocol_ops *);
