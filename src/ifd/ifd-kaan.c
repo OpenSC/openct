@@ -85,7 +85,7 @@ kaan_open(ifd_reader_t *reader, const char *device_name)
 		return -1;
 	}
 
-	ifd_protocol_set_parameter(st->p, IFD_PROTOCOL_T1_RESYNCH, NULL);
+	ifd_protocol_set_parameter(st->p, IFD_PROTOCOL_T1_RESYNCH, 0);
 
 	/* Reset the CT */
 	if (kaan_reset_ct(reader) < 0)

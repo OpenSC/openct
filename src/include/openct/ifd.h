@@ -1,6 +1,7 @@
 /*
  * Core functions of the IFD handler library
  *
+ * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
 #ifndef IFD_CORE_H
@@ -108,8 +109,8 @@ enum {
 #define IFD_CARD_PRESENT	0x0001
 #define IFD_CARD_STATUS_CHANGED	0x0002
 
-extern ifd_reader_t *		ifd_new_serial(const char *, const char *);
-extern ifd_reader_t *		ifd_new_usb(const char *, const char *);
+extern ifd_reader_t *		ifd_open(const char *driver_name,
+					const char *device_name);
 extern int			ifd_attach(ifd_reader_t *);
 extern void			ifd_detach(ifd_reader_t *);
 
@@ -134,9 +135,12 @@ extern int			ifd_apdu_case(const ifd_apdu_t *apdu,
 					unsigned int *lc,
 					unsigned int *le);
 
-extern struct ifd_protocol_ops *ifd_protocol_by_id(int);
-extern struct ifd_protocol_ops *ifd_protocol_by_name(const char *);
-
-extern int			ifd_select_protocol(ifd_reader_t *, const char *);
+extern ifd_protocol_t *		ifd_protocol_new(int id,
+					ifd_reader_t *reader,
+					unsigned int dad);
+extern int			ifd_protocol_set_parameter(ifd_protocol_t *p,
+					int type,
+					long value);
+extern void			ifd_protocol_free(ifd_protocol_t *);
 
 #endif /* IFD_CORE_H */

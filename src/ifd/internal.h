@@ -101,15 +101,6 @@ extern ifd_device_t *	ifd_device_new(const char *, struct ifd_device_ops *,
 				size_t);
 extern void		ifd_device_free(ifd_device_t *);
 
-/* protocol.c */
-extern ifd_protocol_t *	ifd_protocol_new(int proto_id,
-				ifd_reader_t *reader,
-				unsigned int dad);
-extern void		ifd_protocol_free(ifd_protocol_t *);
-extern ifd_protocol_t *	ifd_protocol_select(ifd_reader_t *, int, int);
-extern int		ifd_protocol_transceive(ifd_protocol_t *proto,
-				int dad, ifd_apdu_t *apdu);
-
 /* Checksum functions */
 extern unsigned int	csum_lrc_compute(const unsigned char *, size_t, unsigned char *);
 extern unsigned int	csum_crc_compute(const unsigned char *, size_t, unsigned char *);

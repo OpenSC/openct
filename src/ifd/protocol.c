@@ -11,7 +11,7 @@
 /*
  * Look up protocol based on its ID
  */
-struct ifd_protocol_ops *
+static struct ifd_protocol_ops *
 ifd_protocol_by_id(int id)
 {
 	/* First, check built-in protocols */

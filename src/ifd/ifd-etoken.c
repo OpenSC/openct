@@ -1,6 +1,10 @@
 /*
  * eToken driver
  *
+ * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
+ *
+ * Based on information from the etoken driver by
+ * Andreas Jellinghaus <aj@dungeon.inka.de>.
  */
 
 #include <stdlib.h>

@@ -42,4 +42,12 @@ extern void		ifd_driver_register(const char *,
 extern const ifd_driver_t *ifd_driver_get(const char *);
 extern const char *	ifd_driver_for_id(const char *);
 
+/*
+ * Protocol handling for card terminal drivers
+ */
+extern ifd_protocol_t *	ifd_protocol_select(ifd_reader_t *, int, int);
+extern int		ifd_protocol_transceive(ifd_protocol_t *proto,
+				int dad, ifd_apdu_t *apdu);
+
+
 #endif /* IFD_DRIVER_H */
