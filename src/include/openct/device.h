@@ -97,4 +97,7 @@ extern int		ifd_usb_capture(ifd_device_t *,
 extern int		ifd_usb_end_capture(ifd_device_t *,
 				ifd_usb_capture_t *);
 
+extern int		ifd_serial_get_dsr(ifd_device_t *);
+extern int		ifd_serial_get_dtr(ifd_device_t *);
+
 #endif /* IFD_DEVICE_H */
