@@ -1,6 +1,6 @@
 # Process this file with automake to create Makefile.in
 
-SUBDIRS = . aclocal doc etc src
+SUBDIRS = . aclocal doc etc macos src
 
 EXTRA_DIST = ANNOUNCE LICENSE README bootstrap depcomp
 

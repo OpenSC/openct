@@ -294,6 +294,7 @@ Makefile
 aclocal/Makefile
 doc/Makefile
 etc/Makefile
+macos/Makefile
 src/Makefile
 src/ct/Makefile
 src/ct/libopenct.pc
