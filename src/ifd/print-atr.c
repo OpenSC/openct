@@ -13,6 +13,7 @@
 static void	usage(int exval);
 static void	print_atr(const char *);
 static void	select_mf(ifd_reader_t *reader);
+static void	dump(unsigned char *data, size_t len);
 
 static const char *	opt_driver = "auto";
 
@@ -89,10 +90,9 @@ print_atr(const char *device)
 void
 select_mf(ifd_reader_t *reader)
 {
-	unsigned char	cmd[] = { 0x00, 0xA4, 0x00, 0x00, 0x02, 0x3f, 0x00, 0xfe };
+	unsigned char	cmd[] = { 0x00, 0xA4, 0x00, 0x00, 0x02, 0x3f, 0x00, 0x00 };
 	unsigned char	res[256];
 	ifd_apdu_t	apdu;
-	int		m, n;
 
 	apdu.snd_buf = cmd;
 	apdu.snd_len = sizeof(cmd);
@@ -105,8 +105,20 @@ select_mf(ifd_reader_t *reader)
 	}
 
 	printf("Selected MF, response:\n");
-	n = apdu.rcv_len;
-	for (m = 0; m < n; m++)
-		printf(" %02x", res[m]);
-	printf("\n");
+	dump(res, apdu.rcv_len);
+}
+
+void
+dump(unsigned char *data, size_t len)
+{
+	unsigned int offset = 0;
+
+	do {
+		unsigned int i;
+
+		printf("%04x:", offset);
+		for (i = 0; i < 16 && len; i++, len--)
+			printf(" %02x", *data++);
+		printf("\n");
+	} while (len);
 }
