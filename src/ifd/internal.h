@@ -142,7 +142,7 @@ extern int		ifd_recv_response(ifd_protocol_t *,
 extern void		ifd_driver_register(const char *,
 				struct ifd_driver_ops *);
 extern const ifd_driver_t *ifd_driver_get(const char *);
-extern unsigned int	ifd_drivers_list(const char **, unsigned int);
+extern unsigned int	ifd_drivers_list(const char **, size_t);
 
 /* device.c */
 extern ifd_device_t *	ifd_open_serial(const char *);
