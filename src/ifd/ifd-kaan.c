@@ -25,20 +25,20 @@ typedef struct kaan_status {
 static int		kaan_reset_ct(ifd_reader_t *reader);
 static int		kaan_get_units(ifd_reader_t *reader);
 static int		kaan_display(ifd_reader_t *, const char *);
-static void		kaan_apdu_init(ifd_iso_apdu_t *,
-				unsigned char cse,
-				unsigned char cla,
-				unsigned char ins,
-				unsigned char p1,
-				unsigned char p2);
+static int		kaan_build_display_args(unsigned char *, size_t,
+				unsigned int, const char *);
 static int		kaan_apdu_xcv(ifd_reader_t *,
 				const unsigned char *, size_t,
-				unsigned char *, size_t);
+				unsigned char *, size_t,
+				time_t);
 static int		kaan_get_tlv(unsigned char *, size_t,
 				unsigned char tag,
 				unsigned char **ptr);
 static int		kaan_check_sw(const char *,
 				unsigned char *, int);
+static int		kaan_get_sw(unsigned char *,
+				unsigned int,
+				unsigned short *);
 
 /*
  * Initialize the device
@@ -105,7 +105,7 @@ kaan_reset_ct(ifd_reader_t *reader)
 	unsigned char	sw[2];
 	int		rc;
 
-	rc = kaan_apdu_xcv(reader, cmd, sizeof(cmd), sw, sizeof(sw));
+	rc = kaan_apdu_xcv(reader, cmd, sizeof(cmd), sw, sizeof(sw), 0);
 	return kaan_check_sw("kaan_reset_ct", sw, rc);
 }
 
@@ -119,9 +119,9 @@ kaan_get_units(ifd_reader_t *reader)
 	unsigned char	buffer[16], *units;
 	int		rc, n;
 
-	rc = kaan_apdu_xcv(reader, cmd, sizeof(cmd), buffer, sizeof(buffer));
+	rc = kaan_apdu_xcv(reader, cmd, sizeof(cmd), buffer, sizeof(buffer), 0);
 	if (rc < 0 || (rc = kaan_check_sw("kaan_get_units", buffer, rc)) < 0)
-		return n;
+		return rc;
 
 	if ((n = kaan_get_tlv(buffer, rc, 0x81, &units)) < 0)
 		return 0;
@@ -152,22 +152,16 @@ int
 kaan_display(ifd_reader_t *reader, const char *string)
 {
 	unsigned char	buffer[256] = { 0x20, 0x17, 0x40, 00 };
-	int		rc, n, len = 0;
+	int		rc, n;
 
 	if (!(reader->flags & IFD_READER_DISPLAY))
 		return 0;
 
-	if ((len = string? strlen(string) : 0) > 32)
-		len = 32;
+	n = kaan_build_display_args(buffer, sizeof(buffer), 0, string);
+	if (n < 0)
+		return n;
 
-	n = 4;
-	buffer[n++] = len + 2;
-	buffer[n++] = 0x50;
-	buffer[n++] = len;
-	memcpy(buffer + n, string, len);
-	n += len;
-
-	rc = kaan_apdu_xcv(reader, buffer, n, buffer, sizeof(buffer));
+	rc = kaan_apdu_xcv(reader, buffer, n, buffer, sizeof(buffer), 0);
 	return kaan_check_sw("kaan_display", buffer, rc);
 }
 
@@ -200,7 +194,7 @@ kaan_card_status(ifd_reader_t *reader, int slot, int *status)
 
 	ifd_debug(1, "slot=%d", slot);
 
-	if ((rc = kaan_apdu_xcv(reader, buffer, 5, buffer, sizeof(buffer))) < 0
+	if ((rc = kaan_apdu_xcv(reader, buffer, 5, buffer, sizeof(buffer), 0)) < 0
 	 || (rc = kaan_check_sw("kaan_card_status", buffer, rc)) < 0)
 		return rc;
 	if ((n = kaan_get_tlv(buffer, rc, 0x80, &byte)) >= 0) {
@@ -217,20 +211,99 @@ static int
 kaan_card_reset(ifd_reader_t *reader, int slot, void *result, size_t size)
 {
 	unsigned char	buffer[64] = { 0x20, 0x10, slot+1, 0x01, 0x00 };
-	ifd_iso_apdu_t	apdu;
+	unsigned short	sw;
 	int		rc;
 
-	kaan_apdu_init(&apdu, IFD_APDU_CASE_2S, 0x20, 0x10, slot+1, 0x01);
-	apdu.rcv_buf = buffer;
-	apdu.rcv_len = sizeof(buffer);
-	if ((rc = kaan_apdu_xcv(reader, buffer, 5, buffer, sizeof(buffer))) < 0
-	 || (rc = kaan_check_sw("kaan_card_reset", buffer, rc)) < 0)
+	if ((rc = kaan_apdu_xcv(reader, buffer, 5, buffer, sizeof(buffer), 0)) < 0)
 		return rc;
+
+	if ((rc = kaan_get_sw(buffer, rc, &sw)) < 0)
+		return rc;
+
+	if ((sw & 0xFF00) != 0x9000) {
+		ifd_debug(1, "kaan_card_reset: unable to reset card, sw=0x%04x", sw);
+		return IFD_ERROR_COMM_ERROR;
+	}
 
 	if ((unsigned int) rc > size)
 		rc = size;
 	memcpy(result, buffer, rc);
 	return rc;
+}
+
+/*
+ * Request ICC
+ */
+int
+kaan_card_request(ifd_reader_t *reader, int slot,
+			time_t timeout, const char *message,
+			void *atr, size_t atr_len)
+{
+	unsigned char	buffer[256] = { 0x20, 0x17, slot+1, 0x01, 0x00 };
+	unsigned short	sw;
+	int		n, rc;
+
+	n = kaan_build_display_args(buffer, sizeof(buffer)-1, timeout, message);
+	if (n < 0)
+		return n;
+	buffer[n++] = 0x00;
+
+	rc = kaan_apdu_xcv(reader, buffer, n, buffer, sizeof(buffer), timeout);
+	if (rc < 0)
+		return rc;
+
+	if ((rc = kaan_get_sw(buffer, rc, &sw)) < 0)
+		return rc;
+
+	if ((sw & 0xFF00) != 0x9000) {
+		ifd_debug(1, "kaan_card_reset: unable to reset card, sw=0x%04x", sw);
+		return IFD_ERROR_COMM_ERROR;
+	}
+
+
+	if ((unsigned int) rc > atr_len)
+		rc = atr_len;
+	memcpy(atr, buffer, rc);
+	return rc;
+}
+
+/*
+ * Helper function add message/timeout arguments to command
+ * buffer
+ */
+int
+kaan_build_display_args(unsigned char *cmd, size_t size, unsigned int timeout, const char *message)
+{
+	ct_buf_t	buf;
+	unsigned int	n;
+
+	/* Initialize buffer and skip APDU */
+	ct_buf_init(&buf, cmd, size);
+	ct_buf_put(&buf, NULL, 5);
+
+	if (timeout) {
+		if (ct_buf_putc(&buf, 0x80) < 0
+		 || ct_buf_putc(&buf, 1) < 0
+		 || ct_buf_putc(&buf, timeout) < 0)
+			return -1;
+	}
+	if (message == NULL) {
+		/* No message */
+		cmd[3] |= 0xF0;
+	} else if (strcmp(message, "@")) {
+		if ((n = strlen(message)) > 32)
+			n = 32;
+
+		if (ct_buf_putc(&buf, 0x50) < 0
+		 || ct_buf_putc(&buf, n) < 0
+		 || ct_buf_put(&buf, message, n) < 0)
+			return -1;
+
+	}
+
+	n = ct_buf_avail(&buf);
+	cmd[4] = n - 5;
+	return n;
 }
 
 /*
@@ -251,17 +324,17 @@ kaan_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 	ifd_debug(1, "proto=%d", proto);
 
 	switch (proto) {
-	case IFD_PROTOCOL_T0: cmd[6]    = 0x01; break;
-	case IFD_PROTOCOL_T1: cmd[6]    = 0x02; break;
-	case IFD_PROTOCOL_I2C: cmd[6]   = 0x80; break;
-	case IFD_PROTOCOL_3WIRE: cmd[6] = 0x81; break;
-	case IFD_PROTOCOL_2WIRE: cmd[6] = 0x82; break;
+	case IFD_PROTOCOL_T0: cmd[7]    = 0x01; break;
+	case IFD_PROTOCOL_T1: cmd[7]    = 0x02; break;
+	case IFD_PROTOCOL_I2C: cmd[7]   = 0x80; break;
+	case IFD_PROTOCOL_3WIRE: cmd[7] = 0x81; break;
+	case IFD_PROTOCOL_2WIRE: cmd[7] = 0x82; break;
 	default:
 		ifd_debug(1, "kaan_set_protocol: protocol %d not supported", proto);
 		return -1;
 	}
 
-	if ((rc = kaan_apdu_xcv(reader, cmd, sizeof(cmd), sw, sizeof(sw))) < 0
+	if ((rc = kaan_apdu_xcv(reader, cmd, sizeof(cmd), sw, sizeof(sw), 0)) < 0
 	 || (rc = kaan_check_sw("kaan_set_protocol", sw, rc)) < 0)
 		return rc;
 
@@ -337,9 +410,11 @@ kaan_transparent(ifd_reader_t *reader, int dad, ifd_apdu_t *apdu)
 int
 kaan_apdu_xcv(ifd_reader_t *reader,
 		const unsigned char *sbuf, size_t slen,
-		unsigned char *rbuf, size_t rlen)
+		unsigned char *rbuf, size_t rlen,
+		time_t timeout)
 {
 	kaan_status_t	*st = (kaan_status_t *) reader->driver_data;
+	long		orig_timeout = 0;
 	ifd_apdu_t	tpdu;
 	int		rc;
 
@@ -348,10 +423,26 @@ kaan_apdu_xcv(ifd_reader_t *reader,
 	tpdu.rcv_buf = rbuf;
 	tpdu.rcv_len = rlen;
 
+	/* Override timeout if needed */
+	if (timeout) {
+		ifd_protocol_get_parameter(st->p,
+				IFD_PROTOCOL_RECV_TIMEOUT,
+				&orig_timeout);
+		ifd_protocol_set_parameter(st->p,
+				IFD_PROTOCOL_RECV_TIMEOUT,
+				timeout * 1000);
+	}
+
 	if ((rc = ifd_protocol_transceive(st->p, 0x12, &tpdu)) < 0
 	 || rc < 2) {
 		ct_error("kaan: T=1 protocol failure, rc=%d", rc);
-		return -1;
+		rc = IFD_ERROR_COMM_ERROR;
+	}
+
+	if (orig_timeout) {
+		ifd_protocol_set_parameter(st->p,
+				IFD_PROTOCOL_RECV_TIMEOUT,
+				orig_timeout);
 	}
 
 	return rc;
@@ -363,16 +454,11 @@ kaan_apdu_xcv(ifd_reader_t *reader,
 int
 kaan_check_sw(const char *msg, unsigned char *buf, int rc)
 {
-	if (rc < 0) {
-		ct_error("%s: rc=%d", msg, rc);
-	} else if (rc < 2) {
-		ct_error("%s: response too short (%d bytes)", msg, rc);
-		rc = IFD_ERROR_COMM_ERROR;
-	} else {
-		unsigned short	sw;
+	unsigned short	sw;
 
-		rc -= 2;
-		sw = (buf[rc] << 8) | buf[rc+1];
+	if (rc < 0) {
+		ct_error("%s: %s", msg, ct_strerror(rc));
+	} else if ((rc = kaan_get_sw(buf, rc, &sw)) >= 0) {
 		if (sw != 0x9000) {
 			ct_error("%s: failure, status code %04X",
 					msg, sw);
@@ -380,6 +466,19 @@ kaan_check_sw(const char *msg, unsigned char *buf, int rc)
 		}
 	}
 	return rc;
+}
+
+int
+kaan_get_sw(unsigned char *buf, unsigned int n, unsigned short *sw)
+{
+	if (n < 2) {
+		ifd_debug(1, "response too short (%d bytes)", n);
+		return IFD_ERROR_COMM_ERROR;
+	}
+
+	n -= 2;
+	*sw = (buf[n] << 8) | buf[n+1];
+	return n;
 }
 
 /*
@@ -424,22 +523,6 @@ kaan_get_tlv(unsigned char *buf, size_t len,
 }
 
 /*
- * build an ISO apdu
- */
-void
-kaan_apdu_init(ifd_iso_apdu_t *apdu,
-		unsigned char cse, unsigned char cla,
-		unsigned char ins, unsigned char p1, unsigned char p2)
-{
-	memset(apdu, 0, sizeof(*apdu));
-	apdu->cse = cse;
-	apdu->cla = cla;
-	apdu->ins = ins;
-	apdu->p1  = p1;
-	apdu->p2  = p2;
-}
-
-/*
  * Driver operations
  */
 static struct ifd_driver_ops	kaan_driver = {
@@ -448,6 +531,7 @@ static struct ifd_driver_ops	kaan_driver = {
 	.deactivate	= kaan_deactivate,
 	.card_status	= kaan_card_status,
 	.card_reset	= kaan_card_reset,
+	.card_request	= kaan_card_request,
 	.send		= kaan_send,
 	.recv		= kaan_recv,
 	.set_protocol	= kaan_set_protocol,
