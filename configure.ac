@@ -69,7 +69,7 @@ case "$host" in
 esac
 
 AC_ARG_WITH(common-dir,
-	[  --with-common-dir=PATH  Specify path for common installation libraries],
+	AC_HELP_STRING([--with-common-dir=PATH], [Specify path for common installation libraries]),
 	[
 		if test "x$withval" != "xno" ; then
 			trycommondir=$withval
@@ -214,7 +214,7 @@ saved_CFLAGS="$CFLAGS"
 saved_LDFLAGS="$LDFLAGS"
 saved_CPPFLAGS="$CPPFLAGS"
 AC_ARG_WITH(pcsclite,
-	[  --with-pcsclite=PATH    use PC/SC Lite in PATH],
+	AC_HELP_STRING([--with-pcsclite=PATH], [use PC/SC Lite in PATH]),
 	[pcsc_path=$withval])
 if test "x$pcsc_path" = "xno"; then
 	PCSC_MSG="no"
@@ -225,7 +225,7 @@ if test "x$pcsc_path" != "xno" -a "x$PCSC_MSG" != "xyes"; then
 		AC_MSG_RESULT($PCSC_MSG)
 		],[
 	AC_MSG_CHECKING(for PC/SC Lite support (old style))
-	for pcscdir in "" /pcsc /PCSC; do
+	for pcscdir in "" /PCSC; do
 		CPPFLAGS="$saved_CPPFLAGS"
 		LDFLAGS="$saved_LDFLAGS"
 		LIBS="-lpcsclite $saved_LIBS"
@@ -312,7 +312,7 @@ AC_CHECK_LIB(usb, usb_init,
 
 BUNDLEDIR="${libdir}"
 AC_ARG_WITH(bundle-dir,
-	[  --with-bundle-dir=PATH  install MacOS X bundles to PATH [[EPREFIX/lib]]],
+	AC_HELP_STRING([--with-bundle-dir=PATH], [install MacOS X bundles to PATH [[EPREFIX/lib]]]),
 	[
 		BUNDLEDIR="$withval"
 	]
@@ -328,11 +328,8 @@ fi
 
 dnl Enable/disable debugging messages.
 AC_ARG_ENABLE(debug,
-[  --enable-debug          enable debug messages. [default=no]],
-	, enable_debug=no)
-if (test x$enable_debug = xyes); then
-	AC_DEFINE(DEBUG, 1, [Enable debug messages.])
-fi
+	AC_HELP_STRING([--enable-debug], [enable debug messages. [[default=no]]]),
+	AC_DEFINE(DEBUG, 1, [Enable debug messages.]))
 
 CPPFLAGS="-I\${top_builddir}/src/include -I\${top_srcdir}/src/include $CPPFLAGS"
 AM_CONDITIONAL(HAVE_BUNDLES, test "x$with_bundles" = "xyes")
