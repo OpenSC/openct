@@ -14,7 +14,8 @@
 typedef struct t0_parms {
 	int		state;
 	long		timeout;
-	unsigned int	wwt;		/* wait time */
+
+	unsigned int	max_nulls;
 } t0_params_t;
 
 #define t0_params(r)		((t0_params_t *) ((r)->proto_state))
@@ -23,21 +24,19 @@ enum {
 	IDLE, SENDING, RECEIVING, CONFUSED
 };
 
-static unsigned	int	t0_block_type(unsigned char);
-static unsigned int	t0_seq(unsigned char);
-static unsigned	int	t0_build(ifd_apdu_t *, t0_params_t *,
-				unsigned char, ifd_buf_t *);
-static void		t0_compute_checksum(t0_params_t *, ifd_apdu_t *);
-static int		t0_verify_checksum(t0_params_t *, ifd_apdu_t *);
-static int		t0_xcv(ifd_reader_t *, ifd_apdu_t *);
+static int		t0_resynch(ifd_reader_t *);
+static int		t0_send(ifd_device_t *, ifd_buf_t *, int);
+static int		t0_recv(ifd_device_t *, ifd_buf_t *, int, long);
 
 /*
  * Set default T=1 protocol parameters
  */
 static void
-t0_set_defaults(t0_params_t *t1)
+t0_set_defaults(t0_params_t *t0)
 {
+	t0->timeout = 1000;
 	t0->state = IDLE;
+	t0->max_nulls = 50;
 }
 
 /*
@@ -123,11 +122,10 @@ t0_transceive(ifd_reader_t *reader, unsigned char nad, ifd_apdu_t *apdu)
 {
 	ifd_device_t	*dev = reader->device;
 	t0_params_t	*t0 = t0_params(reader);
-	ifd_apdu_t	block;
-	ifd_buf_t	sbuf, rbuf, tbuf;
-	unsigned char	sdata[5], rdata[T0_BUFFER_SIZE];
-	unsigned int	cla, ins, lc, le;
-	long		timeout;
+	ifd_buf_t	sbuf, rbuf;
+	unsigned char	sdata[5];
+	unsigned int	ins, lc, le;
+	unsigned int	null_count = 0;
 
 	if (t0->state != IDLE) {
 		if (t0_resynch(reader) < 0)
@@ -138,110 +136,137 @@ t0_transceive(ifd_reader_t *reader, unsigned char nad, ifd_apdu_t *apdu)
 	if (apdu->snd_len < 4)
 		return -1;
 
-	/* Initialize send/recv buffer */
-	ifd_buf_init(&sbuf, apdu->snd_buf, apdu->snd_len);
-	ifd_buf_init(&rbuf, apdu->rcv_buf, apdu->rcv_len);
+	/* Initialize send/recv buffers.
+	 * The receive buffer is initialized to exactly the number of
+	 * bytes we expect to receive (le + status word)
+	 */
+	if (apdu->snd_len <= 5) {
+		 /* The APDU may be short (no Le), hence the need to
+		  * clear the buffer */
+		memset(sdata, 0, sizeof(sdata));
+		memcpy(sdata, apdu->snd_buf, apdu->snd_len);
 
-	/* Send APDU may be short (no Le) */
-	if (apdu->snd_len < 5) {
-		ifd_buf_init(&sbuf, sdata, 5);
-		memcpy(sdata, apdu->snd_buf, 4);
-		sdata[4] = 0;
-	}
+		/* Extract lc and le */
+		lc = 0;
+		le = sdata[4];
 
-	if (ifd_buf_avail(&sbuf) == 5) {
 		t0->state = RECEIVING;
-	} else  {
+	} else {
+		memcpy(sdata, apdu->snd_buf, 5);
+
+		/* Fill send buffer */
+		lc = apdu->snd_len - 5;
+		le = 0;
+
 		t0->state = SENDING;
 	}
 
+	/* Set up the send buffer */
+	ifd_buf_init(&sbuf, apdu->snd_buf, lc);
+
+	/* Set up the receive buffer for Le + status word */
+	if (le + 2 > apdu->rcv_len) {
+		ifd_error("%s: recv buffer too small (le=%u)",
+				__FUNCTION__, le);
+		t0->state = IDLE;
+		return -1;
+	}
+	ifd_buf_init(&rbuf, apdu->rcv_buf, le + 2);
+
 	/* Get the INS */
-	ins = apdu->snd_buf[1];
+	ins = sdata[1];
 
-	if (t0_send(dev, &sbuf, 5) < 0)
+	if (ifd_device_send(dev, sdata, 5) < 0)
 		goto failed;
-
-	/* Per character timeout is WWT * etu, in milliseconds
-	 * (etu is microseconds) */
-	timeout = t0->wwt * dev->etu / 1000;
 
 	while (1) {
 		unsigned char	byte;
-		int		n;
+		int		count;
 
-		if (ifd_device_recv(dev, &byte, 1, timeout) < 0)
+		if (ifd_device_recv(dev, &byte, 1, t0->timeout) < 0)
 			goto failed;
 
-		/* ACK */
-		if ((byte ^ ins) & 0xFE == 0) {
-			if (t0->state == SENDING) {
-				if (t0_send(dev, &sbuf, ifd_buf_avail(&sbuf)) < 0)
-					goto failed;
-			} else
+		/* Null byte to extend wait time */
+		if (byte == 0x60) {
+			if (++null_count > t0->max_nulls)
+				goto failed;
+			continue;
 		}
 
+		/* ICC sends SW1 SW2 */
+		if ((byte & 0xF0) == 0x60 || (byte & 0xF0) == 0x90) {
+			/* Store SW1, then get SW2 and store it */
+			if (!ifd_buf_put(&rbuf, &byte, 1)
+			 || t0_recv(dev, &rbuf, 1, t0->timeout) < 0)
+				goto failed;
+
+			break;
+		}
+
+		/* Send/receive data.
+		 * ACK byte means transfer everything in one go,
+		 * ~ACK means do it octet by octet.
+		 * SCEZ masks off using 0xFE, but the Towitoko
+		 * driver uses 0x0E.
+		 * Do we need to make this configurable?
+		 */
+		if (((byte ^ ins) & 0xFE) == 0) {
+			/* Send/recv as much as we can */
+			count = -1;
+		} else if (((~byte ^ ins) & 0xFE) == 0) {
+			count = 1;
+		} else {
+			ifd_debug("%s: unexpected byte 0x%02x",
+					__FUNCTION__, byte);
+			return -1;
+		}
+
+		if (t0->state == SENDING) {
+			if (t0_send(dev, &sbuf, count) < 0)
+				goto failed;
+		} else {
+			if (t0_recv(dev, &rbuf, count, t0->timeout) < 0)
+				goto failed;
+		}
 	}
 
-done:	return 0;
+	apdu->rcv_len = ifd_buf_avail(&rbuf);
+	return apdu->rcv_len;
+
+failed:	t0->state = CONFUSED;
+	return -1;
 }
 
-static unsigned
-t0_block_type(unsigned char pcb)
+int
+t0_send(ifd_device_t *dev, ifd_buf_t *bp, int count)
 {
-	switch (pcb & 0xC0) {
-	case T1_R_BLOCK:
-		return T1_R_BLOCK;
-	case T1_S_BLOCK:
-		return T1_S_BLOCK;
-	default:
-		return T1_I_BLOCK;
-	}
+	int	n;
+
+	if (count < 0)
+		count = ifd_buf_avail(bp);
+	n = ifd_device_send(dev, ifd_buf_head(bp), count);
+	if (n >= 0)
+		ifd_buf_get(bp, NULL, n);
+	return n;
 }
 
-static unsigned int
-t0_seq(unsigned char pcb)
+int
+t0_recv(ifd_device_t *dev, ifd_buf_t *bp, int count, long timeout)
 {
-	switch (pcb & 0xC0) {
-	case T1_R_BLOCK:
-		return (pcb >> T1_R_SEQ_SHIFT) & 1;
-	case T1_S_BLOCK:
-		return 0;
-	default:
-		return (pcb >> T1_I_SEQ_SHIFT) & 1;
-	}
+	int	n;
+
+	if (count < 0)
+		count = ifd_buf_tailroom(bp);
+	n = ifd_device_recv(dev, ifd_buf_tail(bp), count, timeout);
+	if (n >= 0)
+		ifd_buf_put(bp, NULL, count);
+	return n;
 }
 
-unsigned int
-t0_build(ifd_apdu_t *apdu, t0_params_t *t1, unsigned char pcb, ifd_buf_t *bp)
+int
+t0_resynch(ifd_reader_t *reader)
 {
-	unsigned int	len;
-
-	len = ifd_buf_avail(bp);
-	if (len > t0->ifsc) {
-		pcb |= T1_MORE_BLOCKS;
-		len = t0->ifsc;
-	}
-
-	/* Add the sequence number */
-	switch (t0_block_type(pcb)) {
-	case T1_R_BLOCK:
-		pcb |= t0->nr << T1_R_SEQ_SHIFT;
-		break;
-	case T1_I_BLOCK:
-		pcb |= t0->ns << T1_I_SEQ_SHIFT;
-		break;
-	}
-
-	apdu->snd_len = 3 + len;
-
-	/* apdu->snd_buf[0] is already set to NAD */
-	apdu->snd_buf[1] = pcb;
-	apdu->snd_buf[2] = len;
-	memcpy(apdu->snd_buf, bp->base + bp->head, len);
-
-	t0_compute_checksum(t1, apdu);
-
-	return len;
+	return -1;
 }
 
 /*
@@ -256,78 +281,4 @@ ifd_protocol_t	ifd_protocol_t0 = {
 	t0_get_param,
 	t0_transceive,
 };
-
-/*
- * Build/verify checksum
- */
-void
-t0_compute_checksum(t0_params_t *t1, ifd_apdu_t *apdu)
-{
-	apdu->snd_len += t0->checksum(apdu->snd_buf, apdu->snd_len,
-				apdu->snd_buf + apdu->snd_len);
-}
-
-int
-t0_verify_checksum(t0_params_t *t1, ifd_apdu_t *apdu)
-{
-	unsigned char	csum[2];
-	int		m, n;
-
-	m = apdu->rcv_len - t0->rc_bytes;
-	n = t0->rc_bytes;
-
-	if (m < 0)
-		return 0;
-
-	t0->checksum(apdu->rcv_buf, m, csum);
-	return !memcmp(apdu->rcv_buf + m, csum, n);
-}
-
-/*
- * Send/receive block
- */
-int
-t0_xcv(ifd_reader_t *reader, ifd_apdu_t *apdu)
-{
-	ifd_device_t	*dev = reader->device;
-	t0_params_t	*t1 = t0_params(reader);
-	struct timeval	now, end;
-	unsigned int	n;
-	long		timeout;
-
-	if (dev->ops->transceive)
-		return ifd_device_transceive(dev, apdu, t0->timeout);
-
-	/* We need to do it the hard way... */
-	if (ifd_device_send(dev, apdu->snd_buf, apdu->snd_len) < 0)
-		return -1;
-
-	gettimeofday(&end, 0);
-	end.tv_sec  += t0->timeout / 1000;
-	end.tv_usec += t0->timeout % 1000;
-
-	/* Get the header */
-	if (ifd_device_recv(dev, apdu->rcv_buf, 3, t0->timeout) < 0)
-		return -1;
-
-	n = apdu->rcv_buf[2] + t0->rc_bytes;
-	if (n + 3 > apdu->rcv_len || apdu->rcv_buf[2] >= 254) {
-		ifd_error("receive buffer too small");
-		return -1;
-	}
-
-	/* Now get the rest */
-	gettimeofday(&now, 0);
-	timeout = (end.tv_usec - now.tv_usec) / 1000
-		+ (end.tv_sec - now.tv_sec) * 1000;
-	if (timeout <= 0) {
-		ifd_error("Timed out while talking to %s", dev->name);
-		return -1;
-	}
-
-	if (ifd_device_recv(dev, apdu->rcv_buf + 3, n, timeout) < 0)
-		return -1;
-
-	return apdu->rcv_buf[2];
-}
 
