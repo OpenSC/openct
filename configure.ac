@@ -1,6 +1,6 @@
 AC_INIT(src/ifd/init.c)
 AC_CONFIG_AUX_DIR(tools)
-AM_INIT_AUTOMAKE(openct, 0.1)
+AM_INIT_AUTOMAKE(openct, 0.1.0)
 AM_CONFIG_HEADER(include/config.h)
 
 AM_PROG_LIBTOOL
