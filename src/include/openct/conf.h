@@ -18,4 +18,6 @@ extern struct ifd_config {
 	const char *		protocol_modules_dir;
 } ifd_config;
 
+extern int		ifd_config_parse(const char *);
+
 #endif /* IFD_CONFIG_H */

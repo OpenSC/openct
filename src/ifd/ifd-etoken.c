@@ -13,7 +13,7 @@
 #include <ifd/driver.h>
 #include <ifd/device.h>
 #include <ifd/logging.h>
-#include <ifd/config.h>
+#include <ifd/conf.h>
 #include <ifd/error.h>
 
 #define ET_TIMEOUT	1000
@@ -185,7 +185,7 @@ static struct ifd_driver_ops	etoken_driver = {
  * Initialize this module
  */
 void
-ifd_init_module(void)
+ifd_etoken_register(void)
 {
 	ifd_driver_register("etoken", &etoken_driver);
 }

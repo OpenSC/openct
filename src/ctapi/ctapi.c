@@ -1,13 +1,18 @@
 /*
- * Generic CT-API functions, to be used by CTAPI driver shims
+ * CTAPI front-end for libifd
  *
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
 #include <stdlib.h>
-#include "internal.h"
+#include <ifd/core.h>
+#include <ifd/buffer.h>
+#include <ifd/logging.h>
+#include <ifd/conf.h>
+#include <ifd/error.h>
 #include "ctapi.h"
 
+static int	ifd_ctapi_control(ifd_reader_t *, ifd_apdu_t *);
 static int	ifd_ctapi_reset(ifd_reader_t *,
 			ifd_iso_apdu_t *, ifd_buf_t *,
 			time_t, const char *);
@@ -18,6 +23,103 @@ static int	ifd_ctapi_status(ifd_reader_t *,
 static int	ifd_ctapi_error(ifd_buf_t *, unsigned int);
 static int	ifd_ctapi_put_sw(ifd_buf_t *, unsigned int);
 
+
+/*
+ * Initialize card terminal #N.
+ * As all the terminals are configured by libifd internally,
+ * we ignore the port number
+ */
+char
+CT_init(unsigned short ctn, unsigned short pn)
+{
+	static int	first_time = 1;
+	ifd_reader_t	*reader;
+
+	/* When doing first time initialization, init the
+	 * library */
+	if (first_time) {
+		first_time = 0;
+		ifd_init();
+	}
+
+	if (!(reader = ifd_reader_by_index(ctn)))
+		return ERR_INVALID;
+
+	/* FIXME: just activate, or reset as well? */
+	if (ifd_activate(reader) < 0)
+		return ERR_INVALID;
+
+	return OK;
+}
+
+char
+CT_close(unsigned short ctn)
+{
+	ifd_reader_t	*reader;
+
+	if (!(reader = ifd_reader_by_index(ctn)))
+		return ERR_INVALID;
+	if (reader)
+		ifd_deactivate(reader);
+	return OK;
+}
+
+char
+CT_data(unsigned short ctn,
+	unsigned char  *dad,
+	unsigned char  *sad,
+	unsigned short lc,
+	unsigned char  *cmd,
+	unsigned short *lr,
+	unsigned char  *rsp)
+{
+	ifd_reader_t	*reader;
+	ifd_apdu_t	apdu;
+	int		rc;
+
+	if (!(reader = ifd_reader_by_index(ctn))
+	 || !sad || !dad)
+		return ERR_INVALID;
+
+	apdu.snd_len = lc;
+	apdu.snd_buf = cmd;
+	apdu.rcv_len = *lr;
+	apdu.rcv_buf = rsp;
+
+	if (ifd_config.debug > 1) {
+		ifd_debug("CT_data(dad=%d lc=%u lr=%u cmd=%s",
+				*dad, lc, *lr, ifd_hexdump(cmd, lc));
+	}
+	switch (*dad) {
+	case 0:
+		rc = ifd_card_command(reader, 0, &apdu);
+		break;
+	case 1:
+		rc = ifd_ctapi_control(reader, &apdu);
+		break;
+	case 2:
+		ifd_error("CT-API: host talking to itself - "
+			  "needs professional help?");
+		return ERR_INVALID;
+	case 3:
+		rc = ifd_card_command(reader, 1, &apdu);
+		break;
+	default:
+		ifd_error("CT-API: unknown DAD %u", *dad);
+		return ERR_INVALID;
+	}
+
+	/* Somewhat simplistic error translation */
+	if (rc < 0)
+		return ERR_INVALID;
+
+	*lr = rc;
+	return OK;
+}
+
+/*
+ * Handle CTBCS messages
+ */
 int
 ifd_ctapi_control(ifd_reader_t *reader, ifd_apdu_t *apdu)
 {

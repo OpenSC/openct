@@ -11,7 +11,6 @@
 static int		ifd_recv_atr(ifd_device_t *, ifd_buf_t *,
 				unsigned int, int);
 
-
 /*
  * Initialize a reader and open the device
  */

@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <ifd/core.h>
-#include <ifd/config.h>
+#include <ifd/conf.h>
 
 static void	usage(int exval);
 static void	print_atr(ifd_reader_t *);
@@ -44,6 +44,9 @@ main(int argc, char **argv)
 	}
 	if (optind != argc)
 		usage(1);
+
+	/* Initialize IFD library */
+	ifd_init();
 
 	if (ifd_config_parse(opt_config) < 0)
 		exit(1);

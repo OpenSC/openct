@@ -149,10 +149,12 @@ t0_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 		return -1;
 	}
 
+	/*
 	if (le + 2 > tpdu.rcv_len) {
 		ifd_error("t0_transceive: recv buffer too small");
 		return -1;
 	}
+	 */
 
 	if (lc) {
 		t0->state = SENDING;
@@ -243,7 +245,7 @@ t0_xcv(ifd_protocol_t *prot, ifd_apdu_t *apdu)
 		/* ICC sends SW1 SW2 */
 		if ((byte & 0xF0) == 0x60 || (byte & 0xF0) == 0x90) {
 			/* Store SW1, then get SW2 and store it */
-			if (!ifd_buf_put(&rbuf, &byte, 1)
+			if (ifd_buf_put(&rbuf, &byte, 1) < 0
 			 || t0_recv(prot, &rbuf, 1, t0->timeout) < 0)
 				goto failed;
 

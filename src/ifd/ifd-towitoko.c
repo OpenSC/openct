@@ -11,7 +11,7 @@
 #include <ifd/driver.h>
 #include <ifd/device.h>
 #include <ifd/logging.h>
-#include <ifd/config.h>
+#include <ifd/conf.h>
 #include <ifd/error.h>
 
 #define DEBUG(fmt, args...) \
@@ -431,7 +431,7 @@ static struct ifd_driver_ops	towitoko_driver = {
 };
 
 void
-ifd_init_module(void)
+ifd_towitoko_register(void)
 {
 	ifd_driver_register("towitoko", &towitoko_driver);
 }

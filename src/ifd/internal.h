@@ -8,11 +8,12 @@
 #define IFD_INTERNAL_H
 
 #include "core.h"
-#include "config.h"
+#include "conf.h"
 #include "device.h"
 #include "driver.h"
 #include "logging.h"
 #include "error.h"
+#include "buffer.h"
 
 struct ifd_device {
 	char *			name;
@@ -76,11 +77,6 @@ extern struct ifd_protocol_ops	ifd_protocol_t1;
 extern struct ifd_protocol_ops	ifd_protocol_t0;
 extern struct ifd_protocol_ops	ifd_protocol_trans;
 
-typedef struct ifd_buf {
-	unsigned char *		base;
-	unsigned int		head, tail, size;
-} ifd_buf_t;
-
 /* Debugging macros */
 #define IFD_DEBUG(fmt, args...)	do { ifd_debug("%s: " fmt, __FUNCTION__ , ##args); } while (0)
 
@@ -106,17 +102,6 @@ extern void		ifd_device_free(ifd_device_t *);
 extern unsigned int	csum_lrc_compute(const unsigned char *, size_t, unsigned char *);
 extern unsigned int	csum_crc_compute(const unsigned char *, size_t, unsigned char *);
 
-/* Buffer handling */
-extern void		ifd_buf_init(ifd_buf_t *, void *, size_t);
-extern void		ifd_buf_set(ifd_buf_t *, void *, size_t);
-extern void		ifd_buf_clear(ifd_buf_t *);
-extern int		ifd_buf_get(ifd_buf_t *, void *, size_t);
-extern int		ifd_buf_put(ifd_buf_t *, const void *, size_t);
-extern unsigned int	ifd_buf_avail(ifd_buf_t *);
-extern unsigned int	ifd_buf_tailroom(ifd_buf_t *);
-extern void *		ifd_buf_head(ifd_buf_t *);
-extern void *		ifd_buf_tail(ifd_buf_t *);
-extern int		ifd_buf_read(ifd_buf_t *, int);
 
 /* module.c */
 extern int		ifd_load_module(const char *, const char *);
@@ -124,5 +109,8 @@ extern int		ifd_load_module(const char *, const char *);
 /* utils.c */
 extern void		ifd_revert_bits(unsigned char *, size_t);
 extern unsigned int	ifd_count_bits(unsigned int);
+
+/* protocol.c */
+extern void		ifd_protocol_register(struct ifd_protocol_ops *);
 
 #endif /* IFD_INTERNAL_H */

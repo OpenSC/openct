@@ -43,6 +43,9 @@ find_by_name(const char *name, int create)
 	return ip;
 }
 
+/*
+ * Register a driver
+ */
 void
 ifd_driver_register(const char *name, struct ifd_driver_ops *ops)
 {

@@ -10,7 +10,7 @@
 #include <ifd/driver.h>
 #include <ifd/device.h>
 #include <ifd/logging.h>
-#include <ifd/config.h>
+#include <ifd/conf.h>
 #include <ifd/error.h>
 
 #define DEBUG(fmt, args...) \
@@ -478,7 +478,7 @@ static struct ifd_driver_ops	kaan_driver = {
  * Initialize this module
  */
 void
-ifd_init_module(void)
+ifd_kaan_register(void)
 {
 	ifd_driver_register("kaan", &kaan_driver);
 }

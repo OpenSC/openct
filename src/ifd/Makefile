@@ -1,34 +1,29 @@
 DEBUG	= -Wall -g
-CFLAGS	= -I../include $(DEBUG)
+CFLAGS	= -I../../include $(DEBUG)
 LDFLAGS	= -Wl,-export-dynamic
 LIBS	= libifd.a libifd.so
 APPS	= print-atr
-OBJS	= manager.o device.o reader.o driver.o hotplug.o \
-          modules.o \
+DRIVERS	= etoken.c kaan.c towitoko.c
+OBJS	= init.o manager.o device.o reader.o driver.o hotplug.o \
+          modules.o conf.o \
 	  protocol.o proto-t0.o proto-t1.o proto-trans.o \
 	  serial.o usb.o \
+	  $(DRIVERS:.c=.o) \
 	  apdu.o checksum.o buffer.o error.o utils.o \
-	  ctapi.o \
-	  config.o $(SYSDEP)
+	  $(SYSDEP)
 SYSDEP	= linux.o
-SUBDIRS	= drivers
 
 all:: $(LIBS) $(APPS)
 
 clean distclean::
 	rm -rf .objs .sobjs *.a *.o $(APPS)
 
-all clean distclean::
-	for dir in $(SUBDIRS); do \
-		$(MAKE) -C $$dir $@; \
-	done
-
 libifd.a: $(addprefix .objs/,$(OBJS))
 	ar cr $@ $(addprefix .objs/,$(OBJS))
 	ranlib $@
 
 libifd.so: $(addprefix .sobjs/,$(OBJS))
-	ld -shared -o $@ $(addprefix .sobjs/,$(OBJS)) -ldl -lusb -lc
+	ld -shared -o $@ $(addprefix .sobjs/,$(OBJS)) -ldl -lc
 
 .objs/%.o: %.c
 	@mkdir -p .objs

@@ -8,23 +8,43 @@
 #include <string.h>
 #include "internal.h"
 
+struct ifd_protocol_info {
+	struct ifd_protocol_info *next;
+	struct ifd_protocol_ops	*ops;
+};
+
+static struct ifd_protocol_info	*list = NULL;
+
+/*
+ * Register a protocol
+ */
+void
+ifd_protocol_register(struct ifd_protocol_ops *ops)
+{
+	struct ifd_protocol_info *info, **ptr;
+
+	info = (struct ifd_protocol_info *) calloc(1, sizeof(*info));
+	info->ops = ops;
+
+	for (ptr = &list; *ptr; ptr = &(*ptr)->next)
+		;
+	*ptr = info;
+}
+
 /*
  * Look up protocol based on its ID
  */
 static struct ifd_protocol_ops *
 ifd_protocol_by_id(int id)
 {
-	/* First, check built-in protocols */
-	switch (id) {
-	case IFD_PROTOCOL_T0:
-		return &ifd_protocol_t0;
-	case IFD_PROTOCOL_T1:
-		return &ifd_protocol_t1;
-	case IFD_PROTOCOL_TRANSPARENT:
-		return &ifd_protocol_trans;
+	struct ifd_protocol_info *info;
+
+	for (info = list; info; info = info->next) {
+		if (info->ops->id == id)
+			return info->ops;
 	}
 
-	/* Check protocols registered dynamically */
+	/* Autoload protocols defined in external modules? */
 
 	return NULL;
 }
