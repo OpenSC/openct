@@ -398,15 +398,7 @@ ifd_recv_response(ifd_protocol_t *prot, void *buffer, size_t len, long timeout)
 void
 ifd_close(ifd_reader_t *reader)
 {
-	pid_t	pid;
-
 	ifd_detach(reader);
-
-	if ((pid = reader->pid) != 0) {
-		reader->pid = 0;
-		if (kill(pid, SIGTERM) < 0)
-			ct_error("failed to kill reader process: %m");
-	}
 
 	if (reader->device)
 		ifd_device_close(reader->device);
