@@ -48,7 +48,7 @@ typedef struct usb_request {
     uint16_t	wValue;		/* Request Info			*/
     uint16_t	wIndex;		/* Index/Offset Info		*/
     uint16_t	wLength;	/* Number of bytes in transfer	*/
-    uint8_t	data[0];	/* Outgoing Data 		*/
+    uint8_t	data[1];	/* Outgoing Data 		*/
 } usb_request_t;
 
 
@@ -77,7 +77,7 @@ open_devstat(char *name)
 	char *devstat;
 
 	devstat=malloc(strlen(name) + 2);
-	memset(devstat,'\0',strlen(name) + 2);
+	memset(devstat,0,strlen(name) + 2);
 	strcpy(devstat, name);
 	strcpy(devstat+strlen(name)-6, "devstat");
 
@@ -85,8 +85,10 @@ open_devstat(char *name)
 
 	if((devstat_fd = open(devstat, O_RDONLY|O_EXCL|O_NONBLOCK)) < 0) {
 	    ifd_debug(6, "open_devstat: Error opening \"%s\": %s", devstat, strerror(errno));
+	    free(devstat);
 	    return -1;
 	}
+	free(devstat);
 	ifd_debug(6, "open_cntrl0stat: devstat_fd=%d", devstat_fd);
     }
     return 0;
@@ -100,7 +102,7 @@ open_cntrl0stat(char *name)
 	char *cntrl0stat;
 
 	cntrl0stat=malloc(strlen(name) + 5);
-	memset(cntrl0stat,'\0',strlen(name) + 5);
+	memset(cntrl0stat,0,strlen(name) + 5);
 	strcpy(cntrl0stat, name);
 	strcat(cntrl0stat, "stat");
 
@@ -108,8 +110,10 @@ open_cntrl0stat(char *name)
 
 	if((cntrl0stat_fd = open(cntrl0stat, O_RDONLY|O_EXCL)) < 0) {
 	    ifd_debug(6, "open_cntrl0stat: Error opening \"%s\": %s", cntrl0stat, strerror(errno));
+	    free(cntrl0stat);
 	    return 0;
 	}
+	free(cntrl0stat);
 	ifd_debug(6, "open_cntrl0stat: cntrl0stat_fd=%d", cntrl0stat_fd);
     }
     return 1;
@@ -216,7 +220,6 @@ ifd_sysdep_usb_control(ifd_device_t *dev,
 	unsigned int index,
 	void *data, size_t len, long timeout)
 {
-    char		*cntrl0stat=0;
     int			 bytes_to_process;
     int			 bytes_processed;
     int			 failed=0;
@@ -229,11 +232,11 @@ ifd_sysdep_usb_control(ifd_device_t *dev,
 		" index = 0x%02x",
 		requesttype, request, value, index);
 
-    bytes_to_process=sizeof(usb_request_t) + (requesttype == 0x40 ? len : 0);
+    bytes_to_process=(sizeof(usb_request_t)-1) + (requesttype == 0x40 ? len : 0);
     ifd_debug(6, "ifd_sysdep_usb_control: usb_control_req=malloc(%d) [%d][%d]",
-	bytes_to_process, sizeof(usb_request_t), (requesttype == 0x40 ? len : 0));
+	bytes_to_process, (sizeof(usb_request_t)-1), (requesttype == 0x40 ? len : 0));
     usb_control_req=malloc(bytes_to_process);
-    memset(usb_control_req,'\0',bytes_to_process);
+    memset(usb_control_req,0,bytes_to_process);
 
     if(!open_cntrl0stat(dev->name)) return -1;
 
@@ -267,9 +270,6 @@ ifd_sysdep_usb_control(ifd_device_t *dev,
     cleanup:
     if(usb_control_req)
 	free(usb_control_req);
-    if(cntrl0stat)
-	free(cntrl0stat);
-
     if(failed)
 	return failed;
 
