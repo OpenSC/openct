@@ -28,6 +28,10 @@ struct ifd_driver_ops {
 				time_t, const char *);
 
 	int		(*output)(ifd_reader_t *, const char *);
+	int		(*perform_verify)(ifd_reader_t *,
+			       	int, unsigned int, const char *,
+				const unsigned char *, size_t,
+				unsigned char *, size_t);
 
 	int		(*send)(ifd_reader_t *reader,
 				unsigned int dad,

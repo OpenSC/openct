@@ -43,9 +43,11 @@
 #define CT_TAG_CARD_STATUS	0x02	/* IFD_CARD_* byte */
 #define CT_TAG_ATR		0x03	/* Answer to reset */
 #define CT_TAG_LOCK		0x04
+#define CT_TAG_CARD_RESPONSE	0x05	/* Card response to VERIFY etc */
 #define CT_TAG_TIMEOUT		0x80
 #define CT_TAG_MESSAGE		0x81
 #define CT_TAG_LOCKTYPE		0x82
+#define CT_TAG_PIN_DATA		0x83	/* CTBCS verify APDU */
 
 
 #endif /* IFDMGR_PROTOCOL_H */

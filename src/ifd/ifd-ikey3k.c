@@ -111,6 +111,28 @@ failed:	ct_error("ikey3k: failed to activate token");
 }
 
 /*
+ * Select a protocol. We override this function to be able to set the T=1 IFSC
+ */
+static int
+ikey3k_set_protocol(ifd_reader_t *reader, int nslot, int proto)
+{
+	ifd_slot_t	*slot = &reader->slot[nslot];
+	int		r;
+
+	if (!(slot->proto = ifd_protocol_new(proto, reader, slot->dad)))
+		return -1;
+
+	if (proto == IFD_PROTOCOL_T1) {
+		r = ifd_protocol_set_parameter(slot->proto,
+					IFD_PROTOCOL_T1_IFSC, 256);
+		if (r < 0)
+			return r;
+	}
+
+	return 0;
+}
+
+/*
  * Send/receive routines
  */
 static int
@@ -141,6 +163,7 @@ static struct ifd_driver_ops	ikey3k_driver = {
 	deactivate:	ikey3k_deactivate,
 	card_status:	ikey3k_card_status,
 	card_reset:	ikey3k_card_reset,
+	set_protocol:	ikey3k_set_protocol,
 	send:		ikey3k_send,
 	recv:		ikey3k_recv,
 };

@@ -30,6 +30,8 @@ static int do_reset(ifd_reader_t *, int,
 			ct_tlv_parser_t *, ct_tlv_builder_t *);
 static int do_eject(ifd_reader_t *, int,
 			ct_tlv_parser_t *, ct_tlv_builder_t *);
+static int do_verify(ifd_reader_t *, int,
+			ct_tlv_parser_t *, ct_tlv_builder_t *);
 static int do_transact(ifd_reader_t *, int,
 			ct_buf_t *, ct_buf_t *);
 
@@ -79,6 +81,10 @@ ifdhandler_process(ct_socket_t *sock, ifd_reader_t *reader,
 
 	case CT_CMD_EJECT_ICC:
 		rc = do_eject(reader, unit, &args, &resp);
+		break;
+
+	case CT_CMD_PERFORM_VERIFY:
+		rc = do_verify(reader, unit, &args, &resp);
 		break;
 
 	case CT_CMD_LOCK:
@@ -257,6 +263,43 @@ do_eject(ifd_reader_t *reader, int unit,
 
 	return 0;
 }
+
+/*
+ * Request PIN through key pad and have card verify it
+ */
+int
+do_verify(ifd_reader_t *reader, int unit,
+		ct_tlv_parser_t *args, ct_tlv_builder_t *resp)
+{
+	char		msgbuf[128];
+	unsigned char	*data;
+	size_t		data_len;
+	const char	*message = NULL;
+	unsigned int	timeout = 0;
+	int		rc;
+
+	if (unit > reader->nslots)
+		return IFD_ERROR_INVALID_SLOT;
+
+	/* See if we have timeout and/or message parameters */
+	ct_tlv_get_int(args, CT_TAG_TIMEOUT, &timeout);
+	if (ct_tlv_get_string(args, CT_TAG_MESSAGE, msgbuf, sizeof(msgbuf)) > 0)
+		message = msgbuf;
+	if (!ct_tlv_get_opaque(args, CT_TAG_PIN_DATA, &data, &data_len))
+		return IFD_ERROR_MISSING_ARG;
+
+	rc = ifd_card_perform_verify(reader, unit, timeout, message,
+					data, data_len,
+					msgbuf, sizeof(msgbuf));
+	if (rc < 0)
+		return rc;
+
+	ct_tlv_put_tag(resp, CT_TAG_CARD_RESPONSE);
+	ct_tlv_add_bytes(resp, msgbuf, rc);
+	return 0;
+}
+
+
 
 /*
  * Transceive APDU

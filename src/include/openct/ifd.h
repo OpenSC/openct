@@ -138,6 +138,12 @@ extern int			ifd_card_eject(ifd_reader_t *reader,
 					unsigned int slot,
 					time_t timeout,
 					const char *message);
+extern int			ifd_card_perform_verify(ifd_reader_t *reader,
+					unsigned int slot,
+					time_t timeout,
+					const char *message,
+					const unsigned char *data, size_t data_len,
+					unsigned char *resp, size_t resp_len);
 
 extern ifd_protocol_t *		ifd_protocol_new(int id,
 					ifd_reader_t *reader,

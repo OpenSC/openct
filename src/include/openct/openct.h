@@ -46,6 +46,14 @@ enum {
 	IFD_LOCK_EXCLUSIVE,
 };
 
+/*
+ * PIN encoding types
+ */
+enum {
+	IFD_PIN_ENCODING_BCD,
+	IFD_PIN_ENCODING_ASCII,
+};
+
 extern int		ct_status(const ct_info_t **);
 
 extern int		ct_reader_info(unsigned int, ct_info_t *);
@@ -65,6 +73,14 @@ extern int		ct_card_unlock(ct_handle *h, unsigned int slot,
 extern int		ct_card_transact(ct_handle *h, unsigned int slot,
 				const void *apdu, size_t apdu_len,
 				void *recv_buf, size_t recv_len);
+extern int		ct_card_verify(ct_handle *h, unsigned int slot,
+				unsigned int timeout, const char *prompt,
+				unsigned int pin_encoding,
+				unsigned int pin_length,
+				unsigned int pin_offset,
+				const void *send_buf, size_t send_len,
+				void *recv_buf, size_t recv_len);
+
 
 extern int		ct_master_control(const char *command,
 				char *replybuf, size_t replysize);

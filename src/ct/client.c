@@ -244,6 +244,64 @@ ct_card_transact(ct_handle *h, unsigned int slot,
 }
 
 /*
+ * Verify PIN
+ */
+int
+ct_card_verify(ct_handle *h, unsigned int slot,
+			unsigned int timeout, const char *prompt,
+			unsigned int pin_encoding,
+			unsigned int pin_length,
+			unsigned int pin_offset,
+			const void *send_buf, size_t send_len,
+			void *recv_buf, size_t recv_len)
+{
+	unsigned char	buffer[256];
+	ct_buf_t	args, resp;
+	ct_tlv_builder_t builder;
+	ct_tlv_parser_t parser;
+	unsigned char	control = 0x00;
+	int		rc;
+
+	ct_buf_init(&args, buffer, sizeof(buffer));
+	ct_buf_init(&resp, recv_buf, recv_len);
+
+	ct_buf_putc(&args, CT_CMD_PERFORM_VERIFY);
+	ct_buf_putc(&args, slot);
+
+	if (timeout)
+		ct_args_int(&args, CT_TAG_TIMEOUT, timeout);
+	if (prompt)
+		ct_args_string(&args, CT_TAG_MESSAGE, prompt);
+
+	ct_tlv_builder_init(&builder, &args);
+	ct_tlv_put_tag(&builder, CT_TAG_PIN_DATA);
+
+	/* Build the control byte */
+	if (pin_encoding == IFD_PIN_ENCODING_ASCII)
+		control |= 0x01;
+	else if (pin_encoding != IFD_PIN_ENCODING_BCD)
+		return IFD_ERROR_INVALID_ARG;
+	if (pin_length)
+		control |= pin_length << 4;
+	ct_tlv_add_byte(&builder, control);
+
+	/* Offset is 1 based */
+	ct_tlv_add_byte(&builder, pin_offset + 1);
+	ct_tlv_add_bytes(&builder, send_buf, send_len);
+
+	rc = ct_socket_call(h->sock, &args, &resp);
+	if (rc < 0)
+		return rc;
+
+	if ((rc = ct_tlv_parse(&parser, &resp)) < 0)
+		return rc;
+
+	/* Get the ATR */
+	return ct_tlv_get_bytes(&parser,
+			CT_TAG_CARD_RESPONSE, recv_buf, recv_len);
+}
+
+/*
  * Lock/unlock a card
  */
 int
@@ -304,7 +362,8 @@ ct_args_int(ct_buf_t *bp, ifd_tag_t tag, unsigned int value)
 	ct_tlv_put_int(&builder, tag, value);
 }
 
-void	ct_args_string(ct_buf_t *bp, ifd_tag_t tag, const char *value)
+void
+ct_args_string(ct_buf_t *bp, ifd_tag_t tag, const char *value)
 {
 	ct_tlv_builder_t builder;
 

@@ -9,6 +9,7 @@
 #include <time.h>
 #include <unistd.h>
 #include "internal.h"
+#include "ctbcs.h"
 
 /* Freeze after that many seconds of inactivity */
 #define FREEZE_DELAY		5
@@ -25,9 +26,7 @@ typedef struct kaan_status {
 
 static int		kaan_reset_ct(ifd_reader_t *reader);
 static int		kaan_get_units(ifd_reader_t *reader);
-static int		kaan_display(ifd_reader_t *, const char *);
-static int		kaan_build_display_args(unsigned char *, size_t,
-				unsigned int, const char *);
+static int		kaan_freeze(ifd_reader_t *reader);
 static int		__kaan_apdu_xcv(ifd_reader_t *,
 				const unsigned char *, size_t,
 				unsigned char *, size_t,
@@ -94,7 +93,7 @@ kaan_open(ifd_reader_t *reader, const char *device_name)
 
 #if 0
 	/* Clear the display */
-	kaan_display(reader, "");
+	reader->ops->display(reader, "");
 #endif
 
 	return 0;
@@ -151,28 +150,6 @@ kaan_get_units(ifd_reader_t *reader)
 }
 
 /*
- * Output a string to the display
- */
-int
-kaan_display(ifd_reader_t *reader, const char *string)
-{
-	unsigned char	buffer[256] = { 0x20, 0x17, 0x40, 00 };
-	int		rc, n;
-
-	if (!(reader->flags & IFD_READER_DISPLAY))
-		return 0;
-	if (string == NULL)
-		return IFD_ERROR_INVALID_ARG;
-
-	n = kaan_build_display_args(buffer, sizeof(buffer), 0, string);
-	if (n < 0)
-		return n;
-
-	rc = kaan_apdu_xcv(reader, buffer, n, buffer, sizeof(buffer), 0);
-	return kaan_check_sw("kaan_display", buffer, rc);
-}
-
-/*
  * Power up the reader
  */
 static int
@@ -204,20 +181,7 @@ kaan_card_status(ifd_reader_t *reader, int slot, int *status)
 	if (!st->frozen
 	 && st->last_activity + FREEZE_DELAY < time(NULL)
 	 && ifd_device_type(reader->device) == IFD_DEVICE_TYPE_SERIAL) {
-		unsigned char	freeze[16] = { 0x80, 0x70, 0x00, 0x00, 0x00, 0x30, 00 };
-		unsigned int	m, n;
-
-		ifd_debug(1, "trying to freeze reader");
-		for (n = 0, m = 7; n < reader->nslots; n++, m++) {
-			freeze[m] = n + 1;
-			if (reader->slot[n].status != 0)
-				freeze[m] |= 0x02;
-		}
-		freeze[6] = n;
-		freeze[4] = n + 2;
-
-		rc = __kaan_apdu_xcv(reader, freeze, m, freeze, sizeof(freeze), 0, 0);
-		if ((rc = kaan_check_sw("kaan_card_freeze", freeze, rc)) < 0)
+		if ((rc = kaan_freeze(reader)) < 0)
 			return rc;
 		usleep(10000);
 		st->frozen = 1;
@@ -243,6 +207,29 @@ kaan_card_status(ifd_reader_t *reader, int slot, int *status)
 			*status |= IFD_CARD_PRESENT;
 	}
 	return 0;
+}
+
+/*
+ * Send the Freeze command to the reader
+ */
+int
+kaan_freeze(ifd_reader_t *reader)
+{
+	unsigned char	freeze[16] = { 0x80, 0x70, 0x00, 0x00, 0x00, 0x30, 00 };
+	unsigned int	m, n;
+	int		rc;
+
+	ifd_debug(1, "trying to freeze reader");
+	for (n = 0, m = 7; n < reader->nslots; n++, m++) {
+		freeze[m] = n + 1;
+		if (reader->slot[n].status != 0)
+			freeze[m] |= 0x02;
+	}
+	freeze[6] = n;
+	freeze[4] = n + 2;
+
+	rc = __kaan_apdu_xcv(reader, freeze, m, freeze, sizeof(freeze), 0, 0);
+	return kaan_check_sw("kaan_card_freeze", freeze, rc);
 }
 
 /*
@@ -275,17 +262,22 @@ kaan_card_reset(ifd_reader_t *reader, int slot, void *result, size_t size)
 /*
  * Request ICC
  */
-int
+static int
 kaan_card_request(ifd_reader_t *reader, int slot,
 			time_t timeout, const char *message,
 			void *atr, size_t atr_len)
 {
+	ct_buf_t	buf;
 	unsigned char	buffer[256] = { 0x20, 0x17, slot+1, 0x01, 0x00 };
 	unsigned short	sw;
 	int		n, rc;
 
-	n = kaan_build_display_args(buffer, sizeof(buffer)-1, timeout, message);
-	if (n < 0)
+	/* Build the APDU, which is basically a modified CTBCS OUTPUT command */
+	ct_buf_init(&buf, buffer, sizeof(buffer)-1);
+	ctbcs_begin(&buf, 0x17, slot + 1, 0x01);
+	ctbcs_add_timeout(&buf, timeout);
+	ctbcs_add_message(&buf, message);
+	if ((n = ctbcs_finish(&buf)) < 0)
 		return n;
 	buffer[n++] = 0x00;
 
@@ -306,45 +298,6 @@ kaan_card_request(ifd_reader_t *reader, int slot,
 		rc = atr_len;
 	memcpy(atr, buffer, rc);
 	return rc;
-}
-
-/*
- * Helper function add message/timeout arguments to command
- * buffer
- */
-int
-kaan_build_display_args(unsigned char *cmd, size_t size, unsigned int timeout, const char *message)
-{
-	ct_buf_t	buf;
-	unsigned int	n;
-
-	/* Initialize buffer and skip APDU */
-	ct_buf_init(&buf, cmd, size);
-	ct_buf_put(&buf, NULL, 5);
-
-	if (timeout) {
-		if (ct_buf_putc(&buf, 0x80) < 0
-		 || ct_buf_putc(&buf, 1) < 0
-		 || ct_buf_putc(&buf, timeout) < 0)
-			return -1;
-	}
-	if (message == NULL) {
-		/* No message */
-		cmd[3] |= 0xF0;
-	} else if (strcmp(message, "@")) {
-		if ((n = strlen(message)) > 32)
-			n = 32;
-
-		if (ct_buf_putc(&buf, 0x50) < 0
-		 || ct_buf_putc(&buf, n) < 0
-		 || ct_buf_put(&buf, message, n) < 0)
-			return -1;
-
-	}
-
-	n = ct_buf_avail(&buf);
-	cmd[4] = n - 5;
-	return n;
 }
 
 /*
@@ -442,6 +395,72 @@ kaan_transparent(ifd_reader_t *reader, int dad,
 
 	return n;
 }
+
+/*
+ * Output a string to the display
+ */
+static int
+kaan_display(ifd_reader_t *reader, const char *string)
+{
+	unsigned char	buffer[256] = { 0x20, 0x17, 0x40, 00 };
+	int		rc, n;
+
+	if (!(reader->flags & IFD_READER_DISPLAY))
+		return 0;
+
+	n = ctbcs_build_output(buffer, sizeof(buffer), string);
+	if (n < 0)
+		return n;
+
+	rc = kaan_apdu_xcv(reader, buffer, n, buffer, sizeof(buffer), 0);
+	return kaan_check_sw("kaan_display", buffer, rc);
+}
+
+/*
+ * Perform a PIN verification
+ */
+static int
+kaan_perform_verify(ifd_reader_t *reader, int nslot,
+		unsigned int timeout, const char *prompt,
+	       	const unsigned char *data, size_t data_len,
+		unsigned char *resp, size_t resp_len)
+{
+	unsigned char	buffer[256];
+	int		n;
+	unsigned short	sw;
+
+	if (!(reader->flags & IFD_READER_KEYPAD))
+		return 0;
+
+	n = ctbcs_build_perform_verify_apdu(buffer, sizeof(buffer),
+			nslot + 1, prompt, timeout,
+			data, data_len);
+	if (n < 0)
+		return n;
+
+	n = kaan_apdu_xcv(reader, buffer, n, resp, resp_len, 0);
+	if (n < 0) {
+		ct_error("perform_verify failed: %s", ct_strerror(n));
+		return n;
+	}
+	if ((n = kaan_get_sw(resp, n, &sw)) < 0)
+		return n;
+
+	switch (sw) {
+	case 0x6400:
+		ct_error("perform_verify failed: timeout");
+		return IFD_ERROR_USER_TIMEOUT;
+	case 0x6401:
+		ct_error("perform_verify failed: user pressed cancel");
+		return IFD_ERROR_USER_ABORT;
+	case 0x6402:
+		ct_error("perform_verify failed: PIN mismatch");
+		return IFD_ERROR_PIN_MISMATCH;
+	}
+
+	return 2;
+}
+
 
 /*
  * APDU exchange with terminal
@@ -573,6 +592,7 @@ static struct ifd_driver_ops	kaan_driver = {
 	.card_reset	= kaan_card_reset,
 	.card_request	= kaan_card_request,
 	.output		= kaan_display,
+	.perform_verify = kaan_perform_verify,
 	.send		= kaan_send,
 	.recv		= kaan_recv,
 	.set_protocol	= kaan_set_protocol,

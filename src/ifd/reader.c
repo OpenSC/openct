@@ -402,6 +402,32 @@ ifd_card_eject(ifd_reader_t *reader, unsigned int idx,
 }
 
 /*
+ * Perform a PIN verification, using the reader's pin pad
+ */
+int
+ifd_card_perform_verify(ifd_reader_t *reader, unsigned int idx,
+		time_t timeout, const char *message,
+		const unsigned char *data, size_t data_len,
+		unsigned char *resp, size_t resp_len)
+{
+	const ifd_driver_t *drv = reader->driver;
+
+	if (idx > reader->nslots) {
+		ct_error("%s: invalid slot number %u", reader->name, idx);
+		return -1;
+	}
+
+	if (!drv || !drv->ops || !drv->ops->perform_verify)
+		return IFD_ERROR_NOT_SUPPORTED;
+
+	return drv->ops->perform_verify(reader, idx, timeout, message,
+					data, data_len,
+					resp, resp_len);
+}
+
+
+
+/*
  * Send/receive APDU to the ICC
  */
 int
