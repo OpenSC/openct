@@ -92,7 +92,7 @@ void
 ct_reader_disconnect(ct_handle *h)
 {
 	if (h->sock)
-		ct_socket_close(h->sock);
+		ct_socket_free(h->sock);
 	memset(h, 0, sizeof(*h));
 	free(h);
 }

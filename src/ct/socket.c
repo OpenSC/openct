@@ -99,8 +99,10 @@ ct_socket_connect(ct_socket_t *sock, const char *path)
 
 	if ((fd = socket(PF_UNIX, SOCK_STREAM, 0)) < 0
 	 || fcntl(fd, F_SETFD, 1) < 0 /* close on exec */
-	 || connect(fd, (struct sockaddr *) &un, sizeof(un)) < 0)
-		return -1;
+	 || connect(fd, (struct sockaddr *) &un, sizeof(un)) < 0) {
+		if (fd>=0) {close(fd);}
+		return -1; 
+	}
 
 	sock->fd   = fd;
 	return 0;

@@ -112,8 +112,10 @@ main(int argc, char **argv)
 	if (opt_command == CMD_RWAIT) {
 		while (1) {
 			h = ct_reader_connect(opt_reader);
-			if (h) 
+			if (h)  { 
+				free(h);
 				break;
+			}
 			sleep(1);
 		}
 		exit(0);
