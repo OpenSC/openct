@@ -133,7 +133,7 @@ usage(int exval)
 " list  list all readers found\n"
 " atr   print ATR of card in selected reader\n"
 " wait  wait for card to be inserted\n"
-" mf    try to select ATR of card\n"
+" mf    try to select main folder of card\n"
 );
 	exit(exval);
 }
