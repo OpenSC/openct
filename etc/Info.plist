@@ -1,0 +1,26 @@
+	<key>ifdManufacturerString</key>
+	<string>OpenSC Project (www.opensc.org)</string>
+	<key>ifdProductString</key>
+	<string>PC/SC Lite IFD wrapper for OpenCT</string>
+
+	<key>ifdCapabilities</key>
+	<string>0x00000000</string>
+	<key>ifdProtocolSupport</key>
+	<string>0x00000001</string>
+	<key>ifdVersionNumber</key>
+	<string>0x00000001</string>
+
+	<key>ifdVendorID</key>
+	<array>
+		<string>0x076B</string>		<!-- 1 OmniKey -->
+	</array>
+
+	<key>ifdProductID</key>
+	<array>
+		<string>0x0596</string>		<!-- 1 -->
+	</array>
+
+	<key>ifdFriendlyName</key>
+	<array>
+		<string>CardMan 2020</string>	<!-- 1 -->
+	</array>

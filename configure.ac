@@ -246,6 +246,15 @@ AC_CHECK_LIB(usb, usb_init,
 		USB_MSG=yes
 	])
 
+BUNDLEDIR="${libdir}"
+AC_ARG_WITH(bundle-dir,
+	[  --with-bundle-dir=PATH  install MacOS X bundles to PATH [[EPREFIX/lib]]],
+	[
+		BUNDLEDIR="$withval"
+	]
+)
+AC_SUBST(BUNDLEDIR)
+
 if test "x$prefix" = xNONE; then
   prefix=$ac_default_prefix
 fi
