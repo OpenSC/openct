@@ -25,19 +25,21 @@
 struct ifd_device {
 	char *		name;
 	int		type;
-	unsigned int	etu;
 	long		timeout;
 
 	unsigned int	hotplug : 1;
 
-	ifd_device_params_t settings;
+	int		fd;
+	void		*dev;	/* use instead of fd, if no fd available for implementation */
 
+	ifd_device_params_t settings;
 	struct ifd_device_ops *ops;
 
-	int		fd;
 	void *		user_data;
 
 	/* per-device data may follow */
+
+	unsigned int	etu;	/* XXX: unnecessary? */
 };
 
 struct ifd_device_ops {
