@@ -1,5 +1,10 @@
 #!/bin/sh
 
+echo you need at least:
+echo autoconfig 2.57
+echo automake 1.7.6
+echo libtool 1.4.3
+
 set -e
 set -x
 rm -rf *.cache *.status *.log *.m4

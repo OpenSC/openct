@@ -1,7 +1,10 @@
+# Require autoconf 2.57
+AC_PREREQ(2.57)
+
 AC_INIT(openct, CVS)
 AC_CONFIG_SRCDIR(src/ifd/init.c)
 AC_CONFIG_AUX_DIR(tools)
-AM_INIT_AUTOMAKE([foreign])
+AM_INIT_AUTOMAKE([foreign 1.7.6])
 AM_CONFIG_HEADER(include/config.h)
 
 AM_PROG_LIBTOOL
@@ -62,6 +65,13 @@ if test "$pcsc_path" != "no"; then
 fi
 AM_CONDITIONAL(HAVE_PCSCLITE, test "x$ac_cv_lib_pcsclite_SCardEstablishContext" = "xyes")
 
+AC_SUBST(LIBDL)
+AC_CHECK_LIB(dl, dlopen,
+	     [LIBDL="$LIBDL -ldl" ac_cv_func_dlopen_ldl=yes],
+	     ac_cv_func_dlopen_ldl=no)
+
+AC_SUBST(LIBUSB)
+AC_CHECK_LIB(usb, usb_init, [LIBUSB="$LIBUSB -lusb"])
 
 AC_OUTPUT([
 Makefile

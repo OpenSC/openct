@@ -1,6 +1,6 @@
 MAINTAINERCLEANFILES=Makefile.in
 
-DISTCLEANFILES=openct.conf hotplug.openct init-script
+DISTCLEANFILES=openct.conf hotplug.openct openct
 
 EXTRA_DIST = openct.conf.in hotplug.openct.in init-script.in
 
@@ -10,7 +10,11 @@ sbin_SCRIPTS = hotplug.openct
 
 initdir=@sysconfdir@/init.d
 
-init_SCRIPTS = init-script
+init_SCRIPTS = openct
 
 %: %.in
 	sed -e "s#SBINDIR#${sbindir}#g" $(srcdir)/$^ > $@
+
+openct: init-script.in
+	sed -e "s#SBINDIR#${sbindir}#g" $(srcdir)/$^ > $@
+
