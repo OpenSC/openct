@@ -69,7 +69,7 @@ twt_open(ifd_reader_t *reader, const char *device_name)
 	if (twt_command(reader, "\x00", 1, buffer, 2) < 0)
 		goto failed;
 
-	ifd_debug(1, "towotoko reader type 0x%02x", buffer[0]);
+	ifd_debug(1, "towitoko reader type 0x%02x", buffer[0]);
 
 	/* Special handling for some towitoko readers
 	 * (according to SCEZ) */
@@ -619,7 +619,7 @@ twt_command(ifd_reader_t *reader, const void *cmd, size_t cmd_len,
 
 	if (res_len > sizeof(buffer)-1
 	 || cmd_len > sizeof(buffer)-1)
-		return -1;
+		return IFD_ERROR_BUFFER_TOO_SMALL;
 
 	memcpy(buffer, cmd, cmd_len);
 	cmd_len = twt_send_checksum(buffer, cmd_len);
@@ -631,8 +631,8 @@ twt_command(ifd_reader_t *reader, const void *cmd, size_t cmd_len,
 					buffer, cmd_len,
 					buffer, res_len + 1, -1);
 	if (rc < 0) {
-		ct_error("towitoko: transceive error");
-		return -1;
+		ct_error("towitoko: transceive error: %s", ct_strerror(rc));
+		return rc;
 	}
 
 	if (ct_config.debug > 1)
