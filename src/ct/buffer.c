@@ -52,3 +52,15 @@ ifd_buf_tailroom(ifd_buf_t *bp)
 {
 	return bp->size - bp->tail;
 }
+
+void *
+ifd_buf_head(ifd_buf_t *bp)
+{
+	return bp->base + bp->head;
+}
+
+void *
+ifd_buf_tail(ifd_buf_t *bp)
+{
+	return bp->base + bp->tail;
+}
