@@ -1,8 +1,0 @@
-debian/tmp/usr/lib/libopenct.so
-debian/tmp/usr/lib/libopenct.la
-debian/tmp/usr/lib/libopenct.a
-debian/tmp/usr/lib/libifd.so
-debian/tmp/usr/lib/libifd.la
-debian/tmp/usr/lib/libifd.a
-debian/tmp/usr/lib/pkgconfig
-debian/tmp/usr/include/openct/*
