@@ -66,7 +66,7 @@ ct_debug(const char *fmt, ...)
 
 #define MAX_ERROR	256
 static const char *	ct_errors[MAX_ERROR] = {
-  [IFD_SUCCESS]			= "Success"
+  [IFD_SUCCESS]			= "Success",
   [-IFD_ERROR_GENERIC]		= "Generic error",
   [-IFD_ERROR_TIMEOUT]		= "Command timed out",
   [-IFD_ERROR_INVALID_SLOT]	= "Invalid slot",
