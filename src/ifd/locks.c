@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <openct/error.h>
 #include <openct/logging.h>
+#include <openct/conf.h>
 #include "ifdhandler.h"
 
 typedef struct ct_lock {
@@ -52,7 +53,7 @@ ifdhandler_lock(ct_socket_t *sock, int slot, int type, ct_lock_handle *res)
 	l->next = locks;
 	locks = l;
 
-	ct_debug("granted %s lock %u for slot %u by uid=%u",
+	ifd_debug(1, "granted %s lock %u for slot %u by uid=%u",
 			l->exclusive? "excl" : "shared",
 			l->handle, l->slot, l->uid);
 
@@ -95,9 +96,10 @@ ifdhandler_unlock(ct_socket_t *sock, int slot, ct_lock_handle handle)
 	for (lp = &locks; (l = *lp) != NULL; lp = &l->next) {
 		if (l->owner == sock && l->slot == slot
 		 && l->handle == handle) {
-			ct_debug("released %s lock %u for slot %u by uid=%u",
-					l->exclusive? "excl" : "shared",
-					l->handle, l->slot, l->uid);
+			ifd_debug(1,
+				"released %s lock %u for slot %u by uid=%u",
+				l->exclusive? "excl" : "shared",
+				l->handle, l->slot, l->uid);
 
 			*lp = l->next;
 			free(l);
@@ -120,9 +122,10 @@ ifdhandler_unlock_all(ct_socket_t *sock)
 	lp = &locks;
 	while ((l = *lp) != NULL) {
 		if (l->owner == sock) {
-			ct_debug("released %s lock %u for slot %u by uid=%u",
-					l->exclusive? "excl" : "shared",
-					l->handle, l->slot, l->uid);
+			ifd_debug(1,
+				"released %s lock %u for slot %u by uid=%u",
+				l->exclusive? "excl" : "shared",
+				l->handle, l->slot, l->uid);
 			*lp = l->next;
 			free(l);
 		} else {
