@@ -109,12 +109,14 @@ __ct_socket_make(ct_socket_t *sock, int op,
 
 	switch (op) {
 	case CT_MAKESOCK_BIND:
+#ifdef IPV6_V6ONLY
 		if (sa->sa_family == AF_INET6) {
 			int val = 1;
 
 			setsockopt(fd, SOL_IP, IPV6_V6ONLY,
 					&val, sizeof(val));
 		}
+#endif
 		if (ifd_reuse_addr) {
 			int val = 1;
 
