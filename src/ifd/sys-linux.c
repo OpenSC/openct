@@ -92,7 +92,7 @@ ifd_sysdep_usb_control(int fd,
 	struct usbdevfs_ctrltransfer ctrl;
 	int		rc;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,20)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,21)
 	ctrl.bRequestType = requesttype;
 	ctrl.bRequest = request;
 	ctrl.wValue = value;
