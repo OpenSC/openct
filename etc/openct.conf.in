@@ -36,3 +36,9 @@ driver	ikey3k {
 		usb:04b9/1300,
 	};
 };
+driver	cardman {
+	ids = {
+		usb:076b/0596,
+	};
+};
+
