@@ -34,7 +34,7 @@ usb_control(ifd_device_t *dev, void *data, size_t len)
 				cmsg->requesttype,
 				cmsg->request,
 				cmsg->len);
-		if (!(cmsg->requesttype & 0x80))
+		if (!(cmsg->requesttype & 0x80) && cmsg->len)
 			ct_debug("send %s", ct_hexdump(cmsg->data, cmsg->len));
 	}
 
