@@ -1,8 +1,13 @@
-EXTRA_DIST = ANNOUNCE LICENSE README bootstrap
+SUBDIRS = . aclocal doc etc include src
 
-MAINTAINERCLEANFILES = configure Makefile.in aclocal.m4
-DISTCLEANFILES = config.log config.status
+EXTRA_DIST = ANNOUNCE LICENSE README bootstrap depcomp
 
-SUBDIRS = tools doc etc include src
+MAINTAINERCLEANFILES = \
+	Makefile.in config.h.in configure \
+	install-sh ltmain.sh missing mkinstalldirs \
+	compile depcomp config.log config.status \
+	config.guess config.sub acinclude.m4 aclocal.m4
 
-AUTOMAKE_OPTIONS=foreign
+DEPCLEANFILES = config.log configure
+
+AUTOMAKE_OPTIONS = foreign

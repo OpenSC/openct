@@ -1,9 +1,14 @@
-AC_INIT(src/ifd/init.c)
-AC_CONFIG_AUX_DIR(tools)
-AM_INIT_AUTOMAKE(openct, CVS)
-AM_CONFIG_HEADER(include/config.h)
+dnl -*- mode: m4; -*-
+dnl Process this file with autoconf to produce a configure script.
 
-AM_PROG_LIBTOOL
+# Require autoconf 2.52
+AC_PREREQ(2.52)
+
+AC_INIT(LICENSE)
+AM_INIT_AUTOMAKE(openct, CVS)
+AM_CONFIG_HEADER(config.h)
+
+AC_CONFIG_SRCDIR(src/ifd/ifdhandler.c)
 
 AC_CANONICAL_HOST
 case "$host" in
@@ -14,6 +19,21 @@ case "$host" in
 				[#include <linux/usbdevice_fs.h>])
 	;;
 esac
+
+dnl Checks for programs.
+AC_PROG_CPP
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+AM_PROG_LEX
+AC_PATH_PROG(TEST_MINUS_S_SH, bash)
+AC_PATH_PROG(TEST_MINUS_S_SH, ksh)
+AC_PATH_PROG(TEST_MINUS_S_SH, sh)
+
+dnl Add libtool support.
+AM_PROG_LIBTOOL
+dnl Automatically update the libtool script if it becomes out-of-date.
+#AC_SUBST(LIBTOOL_DEPS)
 
 PCSC_MSG=no
 pcsc_path=/usr
@@ -87,7 +107,7 @@ AC_CHECK_LIB(usb, usb_init,
 
 AC_OUTPUT([
 Makefile
-tools/Makefile
+aclocal/Makefile
 doc/Makefile
 etc/Makefile
 include/Makefile
