@@ -251,7 +251,7 @@ list_devices(int argc, char **argv)
 
 	if (!(clnt = ria_connect(opt_server_port)))
 		exit(1);
-	rc = ria_command(clnt, RIA_MGR_LIST, NULL, 0, buffer, sizeof(buffer));
+	rc = ria_command(clnt, RIA_MGR_LIST, NULL, 0, buffer, sizeof(buffer), -1);
 	if (rc < 0) {
 		ct_error("Failed to list exported devices: %s",
 				ct_strerror(rc));
