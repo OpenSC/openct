@@ -31,4 +31,4 @@ libifd.a: $(addprefix .objs/,$(OBJS))
 	$(CC) $(CFLAGS) -c $< -o $@
 
 print-atr: print-atr.o $(LIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o -L. -lifd -ldl
+	$(CC) $(LDFLAGS) -o $@ $@.o -L. -lifd -ldl -lusb
