@@ -5,7 +5,7 @@
  */
 
 #include <stdlib.h>
-#include <openct/core.h>
+#include <openct/ifd.h>
 #include <openct/buffer.h>
 #include <openct/logging.h>
 #include <openct/conf.h>
@@ -13,13 +13,12 @@
 #include "ctapi.h"
 
 static int	ifd_ctapi_control(ifd_reader_t *, ifd_apdu_t *);
-static int	ifd_ctapi_reset(ifd_reader_t *,
-			ifd_iso_apdu_t *, ct_buf_t *,
-			time_t, const char *);
-static int	ifd_ctapi_request_icc(ifd_reader_t *,
-			ifd_iso_apdu_t *, ct_buf_t *);
-static int	ifd_ctapi_status(ifd_reader_t *,
-			ifd_iso_apdu_t *, ct_buf_t *);
+static int	ifd_ctapi_reset(ifd_reader_t *, ifd_iso_apdu_t *,
+			ct_buf_t *, time_t, const char *);
+static int	ifd_ctapi_request_icc(ifd_reader_t *, ifd_iso_apdu_t *,
+			ct_buf_t *, ct_buf_t *);
+static int	ifd_ctapi_status(ifd_reader_t *, ifd_iso_apdu_t *,
+			ct_buf_t *);
 static int	ifd_ctapi_error(ct_buf_t *, unsigned int);
 static int	ifd_ctapi_put_sw(ct_buf_t *, unsigned int);
 
@@ -124,17 +123,18 @@ int
 ifd_ctapi_control(ifd_reader_t *reader, ifd_apdu_t *apdu)
 {
 	ifd_iso_apdu_t	iso;
-	ct_buf_t	rbuf;
+	ct_buf_t	sbuf, rbuf;
 	int		rc;
 
 	if (apdu->rcv_len < 2)
 		return ERR_INVALID;
 
-	if (ifd_apdu_to_iso(apdu, &iso) < 0) {
+	if (ifd_apdu_to_iso(apdu->rcv_buf, apdu->rcv_len, &iso) < 0) {
 		ct_error("Unable to parse CTBCS APDU");
 		return ERR_INVALID;
 	}
 
+	ct_buf_set(&sbuf, apdu->snd_buf, apdu->snd_len);
 	ct_buf_init(&rbuf, apdu->rcv_buf, apdu->rcv_len);
 
 	if (iso.cla != CTBCS_CLA) {
@@ -148,7 +148,7 @@ ifd_ctapi_control(ifd_reader_t *reader, ifd_apdu_t *apdu)
 		rc = ifd_ctapi_reset(reader, &iso, &rbuf, 0, NULL);
 		break;
 	case CTBCS_INS_REQUEST_ICC:
-		rc = ifd_ctapi_request_icc(reader, &iso, &rbuf);
+		rc = ifd_ctapi_request_icc(reader, &iso, &sbuf, &rbuf);
 		break;
 	case CTBCS_INS_STATUS:
 		rc = ifd_ctapi_status(reader, &iso, &rbuf);
@@ -172,10 +172,9 @@ out:	apdu->rcv_len = ct_buf_avail(&rbuf);
  * Request ICC
  */
 static int
-ifd_ctapi_request_icc(ifd_reader_t *reader,
-		ifd_iso_apdu_t *iso, ct_buf_t *rbuf)
+ifd_ctapi_request_icc(ifd_reader_t *reader, ifd_iso_apdu_t *iso,
+		ct_buf_t *sbuf, ct_buf_t *rbuf)
 {
-	ct_buf_t	sbuf;
 	time_t		timeout = 0;
 	char		msgbuf[256], *message;
 
@@ -194,26 +193,26 @@ ifd_ctapi_request_icc(ifd_reader_t *reader,
 		return ifd_ctapi_error(rbuf, CTBCS_SW_BAD_PARAMS);
 	}
 
-	ct_buf_set(&sbuf, iso->snd_buf, iso->lc);
-	while (ct_buf_avail(&sbuf)) {
+	/* XXX use ct_tlv_* functions */
+	while (ct_buf_avail(sbuf)) {
 		unsigned char	type, len, val;
 
-		if (ct_buf_get(&sbuf, &type, 1) < 0
-		 || ct_buf_get(&sbuf, &len, 1) < 0
-		 || ct_buf_avail(&sbuf) < len)
+		if (ct_buf_get(sbuf, &type, 1) < 0
+		 || ct_buf_get(sbuf, &len, 1) < 0
+		 || ct_buf_avail(sbuf) < len)
 			goto bad_length;
 
 		if (type == 0x50) {
-			ct_buf_get(&sbuf, msgbuf, len);
+			ct_buf_get(sbuf, msgbuf, len);
 			msgbuf[len] = '\0';
 		} else if (type == 0x80) {
 			if (len != 1)
 				goto bad_length;
-			ct_buf_get(&sbuf, &val, 1);
+			ct_buf_get(sbuf, &val, 1);
 			timeout = val;
 		} else {
 			/* Ignore unknown tag */
-			ct_buf_get(&sbuf, NULL, len);
+			ct_buf_get(sbuf, NULL, len);
 		}
 	}
 
