@@ -66,11 +66,13 @@ AC_CHECK_LIB(dl, dlopen,
 	     [LIBDL="$LIBDL -ldl" ac_cv_func_dlopen_ldl=yes],
 	     ac_cv_func_dlopen_ldl=no)
 
+USB_MSG=no
 AC_SUBST(LIBUSB)
 AC_CHECK_LIB(usb, usb_init,
 	[
 	      	LIBUSB="$LIBUSB -lusb"
 		AC_DEFINE(HAVE_LIBUSB,1, [Libusb is available])
+		USB_MSG=yes
 	])
 
 AC_OUTPUT([
@@ -107,4 +109,12 @@ echo "Libraries:           ${LIBS}"
 
 echo ""
 echo "PC/SC support:       ${PCSC_MSG}"
+echo "Libusb used:         ${USB_MSG}"
 
+if test "${USB_MSG}" != "yes"
+then
+	echo "without libusb coldplugging will not work."
+	echo "to use usb devices, your hotplugging needs to be"
+	echo "configured and you need to plug in any device "
+	echo "after the system has started (i.e. the init script ran)"
+fi
