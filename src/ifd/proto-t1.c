@@ -389,6 +389,9 @@ t1_resynchronize(ifd_protocol_t *p, int nad)
 	unsigned char	block[4];
 	unsigned int	retries = 3;
 
+	if (p->reader && p->reader->device)
+		ifd_device_flush(p->reader->device);
+
 	while (retries--) {
 		t1->ns = 0;
 		t1->nr = 0;
