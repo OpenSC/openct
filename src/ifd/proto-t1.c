@@ -200,7 +200,6 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 	if (t1->state == DEAD)
 		return -1;
 
-	t1->state = SENDING;
 	retries = t1->retries;
 	resyncs = 3;
 
@@ -208,7 +207,11 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 	ct_buf_set(&sbuf, (void *) snd_buf, snd_len);
 	ct_buf_init(&rbuf, rcv_buf, rcv_len);
 
+	if (t1->state == RESYNCH)
+		goto resync;
+
 	/* Send the first block */
+	t1->state = SENDING;
 	slen = t1_build(t1, sdata, dad, T1_I_BLOCK, &sbuf, &last_send);
 
 	while (1) {
