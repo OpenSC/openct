@@ -6,5 +6,5 @@ LIBADD=-lifd
 
 lib_LTLIBRARIES=openct-ctapi.la
 
-ifd_ctapi_la_SOURCES = ctapi.c ctapi.h
-ifd_ctapi_la_LDFLAGS = -module -avoid-version
+openct_ctapi_la_SOURCES = ctapi.c ctapi.h
+openct_ctapi_la_LDFLAGS = -module -avoid-version

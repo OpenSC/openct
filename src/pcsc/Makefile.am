@@ -7,6 +7,6 @@ EXTRA_DIST= pcsc.c
 if HAVE_PCSCLITE
 lib_LTLIBRARIES=openct-ifd.la
 
-ifdhandler_la_SOURCES= pcsc.c ifdhandler.h
-ifdhandler_la_LDFLAGS=-module -avoid-version
+openct_ifd_la_SOURCES= pcsc.c ifdhandler.h
+openct_ifd_la_LDFLAGS=-module -avoid-version
 endif

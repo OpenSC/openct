@@ -15,8 +15,5 @@ libifd_la_SOURCES= apdu.c checksum.c conf.c confparse.c device.c driver.c \
 libifd_la_LIBADD= -L$(top_builddir)/src/ct -lopenct -ldl -lusb
 libifd_la_LDFLAGS= -versioninfo 0:0
 
-print_atr_SOURCES = print-atr.c
-print_atr_LDADD = -lifd
-
 ifdhandler_SOURCES = ifdhandler.c ifdhandler.h
 ifdhandler_LDADD = -lifd
