@@ -5,13 +5,14 @@ LIBS	= libifd.a libifd.so
 APPS	= print-atr
 DRIVERS	= etoken.c kaan.c towitoko.c
 OBJS	= init.o manager.o device.o reader.o driver.o hotplug.o \
-          modules.o conf.o \
+          modules.o confparse.o \
 	  protocol.o proto-t0.o proto-t1.o proto-trans.o \
 	  serial.o usb.o \
 	  $(DRIVERS:.c=.o) \
-	  apdu.o checksum.o buffer.o error.o utils.o \
+	  apdu.o checksum.o utils.o \
 	  $(SYSDEP)
 SYSDEP	= linux.o
+LINK	= -L../../lib -lcardreader -ldl -lusb
 
 all:: $(LIBS) $(APPS)
 
@@ -23,7 +24,8 @@ libifd.a: $(addprefix .objs/,$(OBJS))
 	ranlib $@
 
 libifd.so: $(addprefix .sobjs/,$(OBJS))
-	$(CC) -shared -o $@ $(addprefix .sobjs/,$(OBJS)) -ldl -lusb
+	$(CC) -shared -o $@ $(addprefix .sobjs/,$(OBJS)) $(LINK)
+	ln -sf $$PWD/$@ ../../lib/$@
 
 .objs/%.o: %.c
 	@mkdir -p .objs
@@ -34,4 +36,4 @@ libifd.so: $(addprefix .sobjs/,$(OBJS))
 	$(CC) -fPIC $(CFLAGS) -c $< -o $@
 
 print-atr: print-atr.o $(LIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o -L. -lifd
+	$(CC) $(LDFLAGS) -o $@ $@.o -L. -lifd $(LINK)

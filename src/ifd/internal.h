@@ -8,12 +8,12 @@
 #define IFD_INTERNAL_H
 
 #include "core.h"
-#include "conf.h"
 #include "device.h"
 #include "driver.h"
-#include "logging.h"
-#include "error.h"
-#include "buffer.h"
+#include <ifd/conf.h>
+#include <ifd/logging.h>
+#include <ifd/error.h>
+#include <ifd/buffer.h>
 
 struct ifd_device {
 	char *			name;

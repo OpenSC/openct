@@ -10,13 +10,8 @@
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
-#include "internal.h"
 
-struct ifd_config	ifd_config = {
-	.debug		= 0,
-	.autoload	= 1,
-	.hotplug_scan_on_startup = 1,
-};
+#include "internal.h"
 
 static const char *	config_filename = NULL;
 static ifd_buf_t	config_buf;
