@@ -12,6 +12,7 @@
 #include <openct/tlv.h>
 #include <openct/error.h>
 #include "protocol.h"
+#include "config.h"
 
 static void	ct_args_int(ct_buf_t *, ifd_tag_t, unsigned int);
 static void	ct_args_string(ct_buf_t *, ifd_tag_t, const char *);
@@ -26,7 +27,7 @@ ct_reader_connect(unsigned int reader)
 	char		path[128];
 
 	snprintf(path, sizeof(path), "%s/%u",
-		ct_config.socket_dir, reader);
+			OPENCT_SOCKET_PATH, reader);
 
 	if (!(sock = ct_socket_new(512)))
 		return NULL;
