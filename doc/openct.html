@@ -345,16 +345,32 @@ $ chmod 755 /var/run/openct
         system to use smart card readers available via OpenCT. For
         details and a more restricitive setup, please consult the
         chapter on Security.</p>
-        <p>Second you need to install the OpenCT init.d script, and
-        make sure it is executed with "start" on every boot and
-        with "stop" on every shutdown. To do this symlink the
-        script to 
-        <tt class="filename">/etc/init.d/openct</tt>:</p>
+        <p>Second you need a config file 
+        <tt class="filename">/etc/openct.conf</tt>. Copy the file
+        from the source code to 
+        <tt class="filename">/etc</tt>:</p>
         <table border="0" bgcolor="#E0E0E0">
           <tr>
             <td>
               <pre class="screen">
-$ ln -s /path/to/openct/etc/init.d/init-script /etc/init.d/openct
+$ cp etc/openct.conf /etc/
+</pre>
+            </td>
+          </tr>
+        </table>
+        <p></p>
+        <p>You need to edit the config file for any serial reader
+        you might have. If you are only using usb tokens, the
+        default file is already fine.</p>
+        <p>Third you need an init script to perform some operations
+        on startip and shutdown. OpenCT ships with an init script
+        that should work at least on debian systems. Install the
+        script by copying it from the source directory:</p>
+        <table border="0" bgcolor="#E0E0E0">
+          <tr>
+            <td>
+              <pre class="screen">
+$ cp etc/init-script /etc/init.d/openct
 </pre>
             </td>
           </tr>

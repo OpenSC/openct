@@ -242,15 +242,33 @@ $ chmod 755 /var/run/openct
 		</para>
 
 		<para>
-			Second you need to install the OpenCT init.d script,
-			and make sure it is executed with "start" on every
-			boot and with "stop" on every shutdown. To do this
-			symlink the script to
-			<filename>/etc/init.d/openct</filename>:
+			Second you need a config file
+			<filename>/etc/openct.conf</filename>.
+			Copy the file from the source code to 
+			<filename>/etc</filename>:
 			<screen>
-$ ln -s /path/to/openct/etc/init.d/init-script /etc/init.d/openct
+$ cp etc/openct.conf /etc/
 			</screen>
 		</para>
+
+		<para>
+			You need to edit the config file for any serial
+			reader you might have. If you are only using
+			usb tokens, the default file is already fine.
+		</para>
+
+		<para>
+			Third you need an init script to perform some
+			operations on startip and shutdown. OpenCT
+			ships with an init script that should work
+			at least on debian systems.
+			Install the script by copying it from the
+			source directory:
+			<screen>
+$ cp etc/init-script /etc/init.d/openct
+			</screen>
+		</para>
+
 
 		<para>
 			Now configure your runlevels to start the init
