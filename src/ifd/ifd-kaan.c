@@ -122,36 +122,68 @@ kaan_open(ifd_reader_t *reader, const char *device_name)
 int
 kaan_reset_ct(ifd_reader_t *reader)
 {
-	unsigned char	cmd[] = { 0x20, 0x10, 0x00, 0x00 };
-	unsigned char	sw[2];
+	unsigned char	cmd1[] = { 0x20, 0x10, 0x00, 0x00 };
+	unsigned char	cmd2[] = { 0x20, 0x11, 0x00, 0x00 };
+	unsigned char	resp[2];
 	int		rc;
+	unsigned short	sw;
 
-	rc = kaan_apdu_xcv(reader, cmd, sizeof(cmd), sw, sizeof(sw), 0);
-	return kaan_check_sw("kaan_reset_ct", sw, rc);
+	if ((rc = kaan_apdu_xcv(reader, cmd1, sizeof(cmd1), resp, sizeof(resp), 0)) < 0) {
+		ct_error("kaan_reset_ct: %s", ct_strerror(rc));
+		return rc;
+	}
+	ifd_debug(1, "kaan_reset_ct: rc=%d\n", rc);
+	if ((rc = kaan_get_sw(resp, rc, &sw)) < 0)
+		return rc;
+	if (sw == 0x6b00) {
+		/* Reset for older readers */
+		if ((rc = kaan_apdu_xcv(reader, cmd2, sizeof(cmd2), resp, sizeof(resp), 0)) < 0) {
+			ct_error("kaan_reset_ct: %s", ct_strerror(rc));
+			return rc;
+		}
+		if ((rc = kaan_get_sw(resp, rc, &sw)) < 0)
+			return rc;
+	}
+	if (sw != 0x9000) {
+		ct_error("kaan_reset_ct: failure, status code %04X",
+				sw);
+		return IFD_ERROR_COMM_ERROR;
+	}
+	return rc;
 }
 
 /*
  * Get functional units
  */
-int
+static int
 kaan_get_units(ifd_reader_t *reader)
 {
 	unsigned char	cmd[] = { 0x20, 0x13, 0x00, 0x81, 0x00 };
 	unsigned char	buffer[16], *units;
 	int		rc, n;
+	unsigned short	sw;
 
-	rc = kaan_apdu_xcv(reader, cmd, sizeof(cmd), buffer, sizeof(buffer), 0);
-	if (rc < 0 || (rc = kaan_check_sw("kaan_get_units", buffer, rc)) < 0)
+	if ((rc = kaan_apdu_xcv(reader, cmd, sizeof(cmd), buffer, sizeof(buffer), 0)) < 0) {
+		ct_error("kaan_get_units: %s", ct_strerror(rc));
 		return rc;
-
+	}
+	if ((rc = kaan_get_sw(buffer, rc, &sw)) < 0)
+		return rc;
+	if (sw != 0x9000) {
+		reader->slot[0].dad = 0x12;
+		return 0;
+	}
 	if ((n = kaan_get_tlv(buffer, rc, 0x81, &units)) < 0)
 		return 0;
+
+	reader->slot[0].dad = 0x02;
 
 	while (n--) {
 		switch (units[n]) {
 		case 0x01: /* ICC1 */
 			break;
 		case 0x02: /* ICC2 */
+			reader->slot[1].dad = 0x32;
 			reader->nslots = 2;
 			break;
 		case 0x40: /* Display */
@@ -219,10 +251,15 @@ kaan_card_status(ifd_reader_t *reader, int slot, int *status)
 	rc = __kaan_apdu_xcv(reader, buffer, 5, buffer, sizeof(buffer), 0, 0);
 	if ((rc = kaan_check_sw("kaan_card_status", buffer, rc)) < 0)
 		return rc;
-	if ((n = kaan_get_tlv(buffer, rc, 0x80, &byte)) >= 0) {
-		if (*byte & 0x01)
-			*status |= IFD_CARD_PRESENT;
+	if (buffer[0] == 0x80) {
+		if ((n = kaan_get_tlv(buffer, rc, 0x80, &byte)) >= 0) {
+			if (*byte & 0x01)
+				*status |= IFD_CARD_PRESENT;
+		}
 	}
+	else /* older implementations may return only value part */
+		if (buffer[0] & 0x01)
+			*status |= IFD_CARD_PRESENT;
 	return 0;
 }
 
@@ -305,12 +342,12 @@ kaan_do_reset(ifd_reader_t *reader, int slot,
  * Reset card and get ATR
  */
 static int
-kaan_card_reset(ifd_reader_t *reader, int slot, void *result, size_t size)
+kaan_card_reset(ifd_reader_t *reader, int nslot, void *result, size_t size)
 {
-	unsigned char	cmd[5] = { 0x20, 0x10, slot+1, 0x01, 0x00 };
+	unsigned char	cmd[5] = { 0x20, 0x10, nslot+1, 0x01, 0x00 };
 
 	ifd_debug(1, "called.");
-	return kaan_do_reset(reader, slot, cmd, 5, result, size, 0);
+	return kaan_do_reset(reader, nslot, cmd, 5, result, size, 0);
 }
 
 /*
