@@ -1,6 +1,6 @@
 NEWS for OpenCT -- History of user visible changes
 
-New in 0.5.0; 2003-11-xx; Antti Tapaninen:
+New in 0.5.0; 2003-11-24; Antti Tapaninen:
 * Initial support for synchronous ICCs
 * Improved support for egate, kaan and towitoko drivers
 * Initial support for Siemens B1 (DTAG/T-TeleSec),
