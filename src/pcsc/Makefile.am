@@ -21,3 +21,6 @@ noinst_HEADERS = ifdhandler.h
 install-exec-local: install-libLTLIBRARIES
 	-${top_srcdir}/macos/libtool-bundle -e $(top_srcdir)/etc/Info.plist \
 	$(DESTDIR)$(libdir)/openct-ifd.so $(DESTDIR)$(bundledir)/
+
+uninstall-local: uninstall-libLTLIBRARIES
+	rm -rf $(DESTDIR)$(bundledir)/openct-ifd.bundle/
