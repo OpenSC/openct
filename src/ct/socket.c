@@ -20,6 +20,7 @@
 #include <openct/logging.h>
 #include <openct/socket.h>
 #include <openct/pathnames.h>
+#include <openct/error.h>
 
 #define SOCK_BUFSIZ	512
 
@@ -214,19 +215,19 @@ ct_socket_call(ct_socket_t *sock, ct_buf_t *args, ct_buf_t *resp)
 	header.dest  = 0;
 
 	/* Put everything into send buffer and transmit */
-	if (ct_socket_put_packet(sock, &header, args) < 0
-	 || ct_socket_flsbuf(sock, 1) < 0)
-		return -1;
+	if ((rc = ct_socket_put_packet(sock, &header, args)) < 0
+	 || (rc = ct_socket_flsbuf(sock, 1)) < 0)
+		return rc;
 
 	/* Loop until we receive a complete packet with the
 	 * right xid in it */
 	do {
-		if (ct_socket_filbuf(sock) < 0)
+		if ((rc = ct_socket_filbuf(sock)) < 0)
 			return -1;
 
 		ct_buf_clear(resp);
 		if ((rc = ct_socket_get_packet(sock, &header, &data)) < 0)
-			return -1;
+			return rc;
 	}  while (rc == 0 || header.xid != xid);
 
 	if (header.error)
@@ -366,13 +367,18 @@ ct_socket_filbuf(ct_socket_t *sock)
 
 /*
  * Flush data from buffer to socket
- * FIXME - ignore SIGPIPE while writing
  */
 int
 ct_socket_flsbuf(ct_socket_t *sock, int all)
 {
+	struct sigaction act;
 	ct_buf_t	*bp = &sock->buf;
-	int		n;
+	int		n, rc = 0;
+
+	/* Ignore SIGPIPE while writing to socket */
+	memset(&act, 0, sizeof(act));
+	act.sa_handler = SIG_IGN;
+	sigaction(SIGPIPE, &act, &act);
 
 	do {
 		if (!(n = ct_buf_avail(bp))) {
@@ -381,14 +387,19 @@ ct_socket_flsbuf(ct_socket_t *sock, int all)
 		}
 		n = write(sock->fd, ct_buf_head(bp), n);
 		if (n < 0) {
-			ct_error("socket send error: %m");
+			if (errno != EPIPE)
+				ct_error("socket send error: %m");
+			rc = IFD_ERROR_NOT_CONNECTED;
 			break;
 		}
 		/* Advance head pointer */
 		ct_buf_get(bp, NULL, n);
 	} while (all);
 
-	if (all == 2) {
+	/* Restore old signal handler */
+	sigaction(SIGPIPE, &act, &act);
+
+	if (rc >= 0 && all == 2) {
 		/* Shutdown socket for write */
 		if (shutdown(sock->fd, 1) < 0) {
 			ct_error("socket shutdown error: %m");
@@ -396,7 +407,7 @@ ct_socket_flsbuf(ct_socket_t *sock, int all)
 		}
 	}
 
-	return n;
+	return rc;
 }
 
 /*
@@ -457,14 +468,19 @@ ct_socket_recv(ct_socket_t *sock, header_t *hdr, ct_buf_t *resp)
 int
 ct_socket_write(ct_socket_t *sock, void *ptr, size_t len)
 {
+	struct sigaction act;
 	unsigned int	count = 0;
 	int		rc;
 
 	if (sock->fd < 0)
 		return -1;
 
+	/* Ignore SIGPIPE while writing to socket */
+	memset(&act, 0, sizeof(act));
+	act.sa_handler = SIG_IGN;
+	sigaction(SIGPIPE, &act, &act);
+
 	while (count < len) {
-		/* XXX block SIGPIPE */
 		rc = write(sock->fd, ptr, len);
 		if (rc < 0) {
 			ct_error("send error: %m");
@@ -474,7 +490,10 @@ ct_socket_write(ct_socket_t *sock, void *ptr, size_t len)
 		count += rc;
 	}
 	rc = count;
-done:	return rc;
+
+done:	/* Restore old signal handler */
+	sigaction(SIGPIPE, &act, &act);
+	return rc;
 }
 
 int
