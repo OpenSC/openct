@@ -57,5 +57,7 @@ extern int		ct_socket_write_nb(ct_socket_t *, void *, size_t);
 extern int		ct_socket_read(ct_socket_t *, void *, size_t);
 extern int		ct_socket_read_nb(ct_socket_t *, void *, size_t);
 extern void		ct_socket_server_loop(ct_socket_t *);
+extern void		ct_socket_link(ct_socket_t *, ct_socket_t *);
+extern void		ct_socket_unlink(ct_socket_t *);
 
 #endif /* IFDD_SOCKET_H */
