@@ -62,7 +62,11 @@
 				 <email>aj@dungeon.inka.de</email>
 				 (the ikey3k and eutron driver, too,
 				 and most of the documentation)
-			</listitem>
+			 </listitem>
+
+			 <listitem>
+				 Markus Friedl helped with the *BSD port.
+			 </listitem>
 		</orderedlist>
 
 		<para>
