@@ -17,6 +17,7 @@ extern struct ifd_config {
 	const char *		modules_dir;
 	const char *		driver_modules_dir;
 	const char *		protocol_modules_dir;
+	const char *		socket_dir;
 } ifd_config;
 
 extern int		ifd_config_parse(const char *);

@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "internal.h"
+#include <ifd/buffer.h>
 
 void
 ifd_buf_init(ifd_buf_t *bp, void *mem, size_t len)
@@ -50,6 +50,14 @@ ifd_buf_put(ifd_buf_t *bp, const void *mem, size_t len)
 		memcpy(bp->base + bp->tail, mem, len);
 	bp->tail += len;
 	return len;
+}
+
+int
+ifd_buf_putc(ifd_buf_t *bp, int byte)
+{
+	unsigned char	c = byte;
+
+	return ifd_buf_put(bp, &c, 1);
 }
 
 unsigned int

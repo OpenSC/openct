@@ -1,5 +1,10 @@
 
-SUBDIRS	= libifd ctapi pcsc
+SUBDIRS	= \
+	libcardreader \
+	libifd \
+	ctapi \
+	pcsc \
+	ifdd
 
 all clean distclean:
 	for dir in $(SUBDIRS); do \

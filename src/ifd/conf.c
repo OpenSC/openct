@@ -10,14 +10,20 @@
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
-#include "internal.h"
+
+#include <ifd/conf.h>
+#include <ifd/config.h>
+#include <ifd/buffer.h>
 
 struct ifd_config	ifd_config = {
 	.debug		= 0,
 	.autoload	= 1,
 	.hotplug_scan_on_startup = 1,
+	.modules_dir	= IFD_MODULES_PATH,
+	.socket_dir	= IFD_SOCKET_PATH,
 };
 
+#if 0
 static const char *	config_filename = NULL;
 static ifd_buf_t	config_buf;
 static int		config_fd = -1;
@@ -43,7 +49,7 @@ ifd_config_parse(const char *filename)
 	int	rc;
 
 	if ((config_filename = filename) == NULL)
-		config_filename = "/etc/ifd.conf";
+		config_filename = IFD_CONFIG_PATH;
 
 	/* If config file doesn't exist, quietly sneak out of here */
 	if ((config_fd = open(config_filename, O_RDONLY)) < 0) {
@@ -314,3 +320,4 @@ err_unexpected_keyword(const char *kwd, const char *expect)
 	return -1;
 }
 
+#endif

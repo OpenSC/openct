@@ -17,6 +17,7 @@ extern void		ifd_buf_set(ifd_buf_t *, void *, size_t);
 extern void		ifd_buf_clear(ifd_buf_t *);
 extern int		ifd_buf_get(ifd_buf_t *, void *, size_t);
 extern int		ifd_buf_put(ifd_buf_t *, const void *, size_t);
+extern int		ifd_buf_putc(ifd_buf_t *, int);
 extern unsigned int	ifd_buf_avail(ifd_buf_t *);
 extern unsigned int	ifd_buf_tailroom(ifd_buf_t *);
 extern unsigned int	ifd_buf_size(ifd_buf_t *);

@@ -6,7 +6,9 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-#include "internal.h"
+#include <ifd/error.h>
+#include <ifd/logging.h>
+#include <ifd/conf.h>
 
 void
 ifd_error(const char *fmt, ...)

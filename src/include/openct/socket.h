@@ -18,6 +18,7 @@ typedef struct ifd_socket {
 	/* events to poll for */
 	int		events;
 
+	void *		user_data;
 	int		(*recv)(struct ifd_socket *);
 	int		(*send)(struct ifd_socket *);
 
