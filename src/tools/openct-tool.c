@@ -183,7 +183,7 @@ usage(int exval)
 	fprintf(stderr,
 "usage: openct-tool [-d] [-f configfile] [-r reader] command ...\n"
 "  -d   enable debugging; repeat to increase verbosity\n"
-"  -f   specify config file (default /etc/ifd.conf\n"
+"  -f   specify config file (default %s)\n"
 "  -r   specify index of reader to use\n"
 "  -h   display this message\n"
 "\n"
@@ -192,7 +192,7 @@ usage(int exval)
 " atr   print ATR of card in selected reader\n"
 " wait  wait for card to be inserted\n"
 " rwait wait for reader to attached\n"
-" mf    try to select main folder of card\n"
+" mf    try to select main folder of card\n", OPENCT_CONF_PATH
 );
 	exit(exval);
 }
