@@ -299,8 +299,8 @@ ifdhandler_recv(ct_socket_t *sock)
 	/* If request is incomplete, go back
 	 * and wait for more
 	 * XXX add timeout? */
-	if (ct_socket_get_packet(sock, &header, &args) < 0)
-		return 0;
+	if ((rc = ct_socket_get_packet(sock, &header, &args)) < 1)
+		return rc;
 
 	ct_buf_init(&resp, buffer, sizeof(buffer));
 
