@@ -1,0 +1,5 @@
+#!/bin/sh
+
+test "$ACTION" == "add" || exit 0
+
+/usr/sbin/openct-control attach $DEVICE $1:$PRODUCT
