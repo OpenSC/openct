@@ -158,5 +158,6 @@ extern long		ifd_time_elapsed(struct timeval *);
 extern void		ifd_protocol_register(struct ifd_protocol_ops *);
 extern int		ifd_sync_detect_icc(ifd_reader_t *, int,
 					void *, size_t);
+extern int		ifd_sync_probe_memory_size(ifd_protocol_t *p, int slot);
 
 #endif /* IFD_INTERNAL_H */
