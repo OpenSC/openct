@@ -1,7 +1,7 @@
 DEBUG	= -Wall -g
 CFLAGS	= -I../../include $(DEBUG)
 LDFLAGS	= $(DEBUG)
-APPS	= openct-tool openct-control
+APPS	= openct-tool
 OBJS	= 
 BINDIR	= $(DESTDIR)/usr/bin
 SBINDIR	= $(DESTDIR)/usr/sbin
@@ -20,9 +20,5 @@ install:
 	$(CC) $(CFLAGS) -c $< -o $@
 
 openct-tool: openct-tool.o $(OBJS)
-	$(CC) $(LDFLAGS) -o $@ $@.o $(OBJS) \
-		-L../../lib -lopenct
-
-openct-control: openct-control.o $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $@.o $(OBJS) \
 		-L../../lib -lopenct
