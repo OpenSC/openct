@@ -14,7 +14,7 @@ ifdhandler = SBINDIR/ifdhandler;
 
 #reader towitoko {
 #	driver = towitoko;
-#	device = serial:/dev/ttyS0
+#	device = serial:/dev/ttyS0;
 #};
 
 #
