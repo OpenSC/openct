@@ -57,7 +57,7 @@ static unsigned short crctab[256] = {
  * Returns LRC of data.
  */
 unsigned int
-csum_lrc_compute(const u_int8_t *in, size_t len, unsigned char *rc)
+csum_lrc_compute(const uint8_t *in, size_t len, unsigned char *rc)
 {
 	unsigned char	lrc = 0;
 
@@ -73,7 +73,7 @@ csum_lrc_compute(const u_int8_t *in, size_t len, unsigned char *rc)
  * Compute CRC of data.
  */
 unsigned int
-csum_crc_compute(const u_int8_t * data, size_t len, unsigned char *rc)
+csum_crc_compute(const uint8_t * data, size_t len, unsigned char *rc)
 {
 	unsigned short v = 0xFFFF;
 

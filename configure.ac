@@ -131,6 +131,7 @@ dnl Checks for library functions.
 AC_FUNC_ERROR_AT_LINE
 AC_FUNC_STAT
 AC_FUNC_VPRINTF
+AC_CHECK_FUNCS([gettimeofday])
 
 dnl C Compiler features
 AC_C_INLINE
@@ -339,7 +340,7 @@ if (test x$enable_debug = xyes); then
 	AC_DEFINE(DEBUG, 1, [Enable debug messages.])
 fi
 
-CPPFLAGS="-I\${top_srcdir}/include $CPPFLAGS"
+CPPFLAGS="-I\${top_builddir}/include -I\${top_srcdir}/include $CPPFLAGS"
 AM_CONDITIONAL(HAVE_BUNDLES, test "x$with_bundles" = "xyes")
 
 openct_etc_path=`eval echo ${sysconfdir}` ; openct_etc_path=`eval echo ${openct_etc_path}`
@@ -358,11 +359,14 @@ AC_DEFINE_UNQUOTED(OPENCT_SOCKET_PATH, "$openct_socket_path", [socket path for l
 openct_status_path=`eval echo ${openct_socket_path}` ; openct_status_path=`eval echo ${openct_status_path}/status`
 AC_DEFINE_UNQUOTED(OPENCT_STATUS_PATH, "$openct_status_path", [status path for libopenct])
 
-openct_ifdhandler_path=`eval echo ${sbindir}` ; openct_ifdhandler_path=`eval echo ${openct_ifdhandler_path}/openct-ifdhandler`
+openct_ifdhandler_path=`eval echo ${sbindir}` ; openct_ifdhandler_path=`eval echo ${openct_ifdhandler_path}/ifdhandler`
 AC_DEFINE_UNQUOTED(OPENCT_IFDHANDLER_PATH, "$openct_ifdhandler_path", [ifdhandler path for libopenct])
 
 pkgdata=`eval echo ${datadir}/${PACKAGE}` ; pkgdata=`eval echo ${pkgdata}`
 AC_SUBST(pkgdata)
+
+sysincludedir="${exec_prefix}/include"
+AC_SUBST(sysincludedir)
 
 AC_OUTPUT([
 Makefile
@@ -380,6 +384,8 @@ src/ifd/Makefile
 src/pcsc/Makefile
 src/tools/Makefile
 ])
+
+AC_CREATE_STDINT_H(include/openct/types.h)
 
 echo ""
 echo "OpenCT has been configured with the following options"

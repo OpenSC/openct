@@ -8,6 +8,7 @@
 #define OPENCT_SOCKET_H
 
 #include <sys/types.h>
+#include <openct/types.h>
 #include <openct/buffer.h>
 
 typedef struct ct_socket {
@@ -32,10 +33,10 @@ typedef struct ct_socket {
 } ct_socket_t;
 
 typedef struct header {
-	u_int32_t       xid;
-	u_int32_t	dest;
+	uint32_t	xid;
+	uint32_t	dest;
 	int16_t		error;
-	u_int16_t       count;
+	uint16_t	count;
 } header_t;
 
 #define CT_SOCKET_BUFSIZ 4096
