@@ -17,6 +17,7 @@
 #define IFD_ERROR_LOCKED	-7
 #define IFD_ERROR_NOLOCK	-8
 #define IFD_ERROR_INVALID_ARG	-9
+#define IFD_ERROR_NO_MEMORY	-10
 
 /* for application/resource manager protocol */
 #define IFD_ERROR_INVALID_MSG	-100
