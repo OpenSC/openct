@@ -146,6 +146,7 @@ eg_transparent(ifd_reader_t *reader, int dad, const void *inbuffer, size_t inlen
      int rc,cmdlen;
      unsigned char stat;
      ifd_iso_apdu_t iso;
+     char cmdbuf[5];
 
      stat=eg_status(reader);
      if (stat != 0) {
@@ -155,12 +156,11 @@ eg_transparent(ifd_reader_t *reader, int dad, const void *inbuffer, size_t inlen
      }
      if (ifd_iso_apdu_parse(inbuffer, inlen, &iso) < 0) 
          return -1;
-     cmdlen=5;
-     if (inlen < 5)
-       cmdlen=4;
+     memset(cmdbuf,0,5);
+     memmove(cmdbuf, inbuffer, inlen < 5 ? inlen : 5);
      rc=eg_control(reader->device, 0x40, 0x80, 0, 0,
-                    (void *) inbuffer, cmdlen, -1);
-     if (rc != cmdlen)
+                    (void *) cmdbuf, 5, -1);
+     if (rc != 5)
           return -1;
      stat=eg_status(reader);
      if (inlen > 5 && stat == 0x10) {
