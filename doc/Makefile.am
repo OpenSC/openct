@@ -1,10 +1,9 @@
 MAINTAINERCLEANFILES=Makefile.in
 
-EXTRA_DIST = openct.xml openct.html
-
-STYLESHEET=/usr/share/sgml/docbook/stylesheet/xsl/nwalsh/xhtml/docbook.xsl
+EXTRA_DIST = openct.xml openct.xsl 
+noinst_DATA = openct.html openct.css
 
 %.html: %.xml
-	        xsltproc -o $@ $(STYLESHEET) $< 
+	        xsltproc -o $@ openct.xsl $< 
 		tidy -im -utf8 -xml $@ || true
 

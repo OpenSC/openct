@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<article ns="http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
-        <articleinfo>
+<book ns="http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+	<title>OpenCT Manual</title>
+	<bookinfo>
 		<author>
 			<firstname>Andreas</firstname>
 			<surname>Jellinghaus</surname>
 			<email>aj@dungeon.inka.de</email>
 		</author>
-		<title>OpenCT Manual</title>
-	</articleinfo>
+	</bookinfo>
 
 	<toc />
 
-	<section>
+	<chapter>
 		<title>About OpenCT</title>
 
 		<para>
@@ -25,9 +25,214 @@
 			use by applications.
 		</para>
 		
+	</chapter>
+
+	<chapter>
+		<title>Requirements</title>
+
+		<para>
+			To use OpenCT with smart card readers attached to
+			the serial port, you only need a kernel with
+			a working serial port, nothing special is required.
+		</para>
+
+		<para>
+			To use OpenCT with smart card readers attached
+			via USB you need a bit more: your kernel needs
+			to support USB and your kernel needs to support
+			the usb controller you are using. On most computers
+			the usb controller is part of the mainboard. If
+			your mainboard uses intel chips you need most
+			likely the "uhci" usb controller support, for
+			other vendors most likely the "ohci" controller support.
+		</para>
+
+		<para>
+			FIXME: I'd like to link to some USB howto with all
+			the details and more help. Is there such a HOWTO?
+		</para>
+
+		<para>
+			You also need to compile your kernel with support for
+			the USB device filesystem and mount the filesystem
+			to <filename>/proc/bus/usb</filename>. The kernel
+			option is CONFIG_USB_DEVICEFS, please turn it on.
+			To mount the filesystem, please edit your
+			<filename>/etc/fstab</filename>. For a linux kernel
+			2.4.* system, it should have a line
+			<screen>
+none	/proc/bus/usb	usbdevfs	defaults	0	0
+			</screen>
+			and for a linux kernel 2.5.* or 2.6.* system, it should have a line:
+			<screen>
+none	/proc/bus/usb	usbfs		defaults	0	0
+			</screen>
+		</para>
+
+		<para>
+			Run <prompt>mount -a </prompt> after editing the
+			file <filename>/etc/fstab</filename> for the changes
+			to take effect. You can also reboot. If you are using
+			sometimes linux kernels 2.4.* and sometimes
+			2.5.*/2.6.*, use the line for kernel 2.4.*. You will
+			get a warning, but it will still work.
+		</para>
+
+		<para>
+			Your kernel also needs to be compiled with hotplugging
+			support. The relevant kernel option is CONFIG_HOTPLUG.
+			You don't need any of the hardware adaptors.
+		</para>
+	</chapter>
+
+	<chapter>
+		<title>Installation</title>
+
+		<para>
+			First create the directory
+			<filename>/var/run/openct</filename> and set the
+			permissions. Do this with the commands:
+			<screen>
+$ mkdir /var/run/openct
+$ chmod 755 /var/run/openct
+			</screen>
+		</para>
+
+		<para>
+			These default permissions will allow everyone
+			on your system to use smart card readers
+			available via OpenCT. For details and a more
+			restricitive setup, please consult the chapter
+			on Security.
+		</para>
+
+		<para>
+			Second you need to install the OpenCT init.d script,
+			and make sure it is executed with "start" on every
+			boot and with "stop" on every shutdown. To do this
+			symlink the script to
+			<filename>/etc/init.d/openct</filename>:
+			<screen>
+$ ln -s /path/to/openct/etc/init.d/init-script /etc/init.d/openct
+			</screen>
+		</para>
+
+		<para>
+			Now configure your runlevels to start the init
+			script everytime the system boots, and to stop
+			the init script everytime the system shuts down.
+			Use whatever your distribution provides or a
+			gui tool like the kde runlevel editor.
+		</para>
+
+		<para>
+			Debian users can do this with a single command:
+			<screen>
+$ update-rc.d openct start 90 2 3 4 5 . stop 10 0 1 6 .
+			</screen>
+		</para>
+
+		<para>
+			Call the init script once with "start".
+			Or reboot. :-)
+			<screen>
+$ /etc/init.d/openct start
+			</screen>
+		</para>
+
+		<para>
+			And now the last task: if you want to use
+			usb readers or usb crypto tokens, you need
+			to configure the hotplug system to call
+			openct everytime there is a new smart
+			card reader or crypto token.
+		</para>
+
+		<section>
+			<title>Installation without hotplug utils</title>
+
+		<para>
+			This section applies, if your system does
+			not have hotplug utils installed. If this command
+			suceeds, go to the other section:
+			<screen>
+$ ls /sbin/hotplug
+			</screen>
+		</para>
+
+		<para>
+			If there is no such file, the installation
+			is very easy: 
+			<screen>
+ln -s /path/to/openct/sbin/hotplug.openct /sbin/hotplug
+			</screen>
+		</para>
+
+		<para>
+			Now attach some usb smart card reader or usb crypto
+			token. The kernel will start
+			<filename>/sbin/hotplug</filename>, and 
+			<prompt>openct-tool list</prompt>
+			should list the new reader.
+		</para>
 	</section>
 
 	<section>
+		<title>Installation with hotplug utils</title>
+
+		<para>
+			First the general instructions, then the debian
+			specific instructions. As usual debian does
+			everything a bit different. That doesn't mean
+			it is necessarily better or worse.
+		</para>
+
+		<para>
+			Edit <filename>/etc/hotplug/usb.usermap</filename>
+			and add these lines:
+			<screen>
+openct 0x0003 0x0973 0x0001 0x0000 0x0001 0xff 0x00 0x00 0xff 0x00 0x00 0x00000000
+openct 0x0003 0x0529 0x050c 0x0000 0x0001 0xff 0x00 0x00 0xff 0x00 0x00 0x00000000
+openct 0x0003 0x0529 0x0514 0x0000 0x0001 0xff 0x00 0x00 0xff 0x00 0x00 0x00000000
+openct 0x0003 0x076b 0x0596 0x0000 0x0001 0xff 0x00 0x00 0xff 0x00 0x00 0x00000000
+openct 0x0003 0x04b9 0x1300 0x0000 0x0001 0xff 0x00 0x00 0xff 0x00 0x00 0x00000000
+openct 0x0003 0x073d 0x0005 0x0020 0x0001 0xff 0x00 0x00 0xff 0x00 0x00 0x00000000
+			</screen>
+		</para>
+
+		<para>
+			Create the directory
+			<filename>/etc/hotplug/usb</filename> and add a symlink
+			to usbtoken:
+			<screen>
+$ mkdir /etc/hotplug/usb
+$ ln -s /path/to/opensc/sbin/hotplug.openct /etc/hotplug/usb/openct
+			</screen>
+		</para>
+	</section>
+
+	<section>
+<<<<<<< openct.xml
+		<title>Debugging</title>
+
+		<para>
+			Edit <filename>openct.conf</filename>
+			and set debug to 4.
+		</para>
+
+		<para>
+			If the problem is with some usb crypto token
+			(e.g. Aladdin eToken PRO), please grep for
+			usb_control - these are the lines I need
+			to see what is happening (or not working).
+		</para>
+
+	</section>
+
+	</chapter>
+
+	<chapter>
+=======
 		<title>Requirements</title>
 
 		<para>
@@ -86,6 +291,7 @@ none            /proc/bus/usb   usbfs   defaults                0       0
 	</section>
 
 	<section>
+>>>>>>> 1.2
 		<title>OpenCT files and tools</title>
 
 		<para>
@@ -318,9 +524,9 @@ lib/libifd.la  lib/libifd.so.0
 			</para>
 		</section>
 
-	</section>
+	</chapter>
 
-	<section>
+	<chapter>
 		<title>Using OpenCT as CT-API driver</title>
 
 		<para>
@@ -347,9 +553,9 @@ openct ifd-ctapi.so
 			static library <filename>lib/ifd-ctapi.a</filename>.
 			(This is completely untested.)
 		</para>
-	</section>
+	</chapter>
 
-	<section>
+	<chapter>
 		<title>Using OpenCT as IfdHandler</title>
 
 		<para>
@@ -370,9 +576,9 @@ openct ifdhandeler.so
 			</screen>
 		</para>
 
-	</section>
+	</chapter>
 
-	<section>
+	<chapter>
 		<title>Writing smart card applications using openct</title>
 
 		<para>
@@ -393,6 +599,150 @@ openct ifdhandeler.so
 		<para>
 			See the pkg-config man page for detailed information.
 		</para>
+<<<<<<< openct.xml
+	</chapter>
+
+	<chapter>
+		<title>Troubleshooting</title>
+
+		<para>
+			If something does not work, please join the OpenSC
+			mailing list and ask for help. For details on the
+			mailing list take a look at <ulink
+				url="http://www.opensc.org/" />
+		</para>
+
+		<para>
+			If you try to use a usb device, please try this:
+			Do you have a <filename>/proc</filename> filesystem?
+			This command should work:
+			<prompt>ls /proc/sys</prompt>
+		</para>
+
+		<para>
+			Is your kernel compiled with usb support? Does the
+			usb support work? This command should list all
+			usb devices:
+			<prompt>lsusb</prompt>
+		</para>
+
+		<para>
+			Is your kernel compiled with hotplugging support?
+			This command give the same output on your system:
+			<screen>
+$ cat /proc/sys/kernel/hotplug 
+/sbin/hotplug
+$ 
+			</screen>
+		</para>
+
+		<para>
+			Do you have a hotplug script?
+			This command should work:
+			<prompt>ls /sbin/hotplug</prompt>
+		</para>
+
+		<para>
+			Did you create the directory
+			<filename>/var/run/openct</filename>? What files are in
+			there? What are the file permissions?
+			Try this command, it should work and give you a
+			similiar output:
+			<screen>
+$ ls -la /var/run/openct/
+total 8
+drwxr-xr-x    2 root     root         4096 2003-07-02 08:13 ./
+drwxr-xr-x    8 root     root         4096 2003-07-02 08:13 ../
+-rw-r--r--    1 root     root         1728 2003-07-02 08:13 status
+$ 
+			</screen>
+			See the security section for details on file permissions
+			of this directory.
+		</para>
+
+		<section>
+			<title>problems with usb devices</title>
+		<para>
+			Are you using an usb smart card reader or
+			usb crypto token? What is it's usb vendor and
+			product id? <prompt>lsusb</prompt> will tell you.
+		</para>
+
+		<para>
+			Is that product id listed in
+			<filename>openct.conf</filename>? If not, please
+			add it.
+		</para>
+		
+		<para>
+			If you have a file
+			<filename>/etc/hotplug/usb.usermal</filename>, is the
+			vendor and product id listed in that file?
+			If not, add a line similar to the install section.
+			The vendor ID is the second number, the product ID
+			the third number.
+		</para>
+		
+		<para>
+			If that solves the proble, please let the openct
+			developers know, so we can improve the default
+			configuration and documentation. You can reach
+			us using the OpenSC developer mailing list at
+			<email>opensc-devel@opensc.org</email>.
+		</para>
+
+		</section>
+	</chapter>
+
+	<chapter>
+		<title>Security</title>
+
+		<para>
+			The default setting is not very secure: all users
+			can access your smart card readers. Several processes
+			can use the same smart card reader at the same time,
+			but they always have to be owned by the same users.
+			(FIXME: is it necessary to issue a LOCK command for
+			this, or will it always work like this?)
+		</para>
+
+		<para>
+			You can restrict access to smart card readers using
+			OpenCT to one user with these
+			commands:
+			<screen>
+$ chown user /var/run/openct
+$ chmod 700 /var/run/openct
+			</screen>
+		</para>
+
+		<para>
+			You can also create a group, add users to that group
+			and restrict access to smart card readers using OpenCT
+			to that group with these commands:
+			<screen>
+$ chgrp group /var/run/openct
+$ chmod 750 /var/run/openct
+			</screen>
+		</para>
+
+		<para>
+			In both cases root can still access the smart
+			card readers. Replace <replaceable>user</replaceable>
+			and <replaceable>group</replaceable> with the user
+			and group of your choice.
+		</para>
+
+		<para>
+			If you want all users to be able to access smart card
+			readers using OpenCT:
+			<screen>
+$ chmod 755 /var/run/openct
+			</screen>
+		</para>
+	</chapter>
+</book>
+=======
 	</section>
 
 	<section>
@@ -494,3 +844,4 @@ $ chmod 750 /var/run/openct
 		</para>
 	</section>
 </article>
+>>>>>>> 1.2
