@@ -8,6 +8,7 @@
 #define IFD_LOGGING_H
 
 extern void		ct_error(const char *, ...);
+extern const char *	ct_strerror(int);
 extern void		ct_debug(const char *, ...);
 
 #endif /* IFD_LOGGING_H */

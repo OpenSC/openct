@@ -36,3 +36,13 @@ ct_debug(const char *fmt, ...)
 	fprintf(stderr, "\n");
 	va_end(ap);
 }
+
+const char *
+ct_strerror(int rc)
+{
+	static char	message[64];
+
+	snprintf(message, sizeof(message),
+		"error code %d", -rc);
+	return message;
+}
