@@ -9,8 +9,8 @@
  * new platform.
  */
 
+#include "internal.h"
 #if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
-#include <config.h>
 #include <sys/types.h>
 #include </usr/src/sys/dev/usb/usb.h>
 #include <sys/stat.h>
@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <signal.h>
 #include <errno.h>
-#include "internal.h"
 
 int
 ifd_sysdep_device_type(const char *name)

@@ -4,6 +4,9 @@
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -14,7 +17,6 @@
 #include <openct/tlv.h>
 #include <openct/error.h>
 #include <openct/protocol.h>
-#include <openct/pathnames.h>
 
 struct ct_handle {
 	ct_socket_t *		sock;

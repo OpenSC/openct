@@ -7,6 +7,9 @@
 #ifndef IFD_INTERNAL_H
 #define IFD_INTERNAL_H
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 #include <openct/ifd.h>
 #include <openct/device.h>
 #include <openct/driver.h>

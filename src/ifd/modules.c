@@ -4,12 +4,14 @@
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
+#include "internal.h"
+#ifdef HAVE_DLFCN_H
 #include <dlfcn.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
-#include "internal.h"
 
 static const char *
 ifd_module_path(const char *subdir)
@@ -18,7 +20,7 @@ ifd_module_path(const char *subdir)
 
 	if (!ct_config.modules_dir
 	 && !(ct_config.modules_dir = getenv("IFD_MODULES")))
-		ct_config.modules_dir = IFD_DEFAULT_MODULES_DIR;
+		ct_config.modules_dir = OPENCT_MODULES_PATH;
 
 	snprintf(path, sizeof(path), "%s/%ss",
 			ct_config.modules_dir, subdir);

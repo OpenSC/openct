@@ -4,8 +4,8 @@
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
-#include <stdlib.h>
 #include "internal.h"
+#include <stdlib.h>
 
 extern void	ifd_egate_register(void);
 extern void	ifd_etoken_register(void);

@@ -7,8 +7,6 @@
 #ifndef OPENCT_CONF_H
 #define OPENCT_CONF_H
 
-#define IFD_DEFAULT_MODULES_DIR		"/usr/lib/ifd"
-
 extern struct ct_config {
 	int			debug;
 	int			autoload;

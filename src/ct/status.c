@@ -1,9 +1,12 @@
 /*
- * Shared status file for OpenSC readers
+ * Shared status file for OpenCT readers
  *
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -15,7 +18,6 @@
 #include <string.h>
 
 #include <openct/openct.h>
-#include <openct/pathnames.h>
 #include <openct/logging.h>
 
 #define OPENCT_STATUS_LOCK	OPENCT_STATUS_PATH ".lock"

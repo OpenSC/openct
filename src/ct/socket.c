@@ -4,6 +4,9 @@
  * Copyright (C) 2003, Olaf Kirch <okir@caldera.de>
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -20,7 +23,6 @@
 
 #include <openct/logging.h>
 #include <openct/socket.h>
-#include <openct/pathnames.h>
 #include <openct/error.h>
 
 

@@ -4,10 +4,13 @@
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
+#include "internal.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/poll.h>
+#ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#endif
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,7 +28,6 @@
 #include <openct/server.h>
 
 #include "ifdhandler.h"
-#include "internal.h"
 
 static int	opt_debug = 0;
 static int	opt_hotplug = 0;

@@ -4,10 +4,10 @@
  * Copyright (C) 2003, Chaskiel Grundman <cg2v@andrew.cmu.edu>
  */
 
+#include "internal.h"
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "internal.h"
 
 #define EG_TIMEOUT	1000
 

@@ -4,11 +4,14 @@
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
+#include "internal.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/poll.h>
 #include <sys/wait.h>
+#ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#endif
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,9 +23,6 @@
 #include <openct/logging.h>
 #include <openct/conf.h>
 #include <openct/driver.h>
-
-#include "internal.h"
-#include "config.h"
 
 static int		mgr_init(int argc, char **argv);
 static int		mgr_shutdown(int argc, char **argv);
@@ -338,13 +338,13 @@ usage(int exval)
 "usage: openct-control [-d] [-f configfile] command\n"
 "  -d   enable debugging; repeat to increase verbosity\n"
 "  -n   disable coldplugging\n"
-"  -f   specify config file (default /etc/openct.conf\n"
+"  -f   specify config file (default %s)\n"
 "  -h   display this message\n"
 "\nWhere command is one of:\n"
 "init - initialize OpenCT\n"
 "attach device ident - attach a hotplug device\n"
 "status - display status of all readers present\n"
-"shutdown - shutdown OpenCT\n"
+"shutdown - shutdown OpenCT\n", OPENCT_CONF_PATH
 );
 	exit(exval);
 }

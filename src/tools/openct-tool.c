@@ -4,11 +4,17 @@
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+#ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
 #include <openct/openct.h>
 #include <openct/logging.h>
 

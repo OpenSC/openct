@@ -327,6 +327,9 @@ AC_CHECK_LIB(usb, usb_init,
 if test "x$prefix" = xNONE; then
   prefix=$ac_default_prefix
 fi
+if test "x$exec_prefix" = xNONE; then
+  exec_prefix=$prefix
+fi
 
 dnl Enable/disable debugging messages.
 AC_ARG_ENABLE(debug,
@@ -343,6 +346,20 @@ openct_etc_path=`eval echo ${sysconfdir}` ; openct_etc_path=`eval echo ${openct_
 AC_DEFINE_UNQUOTED(OPENCT_ETC_PATH, "$openct_etc_path", [etc path for libopenct])
 openct_conf_path=`eval echo ${openct_etc_path}/openct.conf`
 AC_DEFINE_UNQUOTED(OPENCT_CONF_PATH, "$openct_conf_path", [default config file for libopenct])
+
+openct_modules_path=`eval echo ${libdir}` ; openct_modules_path=`eval echo ${openct_modules_path}/ifd`
+AC_DEFINE_UNQUOTED(OPENCT_MODULES_PATH, "$openct_modules_path", [modules path for libopenct])
+
+a=`eval echo $localstatedir`; b=`eval echo ${prefix}/var`
+if test "$a" = "$b"; then localstatedir="/var"; fi	# No one has touched the default settings, so use /var
+openct_socket_path=`eval echo ${localstatedir}` ; openct_socket_path=`eval echo ${openct_socket_path}/run/openct`
+AC_DEFINE_UNQUOTED(OPENCT_SOCKET_PATH, "$openct_socket_path", [socket path for libopenct])
+
+openct_status_path=`eval echo ${openct_socket_path}` ; openct_status_path=`eval echo ${openct_status_path}/status`
+AC_DEFINE_UNQUOTED(OPENCT_STATUS_PATH, "$openct_status_path", [status path for libopenct])
+
+openct_ifdhandler_path=`eval echo ${sbindir}` ; openct_ifdhandler_path=`eval echo ${openct_ifdhandler_path}/openct-ifdhandler`
+AC_DEFINE_UNQUOTED(OPENCT_IFDHANDLER_PATH, "$openct_ifdhandler_path", [ifdhandler path for libopenct])
 
 pkgdata=`eval echo ${datadir}/${PACKAGE}` ; pkgdata=`eval echo ${pkgdata}`
 AC_SUBST(pkgdata)

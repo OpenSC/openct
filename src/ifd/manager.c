@@ -4,9 +4,9 @@
  * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
+#include "internal.h"
 #include <string.h>
 #include <stdlib.h>
-#include "internal.h"
 
 static ifd_reader_t *		ifd_readers[OPENCT_MAX_READERS];
 static unsigned int		ifd_reader_handle = 1;

@@ -7,9 +7,9 @@
  * Andreas Jellinghaus <aj@dungeon.inka.de>.
  */
 
+#include "internal.h"
 #include <stdlib.h>
 #include <string.h>
-#include "internal.h"
 
 #define ET_TIMEOUT	1000
 

@@ -4,6 +4,7 @@
  * Copyright (C) 2003 Olaf Kirch <okir@lst.de>
  */
 
+#include "internal.h"
 #include <sys/types.h>
 #include <sys/select.h>
 #include <sys/time.h>
@@ -14,8 +15,6 @@
 #include <termios.h>
 #include <errno.h>
 #include <string.h>
-
-#include "internal.h"
 
 static unsigned int termios_to_speed(unsigned int bits);
 static unsigned int speed_to_termios(unsigned int speed);

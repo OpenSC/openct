@@ -5,10 +5,9 @@
  * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
+#include "internal.h"
 #include <stdlib.h>
 #include <string.h>
-#include "internal.h"
-
 
 /*
  * Initialize the device

@@ -4,18 +4,21 @@
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
+#include "internal.h"
+#ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
 #include <openct/ifd.h>
 #include <openct/conf.h>
 #include <openct/logging.h>
 #include <openct/error.h>
 #include <openct/tlv.h>
 
-#include "internal.h"
 #include "ifdhandler.h"
 
 static const char *	cmd_name[256] = {

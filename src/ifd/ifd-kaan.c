@@ -4,11 +4,11 @@
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
+#include "internal.h"
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-#include "internal.h"
 #include "ctbcs.h"
 
 /* Freeze after that many seconds of inactivity */

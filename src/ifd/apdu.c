@@ -4,8 +4,8 @@
  * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
-#include <string.h>
 #include "internal.h"
+#include <string.h>
 
 /*
  * Check the APDU type and length

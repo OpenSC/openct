@@ -11,10 +11,8 @@
  * and one exclusive lock per client.
  */
 
+#include "internal.h"
 #include <stdlib.h>
-#include <openct/error.h>
-#include <openct/logging.h>
-#include <openct/conf.h>
 #include "ifdhandler.h"
 
 typedef struct ct_lock {

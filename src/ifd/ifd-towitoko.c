@@ -4,10 +4,10 @@
  * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
+#include "internal.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include "internal.h"
 
 
 static int		twt_led(ifd_reader_t *, int);

@@ -4,6 +4,7 @@
  * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
+#include "internal.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -12,11 +13,7 @@
 #include <errno.h>
 #include <ctype.h>
 
-#include "internal.h"
-
-
 #include <openct/conf.h>
-#include <openct/pathnames.h>
 #include <openct/buffer.h>
 
 struct ct_config	ct_config = {
@@ -63,7 +60,7 @@ ifd_config_parse(const char *filename)
 	int	rc;
 
 	if ((config_filename = filename) == NULL)
-		config_filename = OPENCT_CONFIG_PATH;
+		config_filename = OPENCT_CONF_PATH;
 
 	/* If config file doesn't exist, quietly sneak out of here */
 	if ((config_fd = open(config_filename, O_RDONLY)) < 0) {

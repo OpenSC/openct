@@ -4,9 +4,9 @@
  * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
+#include "internal.h"
 #include <stdio.h>
 #include <sys/time.h>
-#include "internal.h"
 
 
 unsigned int

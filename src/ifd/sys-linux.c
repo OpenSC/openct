@@ -7,9 +7,8 @@
  * new platform.
  */
 
+#include "internal.h"
 #ifdef __linux__
-
-#include <config.h>
 #include <sys/types.h>
 #include <linux/major.h>
 #include <linux/usbdevice_fs.h>
@@ -24,7 +23,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
-#include "internal.h"
 
 int
 ifd_sysdep_device_type(const char *name)
