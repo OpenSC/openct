@@ -69,12 +69,13 @@ typedef struct {
 #define T1_BUFFER_SIZE		(3 + 254 + 2)
 
 enum {
-	SENDING, RECEIVING
+	SENDING, RECEIVING, RESYNCH
 };
 
 static void		t1_set_checksum(t1_data_t *, int);
 static unsigned	int	t1_block_type(unsigned char);
 static unsigned int	t1_seq(unsigned char);
+static int		t1_resynch(t1_data_t *t1);
 static unsigned	int	t1_build(ifd_apdu_t *, t1_data_t *,
 				unsigned char, ifd_buf_t *);
 static void		t1_compute_checksum(t1_data_t *, ifd_apdu_t *);
@@ -144,6 +145,9 @@ t1_set_param(ifd_protocol_t *prot, int type, long value)
 	case IFD_PROTOCOL_RECV_TIMEOUT:
 		t1->timeout = value;
 		break;
+	case IFD_PROTOCOL_T1_RESYNCH:
+		t1->state = RESYNCH;
+		break;
 	case IFD_PROTOCOL_T1_CHECKSUM_LRC:
 	case IFD_PROTOCOL_T1_CHECKSUM_CRC:
 		t1_set_checksum(t1, type);
@@ -190,6 +194,10 @@ t1_transceive(ifd_protocol_t *prot, ifd_apdu_t *apdu)
 	unsigned int	retries, last_send = 0;
 
 	if (apdu->snd_len == 0)
+		return -1;
+
+	/* Perform resynch if required */
+	if (t1->state == RESYNCH && t1_resynch(t1) < 0)
 		return -1;
 
 	t1->state = SENDING;
@@ -404,6 +412,26 @@ t1_build(ifd_apdu_t *apdu, t1_data_t *t1, unsigned char pcb, ifd_buf_t *bp)
 	t1_compute_checksum(t1, apdu);
 
 	return len;
+}
+
+/*
+ * Resynchronize
+ */
+int
+t1_resynch(t1_data_t *t1)
+{
+	ifd_apdu_t	apdu;
+	unsigned char	buf[5];
+	unsigned int	count;
+
+	t1_set_defaults(t1);
+
+	apdu.snd_buf = apdu.rcv_buf = buf;
+	apdu.rcv_len = sizeof(buf);
+	t1_build(&apdu, t1, T1_S_BLOCK | T1_S_RESYNC, NULL);
+	if (t1_xcv((ifd_protocol_t *) t1, &apdu, &count) < 0)
+		return -1;
+	return 0;
 }
 
 /*
