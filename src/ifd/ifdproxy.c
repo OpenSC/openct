@@ -45,6 +45,7 @@ static int		run_server(int, char **);
 static int		run_client(int, char **);
 static int		list_devices(int, char **);
 static void		usage(int);
+static void		version(void);
 
 int
 main(int argc, char **argv)
@@ -57,7 +58,7 @@ main(int argc, char **argv)
 
 	ct_log_destination("@stderr");
 
-	while ((c = getopt(argc, argv, "df:FR:U:")) != -1) {
+	while ((c = getopt(argc, argv, "df:FR:U:v")) != -1) {
 		switch (c) {
 		case 'd':
 			ct_config.debug++;
@@ -73,6 +74,9 @@ main(int argc, char **argv)
 			break;
 		case 'U':
 			opt_user = optarg;
+			break;
+		case 'v':
+			version;
 			break;
 		default:
 			usage(1);
@@ -97,6 +101,9 @@ main(int argc, char **argv)
 	} else
 	if (!strcmp(command, "list")) {
 		list_devices(argc - optind, argv + optind);
+	}else
+	if (!strcmp(command, "version")) {
+		version();
 	} else {
 		ct_error("Unknown command `%s'\n", command);
 		return 1;
@@ -276,6 +283,13 @@ list_devices(int argc, char **argv)
 }
 
 void
+version()
+{
+	fprintf(stderr, "OpenCT " VERSION "\n");
+	exit(0);
+}
+
+void
 usage(int exval)
 {
 	fprintf(stderr,
@@ -283,6 +297,7 @@ usage(int exval)
 	"ifdproxy server [-dF]\n"
 	"ifdproxy export [-dF] name device address\n"
 	"ifdproxy list [-dF] address\n"
+	"ifdproxy version\n"
 	       );
 	exit(exval);
 }
