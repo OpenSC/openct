@@ -231,7 +231,8 @@ again:	s = (char *) ifd_buf_head(&config_buf);
 	buffer[copy] = '\0';
 	ifd_buf_get(&config_buf, NULL, m);
 
-printf("kwd=\"%s\"\n", buffer);
+	if (ifd_config.debug > 4)
+		ifd_debug("ifd_config_parse: token=\"%s\"\n", buffer);
 	*tok = buffer;
 	return 0;
 }

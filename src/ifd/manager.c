@@ -13,6 +13,9 @@
 static ifd_reader_t *		ifd_readers[IFD_MAX_READERS];
 static unsigned int		ifd_reader_handle = 1;
 
+/*
+ * Register a reader
+ */
 int
 ifd_attach(ifd_reader_t *reader)
 {
@@ -40,6 +43,9 @@ ifd_attach(ifd_reader_t *reader)
 	return 0;
 }
 
+/*
+ * Functions to look up registered readers
+ */
 ifd_reader_t *
 ifd_reader_by_handle(unsigned int handle)
 {
@@ -71,6 +77,9 @@ ifd_reader_by_index(unsigned int index)
 	return reader;
 }
 
+/*
+ * Unregister a reader
+ */
 void
 ifd_detach(ifd_reader_t *reader)
 {

@@ -11,10 +11,10 @@
 
 /* Types of devices supported by libifd */
 enum {
-	IFD_DEVICE_TYPE_SERIAL,
+	IFD_DEVICE_TYPE_SERIAL = 0,
 	IFD_DEVICE_TYPE_USB,
 	IFD_DEVICE_TYPE_PS2,
-	IFD_DEVICE_TYPE_OTHER
+	IFD_DEVICE_TYPE_OTHER,
 };
 
 union ifd_device_params {
@@ -54,7 +54,6 @@ typedef struct ifd_usb_cmsg {
 extern ifd_device_t *	ifd_device_open(const char *);
 extern ifd_device_t *	ifd_device_open_channel(unsigned int num);
 extern int		ifd_device_type(ifd_device_t *);
-extern int		ifd_device_guess_type(const char *);
 extern void		ifd_device_flush(ifd_device_t *);
 extern int		ifd_device_identify(const char *, char *, size_t);
 extern int		ifd_device_get_parameters(ifd_device_t *,
@@ -67,7 +66,11 @@ extern int		ifd_device_send(ifd_device_t *, const void *, size_t);
 extern int		ifd_device_recv(ifd_device_t *, void *, size_t, long);
 extern int		ifd_device_control(ifd_device_t *, void *, size_t);
 extern void		ifd_device_close(ifd_device_t *);
-extern const char *	ifd_device_cannel_to_name(unsigned int num);
+
+/* Internal system dependent device functions */
+extern int		ifd_sysdep_device_type(const char *);
+extern const char *	ifd_sysdep_channel_to_name(unsigned int num);
+extern int		ifd_sysdep_usb_control(int, ifd_usb_cmsg_t *, long);
 
 /* scheduled to go away */
 extern ifd_device_t *	ifd_open_serial(const char *);

@@ -6,29 +6,14 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <usb.h>
+#include <fcntl.h>
 #include "internal.h"
-
-struct usb_search_spec {
-	unsigned int	bus, dev;
-	unsigned int	vendor;
-	unsigned int	product;
-	const char *	filename;
-
-	struct usb_device *found;
-};
 
 typedef struct ifd_usb {
 	ifd_device_t	base;
 
-	struct usb_dev_handle *h;
+	int		fd;
 } ifd_usb_t;
-
-static int	ifd_usb_init(void);
-static int	ifd_usb_scan(struct usb_search_spec *,
-				int (*)(struct usb_device *, void *),
-				void *);
-static int	ifd_usb_match(struct usb_device *, struct usb_search_spec *);
 
 /*
  * Send/receive USB control block
@@ -49,26 +34,16 @@ usb_control(ifd_device_t *dev, void *data, size_t len)
 				cmsg->requesttype,
 				cmsg->request,
 				cmsg->len);
-		if (cmsg->requesttype == 0x40)
+		if (!(cmsg->requesttype & 0x80))
 			ifd_debug("send %s", ifd_hexdump(cmsg->data, cmsg->len));
 	}
 
-	n = usb_control_msg(usb->h,
-			cmsg->requesttype,
-			cmsg->request,
-			cmsg->value,
-			cmsg->index,
-			cmsg->data,
-			cmsg->len,
-			10000);
+	n = ifd_sysdep_usb_control(usb->fd, cmsg, 10000);
 
 	if (ifd_config.debug >= 3) {
-		if (cmsg->requesttype == 0xc0 && n >= 0)
+		if ((cmsg->requesttype & 0x80) && n >= 0)
 			ifd_debug("recv %s", ifd_hexdump(cmsg->data, n));
 	}
-
-	if (n < 0)
-		ifd_error("USB: %s", usb_strerror());
 
 	return n;
 }
@@ -83,140 +58,17 @@ static struct ifd_device_ops	ifd_usb_ops = {
 ifd_device_t *
 ifd_open_usb(const char *device)
 {
-	struct usb_search_spec spec;
-	struct usb_dev_handle *uh;
 	ifd_usb_t	*dev;
+	int		fd;
 
-	ifd_usb_init();
-
-	memset(&spec, 0, sizeof(spec));
-
-	if (device[0] == '/') {
-		spec.filename = device;
-	} else {
-		const char	*s;
-
-		for (s = device; *s; ) {
-			char *end;
-
-			while (*s == ',')
-				s++;
-			if (!strncmp(s, "id=", 3)) {
-				spec.vendor = strtoul(s+3, &end, 16);
-				if (*end++ != ':')
-					goto badspec;
-				spec.product  = strtoul(end, &end, 16);
-				s = end;
-			} else
-			if (!strncmp(s, "dev=", 4)) {
-				spec.bus = strtoul(s+4, &end, 10);
-				if (*end++ != ':')
-					goto badspec;
-				spec.dev  = strtoul(end, &end, 10);
-				s = end;
-			} else {
-				goto badspec;
-			}
-
-			if (*s && *s != ',')
-				goto badspec;
-
-		}
-	}
-
-	if (ifd_usb_scan(&spec, NULL, NULL) <= 0) {
-		ifd_error("%s: no such USB device", device);
+	if ((fd = open(device, O_EXCL | O_RDWR)) < 0) {
+		ifd_error("Unable to open USB device %s: %m", device);
 		return NULL;
 	}
 
-	if (!(uh = usb_open(spec.found))) {
-		ifd_error("%s: unable to open USB device: %s",
-				device,
-				usb_strerror());
-		return NULL;
-	}
-
-	dev = (ifd_usb_t *) ifd_device_new(spec.found->filename,
-			&ifd_usb_ops, sizeof(*dev));
+	dev = (ifd_usb_t *) ifd_device_new(device, &ifd_usb_ops, sizeof(*dev));
 	dev->base.type = IFD_DEVICE_TYPE_USB;
-	dev->h = uh;
+	dev->fd = fd;
 
 	return (ifd_device_t *) dev;
-
-badspec:ifd_error("Cannot parse USB device name \"%s\"", device);
-	return NULL;
-}
-
-/*
- * Initialize USB subsystem
- */
-int
-ifd_usb_init(void)
-{
-	static int initialized = 0;
-
-	if (!initialized) {
-		initialized = 1;
-		usb_init();
-	}
-	return 0;
-}
-
-/*
- * Scan the USB bus for a particular device
- */
-int
-ifd_usb_scan(struct usb_search_spec *spec,
-		int (*func)(struct usb_device *, void *),
-		void *call_data)
-{
-	struct usb_bus	*bus;
-	struct usb_device *dev;
-	int n;
-
-	usb_find_busses();
-	usb_find_devices();
-
-	for (bus = usb_busses; bus; bus = bus->next) {
-		for (dev = bus->devices; dev; dev = dev->next) {
-			if (spec && !ifd_usb_match(dev, spec))
-				continue;
-			if (func) {
-				n = func(dev, call_data);
-				if (n != 0)
-					return n;
-			} else if (spec) {
-				spec->found = dev;
-				return 1;
-			}
-		}
-	}
-
-	return 0;
-}
-
-/*
- * Match device against search spec
- */
-int
-ifd_usb_match(struct usb_device *dev, struct usb_search_spec *spec)
-{
-	struct usb_device_descriptor *d = &dev->descriptor;
-	unsigned int num;
-
-	if (spec->bus) {
-		num = strtoul(dev->bus->dirname, NULL, 10);
-		if (spec->bus != num)
-			return 0;
-	}
-	if (spec->dev) {
-		num = strtoul(dev->filename, NULL, 10);
-		if (spec->dev != num)
-			return 0;
-	}
-
-	if ((spec->vendor && d->idVendor != spec->vendor)
-	 || (spec->product && d->idProduct != spec->product))
-		return 0;
-	return 1;
 }

@@ -7,15 +7,18 @@
  * new platform.
  */
 
+#include <sys/types.h>
 #include <linux/major.h>
+#include <linux/usbdevice_fs.h>
 #include <sys/sysmacros.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 #include <string.h>
 #include <stdio.h>
 #include "internal.h"
 
 int
-ifd_device_guess_type(const char *name)
+ifd_sysdep_device_type(const char *name)
 {
 	struct stat stb;
 
@@ -46,7 +49,7 @@ ifd_device_guess_type(const char *name)
 }
 
 const char *
-ifd_device_cannel_to_name(unsigned int num)
+ifd_sysdep_channel_to_name(unsigned int num)
 {
 	static char	namebuf[256];
 
@@ -55,7 +58,7 @@ ifd_device_cannel_to_name(unsigned int num)
 		sprintf(namebuf, "/dev/ttyS%u", num);
 		break;
 	case 1:
-		sprintf(namebuf, "usb:id=%d,%d",
+		sprintf(namebuf, "/proc/bus/usb/%03d/%03d",
 				(num >> 8) & 0xff,
 				num & 0xff);
 		break;
@@ -67,3 +70,26 @@ ifd_device_cannel_to_name(unsigned int num)
 	return namebuf;
 }
 
+/*
+ * USB control command
+ */
+int
+ifd_sysdep_usb_control(int fd, ifd_usb_cmsg_t *cmsg, long timeout)
+{
+	struct usbdevfs_ctrltransfer ctrl;
+	int	rc;
+
+	ctrl.requesttype = cmsg->requesttype;
+	ctrl.request = cmsg->request;
+	ctrl.value = cmsg->value;
+	ctrl.index = cmsg->index;
+	ctrl.length = cmsg->len;
+	ctrl.data = cmsg->data;
+	ctrl.timeout = timeout;
+
+	rc = ioctl(fd, USBDEVFS_CONTROL, &ctrl);
+	if (rc < 0)
+		ifd_error("usb ioctl failed: %m");
+
+	return rc;
+}

@@ -19,7 +19,7 @@ ifd_device_open(const char *name)
 	if (!strncmp(name, "usb:", 4))
 		return ifd_open_usb(name + 4);
 
-	switch (ifd_device_guess_type(name)) {
+	switch (ifd_sysdep_device_type(name)) {
 	case IFD_DEVICE_TYPE_SERIAL:
 		return ifd_open_serial(name);
 	case IFD_DEVICE_TYPE_USB:
@@ -38,7 +38,7 @@ ifd_device_open_channel(unsigned int num)
 {
 	const char	*name;
 
-	if (!(name = ifd_device_cannel_to_name(num)))
+	if (!(name = ifd_sysdep_channel_to_name(num)))
 		return NULL;
 	return ifd_device_open(name);
 }

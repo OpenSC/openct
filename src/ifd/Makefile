@@ -3,7 +3,7 @@ CFLAGS	= -I../include $(DEBUG)
 LDFLAGS	= -Wl,-export-dynamic
 LIBS	= libifd.a libifd.so
 APPS	= print-atr
-OBJS	= manager.o device.o reader.o driver.o \
+OBJS	= manager.o device.o reader.o driver.o hotplug.o \
           modules.o \
 	  protocol.o proto-t0.o proto-t1.o proto-trans.o \
 	  serial.o usb.o \
