@@ -1,7 +1,10 @@
 
 SUBDIRS	= include src
 
-all clean distclean:
+all::
+	@mkdir -p lib
+
+all clean distclean::
 	for dir in $(SUBDIRS); do \
 		$(MAKE) -C $$dir $@; \
 	done
