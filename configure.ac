@@ -1,7 +1,9 @@
 AC_INIT(src/ifd/init.c)
+AC_CONFIG_AUX_DIR(tools)
 AM_INIT_AUTOMAKE(openct, CVS)
-AM_PROG_LIBTOOL
 AM_CONFIG_HEADER(include/config.h)
+
+AM_PROG_LIBTOOL
 
 PCSC_MSG=no
 pcsc_path=/usr
@@ -62,6 +64,7 @@ AM_CONDITIONAL(HAVE_PCSCLITE, test "x$ac_cv_lib_pcsclite_SCardEstablishContext" 
 
 AC_OUTPUT([
 Makefile
+tools/Makefile
 doc/Makefile
 etc/Makefile
 include/Makefile
