@@ -16,15 +16,6 @@
 	do { ifd_debug("%s: "  fmt, __FUNCTION__ , ##args); } while (0)
 		
 
-typedef struct t1_apdu {
-	unsigned char	nad;
-	unsigned char	pcb;
-	unsigned char	snd_len;
-	unsigned char *	snd_buf;
-	unsigned char	rcv_len;
-	unsigned char *	rcv_buf;
-} t1_apdu_t;
-
 typedef struct {
 	ifd_protocol_t	base;
 	int		state;
