@@ -1,37 +1,167 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>OpenCT Manual</title><meta name="generator" content="DocBook XSL Stylesheets V1.60.1" /></head><body><div class="article" lang="en" xml:lang="en"><div class="titlepage"><div><div><h1 class="title"><a id="id2794812"></a>OpenCT Manual</h1></div><div><div class="author"><h3 class="author"><span class="firstname">Andreas</span> <span class="surname">Jellinghaus</span></h3></div></div></div><div></div><hr /></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><a href="#id2791990">About OpenCT</a></dt><dt><a href="#id2794648">OpenCT files and tools</a></dt><dd><dl><dt><a href="#id2796492">/var/run/openct	OpenCT status directory</a></dt><dt><a href="#id2796520">sbin/openct-control	OpenCT Manager</a></dt><dt><a href="#id2796563">init script to start openct</a></dt><dt><a href="#id2796589">Linux with hotplugging</a></dt><dt><a href="#id2796631">sbin/ifdhandler		OpenCT Device Handler</a></dt><dt><a href="#id2796659">bin/openct-tool</a></dt><dt><a href="#id2796685">bin/print-atr</a></dt><dt><a href="#id2796709">etc/openct.conf</a></dt><dt><a href="#id2796733">include/openct/</a></dt><dt><a href="#id2796753">lib/libifd.so</a></dt></dl></dd><dt><a href="#id2796774">Using OpenCT as CT-API driver</a></dt><dt><a href="#id2796823">Using OpenCT as IfdHandler</a></dt><dt><a href="#id2796861">Writing smart card applications using openct</a></dt></dl></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="id2791990"></a>About OpenCT</h2></div></div><div></div></div><p>
-			OpenCT is an open source implmentation providing card
-			terminal drivers. OpenCT was written by Olaf Kirch.
-		</p><p>
-			OpenCT provides CT-API drivers, ifdhandler drivers
-			as well as it's own resource manager for direct
-			use by applications.
-		</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="id2794648"></a>OpenCT files and tools</h2></div></div><div></div></div><p>
-			This section will list all tools and files and
-			explain what they do.
-		</p><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2796492"></a>/var/run/openct	OpenCT status directory</h3></div></div><div></div></div><p>
-				This directory holds status files for openct.
-				Create it with: </p><pre class="screen">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type"
+    content="text/html; charset=UTF-8" />
+    <title>OpenCT Manual</title>
+    <meta name="generator"
+    content="DocBook XSL Stylesheets V1.60.1" />
+  </head>
+  <body>
+    <div class="article" lang="en" xml:lang="en">
+      <div class="titlepage">
+        <div>
+          <div>
+            <h1 class="title">
+            <a id="id2794812"></a>OpenCT Manual</h1>
+          </div>
+          <div>
+            <div class="author">
+              <h3 class="author">
+                <span class="firstname">Andreas</span>
+                <span class="surname">Jellinghaus</span>
+              </h3>
+            </div>
+          </div>
+        </div>
+        <div></div>
+        <hr />
+      </div>
+      <div class="toc">
+        <p>
+          <b>Table of Contents</b>
+        </p>
+        <dl>
+          <dt>
+            <a href="#id2791990">About OpenCT</a>
+          </dt>
+          <dt>
+            <a href="#id2794648">OpenCT files and tools</a>
+          </dt>
+          <dd>
+            <dl>
+              <dt>
+                <a href="#id2796492">/var/run/openct OpenCT status
+                directory</a>
+              </dt>
+              <dt>
+                <a href="#id2796520">sbin/openct-control OpenCT
+                Manager</a>
+              </dt>
+              <dt>
+                <a href="#id2796563">init script to start
+                openct</a>
+              </dt>
+              <dt>
+                <a href="#id2796589">Linux with hotplugging</a>
+              </dt>
+              <dt>
+                <a href="#id2796631">sbin/ifdhandler OpenCT Device
+                Handler</a>
+              </dt>
+              <dt>
+                <a href="#id2796659">bin/openct-tool</a>
+              </dt>
+              <dt>
+                <a href="#id2796685">bin/print-atr</a>
+              </dt>
+              <dt>
+                <a href="#id2796709">etc/openct.conf</a>
+              </dt>
+              <dt>
+                <a href="#id2796733">include/openct/</a>
+              </dt>
+              <dt>
+                <a href="#id2796753">lib/libifd.so</a>
+              </dt>
+            </dl>
+          </dd>
+          <dt>
+            <a href="#id2796774">Using OpenCT as CT-API driver</a>
+          </dt>
+          <dt>
+            <a href="#id2796823">Using OpenCT as IfdHandler</a>
+          </dt>
+          <dt>
+            <a href="#id2796861">Writing smart card applications
+            using openct</a>
+          </dt>
+        </dl>
+      </div>
+      <div class="section" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both">
+              <a id="id2791990"></a>About OpenCT</h2>
+            </div>
+          </div>
+          <div></div>
+        </div>
+        <p>OpenCT is an open source implmentation providing card
+        terminal drivers. OpenCT was written by Olaf Kirch.</p>
+        <p>OpenCT provides CT-API drivers, ifdhandler drivers as
+        well as it's own resource manager for direct use by
+        applications.</p>
+      </div>
+      <div class="section" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both">
+              <a id="id2794648"></a>OpenCT files and tools</h2>
+            </div>
+          </div>
+          <div></div>
+        </div>
+        <p>This section will list all tools and files and explain
+        what they do.</p>
+        <div class="section" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title">
+                <a id="id2796492"></a>/var/run/openct OpenCT status
+                directory</h3>
+              </div>
+            </div>
+            <div></div>
+          </div>
+          <p>This directory holds status files for openct. Create
+          it with:</p>
+          <pre class="screen">
 mkdir /var/run/openct
 chmod 755 /var/run/openct
-				</pre><p>
-			</p><p>
-				By default everyone can use smartcards via
-				openct. You can create a group &quot;openct&quot;, assign
-				users to that group, and limit access to 
-				smartcards via openct like this:
-				</p><pre class="screen">
+</pre>
+          <p></p>
+          <p>By default everyone can use smartcards via openct. You
+          can create a group "openct", assign users to that group,
+          and limit access to smartcards via openct like this:</p>
+          <pre class="screen">
 chgrp openct /var/run/openct
 chmod 750 /var/run/openct
-				</pre><p>
-			</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2796520"></a>sbin/openct-control	OpenCT Manager</h3></div></div><div></div></div><p>
-				Run openct-control once to setup the
-				<tt class="filename">status</tt> file in
-				<tt class="filename">/var/run/openct</tt>.
-				Without that file OpenCT will not work.
-			</p><p>
-				</p><pre class="screen">
+</pre>
+          <p></p>
+        </div>
+        <div class="section" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title">
+                <a id="id2796520"></a>sbin/openct-control OpenCT
+                Manager</h3>
+              </div>
+            </div>
+            <div></div>
+          </div>
+          <p>Run openct-control once to setup the 
+          <tt class="filename">status</tt>file in 
+          <tt class="filename">/var/run/openct</tt>. Without that
+          file OpenCT will not work.</p>
+          <p></p>
+          <pre class="screen">
 aj@simulacron:~/openct$ sbin/openct-control 
 usage: openct-control [-d] [-f configfile] command
   -d   enable debugging; repeat to increase verbosity
@@ -42,13 +172,25 @@ Where command is one of:
 init - initialize OpenCT
 attach device ident - attach a hotplug device
 shutdown - shutdown OpenCT
-				</pre><p>
-			</p><p>
-				FIXME: maybe run openct-control everytime
-				on bootup ?
-			</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2796563"></a>init script to start openct</h3></div></div><div></div></div><p>
-				On debian systems install the init script
-				like this: </p><pre class="screen">
+</pre>
+          <p></p>
+          <p>FIXME: maybe run openct-control everytime on bootup
+          ?</p>
+        </div>
+        <div class="section" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title">
+                <a id="id2796563"></a>init script to start
+                openct</h3>
+              </div>
+            </div>
+            <div></div>
+          </div>
+          <p>On debian systems install the init script like
+          this:</p>
+          <pre class="screen">
 # update-rc.d openct start 99 2 3 4 5 . stop 01 0 1 6 .
  Adding system startup for /etc/init.d/openct ...
    /etc/rc0.d/K01openct -&gt; ../init.d/openct
@@ -59,39 +201,71 @@ shutdown - shutdown OpenCT
    /etc/rc4.d/S99openct -&gt; ../init.d/openct
    /etc/rc5.d/S99openct -&gt; ../init.d/openct
 #
-				</pre><p>
-			</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2796589"></a>Linux with hotplugging</h3></div></div><div></div></div><p>
-				If your kernel has hotplugging, you can
-				configure your linux, so it will launch
-				the driver when a usb crypto token is plugged
-				in (and it terminates when you unplug your key).
-			</p><p>
-				If the file
-				<tt class="filename">/proc/sys/kernel/hotplug</tt>
-				exists, then your kernel supports hotplugging.
-				If not, it does not (check CONFIG_HOTPLUG in
-				your kernel configuration).
-			</p><p>
-				If your linux has no script
-				<tt class="filename">/sbin/hotplug</tt> you can
-				simply </p><pre class="screen">
+</pre>
+          <p></p>
+        </div>
+        <div class="section" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title">
+                <a id="id2796589"></a>Linux with hotplugging</h3>
+              </div>
+            </div>
+            <div></div>
+          </div>
+          <p>If your kernel has hotplugging, you can configure your
+          linux, so it will launch the driver when a usb crypto
+          token is plugged in (and it terminates when you unplug
+          your key).</p>
+          <p>If the file 
+          <tt class="filename">/proc/sys/kernel/hotplug</tt>exists,
+          then your kernel supports hotplugging. If not, it does
+          not (check CONFIG_HOTPLUG in your kernel
+          configuration).</p>
+          <p>If your linux has no script 
+          <tt class="filename">/sbin/hotplug</tt>you can simply</p>
+          <pre class="screen">
 ln -s /path/to/openct/sbin/hotplug.openct /sbin/htplug
-				</pre><p>
-			</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2796631"></a>sbin/ifdhandler		OpenCT Device Handler</h3></div></div><div></div></div><p>
-				This app is called by openct-control to handle
-				onde device, e.g. a smartcard read or an usb
-				token.
-			</p><p>
-				</p><pre class="screen">
+</pre>
+          <p></p>
+        </div>
+        <div class="section" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title">
+                <a id="id2796631"></a>sbin/ifdhandler OpenCT Device
+                Handler</h3>
+              </div>
+            </div>
+            <div></div>
+          </div>
+          <p>This app is called by openct-control to handle onde
+          device, e.g. a smartcard read or an usb token.</p>
+          <p></p>
+          <pre class="screen">
 aj@simulacron:~/openct/bin$ ./ifdhandler 
 usage: ifdhandler [-Hds] driver device socket
   -d   enable debugging; repeat to increase verbosity
   -H   hotplug device, monitor for detach
   -s   send error and debug messages to syslog
   -h   display this message
-				</pre><p>
-			</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2796659"></a>bin/openct-tool</h3></div></div><div></div></div><p>
-				</p><pre class="screen">
+</pre>
+          <p></p>
+        </div>
+        <div class="section" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title">
+                <a id="id2796659"></a>bin/openct-tool</h3>
+              </div>
+            </div>
+            <div></div>
+          </div>
+          <p></p>
+          <pre class="screen">
 aj@simulacron:~/openct/bin$ ./openct-tool 
 usage: print-atr [-d] [-f configfile] [-r reader] command ...
   -d   enable debugging; repeat to increase verbosity
@@ -104,9 +278,21 @@ command: can be one of the following
  atr   print ATR of card in selected reader
  wait  wait for card to be inserted
  mf    try to select ATR of card
-				</pre><p>
-			</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2796685"></a>bin/print-atr</h3></div></div><div></div></div><p>
-				</p><pre class="screen">
+</pre>
+          <p></p>
+        </div>
+        <div class="section" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title">
+                <a id="id2796685"></a>bin/print-atr</h3>
+              </div>
+            </div>
+            <div></div>
+          </div>
+          <p></p>
+          <pre class="screen">
 aj@simulacron:~/openct$ bin/print-atr -h
 usage: print-atr [-d] [-f configfile] [-r reader] [command]
   -d   enable debugging; repeat to increase verbosity
@@ -118,93 +304,164 @@ command: can be one of the following
  list  list all readers found
  atr   print ATR of card in selected reader
  mf    try to select ATR of card
-				</pre><p>
-			</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2796709"></a>etc/openct.conf</h3></div></div><div></div></div><p>
-				</p><pre class="screen">
+</pre>
+          <p></p>
+        </div>
+        <div class="section" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title">
+                <a id="id2796709"></a>etc/openct.conf</h3>
+              </div>
+            </div>
+            <div></div>
+          </div>
+          <p></p>
+          <pre class="screen">
 # Set debug level
-debug	= 0;
+debug   = 0;
 #
 # Enable hot plugging
-hotplug	= yes;
+hotplug = yes;
 #
 # Path to ifdhandler
 ifdhandler = /usr/sbin/ifdhandler;
 #
 # Statically configure non-hotplug aware readers here
 reader towitoko {
-	driver = towitoko;
-	device = /dev/ttyS1;
+        driver = towitoko;
+        device = /dev/ttyS1;
 };
 
 #
 # Hotplug IDs
-driver	etoken {
-	ids = {
-		usb:0529/050c,
-	};
+driver  etoken {
+        ids = {
+                usb:0529/050c,
+        };
 };
-driver	egate {
-	ids = {
-		usb:0973/0001,
-	};
+driver  egate {
+        ids = {
+                usb:0973/0001,
+        };
 };
-				</pre><p>
-			</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2796733"></a>include/openct/</h3></div></div><div></div></div><p>
-				</p><pre class="screen">
+</pre>
+          <p></p>
+        </div>
+        <div class="section" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title">
+                <a id="id2796733"></a>include/openct/</h3>
+              </div>
+            </div>
+            <div></div>
+          </div>
+          <p></p>
+          <pre class="screen">
 aj@simulacron:~/openct$ ls include/openct/
-apdu.h    conf.h    driver.h  ifd.h      openct.h     protocol.h  socket.h
-buffer.h  device.h  error.h   logging.h  pathnames.h  server.h    tlv.h
-				</pre><p>
-			</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h3 class="title"><a id="id2796753"></a>lib/libifd.so</h3></div></div><div></div></div><p>
-				</p><pre class="screen">
+apdu.h    conf.h    driver.h  ifd.h      openct.h     protocol.h 
+socket.h
+buffer.h  device.h  error.h   logging.h  pathnames.h  server.h   
+tlv.h
+</pre>
+          <p></p>
+        </div>
+        <div class="section" lang="en" xml:lang="en">
+          <div class="titlepage">
+            <div>
+              <div>
+                <h3 class="title">
+                <a id="id2796753"></a>lib/libifd.so</h3>
+              </div>
+            </div>
+            <div></div>
+          </div>
+          <p></p>
+          <pre class="screen">
 aj@simulacron:~/openct$ /bin/ls lib/libifd.*    
 lib/libifd.a   lib/libifd.so    lib/libifd.so.0.0.0
 lib/libifd.la  lib/libifd.so.0
-				</pre><p>
-			</p></div></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="id2796774"></a>Using OpenCT as CT-API driver</h2></div></div><div></div></div><p>
-			Install and configure the directory
-			<tt class="filename">/etc/openct.conf</tt> as discussed.
-			Configure your CT-API application to load
-			<tt class="filename">lib/ifd-ctapi.so</tt>.
-		</p><p>
-			For example to use openct with pcsc-lite,
-			configure <tt class="filename">/etc/reader.conf</tt>
-			this way:
-			</p><pre class="screen">
+</pre>
+          <p></p>
+        </div>
+      </div>
+      <div class="section" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both">
+              <a id="id2796774"></a>Using OpenCT as CT-API
+              driver</h2>
+            </div>
+          </div>
+          <div></div>
+        </div>
+        <p>Install and configure the directory 
+        <tt class="filename">/etc/openct.conf</tt>as discussed.
+        Configure your CT-API application to load 
+        <tt class="filename">lib/ifd-ctapi.so</tt>.</p>
+        <p>For example to use openct with pcsc-lite, configure 
+        <tt class="filename">/etc/reader.conf</tt>this way:</p>
+        <pre class="screen">
 FIXME: 
 add valid reader.conf entry to use
 openct ifd-ctapi.so
-			</pre><p>
-		</p><p>
-			If your application does not support shared
-			libraries, maybe you have better luck with the
-			static library <tt class="filename">lib/ifd-ctapi.a</tt>.
-			(This is completely untested.)
-		</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="id2796823"></a>Using OpenCT as IfdHandler</h2></div></div><div></div></div><p>
-			Install and configure the directory
-			<tt class="filename">/etc/openct.conf</tt> as discussed.
-			Configure your CT-API application to load
-			<tt class="filename">lib/ifdhandler.so</tt>.
-		</p><p>
-			For example to use openct with pcsc-lite,
-			configure <tt class="filename">/etc/reader.conf</tt>
-			this way:
-			</p><pre class="screen">
+</pre>
+        <p></p>
+        <p>If your application does not support shared libraries,
+        maybe you have better luck with the static library 
+        <tt class="filename">lib/ifd-ctapi.a</tt>. (This is
+        completely untested.)</p>
+      </div>
+      <div class="section" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both">
+              <a id="id2796823"></a>Using OpenCT as IfdHandler</h2>
+            </div>
+          </div>
+          <div></div>
+        </div>
+        <p>Install and configure the directory 
+        <tt class="filename">/etc/openct.conf</tt>as discussed.
+        Configure your CT-API application to load 
+        <tt class="filename">lib/ifdhandler.so</tt>.</p>
+        <p>For example to use openct with pcsc-lite, configure 
+        <tt class="filename">/etc/reader.conf</tt>this way:</p>
+        <pre class="screen">
 FIXME: 
 add valid reader.conf entry to use
 openct ifdhandeler.so
-			</pre><p>
-		</p></div><div class="section" lang="en" xml:lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="id2796861"></a>Writing smart card applications using openct</h2></div></div><div></div></div><p>
-			OpenCT has a proprietory, but very easy to use
-			interface. Take a look at the header files
-			<tt class="filename">include/opensc/*.h</tt> and 
-			the library <tt class="filename">lib/libopenct*</tt>.
-		</p><p>
-			If your application uses autoconf, we made
-			it easy for you to search for openct and
-			link with libopenct by shipping openct with
-			a pkg-config file:
-			<tt class="filename">lib/pkg-config/libopenct.pc</tt>
-		</p><p>
-			See the pkg-config man page for detailed information.
-		</p></div></div></body></html>
+</pre>
+        <p></p>
+      </div>
+      <div class="section" lang="en" xml:lang="en">
+        <div class="titlepage">
+          <div>
+            <div>
+              <h2 class="title" style="clear: both">
+              <a id="id2796861"></a>Writing smart card applications
+              using openct</h2>
+            </div>
+          </div>
+          <div></div>
+        </div>
+        <p>OpenCT has a proprietory, but very easy to use
+        interface. Take a look at the header files 
+        <tt class="filename">include/opensc/*.h</tt>and the library
+        
+        <tt class="filename">lib/libopenct*</tt>.</p>
+        <p>If your application uses autoconf, we made it easy for
+        you to search for openct and link with libopenct by
+        shipping openct with a pkg-config file: 
+        <tt class="filename">lib/pkg-config/libopenct.pc</tt></p>
+        <p>See the pkg-config man page for detailed
+        information.</p>
+      </div>
+    </div>
+  </body>
+</html>

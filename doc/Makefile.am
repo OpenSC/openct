@@ -6,4 +6,5 @@ STYLESHEET=/usr/share/sgml/docbook/stylesheet/xsl/nwalsh/xhtml/docbook.xsl
 
 %.html: %.xml
 	        xsltproc -o $@ $(STYLESHEET) $< 
+		tidy -im -utf8 -xml $@ || true
 
