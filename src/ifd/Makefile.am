@@ -9,7 +9,7 @@ lib_LTLIBRARIES = libifd.la
 sbin_PROGRAMS = ifdhandler ifdproxy
 
 libifd_la_SOURCES = \
-	apdu.c checksum.c conf.c ctbcs.c device.c driver.c \
+	apdu.c atr.c checksum.c conf.c ctbcs.c device.c driver.c \
 	init.c locks.c manager.c modules.c process.c protocol.c \
 	reader.c serial.c usb.c usb-descriptors.c utils.c \
 	\
@@ -32,4 +32,4 @@ ifdhandler_LDADD = libifd.la
 ifdproxy_SOURCES = ifdproxy.c ria-device.c ria-server.c
 ifdproxy_LDADD = libifd.la
 
-noinst_HEADERS = ctbcs.h ifdhandler.h internal.h ria.h usb-descriptors.h
+noinst_HEADERS = atr.h ctbcs.h ifdhandler.h internal.h ria.h usb-descriptors.h

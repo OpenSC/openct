@@ -63,6 +63,7 @@ ifd_protocol_select(ifd_reader_t *reader, int nslot, int preferred)
 
 	ifd_debug(1, "atr=%s", ct_hexdump(slot->atr, slot->atr_len));
 
+	/* FIXME: use ifd_atr_parse() instead */
 	atr = slot->atr;
 	len = slot->atr_len;
 	if (len < 2)
