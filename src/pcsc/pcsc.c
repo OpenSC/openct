@@ -33,7 +33,7 @@
 #include <pcsclite.h>
 #endif
 #include <openct/openct.h>
-#include "ctapi.h"	/* XXX: <openct/ctapi.h>? */
+#include "ctapi.h"		/* XXX: <openct/ctapi.h>? */
 #include "ifdhandler.h"
 
 /* Maximum number of readers handled */
@@ -42,541 +42,464 @@
 /* Maximum number of slots per reader handled */
 #define IFDH_MAX_SLOTS		1	/* XXX: OPENCT_MAX_SLOTS? */
 
-typedef struct
-{
-  DEVICE_CAPABILITIES device_capabilities;
-  ICC_STATE icc_state;
-  DWORD ATR_Length;
-  PROTOCOL_OPTIONS protocol_options;
-}
-IFDH_Context;
+typedef struct {
+	DEVICE_CAPABILITIES device_capabilities;
+	ICC_STATE icc_state;
+	DWORD ATR_Length;
+	PROTOCOL_OPTIONS protocol_options;
+} IFDH_Context;
 
 /* Matrix that stores conext information of all slots and readers */
-static IFDH_Context *ifdh_context[IFDH_MAX_READERS][IFDH_MAX_SLOTS] = {
-  {NULL},{NULL},{NULL},{NULL},
+static IFDH_Context *ifdh_context[IFDH_MAX_READERS][IFDH_MAX_SLOTS] =
+{
+	{NULL},
+	{NULL},
+	{NULL},
+	{NULL},
 };
 
 /* Mutexes for all readers */
 #ifdef HAVE_PTHREAD
-static pthread_mutex_t ifdh_context_mutex[IFDH_MAX_READERS] = {
-  PTHREAD_MUTEX_INITIALIZER,
-  PTHREAD_MUTEX_INITIALIZER,
-  PTHREAD_MUTEX_INITIALIZER,
-  PTHREAD_MUTEX_INITIALIZER
+static pthread_mutex_t ifdh_context_mutex[IFDH_MAX_READERS] =
+{
+	PTHREAD_MUTEX_INITIALIZER,
+	PTHREAD_MUTEX_INITIALIZER,
+	PTHREAD_MUTEX_INITIALIZER,
+	PTHREAD_MUTEX_INITIALIZER
 };
 #endif
 
 RESPONSECODE
 IFDHCreateChannel(DWORD Lun, DWORD Channel)
 {
-  char ret;
-  unsigned short ctn, pn, slot;
-  RESPONSECODE rv;
+	char ret;
+	unsigned short ctn, pn, slot;
+	RESPONSECODE rv;
 
-  ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
-  slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
-
+	ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
+	slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
 #ifdef HAVE_PTHREAD
-  pthread_mutex_lock (&ifdh_context_mutex[ctn]);
+	pthread_mutex_lock(&ifdh_context_mutex[ctn]);
 #endif
+	if (ifdh_context[ctn][slot] == NULL) {
+		/* We don't care that much about IFDH CHANNELID handling */
+		if (Channel > IFDH_MAX_READERS) {
+			pn = 0;
+		} else {
+			pn = ((Channel == 0) ? 0 : Channel - 1);
+		}
+		ret = CT_init(ctn, pn);
 
-  if (ifdh_context[ctn][slot] == NULL)
-    {
-      /* We don't care that much about IFDH CHANNELID handling */
-      if (Channel > IFDH_MAX_READERS)
-        pn = 0;
-      else
-        pn = ((Channel == 0) ? 0 : Channel - 1);
+		if (ret == OK) {
+			/* Initialize context of the all slots in this reader */
+			for (slot = 0; slot < IFDH_MAX_SLOTS; slot++) {
+				ifdh_context[ctn][slot] =
+				    (IFDH_Context *) malloc(sizeof(IFDH_Context));
 
-      ret = CT_init (ctn, pn);
-
-      if (ret == OK)
-        {
-          /* Initialize context of the all slots in this reader */
-          for (slot = 0; slot < IFDH_MAX_SLOTS; slot++)
-            {
-              ifdh_context[ctn][slot] =
-                (IFDH_Context *) malloc (sizeof (IFDH_Context));
-
-              if (ifdh_context[ctn][slot] != NULL)
-                memset (ifdh_context[ctn][slot], 0, sizeof (IFDH_Context));
-            }
-          rv = IFD_SUCCESS;
-        }
-
-      else
-        rv = IFD_COMMUNICATION_ERROR;
-    }
-
-  else
-    {
-      /* Assume that IFDHCreateChannel is being called for another
-         already initialized slot in this same reader, and return Success */
-      rv = IFD_SUCCESS;
-    }
-
+				if (ifdh_context[ctn][slot] != NULL)
+					memset(ifdh_context[ctn][slot], 0, sizeof(IFDH_Context));
+			}
+			rv = IFD_SUCCESS;
+		} else {
+			rv = IFD_COMMUNICATION_ERROR;
+		}
+	} else {
+		/* Assume that IFDHCreateChannel is being called for another
+		   already initialized slot in this same reader, and return Success */
+		rv = IFD_SUCCESS;
+	}
 #ifdef HAVE_PTHREAD
-  pthread_mutex_unlock (&ifdh_context_mutex[ctn]);
+	pthread_mutex_unlock(&ifdh_context_mutex[ctn]);
 #endif
-
 #ifdef DEBUG_IFDH
-  syslog (LOG_INFO, "IFDH: IFDHCreateChannel(Lun=0x%X, Channel=0x%X)=%d",Lun,
-          Channel, rv);
+	syslog(LOG_INFO, "IFDH: IFDHCreateChannel(Lun=0x%X, Channel=0x%X)=%d", Lun,
+	       Channel, rv);
 #endif
-
-  return rv;
+	return rv;
 }
 
 RESPONSECODE
 IFDHCloseChannel(DWORD Lun)
 {
-  char ret;
-  unsigned short ctn, slot;
-  RESPONSECODE rv;
+	char ret;
+	unsigned short ctn, slot;
+	RESPONSECODE rv;
 
-  ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
-  slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
+	ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
+	slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
 
-  ret = CT_close (ctn);
+	ret = CT_close(ctn);
 
-  if (ret == OK)
-    {
+	if (ret == OK) {
 #ifdef HAVE_PTHREAD
-      pthread_mutex_lock (&ifdh_context_mutex[ctn]);
+		pthread_mutex_lock(&ifdh_context_mutex[ctn]);
 #endif
-
-      /* Free context of the all slots in this reader */
-      for (slot = 0; slot < IFDH_MAX_SLOTS; slot++)
-        {
-          if (ifdh_context[ctn][slot] != NULL)
-            {
-              free (ifdh_context[ctn][slot]);
-              ifdh_context[ctn][slot] = NULL;
-            }
-        }
+		/* Free context of the all slots in this reader */
+		for (slot = 0; slot < IFDH_MAX_SLOTS; slot++) {
+			if (ifdh_context[ctn][slot] != NULL) {
+				free(ifdh_context[ctn][slot]);
+				ifdh_context[ctn][slot] = NULL;
+			}
+		}
 #ifdef HAVE_PTHREAD
-      pthread_mutex_unlock (&ifdh_context_mutex[ctn]);
+		pthread_mutex_unlock(&ifdh_context_mutex[ctn]);
 #endif
-      rv = IFD_SUCCESS;
-    }
-
-  else
-    rv = IFD_COMMUNICATION_ERROR;
-
+		rv = IFD_SUCCESS;
+	} else {
+		rv = IFD_COMMUNICATION_ERROR;
+	}
 #ifdef DEBUG_IFDH
-  syslog (LOG_INFO, "IFDH: IFDHCloseChannel(Lun=0x%X)=%d", Lun, rv);
+	syslog(LOG_INFO, "IFDH: IFDHCloseChannel(Lun=0x%X)=%d", Lun, rv);
 #endif
-
-  return rv;
+	return rv;
 }
 
 RESPONSECODE
 IFDHGetCapabilities(DWORD Lun, DWORD Tag, PDWORD Length, PUCHAR Value)
 {
-  unsigned short ctn, slot;
-  RESPONSECODE rv;
+	unsigned short ctn, slot;
+	RESPONSECODE rv;
 
-  ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
-  slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
-
+	ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
+	slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
 #ifdef HAVE_PTHREAD
-  pthread_mutex_lock (&ifdh_context_mutex[ctn]);
+	pthread_mutex_lock(&ifdh_context_mutex[ctn]);
 #endif
+	switch (Tag) {
+	case TAG_IFD_ATR:
+		(*Length) = ifdh_context[ctn][slot]->ATR_Length;
+		memcpy(Value, ifdh_context[ctn][slot]->icc_state.ATR, (*Length));
+		rv = IFD_SUCCESS;
+		break;
 
-  switch (Tag)
-  {
-    case TAG_IFD_ATR:
-    (*Length) = ifdh_context[ctn][slot]->ATR_Length;
-    memcpy (Value, ifdh_context[ctn][slot]->icc_state.ATR, (*Length));
-    rv = IFD_SUCCESS;
-    break;
+	case TAG_IFD_SLOTS_NUMBER:
+		(*Length) = 1;
+		(*Value) = IFDH_MAX_SLOTS;
+		rv = IFD_SUCCESS;
+		break;
 
-    case TAG_IFD_SLOTS_NUMBER:
-    (*Length) = 1;
-    (*Value) = IFDH_MAX_SLOTS;
-    rv = IFD_SUCCESS;
-    break;
+	case TAG_IFD_SIMULTANEOUS_ACCESS:
+		(*Length) = 1;
+		(*Value) = IFDH_MAX_READERS;
+		rv = IFD_SUCCESS;
+		break;
 
-    case TAG_IFD_SIMULTANEOUS_ACCESS:
-    (*Length) = 1;
-    (*Value) = IFDH_MAX_READERS;
-    rv = IFD_SUCCESS;
-    break;
-
-    default:
-    (*Length) = 0;
-    rv = IFD_ERROR_TAG;
-  }
-
+	default:
+		(*Length) = 0;
+		rv = IFD_ERROR_TAG;
+	}
 #ifdef HAVE_PTHREAD
-  pthread_mutex_unlock (&ifdh_context_mutex[ctn]);
+	pthread_mutex_unlock(&ifdh_context_mutex[ctn]);
 #endif
-
 #ifdef DEBUG_IFDH
-  syslog (LOG_INFO, "IFDH: IFDHGetCapabilities (Lun=0x%X, Tag=0x%X)=%d",Lun, Tag, rv);
+	syslog(LOG_INFO, "IFDH: IFDHGetCapabilities (Lun=0x%X, Tag=0x%X)=%d", Lun, Tag, rv);
 #endif
-
-  return rv;
+	return rv;
 }
 
 RESPONSECODE
 IFDHSetCapabilities(DWORD Lun, DWORD Tag, DWORD Length, PUCHAR Value)
 {
 #ifdef DEBUG_IFDH
-/*  syslog (LOG_INFO, "IFDH: IFDHSetCapabilities (Lun=%X, Tag=%X)=%d",Lun, Tag,
-          IFD_NOT_SUPPORTED ); */
+#if 0
+	syslog(LOG_INFO, "IFDH: IFDHSetCapabilities (Lun=%X, Tag=%X)=%d", Lun, Tag,
+	       IFD_NOT_SUPPORTED);
 #endif
-
-  return IFD_NOT_SUPPORTED;
+#endif
+	return IFD_NOT_SUPPORTED;
 }
 
 RESPONSECODE
 IFDHSetProtocolParameters(DWORD Lun, DWORD Protocol,
-                          UCHAR Flags, UCHAR PTS1, UCHAR PTS2, UCHAR PTS3)
+			  UCHAR Flags, UCHAR PTS1, UCHAR PTS2, UCHAR PTS3)
 {
-  char ret;
-  unsigned short ctn, slot, lc, lr;
-  UCHAR cmd[10], rsp[256], sad, dad;
-  RESPONSECODE rv;
+	char ret;
+	unsigned short ctn, slot, lc, lr;
+	UCHAR cmd[10], rsp[256], sad, dad;
+	RESPONSECODE rv;
 
-  ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
-  slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
-
+	ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
+	slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
 #ifdef HAVE_PTHREAD
-  pthread_mutex_lock (&ifdh_context_mutex[ctn]);
+	pthread_mutex_lock(&ifdh_context_mutex[ctn]);
 #endif
+	if (ifdh_context[ctn][slot] != NULL) {
+		cmd[0] = CTBCS_CLA;
+		cmd[1] = CTBCS_INS_RESET;
+		cmd[2] = (UCHAR) (slot + 1);
+		cmd[3] = CTBCS_P2_RESET_GET_ATR;
+		cmd[4] = 0x06;
+		cmd[5] = 0xFF;
+		cmd[6] = (Flags << 4) | (0x0F & Protocol);
 
-  if (ifdh_context[ctn][slot] != NULL)
-    {
-      cmd[0] = CTBCS_CLA;
-      cmd[1] = CTBCS_INS_RESET;
-      cmd[2] = (UCHAR) (slot + 1);
-      cmd[3] = CTBCS_P2_RESET_GET_ATR;
-      cmd[4] = 0x06;
-      cmd[5] = 0xFF;
-      cmd[6] = (Flags << 4) | (0x0F & Protocol);
+		lc = 7;
 
-      lc=7; 
+		if ((Flags & 0x10) == 0x10)
+			cmd[lc++] = PTS1;
 
-      if ((Flags & 0x10) == 0x10)
-	  cmd[lc++] = PTS1;
-      
-      if ((Flags & 0x20) == 0x20)
-	  cmd[lc++] = PTS2;
+		if ((Flags & 0x20) == 0x20)
+			cmd[lc++] = PTS2;
 
-      if ((Flags & 0x40) == 0x40)
-	  cmd[lc++] = PTS3;
+		if ((Flags & 0x40) == 0x40)
+			cmd[lc++] = PTS3;
 
-      dad = 0x01;
-      sad = 0x02;
-      lr = 256;
+		dad = 0x01;
+		sad = 0x02;
+		lr = 256;
 
-      ret = CT_data (ctn, &dad, &sad, lc, cmd, &lr, rsp);
+		ret = CT_data(ctn, &dad, &sad, lc, cmd, &lr, rsp);
 
-      if ((ret == OK) && (lr >= 2))
-        {
-          ifdh_context[ctn][slot]->ATR_Length = (DWORD) lr - 2;
-          memcpy (ifdh_context[ctn][slot]->icc_state.ATR, rsp, lr - 2);
+		if ((ret == OK) && (lr >= 2)) {
+			ifdh_context[ctn][slot]->ATR_Length = (DWORD) lr - 2;
+			memcpy(ifdh_context[ctn][slot]->icc_state.ATR, rsp, lr - 2);
 
-          rv = IFD_SUCCESS;
-        }
-
-      else
-        rv = IFD_ERROR_PTS_FAILURE;
-    }
-
-  else
-    rv = IFD_ICC_NOT_PRESENT;
-
+			rv = IFD_SUCCESS;
+		} else {
+			rv = IFD_ERROR_PTS_FAILURE;
+		}
+	} else {
+		rv = IFD_ICC_NOT_PRESENT;
+	}
 #ifdef HAVE_PTHREAD
-  pthread_mutex_unlock (&ifdh_context_mutex[ctn]);
+	pthread_mutex_unlock(&ifdh_context_mutex[ctn]);
 #endif
-
 #ifdef DEBUG_IFDH
-  syslog (LOG_INFO, "IFDH: IFDHSetProtocolParameters (Lun=0x%X, Protocol=%d, Flags=0x%02X, PTS1=0x%02X, PTS2=0x%02X, PTS3=0x%02X)=%d", 
-	  Lun, Protocol, Flags, PTS1, PTS2, PTS3, rv);
+	syslog(LOG_INFO, "IFDH: IFDHSetProtocolParameters (Lun=0x%X, Protocol=%d, Flags=0x%02X, PTS1=0x%02X, PTS2=0x%02X, PTS3=0x%02X)=%d",
+	       Lun, Protocol, Flags, PTS1, PTS2, PTS3, rv);
 #endif
-
-  return rv;
+	return rv;
 }
 
 RESPONSECODE
 IFDHPowerICC(DWORD Lun, DWORD Action, PUCHAR Atr, PDWORD AtrLength)
 {
-  char ret;
-  unsigned short ctn, slot, lc, lr;
-  UCHAR cmd[5], rsp[256], sad, dad;
-  RESPONSECODE rv;
+	char ret;
+	unsigned short ctn, slot, lc, lr;
+	UCHAR cmd[5], rsp[256], sad, dad;
+	RESPONSECODE rv;
 
-  ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
-  slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
-
+	ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
+	slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
 #ifdef HAVE_PTHREAD
-  pthread_mutex_lock (&ifdh_context_mutex[ctn]);
+	pthread_mutex_lock(&ifdh_context_mutex[ctn]);
 #endif
+	if (ifdh_context[ctn][slot] != NULL) {
+		if (Action == IFD_POWER_UP) {
+			cmd[0] = CTBCS_CLA;
+			cmd[1] = CTBCS_INS_REQUEST_ICC;
+			cmd[2] = (UCHAR) (slot + 1);
+			cmd[3] = CTBCS_P2_REQUEST_GET_ATR;
+			cmd[4] = 0x00;
 
-  if (ifdh_context[ctn][slot] != NULL)
-    {
-      if (Action == IFD_POWER_UP)
-        {
-          cmd[0] = CTBCS_CLA;
-          cmd[1] = CTBCS_INS_REQUEST_ICC;
-          cmd[2] = (UCHAR) (slot + 1);
-          cmd[3] = CTBCS_P2_REQUEST_GET_ATR;
-          cmd[4] = 0x00;
+			dad = 0x01;
+			sad = 0x02;
+			lr = 256;
+			lc = 5;
 
-          dad = 0x01;
-          sad = 0x02;
-          lr = 256;
-          lc = 5;
+			ret = CT_data(ctn, &dad, &sad, 5, cmd, &lr, rsp);
 
-          ret = CT_data (ctn, &dad, &sad, 5, cmd, &lr, rsp);
+			if ((ret == OK) && (lr >= 2)) {
+				ifdh_context[ctn][slot]->ATR_Length = (DWORD) lr - 2;
+				memcpy(ifdh_context[ctn][slot]->icc_state.ATR, rsp, lr - 2);
 
-          if ((ret == OK) && (lr >= 2))
-            {
-              ifdh_context[ctn][slot]->ATR_Length = (DWORD) lr - 2;
-              memcpy (ifdh_context[ctn][slot]->icc_state.ATR, rsp, lr - 2);
+				(*AtrLength) = (DWORD) lr - 2;
+				memcpy(Atr, rsp, lr - 2);
 
-              (*AtrLength) = (DWORD) lr - 2;
-              memcpy (Atr, rsp, lr - 2);
+				rv = IFD_SUCCESS;
+			} else {
+				rv = IFD_COMMUNICATION_ERROR;
+			}
+		} else if (Action == IFD_POWER_DOWN) {
+			cmd[0] = CTBCS_CLA;
+			cmd[1] = CTBCS_INS_EJECT_ICC;
+			cmd[2] = (UCHAR) (slot + 1);
+			cmd[3] = 0x00;
+			cmd[4] = 0x00;
 
-              rv = IFD_SUCCESS;
-            }
+			dad = 0x01;
+			sad = 0x02;
+			lr = 256;
+			lc = 5;
 
-          else
-            rv = IFD_COMMUNICATION_ERROR;
-        }
+			ret = CT_data(ctn, &dad, &sad, 5, cmd, &lr, rsp);
 
-      else if (Action == IFD_POWER_DOWN)
-        {
-          cmd[0] = CTBCS_CLA;
-          cmd[1] = CTBCS_INS_EJECT_ICC;
-          cmd[2] = (UCHAR) (slot + 1);
-          cmd[3] = 0x00;
-          cmd[4] = 0x00;
+			if (ret == OK) {
+				ifdh_context[ctn][slot]->ATR_Length = 0;
+				memset(ifdh_context[ctn][slot]->icc_state.ATR, 0, MAX_ATR_SIZE);
 
-          dad = 0x01;
-          sad = 0x02;
-          lr = 256;
-          lc = 5;
+				(*AtrLength) = 0;
+				rv = IFD_SUCCESS;
+			} else {
+				rv = IFD_COMMUNICATION_ERROR;
+			}
+		} else if (Action == IFD_RESET) {
+			cmd[0] = CTBCS_CLA;
+			cmd[1] = CTBCS_INS_RESET;
+			cmd[2] = (UCHAR) (slot + 1);
+			cmd[3] = CTBCS_P2_RESET_GET_ATR;
+			cmd[4] = 0x00;
 
-          ret = CT_data (ctn, &dad, &sad, 5, cmd, &lr, rsp);
+			dad = 0x01;
+			sad = 0x02;
+			lr = 256;
+			lc = 5;
 
-          if (ret == OK)
-            {
-              ifdh_context[ctn][slot]->ATR_Length = 0;
-              memset (ifdh_context[ctn][slot]->icc_state.ATR, 0, MAX_ATR_SIZE);
+			ret = CT_data(ctn, &dad, &sad, 5, cmd, &lr, rsp);
 
-              (*AtrLength) = 0;
-              rv = IFD_SUCCESS;
-            }
+			if ((ret == OK) && (lr >= 2)) {
+				ifdh_context[ctn][slot]->ATR_Length = (DWORD) lr - 2;
+				memcpy(ifdh_context[ctn][slot]->icc_state.ATR, rsp, lr - 2);
 
-          else
-            rv = IFD_COMMUNICATION_ERROR;
-        }
+				(*AtrLength) = (DWORD) lr - 2;
+				memcpy(Atr, rsp, lr - 2);
 
-      else if (Action == IFD_RESET)
-        {
-          cmd[0] = CTBCS_CLA;
-          cmd[1] = CTBCS_INS_RESET;
-          cmd[2] = (UCHAR) (slot + 1);
-          cmd[3] = CTBCS_P2_RESET_GET_ATR;
-          cmd[4] = 0x00;
-
-          dad = 0x01;
-          sad = 0x02;
-          lr = 256;
-          lc = 5;
-
-          ret = CT_data (ctn, &dad, &sad, 5, cmd, &lr, rsp);
-
-          if ((ret == OK) && (lr >= 2))
-            {
-              ifdh_context[ctn][slot]->ATR_Length = (DWORD) lr - 2;
-              memcpy (ifdh_context[ctn][slot]->icc_state.ATR, rsp, lr - 2);
-
-              (*AtrLength) = (DWORD) lr - 2;
-              memcpy (Atr, rsp, lr - 2);
-
-              rv = IFD_SUCCESS;
-            }
-
-          else
-            rv = IFD_ERROR_POWER_ACTION;
-        }
-
-      else
-        rv = IFD_NOT_SUPPORTED;
-    }
-
-  else
-    rv = IFD_ICC_NOT_PRESENT;
-
+				rv = IFD_SUCCESS;
+			} else {
+				rv = IFD_ERROR_POWER_ACTION;
+			}
+		} else {
+			rv = IFD_NOT_SUPPORTED;
+		}
+	} else {
+		rv = IFD_ICC_NOT_PRESENT;
+	}
 #ifdef HAVE_PTHREAD
-  pthread_mutex_unlock (&ifdh_context_mutex[ctn]);
+	pthread_mutex_unlock(&ifdh_context_mutex[ctn]);
 #endif
-
 #ifdef DEBUG_IFDH
-  syslog (LOG_INFO, "IFDH: IFDHPowerICC (Lun=0x%X, Action=0x%X)=%d", Lun, Action, rv);
+	syslog(LOG_INFO, "IFDH: IFDHPowerICC (Lun=0x%X, Action=0x%X)=%d", Lun, Action, rv);
 #endif
-
-  return rv;
+	return rv;
 }
 
 RESPONSECODE
 IFDHTransmitToICC(DWORD Lun, SCARD_IO_HEADER SendPci,
-                  PUCHAR TxBuffer, DWORD TxLength,
-                  PUCHAR RxBuffer, PDWORD RxLength, PSCARD_IO_HEADER RecvPci)
+		  PUCHAR TxBuffer, DWORD TxLength,
+		  PUCHAR RxBuffer, PDWORD RxLength, PSCARD_IO_HEADER RecvPci)
 {
-  char ret;
-  unsigned short ctn, slot, lc, lr;
-  UCHAR sad, dad;
-  RESPONSECODE rv;
+	char ret;
+	unsigned short ctn, slot, lc, lr;
+	UCHAR sad, dad;
+	RESPONSECODE rv;
 
-  ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
-  slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
-
+	ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
+	slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
 #ifdef HAVE_PTHREAD
-  pthread_mutex_lock (&ifdh_context_mutex[ctn]);
+	pthread_mutex_lock(&ifdh_context_mutex[ctn]);
 #endif
-
-  if (ifdh_context[ctn][slot] != NULL)
-    {
+	if (ifdh_context[ctn][slot] != NULL) {
 #ifdef HAVE_PTHREAD
-      pthread_mutex_unlock (&ifdh_context_mutex[ctn]);
+		pthread_mutex_unlock(&ifdh_context_mutex[ctn]);
 #endif
-      dad = (UCHAR) ((slot == 0) ? 0x00 : slot + 1);
-      sad = 0x02;
-      lr = (unsigned short) (*RxLength);
-      lc = (unsigned short) TxLength;
+		dad = (UCHAR) ((slot == 0) ? 0x00 : slot + 1);
+		sad = 0x02;
+		lr = (unsigned short) (*RxLength);
+		lc = (unsigned short) TxLength;
 
-      ret = CT_data (ctn, &dad, &sad, lc, TxBuffer, &lr, RxBuffer);
+		ret = CT_data(ctn, &dad, &sad, lc, TxBuffer, &lr, RxBuffer);
 
-      if (ret == OK)
-        {
-          (*RxLength) = lr;
-          rv = IFD_SUCCESS;
-        }
-
-      else
-        {
-          (*RxLength) = 0;
-          rv = IFD_COMMUNICATION_ERROR;
-        }
-    }
-
-  else
-    {
+		if (ret == OK) {
+			(*RxLength) = lr;
+			rv = IFD_SUCCESS;
+		} else {
+			(*RxLength) = 0;
+			rv = IFD_COMMUNICATION_ERROR;
+		}
+	} else {
 #ifdef HAVE_PTHREAD
-      pthread_mutex_unlock (&ifdh_context_mutex[ctn]);
+		pthread_mutex_unlock(&ifdh_context_mutex[ctn]);
 #endif
-      rv = IFD_ICC_NOT_PRESENT;
-    }
-
+		rv = IFD_ICC_NOT_PRESENT;
+	}
 #ifdef DEBUG_IFDH
-  syslog (LOG_INFO, "IFDH: IFDHTransmitToICC (Lun=0x%X, Tx=%u, Rx=%u)=%d", Lun, TxLength, (*RxLength), rv);
+	syslog(LOG_INFO, "IFDH: IFDHTransmitToICC (Lun=0x%X, Tx=%u, Rx=%u)=%d", Lun, TxLength, (*RxLength), rv);
 #endif
-
-  return rv;
+	return rv;
 }
 
 RESPONSECODE
 IFDHControl(DWORD Lun, PUCHAR TxBuffer,
-            DWORD TxLength, PUCHAR RxBuffer, PDWORD RxLength)
+	    DWORD TxLength, PUCHAR RxBuffer, PDWORD RxLength)
 {
-  char ret;
-  unsigned short ctn, slot, lc, lr;
-  UCHAR sad, dad;
-  RESPONSECODE rv;
+	char ret;
+	unsigned short ctn, slot, lc, lr;
+	UCHAR sad, dad;
+	RESPONSECODE rv;
 
-  ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
-  slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
-
+	ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
+	slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
 #ifdef HAVE_PTHREAD
-  pthread_mutex_lock (&ifdh_context_mutex[ctn]);
+	pthread_mutex_lock(&ifdh_context_mutex[ctn]);
 #endif
-
-  if (ifdh_context[ctn][slot] != NULL)
-    {
+	if (ifdh_context[ctn][slot] != NULL) {
 #ifdef HAVE_PTHREAD
-      pthread_mutex_unlock (&ifdh_context_mutex[ctn]);
+		pthread_mutex_unlock(&ifdh_context_mutex[ctn]);
 #endif
-      dad = 0x01;
-      sad = 0x02;
-      lr = (unsigned short) (*RxLength);
-      lc = (unsigned short) TxLength;
+		dad = 0x01;
+		sad = 0x02;
+		lr = (unsigned short) (*RxLength);
+		lc = (unsigned short) TxLength;
 
-      ret = CT_data (ctn, &dad, &sad, lc, TxBuffer, &lr, RxBuffer);
+		ret = CT_data(ctn, &dad, &sad, lc, TxBuffer, &lr, RxBuffer);
 
-      if (ret == OK)
-        {
-          (*RxLength) = lr;
-          rv = IFD_SUCCESS;
-        }
-      else
-        {
-          (*RxLength) = 0;
-          rv = IFD_COMMUNICATION_ERROR;
-        }
-    }
-
-  else
-    {
+		if (ret == OK) {
+			(*RxLength) = lr;
+			rv = IFD_SUCCESS;
+		} else {
+			(*RxLength) = 0;
+			rv = IFD_COMMUNICATION_ERROR;
+		}
+	} else {
 #ifdef HAVE_PTHREAD
-      pthread_mutex_unlock (&ifdh_context_mutex[ctn]);
+		pthread_mutex_unlock(&ifdh_context_mutex[ctn]);
 #endif
-      rv = IFD_ICC_NOT_PRESENT;
-    }
-
+		rv = IFD_ICC_NOT_PRESENT;
+	}
 #ifdef DEBUG_IFDH
-  syslog (LOG_INFO, "IFDH: IFDHControl (Lun=0x%X, Tx=%u, Rx=%u)=%d", Lun, TxLength, (*RxLength), rv);
+	syslog(LOG_INFO, "IFDH: IFDHControl (Lun=0x%X, Tx=%u, Rx=%u)=%d", Lun, TxLength, (*RxLength), rv);
 #endif
-
-  return rv;
+	return rv;
 }
 
 RESPONSECODE
 IFDHICCPresence(DWORD Lun)
 {
-  char ret;
-  unsigned short ctn, slot, lc, lr;
-  UCHAR cmd[5], rsp[256], sad, dad;
-  RESPONSECODE rv;
+	char ret;
+	unsigned short ctn, slot, lc, lr;
+	UCHAR cmd[5], rsp[256], sad, dad;
+	RESPONSECODE rv;
 
-  ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
-  slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
+	ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
+	slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
 
-  cmd[0] = CTBCS_CLA;
-  cmd[1] = CTBCS_INS_STATUS;
-  cmd[2] = CTBCS_UNIT_CT;
-  cmd[3] = CTBCS_P2_STATUS_ICC;
-  cmd[4] = 0x00;
+	cmd[0] = CTBCS_CLA;
+	cmd[1] = CTBCS_INS_STATUS;
+	cmd[2] = CTBCS_UNIT_CT;
+	cmd[3] = CTBCS_P2_STATUS_ICC;
+	cmd[4] = 0x00;
 
-  dad = 0x01;
-  sad = 0x02;
-  lc = 5;
-  lr = 256;
+	dad = 0x01;
+	sad = 0x02;
+	lc = 5;
+	lr = 256;
 
-  ret = CT_data (ctn, &dad, &sad, lc, cmd, &lr, rsp);
+	ret = CT_data(ctn, &dad, &sad, lc, cmd, &lr, rsp);
 
-  if (ret == OK)
-    {
-      if (slot < lr - 2)
-        {
-          if (rsp[slot] == CTBCS_DATA_STATUS_NOCARD)
-            rv = IFD_ICC_NOT_PRESENT;
-          else
-            rv = IFD_ICC_PRESENT;
-        }
-      else
-        rv = IFD_ICC_NOT_PRESENT;
-    }
-  else
-    rv = IFD_COMMUNICATION_ERROR;
-
+	if (ret == OK) {
+		if (slot < lr - 2) {
+			if (rsp[slot] == CTBCS_DATA_STATUS_NOCARD) {
+				rv = IFD_ICC_NOT_PRESENT;
+			} else {
+				rv = IFD_ICC_PRESENT;
+			}
+		} else {
+			rv = IFD_ICC_NOT_PRESENT;
+		}
+	} else {
+		rv = IFD_COMMUNICATION_ERROR;
+	}
 #ifdef DEBUG_IFDH
-  syslog (LOG_INFO, "IFDH: IFDHICCPresence (Lun=0x%X)=%d", Lun, rv);
+	syslog(LOG_INFO, "IFDH: IFDHICCPresence (Lun=0x%X)=%d", Lun, rv);
 #endif
-
-  return rv;
+	return rv;
 }
