@@ -446,7 +446,7 @@ do_memory_read(ifd_reader_t *reader, int unit,
 		return IFD_ERROR_INVALID_SLOT;
 
 	if (!ct_tlv_get_int(args, CT_TAG_ADDRESS, &address)
-	 || !ct_tlv_get_int(args, CT_TAG_COUNT, &data_len))
+	 || !ct_tlv_get_int(args, CT_TAG_COUNT, (unsigned int *) &data_len))
 		return IFD_ERROR_MISSING_ARG;
 
 	if (data_len > sizeof(data))
