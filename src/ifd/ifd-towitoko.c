@@ -25,9 +25,6 @@ static int		twt_try_reset(ifd_reader_t *,
 static int		twt_command(ifd_reader_t *,
 				const char *, size_t,
 				void *, size_t);
-static void		twt_build(ifd_apdu_t *,
-				const void *, size_t,
-				void *, size_t);
 static int		twt_recv_checksum(const unsigned char *, size_t);
 static unsigned int	twt_send_checksum(unsigned char *, size_t);
 
@@ -47,7 +44,6 @@ twt_open(ifd_reader_t *reader, const char *device_name)
 	ifd_device_params_t params;
 	ifd_device_t	*dev;
 	unsigned char	buffer[256];
-	ifd_apdu_t	cmd;
 
 	DEBUG("called, device=%s", device_name);
 
@@ -72,8 +68,7 @@ twt_open(ifd_reader_t *reader, const char *device_name)
 	sleep(1);
 	ifd_device_flush(dev);
 
-	twt_build(&cmd, "\x00\x01", 2, buffer, 3);
-	if (ifd_device_transceive(dev, &cmd, -1) < 0
+	if (ifd_device_transceive(dev, "\x00\x01", 2, buffer, 3, -1) < 0
 	 || !twt_recv_checksum(buffer, 3))
 		goto failed;
 
@@ -215,13 +210,8 @@ twt_try_reset(ifd_reader_t *reader,
 
 	ct_config.hush_errors++;
 	if (ifd_device_type(dev) != IFD_DEVICE_TYPE_SERIAL) {
-		ifd_apdu_t	apdu;
-
-		apdu.snd_buf = (void *) cmd;
-		apdu.snd_len = cmd_len;
-		apdu.rcv_buf = atr;
-		apdu.rcv_len = atr_len;
-		rc = ifd_device_transceive(dev, &apdu, 1000);
+		rc = ifd_device_transceive(dev, cmd, cmd_len,
+						atr, atr_len, 1000);
 	} else {
 		if (ifd_device_send(dev, cmd, cmd_len) < 0)
 			return -1;
@@ -348,7 +338,7 @@ twt_command(ifd_reader_t *reader, const char *cmd, size_t cmd_len,
 		void *res, size_t res_len)
 {
 	unsigned char	buffer[254];
-	ifd_apdu_t	apdu;
+	int		rc;
 
 	if (ct_config.debug > 1)
 		DEBUG("sending:%s", ct_hexdump(cmd, cmd_len));
@@ -360,9 +350,10 @@ twt_command(ifd_reader_t *reader, const char *cmd, size_t cmd_len,
 	memcpy(buffer, cmd, cmd_len);
 	cmd_len = twt_send_checksum(buffer, cmd_len);
 
-	twt_build(&apdu, buffer, cmd_len, buffer, res_len + 1);
-
-	if (ifd_device_transceive(reader->device, &apdu, -1) < 0) {
+	rc = ifd_device_transceive(reader->device,
+					buffer, cmd_len,
+					buffer, res_len + 1, -1);
+	if (rc < 0) {
 		ct_error("towitoko: transceive error");
 		return -1;
 	}
@@ -408,16 +399,6 @@ twt_send_checksum(unsigned char *data, size_t len)
 {
 	data[len] = twt_checksum(0x00, data, len);
 	return len + 1;
-}
-
-void
-twt_build(ifd_apdu_t *apdu, const void *snd_buf, size_t snd_len,
-		void *rcv_buf, size_t rcv_len)
-{
-	apdu->snd_buf = (void *) snd_buf;
-	apdu->snd_len = snd_len;
-	apdu->rcv_buf = rcv_buf;
-	apdu->rcv_len = rcv_len;
 }
 
 /*

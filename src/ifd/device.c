@@ -149,7 +149,10 @@ ifd_device_recv(ifd_device_t *dev, void *data, size_t len, long timeout)
 }
 
 int
-ifd_device_transceive(ifd_device_t *dev, ifd_apdu_t *apdu, long timeout)
+ifd_device_transceive(ifd_device_t *dev, 
+		const void *sbuf, size_t slen,
+		void *rbuf, size_t rlen,
+		long timeout)
 {
 	if (timeout < 0)
 		timeout = dev->timeout;
@@ -157,13 +160,15 @@ ifd_device_transceive(ifd_device_t *dev, ifd_apdu_t *apdu, long timeout)
 	if (!dev || !dev->ops)
 		return -1;
 	if (dev->ops->transceive)
-		return dev->ops->transceive(dev, apdu, timeout);
+		return dev->ops->transceive(dev,
+						sbuf, slen,
+						rbuf, rlen, timeout);
 
 	/* Fall back to send/recv */
 	ifd_device_flush(dev);
-	if (ifd_device_send(dev, apdu->snd_buf, apdu->snd_len) < 0)
+	if (ifd_device_send(dev, sbuf, slen) < 0)
 		return -1;
-	return ifd_device_recv(dev, apdu->rcv_buf, apdu->rcv_len, timeout);
+	return ifd_device_recv(dev, rbuf, rlen, timeout);
 }
 
 void

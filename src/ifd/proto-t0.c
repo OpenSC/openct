@@ -24,7 +24,9 @@ enum {
 	IDLE, SENDING, RECEIVING, CONFUSED
 };
 
-static int	t0_xcv(ifd_protocol_t *, ifd_apdu_t *);
+static int	t0_xcv(ifd_protocol_t *,
+			void *, size_t,
+			void *, size_t);
 static int	t0_send(ifd_protocol_t *, ct_buf_t *, int);
 static int	t0_recv(ifd_protocol_t *, ct_buf_t *, int, long);
 static int	t0_resynch(t0_data_t *);
@@ -107,9 +109,12 @@ static int
 t0_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 {
 	t0_data_t	*t0 = (t0_data_t *) prot;
-	ifd_apdu_t	tpdu;
+	ifd_iso_apdu_t	iso;
 	unsigned char	sdata[5];
 	unsigned int	cla, cse, lc, le;
+	void		*sbuf, *rbuf;
+	size_t		slen, rlen;
+	int		rc;
 
 	if (t0->state != IDLE) {
 		if (t0_resynch(t0) < 0)
@@ -120,29 +125,35 @@ t0_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 	if (apdu->snd_len < 4 || apdu->rcv_len < 2)
 		return -1;
 
-	/* Copy APDU */
-	tpdu = *apdu;
+	/* XXX */
+	sbuf = apdu->snd_buf;
+	rbuf = apdu->rcv_buf;
+	slen = apdu->snd_len;
+	rlen = apdu->rcv_len;
 
-	/* Get class byte */
-	cla = ((unsigned char *) tpdu.snd_buf)[0];
+	/* Check the APDU case etc */
+	if ((rc = ifd_apdu_to_iso(sbuf, slen, &iso)) < 0)
+		return rc;
 
-	/* Check the APDU case */
-	cse = ifd_apdu_case(&tpdu, &lc, &le);
+	cse = iso.cse;
+	cla = iso.cla;
+	lc  = iso.lc;
+	le  = iso.le;
 
 	switch (cse) {
 	case IFD_APDU_CASE_1:
 		/* Include a NUL lc byte */
-		memcpy(sdata, tpdu.snd_buf, 4);
+		memcpy(sdata, sbuf, 4);
 		sdata[4] = 0;
-		tpdu.snd_buf = sdata;
-		tpdu.snd_len = 5;
+		sbuf = sdata;
+		slen = 5;
 		break;
 	case IFD_APDU_CASE_2S:
 	case IFD_APDU_CASE_3S:
 		break;
 	case IFD_APDU_CASE_4S:
 		/* Strip off the Le byte */
-		tpdu.snd_len--;
+		slen--;
 		break;
 	default:
 		/* We don't handle ext APDUs */
@@ -150,7 +161,7 @@ t0_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 	}
 
 	/*
-	if (le + 2 > tpdu.rcv_len) {
+	if (le + 2 > slen) {
 		ct_error("t0_transceive: recv buffer too small");
 		return -1;
 	}
@@ -158,23 +169,21 @@ t0_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 
 	if (lc) {
 		t0->state = SENDING;
-		tpdu.rcv_len = 2;
-
-		if (t0_xcv(prot, &tpdu) < 0)
-			return -1;
+		if ((rc = t0_xcv(prot, sbuf, slen, rbuf, 2)) < 0)
+			return rc;
 
 		/* Can this happen? */
-		if (tpdu.rcv_len != 2)
-			return -1;
+		if (rc != 2)
+			return IFD_ERROR_COMM_ERROR;
 
 		/* Case 4 APDU - check whether we should
 		 * try to get the response */
 		if (cse == IFD_APDU_CASE_4S) {
 			unsigned char	*sw;
 
-			sw = (unsigned char *) tpdu.rcv_buf;
+			sw = (unsigned char *) rbuf;
 
-			if (sw[0] == 0x61 && sw[1]) {
+			if (sw[0] == 0x61) {
 				/* additional length info */
 				if (sw[1] != 0 && sw[1] < le)
 					le = sw[1];
@@ -186,32 +195,29 @@ t0_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 			}
 
 			/* Transmit a Get Response command */
-			tpdu.snd_buf = sdata;
-			tpdu.snd_len = 5;
-			tpdu.rcv_len = le + 2;
-
 			sdata[0] = cla;
 			sdata[1] = 0xC0;
 			sdata[2] = 0x00;
 			sdata[3] = 0x00;
 			sdata[4] = le;
-		} else {
-			goto done;
+
+			t0->state = RECEIVING;
+			rc = t0_xcv(prot, sdata, 5, rbuf, le + 2);
 		}
+	} else {
+		t0->state = RECEIVING;
+		rc = t0_xcv(prot, sbuf, slen, rbuf, le + 2);
 	}
 
-	t0->state = RECEIVING;
-	tpdu.rcv_len = le + 2;
-	if (t0_xcv(prot, &tpdu) < 0)
-		return -1;
-
 done:	t0->state = IDLE;
-	apdu->rcv_len = tpdu.rcv_len;
-	return apdu->rcv_len;
+	if (rc >= 0)
+		apdu->rcv_len = rc;
+	return rc;
 }
 
 static int
-t0_xcv(ifd_protocol_t *prot, ifd_apdu_t *apdu)
+t0_xcv(ifd_protocol_t *prot, void *sdata, size_t slen,
+			void *rdata, size_t rlen)
 {
 	t0_data_t	*t0 = (t0_data_t *) prot;
 	ct_buf_t	sbuf, rbuf;
@@ -219,8 +225,8 @@ t0_xcv(ifd_protocol_t *prot, ifd_apdu_t *apdu)
 	unsigned int	ins;
 
 	/* Set up the send buffer */
-	ct_buf_set(&sbuf, apdu->snd_buf, apdu->snd_len);
-	ct_buf_init(&rbuf, apdu->rcv_buf, apdu->rcv_len);
+	ct_buf_set(&sbuf, sdata, slen);
+	ct_buf_init(&rbuf, rdata, rlen);
 
 	/* Get the INS */
 	ins = sbuf.base[1];
@@ -281,8 +287,7 @@ t0_xcv(ifd_protocol_t *prot, ifd_apdu_t *apdu)
 		}
 	}
 
-	apdu->rcv_len = ct_buf_avail(&rbuf);
-	return apdu->rcv_len;
+	return ct_buf_avail(&rbuf);
 
 failed:	t0->state = CONFUSED;
 	return -1;

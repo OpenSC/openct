@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <openct/core.h>
+#include <openct/ifd.h>
 #include <openct/conf.h>
 
 static void	usage(int exval);

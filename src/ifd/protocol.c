@@ -117,11 +117,18 @@ ifd_protocol_select(ifd_reader_t *reader, int nslot, int preferred)
 int
 ifd_protocol_transceive(ifd_protocol_t *p, int dad, ifd_apdu_t *apdu)
 {
+	int	rc;
+
 	if (!p || !p->ops || !p->ops->transceive)
 		return -1;
 
 	IFD_DEBUG("cmd: %s", ct_hexdump(apdu->snd_buf, apdu->snd_len));
-	return p->ops->transceive(p, dad, apdu);
+	rc = p->ops->transceive(p, dad, apdu);
+
+	if (rc >= 0)
+		IFD_DEBUG("resp:%s", ct_hexdump(apdu->rcv_buf, apdu->rcv_len));
+
+	return rc;
 }
 
 /*

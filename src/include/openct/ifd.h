@@ -125,10 +125,6 @@ extern int			ifd_card_request(ifd_reader_t *reader,
 					void *atr_buf,
 					size_t atr_len);
 
-extern int			ifd_apdu_case(const ifd_apdu_t *apdu,
-					unsigned int *lc,
-					unsigned int *le);
-
 extern ifd_protocol_t *		ifd_protocol_new(int id,
 					ifd_reader_t *reader,
 					unsigned int dad);
