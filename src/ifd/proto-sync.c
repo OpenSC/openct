@@ -167,7 +167,7 @@ out:	if (!res) {
 /*
  * Detect I2C memory length
  */
-static int
+int
 ifd_sync_probe_memory_size(ifd_protocol_t *p, int slot)
 {
 	sync_state_t	*st = (sync_state_t *) p;
@@ -229,9 +229,6 @@ ifd_sync_detect_icc(ifd_reader_t *reader, int slot, void *atr, size_t size)
 	ifd_protocol_t	*p = NULL;
 	int		n;
 
-	if (size < 4)
-		return -1;
-
 	if ((p = ifd_sync_probe_icc(reader, slot, IFD_PROTOCOL_I2C_SHORT))
 	 || (p = ifd_sync_probe_icc(reader, slot, IFD_PROTOCOL_I2C_LONG))) {
 		/* I2C card. Empty ATR */
@@ -243,20 +240,20 @@ ifd_sync_detect_icc(ifd_reader_t *reader, int slot, void *atr, size_t size)
 		if (ifd_deactivate(reader) < 0
 		 || ifd_activate(reader) < 0)
 			goto failed;
-		if (ifd_protocol_read_memory(p, slot, 0, atr, 4) < 0)
+		n = ifd_protocol_read_memory(p, slot, 0, atr, size);
+		if (n < 0)
 			goto failed;
-		n = 4;
 	} else {
 	 	goto failed;
 	}
 
 
+	/* Probe memory length */
 	if (ifd_sync_probe_memory_size(p, slot))
 		goto failed;
 
 	reader->slot[slot].proto = p;
 
-	/* Probe memory length */
 	ifd_debug(1, "Detected synchronous card (%s), size=%u, %satr%s",
 			p->ops->name,
 			ifd_sync_memory_length(p),
