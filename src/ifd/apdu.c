@@ -36,7 +36,7 @@ __ifd_apdu_case(const ifd_apdu_t *apdu, unsigned int *lc, unsigned int *le)
 
 	/* APDU + Lc + data + Le */
 	if (len == b + 1) {
-		*le = data[1 + b];
+		*le = data[5 + b];
 		return IFD_APDU_CASE_4S;
 	}
 
