@@ -7,6 +7,8 @@
 #ifndef IFD_BUFFER_H
 #define IFD_BUFFER_H
 
+#include <sys/types.h>
+
 typedef struct ifd_buf {
 	unsigned char *		base;
 	unsigned int		head, tail, size;
