@@ -42,6 +42,7 @@ ct_hexdump(const unsigned char *data, size_t len)
 	static char	string[256];
 	unsigned int	i, left;
 
+	string[0] = '\0';
 	left = sizeof(string);
 	for (i = 0; len--; i += 3) {
 		if (i >= sizeof(string) - 4)
