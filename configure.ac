@@ -29,6 +29,27 @@ AC_C_BIGENDIAN
 
 dnl Check for some target-specific stuff
 case "$host" in
+*-*-hpux*)
+	CPPFLAGS="$CPPFLAGS -D_HPUX_SOURCE -D_XOPEN_SOURCE_EXTENDED"
+	;;
+*-*-solaris*)
+	CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+	LDFLAGS="$LDFLAGS -L/usr/local/lib -R/usr/local/lib"
+	need_dash_r=1
+	;;
+*-*-sunos4*)
+	CPPFLAGS="$CPPFLAGS -DSUNOS4"
+	;;
+*-*-aix*)
+	CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+	LDFLAGS="$LDFLAGS -L/usr/local/lib"
+	if (test "$LD" != "gcc" && test -z "$blibpath"); then
+		blibpath="/usr/lib:/lib:/usr/local/lib"
+	fi
+	;;
+*-*-osf*)
+	CPPFLAGS="$CPPFLAGS -D_POSIX_PII_SOCKET"
+	;;
 *-*-linux*)
 	AC_CHECK_MEMBER(struct usbdevfs_ctrltransfer.bRequestType,
 		[AC_DEFINE(LINUX_NEWUSB,1,[new usb structure])],
@@ -106,6 +127,11 @@ AC_TYPE_UID_T
 AC_TYPE_SIZE_T
 AC_HEADER_TIME
 
+dnl Checks for library functions.
+AC_FUNC_ERROR_AT_LINE
+AC_FUNC_STAT
+AC_FUNC_VPRINTF
+
 dnl C Compiler features
 AC_C_INLINE
 if test "$GCC" = "yes"; then
@@ -114,6 +140,103 @@ fi
 
 AC_SUBST(LIBDL)
 AC_CHECK_LIB(dl, dlopen, [LIBDL="$LIBDL -ldl" ac_cv_func_dlopen_ldl=yes], ac_cv_func_dlopen_ldl=no)
+
+#
+#  We check for various libraries
+#  - SysVr4 style of "-lsocket" at first (unless in libc)
+#    The hallmark is  connect()  routine (we presume)
+#
+AC_SUBST(LIBSOCKET)dnl
+ac_cv_libsocket_both=1
+AC_CHECK_FUNC(connect, ac_cv_libsocket_both=0)
+AC_CHECK_FUNC(gethostbyname, ac_cv_libsocket_both=0)
+if test "$ac_cv_libsocket_both" = 1 ; then
+  # Check cache
+  if test "$ac_cv_func_socket_lsocket" = yes ; then
+    AC_MSG_RESULT([need -lsocket library (cached)])
+    LIBSOCKET="-lsocket"
+    if test "$ac_cv_func_gethostbyname_lnsl" = yes ; then
+	LIBSOCKET="-lsocket -lnsl"
+    fi
+  else
+    # Well, will this work ?  SysVR4, but not Sun Solaris ?
+    AC_CHECK_LIB(socket, connect, [LIBSOCKET="-lsocket"
+				   ac_cv_func_socket_lsocket=yes],
+				   ac_cv_func_socket_lsocket=no)
+    if test "$ac_cv_func_socket_lsocket" = yes ; then
+      t_oldLibs="$LIBS"
+      LIBS="$LIBS -lsocket $LIBRESOLV"
+      AC_TRY_LINK([],[gethostbyname();], ,[
+	  LIBS="$LIBS -lnsl" # Add this Solaris library..
+	  AC_TRY_LINK([],[gethostbyname();],[
+			LIBSOCKET="-lsocket -lnsl"
+			ac_cv_func_gethostbyname_lnsl=yes
+		], [
+		   AC_MSG_ERROR([Weird, '$LIBS' not enough to find  gethostbyname() ?!])
+		])
+	])
+      LIBS="$t_oldLibs"
+    fi
+  fi
+fi
+
+AC_SUBST(LIBRESOLV)dnl
+if test "x$LIBRESOLV" = "x"; then
+  # Ok, No  -lresolv,  is this enough for the  _res  to appear ?
+  t_oldLibs="$LIBS"
+  LIBS="$LIBS $LIBSOCKET"
+  ac_cv_var__res_options=no
+  # This following is for IRIX6.4, and I sincerely hope it
+  # will not fail on other systems...  It did! It did!
+  # Many systems don't have idemponent headers, they need specific
+  # includes before latter ones, or the latter ones won't be successful...
+  AC_TRY_LINK([#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/nameser.h>
+#include <resolv.h>],
+	      [_res.options = RES_INIT;],
+		ac_cv_var__res_options=yes);
+  if test "$ac_cv_var__res_options" != "yes"; then
+    LIBRESOLV="-lresolv"
+  fi
+  LIBS="$t_oldLibs"
+fi
+
+if test "x$LIBRESOLV" = "x"; then
+  # glibc 2.2.4 and libresolv is difficult
+  #  -	gethostbyname won't require lresolv because all
+  #	queries are made through the nsswitch
+  #  -	checking for the variable _res will not require
+  #	lresolv because _res is defined somewhere
+  AC_CHECK_LIB(resolv, res_query, [LIBRESOLV=-lresolv])
+  LIBS="$t_oldLibs"
+fi
+
+# See about the routines that possibly exist at the libraries..
+LIBS="$t_oldLibs $LIBSOCKET"
+AC_CHECK_FUNCS(socket socketpair)
+LIBS="$t_oldLibs"
+
+if test "$ac_cv_func_socket" = no -a "$LIBSOCKET" != ""; then
+  LIBS="$LIBS $LIBSOCKET"
+  AC_TRY_LINK([],[socket();], ac_cv_func_socket=yes)
+  if test $ac_cv_func_socket = yes; then
+    AC_DEFINE(HAVE_SOCKET, 1, [Have socket])
+  fi
+  LIBS="$t_oldLibs"
+fi
+if test "$ac_cv_func_socketpair" = no -a "$LIBSOCKET" != ""; then
+  LIBS="$LIBS $LIBSOCKET"
+  AC_TRY_LINK([],[socketpair();], ac_cv_func_socketpair=yes)
+  if test $ac_cv_func_socketpair = yes; then
+    AC_DEFINE(HAVE_SOCKETPAIR, 1, [Have socketpair])
+  fi
+  LIBS="$t_oldLibs"
+fi
+
+# Always link lib{socket,nsl,resolv) if found, sigh.
+LIBS="$LIBS $LIBSOCKET $LIBRESOLV"
 
 PCSC_MSG=no
 pcsc_path=/usr
@@ -201,7 +324,28 @@ AC_CHECK_LIB(usb, usb_init,
 		USB_MSG=yes
 	])
 
+if test "x$prefix" = xNONE; then
+  prefix=$ac_default_prefix
+fi
+
+dnl Enable/disable debugging messages.
+AC_ARG_ENABLE(debug,
+[  --enable-debug          enable debug messages. [default=no]],
+	, enable_debug=no)
+if (test x$enable_debug = xyes); then
+	AC_DEFINE(DEBUG, 1, [Enable debug messages.])
+fi
+
+CPPFLAGS="-I\${top_builddir}/include $CPPFLAGS"
 AM_CONDITIONAL(HAVE_BUNDLES, test "x$with_bundles" = "xyes")
+
+openct_etc_path=`eval echo ${sysconfdir}` ; openct_etc_path=`eval echo ${openct_etc_path}`
+AC_DEFINE_UNQUOTED(OPENCT_ETC_PATH, "$openct_etc_path", [etc path for libopenct])
+openct_conf_path=`eval echo ${openct_etc_path}/openct.conf`
+AC_DEFINE_UNQUOTED(OPENCT_CONF_PATH, "$openct_conf_path", [default config file for libopenct])
+
+pkgdata=`eval echo ${datadir}/${PACKAGE}` ; pkgdata=`eval echo ${pkgdata}`
+AC_SUBST(pkgdata)
 
 AC_OUTPUT([
 Makefile
@@ -238,11 +382,11 @@ echo "Libraries:           ${LIBS}"
 echo ""
 echo "PC/SC support:       ${PCSC_MSG}"
 echo "Libusb used:         ${USB_MSG}"
+echo ""
 
-if test "${USB_MSG}" != "yes"
-then
-	echo "without libusb coldplugging will not work."
-	echo "to use usb devices, your hotplugging needs to be"
-	echo "configured and you need to plug in any device "
-	echo "after the system has started (i.e. the init script ran)"
+if test "${USB_MSG}" != "yes"; then
+  echo "Without libusb coldplugging will not work."
+  echo "To use usb devices, your hotplugging needs to be"
+  echo "configured and you need to plug in any device "
+  echo "after the system has started (i.e. the init script ran)"
 fi
