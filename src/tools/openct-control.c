@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/poll.h>
+#include <sys/wait.h>
 #include <getopt.h>
 #include <signal.h>
 #include <stdio.h>
@@ -18,36 +19,35 @@
 
 #include <openct/logging.h>
 #include <openct/conf.h>
+#include <openct/driver.h>
 
 #include "internal.h"
 
-static int		mgr_killall(void);
+static int		mgr_init(int argc, char **argv);
+static int		mgr_shutdown(int argc, char **argv);
+static int		mgr_attach(int argc, char **argv);
 static void		usage(int exval);
 
 static const char *	opt_config = NULL;
 static int		opt_debug = 0;
-static int		opt_killall = 0;
 
 static void		configure_reader(ifd_conf_node_t *);
 
 int
 main(int argc, char **argv)
 {
-	int		n, c;
+	int	c;
 
 	/* Make sure the mask is good */
 	umask(033);
 
-	while ((c = getopt(argc, argv, "df:hk")) != -1) {
+	while ((c = getopt(argc, argv, "df:hs")) != -1) {
 		switch (c) {
 		case 'd':
 			opt_debug++;
 			break;
 		case 'f':
 			opt_config = optarg;
-			break;
-		case 'k':
-			opt_killall++;
 			break;
 		case 'h':
 			usage(0);
@@ -56,19 +56,39 @@ main(int argc, char **argv)
 		}
 	}
 
-	if (optind != argc)
-		usage(1);
-
 	ct_config.debug = opt_debug;
-
-	if (opt_killall) {
-		mgr_killall();
-		return 0;
-	}
 
 	/* Parse IFD config file */
 	if (ifd_config_parse(opt_config) < 0)
 		exit(1);
+
+	if (optind == argc)
+		usage(1);
+
+	argv += optind;
+	argc -= optind;
+
+	if (!strcmp(argv[0], "init")) {
+		return mgr_init(argc, argv);
+	} else
+	if (!strcmp(argv[0], "shutdown")) {
+		return mgr_shutdown(argc, argv);
+	} else
+	if (!strcmp(argv[0], "attach")) {
+		return mgr_attach(argc, argv);
+	}
+
+	fprintf(stderr, "Unknown command: %s\n", argv[0]);
+	return 1;
+}
+
+int
+mgr_init(int argc, char **argv)
+{
+	int	n;
+
+	if (argc != 1)
+		usage(1);
 
 	/* Zap the status file */
 	ct_status_clear(OPENCT_MAX_READERS);
@@ -92,8 +112,67 @@ main(int argc, char **argv)
 
 	/* Create an ifdhandler process for every hotplug reader found */
 	mgr_scan_usb();
-
 	return 0;
+}
+
+/*
+ * shut down the whole thing
+ */
+int
+mgr_shutdown(int argc, char **argv)
+{
+	const ct_info_t	*status;
+	int		num, killed = 0;
+
+	if (argc != 1)
+		usage(1);
+
+	if ((num = ct_status(&status)) < 0) {
+		fprintf(stderr,
+			"cannot access status file; no readers killed\n");
+		return 1;
+	}
+
+	while (num--) {
+		if (status[num].ct_pid
+		 && kill(status[num].ct_pid, SIGTERM) >= 0)
+			killed++;
+	}
+
+	printf("%d process%s killed.\n", killed, (killed == 1)? "" : "es");
+	return 0;
+}
+
+/*
+ * Attach a new reader
+ */
+int
+mgr_attach(int argc, char **argv)
+{
+	const char	*device, *driver, *idstring;
+	ifd_devid_t	id;
+	pid_t		pid;
+
+	if (argc != 3)
+		usage(1);
+	device = argv[1];
+	idstring = argv[2];
+
+	/* Initialize IFD library */
+	ifd_init();
+
+	if (ifd_device_id_parse(idstring, &id) < 0) {
+		fprintf(stderr, "Cannot parse device ID %s\n", idstring);
+		return 1;
+	}
+
+	if (!(driver = ifd_driver_for_id(&id))) {
+		fprintf(stderr, "No driver for this device\n");
+		return 1;
+	}
+
+	pid = mgr_spawn_ifdhandler(driver, device, -1);
+	return (pid > 0);
 }
 
 /*
@@ -141,12 +220,18 @@ mgr_spawn_ifdhandler(const char *driver, const char *device, int idx)
 		return 0;
 	}
 
-	if (pid != 0)
-		return pid;
+	if (pid != 0) {
+		/* We're the parent process. The child process should
+		 * call daemon(), causing the process to exit
+		 * immediately after allocating a slot in the status
+		 * file. We wait for it here to make sure USB devices
+		 * don't claim a slot reserved for another device */
+		waitpid(pid, NULL, 0);
+		return 1;
+	}
 
 	argc = 0;
 	argv[argc++] = ct_config.ifdhandler;
-	argv[argc++] = "-s";
 
 	if (idx >= 0) {
 		snprintf(reader, sizeof(reader), "-r%u", idx);
@@ -180,41 +265,20 @@ mgr_spawn_ifdhandler(const char *driver, const char *device, int idx)
 }
 
 /*
- * Kill all ifdhandler processes
- */
-int
-mgr_killall(void)
-{
-	const ct_info_t	*status;
-	int		num, killed = 0;
-
-	if ((num = ct_status(&status)) < 0) {
-		ct_error("cannot access status file; no readers killed");
-		return -1;
-	}
-
-	while (num--) {
-		if (status[num].ct_pid
-		 && kill(status[num].ct_pid, SIGTERM) >= 0)
-			killed++;
-	}
-
-	printf("%d process%s killed.\n", killed, (killed == 1)? "" : "es");
-	return 0;
-}
-
-/*
  * Usage message
  */
 void
 usage(int exval)
 {
 	fprintf(stderr,
-"usage: ifdd [-dk] [-f configfile]\n"
+"usage: openct-control [-d] [-f configfile] command\n"
 "  -d   enable debugging; repeat to increase verbosity\n"
 "  -f   specify config file (default /etc/openct.conf\n"
-"  -k   kill all reader processes\n"
 "  -h   display this message\n"
+"\nWhere command is one of:\n"
+"init - initialize OpenCT\n"
+"attach device ident - attach a hotplug device\n"
+"shutdown - shutdown OpenCT\n"
 );
 	exit(exval);
 }
