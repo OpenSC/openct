@@ -2,7 +2,7 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-INCLUDES = @CPPFLAGS@ @CFLAGS_PCSC@ -I$(top_srcdir)/src/ctapi
+INCLUDES = -I$(top_srcdir)/src/ctapi @CPPFLAGS@ @CFLAGS_PCSC@
 
 if HAVE_PCSC
 lib_LTLIBRARIES = openct-ifd.la
