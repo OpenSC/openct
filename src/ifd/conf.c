@@ -19,8 +19,8 @@ struct ifd_config	ifd_config = {
 	.debug		= 0,
 	.autoload	= 1,
 	.hotplug_scan_on_startup = 1,
-	.modules_dir	= IFD_MODULES_PATH,
-	.socket_dir	= IFD_SOCKET_PATH,
+	.modules_dir	= OPENCT_MODULES_PATH,
+	.socket_dir	= OPENCT_SOCKET_PATH,
 };
 
 #if 0
@@ -49,7 +49,7 @@ ifd_config_parse(const char *filename)
 	int	rc;
 
 	if ((config_filename = filename) == NULL)
-		config_filename = IFD_CONFIG_PATH;
+		config_filename = OPENCT_CONFIG_PATH;
 
 	/* If config file doesn't exist, quietly sneak out of here */
 	if ((config_fd = open(config_filename, O_RDONLY)) < 0) {

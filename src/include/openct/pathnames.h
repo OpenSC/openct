@@ -5,11 +5,11 @@
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef OPENCT_CONFIG_H
+#define OPENCT_CONFIG_H
 
-#define IFD_CONFIG_PATH		"/etc/ifd.conf"
-#define IFD_MODULES_PATH	"/usr/lib/ifd"
-#define IFD_SOCKET_PATH		"/var/run/ifd"
+#define OPENCT_CONFIG_PATH	"/etc/openct.conf"
+#define OPENCT_MODULES_PATH	"/usr/lib/ifd"
+#define OPENCT_SOCKET_PATH	"/var/run/openct"
 
-#endif /* CONFIG_H */
+#endif /* OPENCT_CONFIG_H */
