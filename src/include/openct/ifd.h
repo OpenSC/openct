@@ -80,6 +80,8 @@ enum {
 	IFD_PROTOCOL_T1_CHECKSUM_CRC,
 	IFD_PROTOCOL_T1_CHECKSUM_LRC,
 	IFD_PROTOCOL_T1_RESYNCH,
+	IFD_PROTOCOL_T1_IFSC,
+	IFD_PROTOCOL_T1_IFSD,
 };
 
 enum {
@@ -131,6 +133,9 @@ extern ifd_protocol_t *		ifd_protocol_new(int id,
 extern int			ifd_protocol_set_parameter(ifd_protocol_t *p,
 					int type,
 					long value);
+extern int			ifd_protocol_get_parameter(ifd_protocol_t *p,
+					int type,
+					long *value);
 extern void			ifd_protocol_free(ifd_protocol_t *);
 
 #endif /* IFD_CORE_H */

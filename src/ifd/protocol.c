@@ -173,6 +173,14 @@ ifd_protocol_set_parameter(ifd_protocol_t *p, int type, long value)
 	return p->ops->set_param(p, type, value);
 }
 
+int
+ifd_protocol_get_parameter(ifd_protocol_t *p, int type, long *value)
+{
+	if (!p || !p->ops || !p->ops->get_param)
+		return -1;
+	return p->ops->get_param(p, type, value);
+}
+
 /*
  * Free protocol object
  */
