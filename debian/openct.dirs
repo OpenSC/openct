@@ -1,0 +1,5 @@
+sbin
+etc
+etc/init.d
+etc/hotplug/usb
+var/run/openct

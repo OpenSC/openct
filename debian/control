@@ -1,0 +1,38 @@
+Source: openct
+Priority: optional
+Maintainer: Andreas Jellinghaus <aj@dungeon.inka.de>
+Build-Depends: debhelper (>= 4.0.0), libusb-dev, libpcsclite-dev
+Standards-Version: 3.6.0
+Section: utils
+
+Package: openct
+Section: utils
+Architecture: any
+Depends: ${shlibs:Depends}
+Recommends: hotplug, usbutils
+Provides: pcsc-ifd-handler
+Description: open source smart card drivers and middleware
+ OpenCT is a library for accessing smart card terminals.  It provides a rich
+ set of functions for driver writers, protocol drivers for T=0 and T=1, serial
+ and USB functionality, including USB hotplugging.  
+ .
+ Currently, OpenCT supports the following set of card terminals
+ and USB tokens:
+ .
+   -      Towitoko serial readers
+   -      Kobil Kaan Professional (including PIN pad support)
+   -      Aladdin eToken
+   -      Rainbow iKey 3000
+   -      Cryptoflex eGate
+   -      Eutron Cypto-Identity ITSEC
+
+Package: openct-dev
+Section: devel
+Architecture: any
+Depends: openct (= ${Source-Version})
+Description: development files for openct
+ OpenCT is a library for accessing smart card terminals.  It provides a rich
+ set of functions for driver writers, protocol drivers for T=0 and T=1, serial
+ and USB functionality, including USB hotplugging.  
+ .
+ This package contains files to link other applications against openct.

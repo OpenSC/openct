@@ -1,0 +1,26 @@
+openct (0.5.0-cvs-20040108-1) unstable; urgency=low
+
+  * cvs snapshot.
+  * added *.so files.
+  * new version numbers (ugh, quite long)
+
+ -- Andreas Jellinghaus <aj@dungeon.inka.de>  Thu,  8 Jan 2004 11:07:09 +0100
+
+openct (0.5.0-0.1) unstable; urgency=low
+
+  * recompiled.
+
+ -- Andreas Jellinghaus <aj@dungeon.inka.de>  Mon,  8 Dec 2003 14:44:58 +0100
+
+openct (0.5.0-0) unstable; urgency=low
+
+  * New Version
+
+ -- Andreas Jellinghaus <aj@dungeon.inka.de>  Mon,  8 Dec 2003 14:44:58 +0100
+
+openct (0.1.0-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Andreas Jellinghaus <aj@dungeon.inka.de>  Thu, 16 Oct 2003 19:21:49 +0200
+
