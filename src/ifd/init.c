@@ -29,6 +29,7 @@ ifd_init(void)
 	ifd_towitoko_register();
 	ifd_cardman_register();
 	ifd_smartboard_register();
+	ifd_gempc_register();
 
 	/* Register all builtin protocols */
 	ifd_protocol_register(&ifd_protocol_t0);

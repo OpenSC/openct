@@ -8,7 +8,7 @@ lib_LTLIBRARIES = libifd.la
 
 sbin_PROGRAMS = ifdhandler
 
-DRIVERS	= cardman.c egate.c etoken.c eutron.c ikey3k.c kaan.c smartboard.c towitoko.c
+DRIVERS	= cardman.c egate.c etoken.c eutron.c gempc.c ikey3k.c kaan.c smartboard.c towitoko.c
 
 libifd_la_SOURCES = \
 	apdu.c checksum.c conf.c device.c driver.c \
