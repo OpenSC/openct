@@ -1,5 +1,13 @@
 NEWS for OpenCT -- History of user visible changes
 
+New in 0.6.2; 2004-10-31; Andreas Jellinghaus
+* Small fix in hotplug script.
+* Increased transfer buffer to 258 bytes for e-gate.
+* Improved error handling in e-gate driver.
+* Updated Info.plist files.
+* Small fix in atr.c that returned an error for legal atrs.
+* Improvements to the kaan driver.
+
 New in 0.6.1; 2004-07-18; Andreas Jellinghaus
 * This is a test version of alpha code quality
   There are several known problems with it, please
