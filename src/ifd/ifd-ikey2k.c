@@ -67,7 +67,7 @@ ikey2k_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 {
 	ifd_device_t *dev = reader->device;
 	unsigned char	buffer[256];
-	int		rc, n, atrlen;
+	int		rc, atrlen;
 
 	unsigned char expect5[] =
 		{ 0x0d, 0x63, 0x00, 0x05, 0x2d, 0x2d, 0xc0, 0x80,
