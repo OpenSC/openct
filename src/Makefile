@@ -4,7 +4,7 @@ SUBDIRS	= \
 	ifd \
 	ctapi \
 	pcsc \
-	daemon \
+	control \
 	tools
 
 all clean distclean install:
