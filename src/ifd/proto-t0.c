@@ -205,7 +205,7 @@ t0_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 
 done:	t0->state = IDLE;
 	apdu->rcv_len = tpdu.rcv_len;
-	return 0;
+	return apdu->rcv_len;
 }
 
 static int
