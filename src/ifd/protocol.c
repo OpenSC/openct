@@ -142,6 +142,8 @@ ifd_protocol_transceive(ifd_protocol_t *p, int dad,
 
 	if (rc >= 0)
 		ifd_debug(1, "resp:%s", ct_hexdump(rbuf, rc));
+	else
+		ifd_debug(1, "transceive error: %s", ct_strerror(rc));
 
 	return rc;
 }
