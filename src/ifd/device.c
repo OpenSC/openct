@@ -11,6 +11,11 @@
 ifd_device_t *
 ifd_device_open(const char *name)
 {
+	if (!strncmp(name, "serial:", 7))
+		return ifd_open_usb(name + 7);
+	if (!strncmp(name, "usb:", 4))
+		return ifd_open_usb(name + 4);
+
 	switch (ifd_device_guess_type(name)) {
 	case IFD_DEVICE_TYPE_SERIAL:
 		return ifd_open_serial(name);
