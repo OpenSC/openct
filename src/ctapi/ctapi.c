@@ -1,10 +1,11 @@
 /*
- * CTAPI front-end for libifd
+ * CTAPI front-end for libopenct
  *
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
 #include <stdlib.h>
+#include <openct/openct.h>
 #include <openct/ifd.h>
 #include <openct/buffer.h>
 #include <openct/logging.h>
@@ -12,173 +13,91 @@
 #include <openct/error.h>
 #include "ctapi.h"
 
-static int	ifd_ctapi_control(ifd_reader_t *,
-			const void *, size_t,
-			void *, size_t);
-static int	ifd_ctapi_reset(ifd_reader_t *, ifd_iso_apdu_t *,
-			ct_buf_t *, time_t, const char *);
-static int	ifd_ctapi_request_icc(ifd_reader_t *, ifd_iso_apdu_t *,
-			ct_buf_t *, ct_buf_t *);
-static int	ifd_ctapi_status(ifd_reader_t *, ifd_iso_apdu_t *,
-			ct_buf_t *);
-static int	ifd_ctapi_error(ct_buf_t *, unsigned int);
-static int	ifd_ctapi_put_sw(ct_buf_t *, unsigned int);
-
+static struct CardTerminal
+{
+	unsigned short ctn;
+	ct_handle *h;
+	ct_lock_handle lock;
+	struct CardTerminal *next;
+} *cardTerminals;
 
 /*
- * Initialize card terminal #N.
- * As all the terminals are configured by libifd internally,
- * we ignore the port number
+ * Functions for setting the SW
  */
-char
-CT_init(unsigned short ctn, unsigned short pn)
+static int
+ctapi_put_sw(ct_buf_t *bp, unsigned int sw)
 {
-	static int	first_time = 1;
-	ifd_reader_t	*reader;
+	unsigned char	temp[2];
 
-	/* When doing first time initialization, init the
-	 * library */
-	if (first_time) {
-		first_time = 0;
-		ifd_init();
-	}
+	temp[0] = sw >> 8;
+	temp[1] = sw & 0xff;
 
-	if (!(reader = ifd_reader_by_index(ctn)))
+	if (ct_buf_put(bp, temp, 2) < 0)
 		return ERR_INVALID;
-
-	/* FIXME: just activate, or reset as well? */
-	if (ifd_activate(reader) < 0)
-		return ERR_INVALID;
-
-	return OK;
+	return 2;
 }
 
-char
-CT_close(unsigned short ctn)
+static int
+ctapi_error(ct_buf_t *bp, unsigned int sw)
 {
-	ifd_reader_t	*reader;
-
-	if (!(reader = ifd_reader_by_index(ctn)))
-		return ERR_INVALID;
-	if (reader)
-		ifd_deactivate(reader);
-	return OK;
+	ct_buf_clear(bp);
+	return ctapi_put_sw(bp, sw);
 }
 
-char
-CT_data(unsigned short ctn,
-	unsigned char  *dad,
-	unsigned char  *sad,
-	unsigned short lc,
-	unsigned char  *cmd,
-	unsigned short *lr,
-	unsigned char  *rsp)
+static int
+ctapi_reset(ct_handle *h, char p1, char p2,
+		ct_buf_t *rbuf,
+		time_t timeout, const char *message)
 {
-	ifd_reader_t	*reader;
+	unsigned int	atrlen = 0;
+	unsigned char	atr[64];
 	int		rc;
 
-	if (!(reader = ifd_reader_by_index(ctn))
-	 || !sad || !dad)
-		return ERR_INVALID;
+	switch (p1) {
+	case CTBCS_UNIT_INTERFACE1:
+	case CTBCS_UNIT_INTERFACE2:
+		rc = ct_card_reset(h, p1 - CTBCS_UNIT_INTERFACE1,
+				atr, sizeof(atr));
+		break;
 
-	if (ct_config.debug > 1) {
-		ct_debug("CT_data(dad=%d lc=%u lr=%u cmd=%s",
-				*dad, lc, *lr, ct_hexdump(cmd, lc));
-	}
-	switch (*dad) {
-	case 0:
-		rc = ifd_card_command(reader, 0,
-				cmd, lc, rsp, *lr);
-		break;
-	case 1:
-		rc = ifd_ctapi_control(reader,
-				cmd, lc, rsp, *lr);
-		break;
-	case 2:
-		ct_error("CT-API: host talking to itself - "
-			  "needs professional help?");
-		return ERR_INVALID;
-	case 3:
-		rc = ifd_card_command(reader, 1,
-				cmd, lc, rsp, *lr);
-		break;
 	default:
-		ct_error("CT-API: unknown DAD %u", *dad);
-		return ERR_INVALID;
-	}
-
-	/* Somewhat simplistic error translation */
-	if (rc < 0)
-		return ERR_INVALID;
-
-	*lr = rc;
-	return OK;
-}
-
-/*
- * Handle CTBCS messages
- */
-int
-ifd_ctapi_control(ifd_reader_t *reader,
-		const void *cmd, size_t cmd_len,
-		void *rsp, size_t rsp_len)
-{
-	ifd_iso_apdu_t	iso;
-	ct_buf_t	sbuf, rbuf;
-	int		rc;
-
-	if (rsp_len < 2)
-		return ERR_INVALID;
-
-	if (ifd_iso_apdu_parse(cmd, cmd_len, &iso) < 0) {
-		ct_error("Unable to parse CTBCS APDU");
-		return ERR_INVALID;
-	}
-
-	ct_buf_set(&sbuf, (void *) cmd, cmd_len);
-	ct_buf_init(&rbuf, rsp, rsp_len);
-
-	if (iso.cla != CTBCS_CLA) {
-		ct_error("Bad CTBCS APDU, cla=0x%02x", iso.cla);
-		ifd_ctapi_error(&rbuf, CTBCS_SW_BAD_CLASS);
-		goto out;
-	}
-
-	switch (iso.ins) {
-	case CTBCS_INS_RESET:
-		rc = ifd_ctapi_reset(reader, &iso, &rbuf, 0, NULL);
-		break;
-	case CTBCS_INS_REQUEST_ICC:
-		rc = ifd_ctapi_request_icc(reader, &iso, &sbuf, &rbuf);
-		break;
-	case CTBCS_INS_STATUS:
-		rc = ifd_ctapi_status(reader, &iso, &rbuf);
-		break;
-	default:
-		ct_error("Bad CTBCS APDU, ins=0x%02x", iso.ins);
-		rc = ifd_ctapi_error(&rbuf, CTBCS_SW_BAD_INS);
+		/* Unknown unit */
+		return ctapi_error(rbuf, CTBCS_SW_BAD_PARAMS);
 	}
 
 	if (rc < 0)
-		return rc;
+		return ERR_TRANS;
+	
+	switch (p2 & 0xF) {
+	case CTBCS_P2_RESET_NO_RESP:
+		atrlen = 0;
+		break;
+	case CTBCS_P2_RESET_GET_ATR:
+		atrlen = rc;
+		break;
+	case CTBCS_P2_RESET_GET_HIST:
+		ct_error("CTAPI RESET: P2=GET_HIST not supported yet");
+		return ctapi_error(rbuf, CTBCS_SW_BAD_PARAMS);
+	}
 
-	if (ct_buf_avail(&rbuf) > iso.le + 2)
-		ifd_ctapi_error(&rbuf, CTBCS_SW_BAD_LENGTH);
+	if (ct_buf_put(rbuf, atr, atrlen) < 0
+	 || ctapi_put_sw(rbuf, 0x9000) < 0)
+		return ctapi_error(rbuf, CTBCS_SW_BAD_LENGTH);
 
-out:	return ct_buf_avail(&rbuf);
+	return 0;
 }
 
 /*
  * Request ICC
  */
 static int
-ifd_ctapi_request_icc(ifd_reader_t *reader, ifd_iso_apdu_t *iso,
+ctapi_request_icc(ct_handle *h, char p1, char p2,
 		ct_buf_t *sbuf, ct_buf_t *rbuf)
 {
 	time_t		timeout = 0;
 	char		msgbuf[256], *message;
 
-	switch (iso->p2 >> 4) {
+	switch (p2 >> 4) {
 	case 0x00:
 		/* use default label, or label specified
 		 * in data. An empty message string indicates
@@ -190,7 +109,7 @@ ifd_ctapi_request_icc(ifd_reader_t *reader, ifd_iso_apdu_t *iso,
 		/* No message */
 		message = NULL;
 	default:
-		return ifd_ctapi_error(rbuf, CTBCS_SW_BAD_PARAMS);
+		return ctapi_error(rbuf, CTBCS_SW_BAD_PARAMS);
 	}
 
 	/* XXX use ct_tlv_* functions */
@@ -216,69 +135,24 @@ ifd_ctapi_request_icc(ifd_reader_t *reader, ifd_iso_apdu_t *iso,
 		}
 	}
 
-	/* ifd_ctapi_reset does all the rest of the work */
-	return ifd_ctapi_reset(reader, iso, rbuf, timeout, message);
+	/* ctapi_reset does all the rest of the work */
+	return ctapi_reset(h, p1, p2, rbuf, timeout, message);
 
 bad_length:
-	return ifd_ctapi_error(rbuf, CTBCS_SW_BAD_LENGTH);
-}
-
-int
-ifd_ctapi_reset(ifd_reader_t *reader, ifd_iso_apdu_t *iso,
-		ct_buf_t *rbuf,
-		time_t timeout, const char *message)
-{
-	unsigned char	unit;
-	unsigned int	atrlen = 0;
-	unsigned char	atr[64];
-	int		rc;
-
-	unit = iso->p1;
-	switch (unit) {
-	case CTBCS_UNIT_INTERFACE1:
-	case CTBCS_UNIT_INTERFACE2:
-		rc = ifd_card_reset(reader, unit - CTBCS_UNIT_INTERFACE1,
-				atr, sizeof(atr));
-		break;
-
-	default:
-		/* Unknown unit */
-		return ifd_ctapi_error(rbuf, CTBCS_SW_BAD_PARAMS);
-	}
-
-	if (rc < 0)
-		return ERR_TRANS;
-	
-	switch (iso->p2 & 0xF) {
-	case CTBCS_P2_RESET_NO_RESP:
-		atrlen = 0;
-		break;
-	case CTBCS_P2_RESET_GET_ATR:
-		atrlen = rc;
-		break;
-	case CTBCS_P2_RESET_GET_HIST:
-		ct_error("CTAPI RESET: P2=GET_HIST not supported yet");
-		return ifd_ctapi_error(rbuf, CTBCS_SW_BAD_PARAMS);
-	}
-
-	if (ct_buf_put(rbuf, atr, atrlen) < 0
-	 || ifd_ctapi_put_sw(rbuf, 0x9000) < 0)
-		return ifd_ctapi_error(rbuf, CTBCS_SW_BAD_LENGTH);
-
-	return 0;
+	return ctapi_error(rbuf, CTBCS_SW_BAD_LENGTH);
 }
 
 static int
-ifd_ctapi_status(ifd_reader_t *reader, ifd_iso_apdu_t *iso, ct_buf_t *rbuf)
+ctapi_status(ct_handle *h, ct_buf_t *rbuf)
 {
 	unsigned int	n;
 
-	for (n = 0; n < reader->nslots; n++) {
+	for (n = 0; n < 2; n++) {
 		unsigned char	c;
 		int		status;
 
-		if (ifd_card_status(reader, n, &status) < 0)
-			status = 0;
+		if (ct_card_status(h, n, &status) < 0)
+			break;
 
 		c = (status & IFD_CARD_PRESENT)
 			? CTBCS_DATA_STATUS_CARD_CONNECT
@@ -287,34 +161,166 @@ ifd_ctapi_status(ifd_reader_t *reader, ifd_iso_apdu_t *iso, ct_buf_t *rbuf)
 			goto bad_length;
 	}
 
-	if (ifd_ctapi_put_sw(rbuf, 0x9000) < 0)
+	if (ctapi_put_sw(rbuf, 0x9000) < 0)
 		goto bad_length;
 
 	return 0;
 
 bad_length:
-	return ifd_ctapi_error(rbuf, CTBCS_SW_BAD_LENGTH);
+	return ctapi_error(rbuf, CTBCS_SW_BAD_LENGTH);
 }
 
 /*
- * Functions for setting the SW
+ * Handle CTBCS messages
  */
 static int
-ifd_ctapi_error(ct_buf_t *bp, unsigned int sw)
+ctapi_control(ct_handle *h,
+		const char *cmd, size_t cmd_len,
+		void *rsp, size_t rsp_len)
 {
-	ct_buf_clear(bp);
-	return ifd_ctapi_put_sw(bp, sw);
+	ct_buf_t	sbuf, rbuf;
+	int		rc;
+
+	if (rsp_len < 2)
+		return ERR_INVALID;
+
+	ct_buf_set(&sbuf, (void *) cmd, cmd_len);
+	ct_buf_init(&rbuf, rsp, rsp_len);
+
+	if (cmd[0] != CTBCS_CLA) {
+		ct_error("Bad CTBCS APDU, cla=0x%02x", cmd[0]);
+		ctapi_error(&rbuf, CTBCS_SW_BAD_CLASS);
+		goto out;
+	}
+
+	switch (cmd[1]) {
+	case CTBCS_INS_RESET:
+		rc = ctapi_reset(h, cmd[1], cmd[2], &rbuf, 0, NULL);
+		break;
+	case CTBCS_INS_REQUEST_ICC:
+		rc = ctapi_request_icc(h, cmd[1], cmd[2], &sbuf, &rbuf);
+		break;
+	case CTBCS_INS_STATUS:
+		rc = ctapi_status(h, &rbuf);
+		break;
+	default:
+		ct_error("Bad CTBCS APDU, ins=0x%02x", cmd[1]);
+		rc = ctapi_error(&rbuf, CTBCS_SW_BAD_INS);
+	}
+
+	if (rc < 0)
+		return rc;
+
+	if (ct_buf_avail(&rbuf) > cmd[4] + 2)
+		ctapi_error(&rbuf, CTBCS_SW_BAD_LENGTH);
+
+out:	return ct_buf_avail(&rbuf);
 }
 
-int
-ifd_ctapi_put_sw(ct_buf_t *bp, unsigned int sw)
+/*
+ * Initialize card terminal #N.
+ * As all the terminals are configured by libifd internally,
+ * we ignore the port number
+ */
+char
+CT_init(unsigned short ctn, unsigned short pn)
 {
-	unsigned char	temp[2];
+	struct CardTerminal *ct;
+	ct_handle *h;
+	ct_lock_handle lock;
+	unsigned char atr[64];
 
-	temp[0] = sw >> 8;
-	temp[1] = sw & 0xff;
-
-	if (ct_buf_put(bp, temp, 2) < 0)
+	if ((ct=malloc(sizeof(struct CardTerminal)))==(struct CardTerminal*)0)
+		return ERR_MEMORY;
+	if (!(h = ct_reader_connect(pn))) {
+		free(ct);
 		return ERR_INVALID;
-	return 2;
+	}
+        if (ct_card_lock(h, 0, IFD_LOCK_EXCLUSIVE, &lock) < 0) {
+		free(ct);
+		return ERR_HTSI;
+	}
+#if 0
+	if (ct_card_status(h, 0, &status) < 0) {
+		return ERR_HTSI;
+	}
+#endif
+#if 0
+	if (ct_card_reset(h, 0, atr, sizeof(atr)) < 0) {
+		return ERR_HTSI;
+	}
+
+#endif
+	ct->ctn=ctn;
+	ct->h=h;
+	ct->lock=lock;
+	ct->next=cardTerminals;
+	cardTerminals=ct;
+	return OK;
+}
+
+char
+CT_close(unsigned short ctn)
+{
+	struct CardTerminal **ct,*next;
+
+	for (ct=&cardTerminals; *ct && (*ct)->ctn!=ctn; ct = &(*ct)->next);
+	if ((*ct)==(struct CardTerminal*)0)
+		return ERR_INVALID;
+	ct_reader_disconnect((*ct)->h);
+	next=(*ct)->next;
+	free((*ct));
+	*ct=(*ct)->next;
+	return OK;
+}
+
+char
+CT_data(unsigned short ctn,
+	unsigned char  *dad,
+	unsigned char  *sad,
+	unsigned short lc,
+	unsigned char  *cmd,
+	unsigned short *lr,
+	unsigned char  *rsp)
+{
+	struct CardTerminal **ct,*next;
+	int status, rc;
+
+	for (ct=&cardTerminals; *ct && (*ct)->ctn!=ctn; ct = &(*ct)->next);
+	if ((*ct)==(struct CardTerminal*)0 || !sad || !dad)
+		return ERR_INVALID;
+
+#if 0
+		ct_debug("CT_data(dad=%d lc=%u lr=%u cmd=%s",
+				*dad, lc, *lr, ct_hexdump(cmd, lc));
+#endif
+
+	switch (*dad) {
+		case CTAPI_DAD_ICC1:
+			rc = ct_card_transact((*ct)->h, 0,
+				cmd, (size_t)lc, rsp, (size_t)*lr);
+			break;
+		case CTAPI_DAD_ICC2:
+			rc = ct_card_transact((*ct)->h, 1,
+				cmd, (size_t)lc, rsp, (size_t)*lr);
+			break;
+		case CTAPI_DAD_CT:
+			rc = ctapi_control((*ct)->h,
+				cmd, lc, rsp, *lr);
+			break;
+		case CTAPI_DAD_HOST:
+			ct_error("CT-API: host talking to itself - "
+				"needs professional help?");
+			return ERR_INVALID;
+		default:
+			ct_error("CT-API: unknown DAD %u", *dad);
+			return ERR_INVALID;
+	}
+
+	/* Somewhat simplistic error translation */
+	if (rc < 0)
+		return ERR_INVALID;
+
+	*lr = rc;
+	return OK;
 }
