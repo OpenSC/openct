@@ -15,6 +15,7 @@ IFDOBJS	= ifdhandler.o process.o locks.o
 SYSDEP	= linux.o
 LINK	= -L../../lib -lopenct -ldl -lusb
 LIBDIR	= $(DESTDIR)/usr/lib
+SBINDIR	= $(DESTDIR)/usr/sbin
 
 all:: $(LIBS) $(APPS)
 
@@ -25,6 +26,7 @@ install:
 	mkdir -p $(LIBDIR)
 	install -m 444 libifd.a $(LIBDIR)
 	install -m 555 libifd.so $(LIBDIR)
+	install -m 555 ifdhandler $(SBINDIR)/openct-ifdhandler
 
 libifd.a: $(addprefix .objs/,$(LIBOBJS))
 	ar cr $@ $(addprefix .objs/,$(LIBOBJS))
