@@ -16,10 +16,16 @@
 /* Freeze after that many seconds of inactivity */
 #define FREEZE_DELAY		5
 
+enum {
+	TYPE_KAAN,
+	TYPE_B1,
+};
+
 /*
  * CT status
  */
 typedef struct kaan_status {
+	int			reader_type;
 	ifd_protocol_t *	p;
 	time_t			last_activity;
 	unsigned int		frozen : 1;
@@ -30,6 +36,7 @@ static int		kaan_reset_ct(ifd_reader_t *reader);
 static int		kaan_get_units(ifd_reader_t *reader);
 static int		kaan_freeze(ifd_reader_t *reader);
 static int		kaan_sync_detect(ifd_reader_t *reader, int nslot);
+static int		kaan_set_protocol(ifd_reader_t *, int, int);
 static int		__kaan_apdu_xcv(ifd_reader_t *,
 				const unsigned char *, size_t,
 				unsigned char *, size_t,
@@ -51,6 +58,8 @@ static int		kaan_check_sw(const char *,
 static int		kaan_get_sw(const unsigned char *,
 				unsigned int,
 				unsigned short *);
+static int		kaan_select_app(ifd_reader_t *reader, int nad,
+				const void *, size_t);
 
 #define kaan_apdu_xcv(reader, sbuf, slen, rbug, rlen, timeout) \
 	__kaan_apdu_xcv(reader, sbuf, slen, rbug, rlen, timeout, 1)
@@ -85,6 +94,7 @@ kaan_open(ifd_reader_t *reader, const char *device_name)
 	reader->device = dev;
 	if ((st = (kaan_status_t *) calloc(1, sizeof(*st))) == NULL)
 		return IFD_ERROR_NO_MEMORY;
+	st->reader_type = TYPE_KAAN;
 	st->icc_proto[0] = -1;
 	st->icc_proto[1] = -1;
 
@@ -167,6 +177,9 @@ b1_open(ifd_reader_t *reader, const char *device_name)
 	reader->device = dev;
 	if ((st = (kaan_status_t *) calloc(1, sizeof(*st))) == NULL)
 		return IFD_ERROR_NO_MEMORY;
+	st->reader_type = TYPE_B1;
+	st->icc_proto[0] = -1;
+	st->icc_proto[1] = -1;
 
 	reader->driver_data = st;
 	if (!(st->p = ifd_protocol_new(IFD_PROTOCOL_T1, reader, 0x12))) {
@@ -382,15 +395,30 @@ kaan_do_reset(ifd_reader_t *reader, int nslot,
 	switch (sw) {
 	case 0x9000:
 	case 0x62a6:
-		/* synchronous ICC, CT has already done everything we need
+		/* Synchronous ICC, CT has already done everything we need
 		 * to know. Now just get the info from the CT. */
 		memcpy(atr, buffer, got);
 		if ((rc = kaan_sync_detect(reader, nslot)) < 0)
 			return rc;
+
+		if (got == 4 && st->reader_type == TYPE_B1) {
+			/* Try to select KVK file.  This is required for
+			 * B1 readers and failure is ignored.
+			 */
+			static unsigned char aid[] = { 0xd2, 0x80, 0x00, 0x00, 0x01, 0x01 };
+			kaan_select_app(reader, 0x02, aid, sizeof(aid));
+		}
 		break;
 	case 0x62a5:
-		/* ATR was read, but protocol is unknown. */
+		/* ATR was read, but protocol is unknown.  B1 readers */
+		/* use that for phone cards, because their size can not */
+		/* automatically be detected.  Chose the largest possible */
+		/* size. */
 		memcpy(atr, buffer, got);
+		if (got == 4 && st->reader_type == TYPE_B1)
+			kaan_set_protocol(reader, nslot, IFD_PROTOCOL_4433);
+		if ((rc = kaan_sync_detect(reader, nslot)) < 0)
+			return rc;
 		break;
 	case 0x9001:
 		/* asynchronous ICC, just copy the ATR */
@@ -692,6 +720,18 @@ kaan_sync_detect(ifd_reader_t *reader, int nslot)
 	case 0x82:
 		protocol = IFD_PROTOCOL_2WIRE;
 		break;
+	case 0x90:
+		protocol = IFD_PROTOCOL_4401;
+		break;
+	case 0x91:
+		protocol = IFD_PROTOCOL_4402;
+		break;
+	case 0x92:
+		protocol = IFD_PROTOCOL_4403;
+		break;
+	case 0x93:
+		protocol = IFD_PROTOCOL_4433;
+		break;
 	default:
 		ct_error("kaan_sync_detect: unknown card protocol 0x%x", protocol);
 		return IFD_ERROR_NOT_SUPPORTED;
@@ -757,6 +797,25 @@ kaan_select_file(ifd_reader_t *reader, unsigned char nad, unsigned int fid, size
 		*sizep = (resp[0] << 8) | resp[1];
 
 	return 0;
+}
+
+int
+kaan_select_app(ifd_reader_t *reader, int nad, const void *aid, size_t len)
+{
+	unsigned char	cmd[32] = { 0x00, 0xa4, 0x04, 0x00 };
+	unsigned char	resp[64];
+	int		r;
+
+	if (len > sizeof(cmd) - 5)
+		return IFD_ERROR_BUFFER_TOO_SMALL;
+
+	cmd[4] = len;
+	memcpy(cmd+5, aid, len);
+
+	r = kaan_transparent(reader, nad, cmd, len + 5, resp, sizeof(resp));
+	if (r < 0)
+		return r;
+	return kaan_check_sw("kaan_select_app", resp, r);
 }
 
 int
