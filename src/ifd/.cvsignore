@@ -24,3 +24,5 @@ Makefile.in
 core
 gmon.out
 ifdhandler
+ifdproxy
+.gdbinit

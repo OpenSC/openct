@@ -19,6 +19,32 @@ static unsigned int termios_to_speed(unsigned int bits);
 static unsigned int speed_to_termios(unsigned int speed);
 
 /*
+ * Reset the device
+ */
+static int
+ifd_serial_reset(ifd_device_t *dev)
+{
+	ifd_device_params_t	params, orig_params;
+	int			rc;
+
+	if ((rc = ifd_device_get_parameters(dev, &orig_params)) < 0)
+		return rc;
+
+	/* Drop DTR */
+	params = orig_params;
+	params.serial.speed = 0;
+	params.serial.dtr = 0;
+	if ((rc = ifd_device_set_parameters(dev, &params)) < 0)
+		return rc;
+	usleep(500000);
+
+	/* Change back to original config */
+	if ((rc = ifd_device_set_parameters(dev, &orig_params)) < 0)
+		return rc;
+	return 0;
+}
+
+/*
  * Get the current configuration
  */
 static int
@@ -359,6 +385,7 @@ ifd_open_serial(const char *name)
 	fcntl(fd, F_SETFL, 0);
 
 	ifd_serial_ops.identify = ifd_serial_identify;
+	ifd_serial_ops.reset = ifd_serial_reset;
 	ifd_serial_ops.set_params = ifd_serial_set_params;
 	ifd_serial_ops.get_params = ifd_serial_get_params;
 	ifd_serial_ops.flush = ifd_serial_flush;

@@ -37,7 +37,7 @@ static unsigned int	opt_reader = -1;
 
 static void	usage(int exval);
 static void	ifdhandler_run(ifd_reader_t *);
-static int	ifdhandler_poll_presence(struct pollfd *, unsigned int, void *);
+static int	ifdhandler_poll_presence(ct_socket_t *, struct pollfd *);
 static int	ifdhandler_accept(ct_socket_t *);
 static int	ifdhandler_recv(ct_socket_t *);
 static int	ifdhandler_send(ct_socket_t *);
@@ -145,6 +145,8 @@ main(int argc, char **argv)
 		return 1;
 	}
 
+	ifd_device_set_hotplug(reader->device, opt_hotplug);
+
 	reader->status = status;
 	strncpy(status->ct_name, reader->name, sizeof(status->ct_name)-1);
 	status->ct_slots = reader->nslots;
@@ -163,8 +165,8 @@ main(int argc, char **argv)
 void
 ifdhandler_run(ifd_reader_t *reader)
 {
+	char		socket_name[1024];
 	ct_socket_t	*sock;
-	char		socket_name[16];
 	int		rc;
 
 	/* Activate reader */
@@ -174,7 +176,9 @@ ifdhandler_run(ifd_reader_t *reader)
 	}
 
 	sock = ct_socket_new(0);
-	snprintf(socket_name, sizeof(socket_name), "%u", opt_reader);
+	snprintf(socket_name, sizeof(socket_name),
+			OPENCT_SOCKET_PATH "/%u",
+			opt_reader);
 	if (ct_socket_listen(sock, socket_name, 0666) < 0) {
 		ct_error("Failed to create server socket");
 		exit(1);
@@ -182,9 +186,17 @@ ifdhandler_run(ifd_reader_t *reader)
 
 	sock->user_data = reader;
 	sock->recv = ifdhandler_accept;
+	ct_mainloop_add_socket(sock);
+
+	/* Encapsulate the reader into a socket struct */
+	sock = ct_socket_new(0);
+	sock->fd = 0x7FFFFFFF;
+	sock->poll = ifdhandler_poll_presence;
+	sock->user_data = reader;
+	ct_mainloop_add_socket(sock);
 
 	/* Call the server loop */
-	ct_mainloop(sock, ifdhandler_poll_presence, reader);
+	ct_mainloop();
 	exit(0);
 }
 
@@ -192,9 +204,9 @@ ifdhandler_run(ifd_reader_t *reader)
  * Poll for presence of hotplug device
  */
 int
-ifdhandler_poll_presence(struct pollfd *pfd, unsigned int max, void *ptr)
+ifdhandler_poll_presence(ct_socket_t *sock, struct pollfd *pfd)
 {
-	ifd_reader_t	*reader = (ifd_reader_t *) ptr;
+	ifd_reader_t	*reader = (ifd_reader_t *) sock->user_data;
 	ifd_device_t	*dev = reader->device;
 	unsigned int	n;
 
@@ -204,7 +216,7 @@ ifdhandler_poll_presence(struct pollfd *pfd, unsigned int max, void *ptr)
 		unsigned int		prev_seq, new_seq;
 		ct_info_t		*info;
 		time_t			now;
-		int			status;
+		int			rc, status;
 
 		time(&now);
 		if (now < reader->slot[n].next_update)
@@ -214,8 +226,14 @@ ifdhandler_poll_presence(struct pollfd *pfd, unsigned int max, void *ptr)
 		 * XXX: make this configurable */
 		reader->slot[n].next_update = now + 1;
 
-		if (ifd_card_status(reader, n, &status) < 0)
+		if ((rc = ifd_card_status(reader, n, &status)) < 0) {
+			/* Don't return error; let the hotplug test
+			 * pick up the detach
+			if (rc == IFD_ERROR_DEVICE_DISCONNECTED)
+				return rc;
+			 */
 			continue;
+		}
 
 		info = reader->status;
 		new_seq = prev_seq = info->ct_card[n];
@@ -234,13 +252,12 @@ ifdhandler_poll_presence(struct pollfd *pfd, unsigned int max, void *ptr)
 		}
 	}
 
-	if (!opt_hotplug || !dev->ops->poll_presence)
-		return 0;
-	if (!dev->ops->poll_presence(dev, pfd)) {
+	if (dev->hotplug && ifd_device_poll_presence(dev, pfd) == 0) {
 		ifd_debug(1, "Reader %s detached", reader->name);
 		memset(reader->status, 0, sizeof(*reader->status));
 		exit(0);
 	}
+
 	return 1;
 }
 
@@ -276,7 +293,7 @@ ifdhandler_recv(ct_socket_t *sock)
 	int		rc;
 
 	/* Error or client closed connection? */
-	if ((rc = ct_socket_filbuf(sock)) <= 0)
+	if ((rc = ct_socket_filbuf(sock, -1)) <= 0)
 		return -1;
 
 	/* If request is incomplete, go back

@@ -6,7 +6,7 @@ INCLUDES = -I$(top_srcdir)/src/scdl @CPPFLAGS@ @CFLAGS_PCSC@
 
 lib_LTLIBRARIES = libifd.la
 
-sbin_PROGRAMS = ifdhandler
+sbin_PROGRAMS = ifdhandler ifdproxy
 
 libifd_la_SOURCES = \
 	apdu.c checksum.c conf.c ctbcs.c device.c driver.c \
@@ -20,11 +20,16 @@ libifd_la_SOURCES = \
 	proto-gbp.c proto-sync.c proto-t0.c proto-t1.c \
 	proto-trans.c \
 	\
-	sys-bsd.c sys-linux.c sys-null.c
+	sys-bsd.c sys-linux.c sys-null.c \
+	\
+	ria.c
 libifd_la_LIBADD = ../scdl/libscdl.la ../ct/libopenct.la @LIBDL@ @LIBUSB@
 libifd_la_LDFLAGS = -version-info @OPENCT_LT_CURRENT@:@OPENCT_LT_REVISION@:@OPENCT_LT_AGE@
 
 ifdhandler_SOURCES = ifdhandler.c
 ifdhandler_LDADD = libifd.la
 
-noinst_HEADERS = ctbcs.h ifdhandler.h internal.h
+ifdproxy_SOURCES = ifdproxy.c ria-device.c ria-server.c
+ifdproxy_LDADD = libifd.la
+
+noinst_HEADERS = ctbcs.h ifdhandler.h internal.h ria.h

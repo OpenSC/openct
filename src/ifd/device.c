@@ -18,6 +18,8 @@ ifd_device_open(const char *name)
 		return ifd_open_serial(name + 7);
 	if (!strncmp(name, "usb:", 4))
 		return ifd_open_usb(name + 4);
+	if (!strncmp(name, "remote:", 4))
+		return ifd_open_remote(name + 7);
 
 	switch (ifd_sysdep_device_type(name)) {
 	case IFD_DEVICE_TYPE_SERIAL:
@@ -86,10 +88,25 @@ ifd_device_identify(const char *name, char *ident, size_t len)
 }
 
 int
+ifd_device_reset(ifd_device_t *dev)
+{
+	if (!dev || !dev->ops || !dev->ops->reset)
+		return IFD_ERROR_NOT_SUPPORTED;
+	return dev->ops->reset(dev);
+}
+
+void
+ifd_device_set_hotplug(ifd_device_t *dev, int hotplug)
+{
+	if (hotplug)
+		dev->hotplug = 1;
+}
+
+int
 ifd_device_set_parameters(ifd_device_t *dev, const ifd_device_params_t *parms)
 {
 	if (!dev || !dev->ops || !dev->ops->set_params)
-		return -1;
+		return IFD_ERROR_NOT_SUPPORTED;
 	return dev->ops->set_params(dev, parms);
 }
 
@@ -97,7 +114,7 @@ int
 ifd_device_get_parameters(ifd_device_t *dev, ifd_device_params_t *parms)
 {
 	if (!dev || !dev->ops || !dev->ops->get_params)
-		return -1;
+		return IFD_ERROR_NOT_SUPPORTED;
 	return dev->ops->get_params(dev, parms);
 }
 
@@ -113,7 +130,7 @@ int
 ifd_device_send(ifd_device_t *dev, const unsigned char *data, size_t len)
 {
 	if (!dev || !dev->ops || !dev->ops->send)
-		return -1;
+		return IFD_ERROR_NOT_SUPPORTED;
 	return dev->ops->send(dev, data, len);
 }
 
@@ -121,7 +138,7 @@ int
 ifd_device_control(ifd_device_t *dev, void *cmsg, size_t len)
 {
 	if (!dev || !dev->ops || !dev->ops->control)
-		return -1;
+		return IFD_ERROR_NOT_SUPPORTED;
 	return dev->ops->control(dev, cmsg, len);
 }
 
@@ -132,7 +149,7 @@ ifd_device_recv(ifd_device_t *dev, unsigned char *data, size_t len, long timeout
 		timeout = dev->timeout;
 
 	if (!dev || !dev->ops || !dev->ops->recv)
-		return -1;
+		return IFD_ERROR_NOT_SUPPORTED;
 	return dev->ops->recv(dev, data, len, timeout);
 }
 
@@ -142,6 +159,8 @@ ifd_device_transceive(ifd_device_t *dev,
 		void *rbuf, size_t rlen,
 		long timeout)
 {
+	int	rc;
+
 	if (timeout < 0)
 		timeout = dev->timeout;
 
@@ -154,8 +173,8 @@ ifd_device_transceive(ifd_device_t *dev,
 
 	/* Fall back to send/recv */
 	ifd_device_flush(dev);
-	if (ifd_device_send(dev, (const unsigned char *) sbuf, slen) < 0)
-		return -1;
+	if ((rc = ifd_device_send(dev, (const unsigned char *) sbuf, slen)) < 0)
+		return rc;
 	return ifd_device_recv(dev, (unsigned char *) rbuf, rlen, timeout);
 }
 

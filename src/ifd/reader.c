@@ -163,7 +163,7 @@ ifd_output(ifd_reader_t *reader, const char *message)
 	const ifd_driver_t *drv = reader->driver;
 
 	if (!drv || !drv->ops || !drv->ops->output)
-		return -1;
+		return IFD_ERROR_NOT_SUPPORTED;
 
 	return drv->ops->output(reader, message);
 }
@@ -175,6 +175,7 @@ int
 ifd_card_status(ifd_reader_t *reader, unsigned int idx, int *status)
 {
 	const ifd_driver_t *drv = reader->driver;
+	int		rc;
 
 	if (idx > reader->nslots) {
 		ct_error("%s: invalid slot number %u", reader->name, idx);
@@ -183,10 +184,10 @@ ifd_card_status(ifd_reader_t *reader, unsigned int idx, int *status)
 
 	*status = 0;
 	if (!drv || !drv->ops || !drv->ops->card_status)
-		return -1;
+		return IFD_ERROR_NOT_SUPPORTED;
 
-	if (drv->ops->card_status(reader, idx, status) < 0)
-		return -1;
+	if ((rc = drv->ops->card_status(reader, idx, status)) < 0)
+		return rc;
 	if (*status & IFD_CARD_STATUS_CHANGED)
 		reader->slot[idx].atr_len = 0;
 	reader->slot[idx].status = *status;
@@ -219,11 +220,14 @@ ifd_card_request(ifd_reader_t *reader, unsigned int idx,
 
 	if (idx > reader->nslots) {
 		ct_error("%s: invalid slot number %u", reader->name, idx);
-		return -1;
+		return IFD_ERROR_INVALID_ARG;
 	}
 
-	if (!drv || !drv->ops || !drv->ops->card_reset || !dev)
-		return -1;
+	if (dev == NULL)
+		return IFD_ERROR_INVALID_ARG;
+
+	if (!drv || !drv->ops || !drv->ops->card_reset)
+		return IFD_ERROR_NOT_SUPPORTED;
 
 	slot = &reader->slot[idx];
 	slot->atr_len = 0;
@@ -277,8 +281,8 @@ ifd_card_request(ifd_reader_t *reader, unsigned int idx,
 		count = n;
 	} else {
 		parity = IFD_SERIAL_PARITY_EVEN;
-		if (drv->ops->change_parity(reader, parity) < 0)
-			return -1;
+		if ((n = drv->ops->change_parity(reader, parity)) < 0)
+			return n;
 
 		/* Reset the card */
 		n = drv->ops->card_reset(reader, idx,
@@ -345,6 +349,8 @@ ifd_card_request(ifd_reader_t *reader, unsigned int idx,
 				parity = IFD_SERIAL_PARITY_TOGGLE(parity);
 			count = rbuf.tail - rbuf.head;
 		}
+
+		ifd_debug(1, "received atr:%s", ct_hexdump(slot->atr, count));
 
 		/* Set the parity in case it was toggled */
 		if (drv->ops->change_parity(reader, parity) < 0)

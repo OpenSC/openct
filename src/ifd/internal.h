@@ -27,11 +27,15 @@ struct ifd_device {
 	int		type;
 	unsigned int	etu;
 	long		timeout;
+
+	unsigned int	hotplug : 1;
+
 	ifd_device_params_t settings;
 
 	struct ifd_device_ops *ops;
 
 	int		fd;
+	void *		user_data;
 
 	/* per-device data may follow */
 };
@@ -43,9 +47,7 @@ struct ifd_device_ops {
 	int		(*identify)(ifd_device_t *, char *, size_t);
 
 	/* Reset device */
-#if 0
-	int		(*reset)(ifd_device_t *, void *, size_t);
-#endif
+	int		(*reset)(ifd_device_t *);
 
 	int		(*set_params)(ifd_device_t *, const ifd_device_params_t *);
 	int		(*get_params)(ifd_device_t *, ifd_device_params_t *);
@@ -148,6 +150,7 @@ extern unsigned int	ifd_drivers_list(const char **, size_t);
 extern ifd_device_t *	ifd_open_serial(const char *);
 extern ifd_device_t *	ifd_open_psaux(const char *);
 extern ifd_device_t *	ifd_open_usb(const char *);
+extern ifd_device_t *	ifd_open_remote(const char *);
 extern ifd_device_t *	ifd_device_new(const char *,
 				struct ifd_device_ops *, size_t);
 extern void		ifd_device_free(ifd_device_t *);
