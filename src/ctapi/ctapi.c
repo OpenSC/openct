@@ -63,6 +63,11 @@ ctapi_reset(ct_handle *h, char p1, char p2,
 				atr, sizeof(atr));
 		break;
 
+        case CTBCS_UNIT_CT:
+		/* Reset is already performed during CT_init() */
+        	rc = 0;
+        	break;
+
 	default:
 		/* Unknown unit */
 		return ctapi_error(rbuf, CTBCS_SW_BAD_PARAMS);
@@ -206,6 +211,7 @@ ctapi_control(ct_handle *h,
 		le = cmd[4];
 		ct_buf_get(&sbuf, NULL, 5);
 	}
+        if (le == 0) le = 256;
 
 	if (cmd[0] != CTBCS_CLA) {
 		ct_error("Bad CTBCS APDU, cla=0x%02x", cmd[0]);
@@ -214,7 +220,8 @@ ctapi_control(ct_handle *h,
 	}
 
 	switch (cmd[1]) {
-	case CTBCS_INS_RESET:
+	case CTBCS_INS_RESET: /* old reset command */
+	case 0x10:            /* new reset command */
 		rc = ctapi_reset(h, cmd[2], cmd[3], &rbuf, 0, NULL);
 		break;
 	case CTBCS_INS_REQUEST_ICC:
