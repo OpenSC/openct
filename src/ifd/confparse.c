@@ -6,5 +6,6 @@
 #include "internal.h"
 
 struct ifd_config	ifd_config = {
-	autoload : 1,
+	.autoload	= 1,
+	.debug		= 0,
 };
