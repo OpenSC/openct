@@ -12,6 +12,7 @@
 typedef struct ct_buf {
 	unsigned char *		base;
 	unsigned int		head, tail, size;
+	unsigned int		overrun;
 } ct_buf_t;
 
 extern void		ct_buf_init(ct_buf_t *, void *, size_t);
@@ -29,6 +30,7 @@ extern void *		ct_buf_head(ct_buf_t *);
 extern void *		ct_buf_tail(ct_buf_t *);
 extern int		ct_buf_read(ct_buf_t *, int);
 extern void		ct_buf_compact(ct_buf_t *);
+extern int		ct_buf_overrun(ct_buf_t *);
 
 
 #endif /* IFD_BUFFER_H */

@@ -76,8 +76,10 @@ ct_buf_gets(ct_buf_t *bp, char *buffer, size_t size)
 int
 ct_buf_put(ct_buf_t *bp, const void *mem, size_t len)
 {
-	if (len > bp->size - bp->tail)
+	if (len > bp->size - bp->tail) {
+		bp->overrun = 1;
 		return -1;
+	}
 	if (mem)
 		memcpy(bp->base + bp->tail, mem, len);
 	bp->tail += len;
@@ -155,4 +157,10 @@ ct_buf_compact(ct_buf_t *bp)
 	memmove(bp->base, bp->base + bp->head, count);
 	bp->tail -= bp->head;
 	bp->head  = 0;
+}
+
+int
+ct_buf_overrun(ct_buf_t *bp)
+{
+	return bp->overrun;
 }
