@@ -28,7 +28,7 @@ ct_log_destination(const char *dest)
 		log_dest = DST_STDERR;
 	} else if (!strcmp(dest, "@syslog")) {
 		log_dest = DST_SYSLOG;
-		openlog("ifdd", LOG_PID, LOG_DAEMON);
+		openlog("ifdhandler", LOG_PID, LOG_DAEMON);
 	} else {
 		log_dest = DST_STDERR;
 		ct_error("log destination %s not implemented yet", dest);
