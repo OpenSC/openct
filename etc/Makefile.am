@@ -4,7 +4,7 @@ MAINTAINERCLEANFILES = Makefile.in
 
 DISTCLEANFILES = openct.conf hotplug.openct init-script
 
-EXTRA_DIST = openct.conf.in hotplug.openct.in init-script.in
+EXTRA_DIST = Info.plist openct.conf.in hotplug.openct.in init-script.in
 
 noinst_DATA = openct.conf
 

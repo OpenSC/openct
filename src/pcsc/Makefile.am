@@ -19,5 +19,5 @@ noinst_HEADERS = ifdhandler.h
 # Don't use HAVE_BUNDLES for this case, pcsc-lite loads
 # USB drivers from MacOS X like bundles for all platforms
 install-exec-local: install-libLTLIBRARIES
-	-${top_srcdir}/macos/libtool-bundle -e $(top_srcdir)/src/pcsc/Info.plist \
+	-${top_srcdir}/macos/libtool-bundle -e $(top_srcdir)/etc/Info.plist \
 	$(DESTDIR)$(libdir)/openct-ifd.so $(DESTDIR)$(bundledir)/
