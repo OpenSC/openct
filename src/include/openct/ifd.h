@@ -74,8 +74,8 @@ typedef struct ifd_reader {
 	const ifd_driver_t *	driver;
 	ifd_device_t *		device;
 
-	/* In case the IFD needs a specific protocol too */
-	ifd_protocol_t *	proto;
+	/* In case the IFD needs to keep state */
+	void *			driver_data;
 } ifd_reader_t;
 
 #define IFD_READER_DISPLAY	0x0100
@@ -92,6 +92,7 @@ enum {
 	IFD_PROTOCOL_T1_BLOCKSIZE,
 	IFD_PROTOCOL_T1_CHECKSUM_CRC,
 	IFD_PROTOCOL_T1_CHECKSUM_LRC,
+	IFD_PROTOCOL_T1_RESYNCH,
 };
 
 enum {
