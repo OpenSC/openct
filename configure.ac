@@ -295,7 +295,6 @@ aclocal/Makefile
 doc/Makefile
 etc/Makefile
 src/Makefile
-src/control/Makefile
 src/ct/Makefile
 src/ct/libopenct.pc
 src/ctapi/Makefile
