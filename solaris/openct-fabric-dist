@@ -1,0 +1,69 @@
+#!/sbin/sh
+#
+# Copyright 2005 William Wanders.  All rights reserved.
+# Use is subject to license terms.
+#
+# ident	"@(#)openct-fabric	1.1	04/08/31 SMI"
+#
+# This script is used initialize and shutdown the OpenCT fabric
+#
+
+case "$1" in
+'start')
+	# Create directory for OpenCT fabric
+	if [ ! -d /var/run/openct ]
+	then
+		mkdir -p /var/run/openct
+	fi
+
+	# Startup the OpenCT fabric
+	if [ ! -f /var/run/openct/status ]
+	then
+		/usr/sbin/openct-control init
+	fi
+
+	# Add sysevent handler for hotplug support
+	if syseventadm list \
+		-v SUNW -p ddi -c EC_devfs -s ESC_devfs_devi_add \
+		/usr/sbin/openct-hotplug '${di.path}' >/dev/null
+	then
+		echo "system eventhandler already added"
+	else
+		syseventadm add \
+			-v SUNW -p ddi -c EC_devfs -s ESC_devfs_devi_add \
+			/usr/sbin/openct-hotplug '${di.path}'
+	fi
+	;;
+'stop')
+	# Remove sysevent handler for hotplug support
+	if syseventadm list \
+		-v SUNW -p ddi -c EC_devfs -s ESC_devfs_devi_add \
+		/usr/sbin/openct-hotplug '${di.path}' >/dev/null
+	then
+		syseventadm remove \
+			-v SUNW -p ddi -c EC_devfs -s ESC_devfs_devi_add \
+			/usr/sbin/openct-hotplug '${di.path}'
+	fi
+
+	# Shutdown the OpenCT fabric
+	if [ -f /var/run/openct/status ]
+	then
+		/usr/sbin/openct-control shutdown
+	fi
+
+	# Cleanup the OpenCT fabric directory
+	if [ -d /var/run/openct ]
+	then
+		rm -rf /var/run/openct
+	fi
+	;;
+'status')
+	/usr/sbin/openct-control status
+	;;
+*)
+	echo "Usage: $0 { start | stop | status}"
+	exit 1
+	;;
+esac
+
+exit $?

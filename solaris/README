@@ -1,0 +1,16 @@
+Creating an installable package for Solaris 10
+==============================================
+
+The files in this directory are an attempt to ease
+the building of openct packages for Solaris 10.
+
+The basic steps to create a Solaris 10 package are:
+# make build
+# make dist
+# make package
+
+NOTE: If using the GNU compiler adjust the Makefile
+
+The package contains installs openct as a first class
+citizen in /usr, registers openct with SMF and activates
+a sysevent driven hotplug handler.

@@ -1,0 +1,74 @@
+# Set debug level
+debug	= 0;
+#
+# Enable hot plugging
+hotplug	= yes;
+#
+# Path to ifdhandler
+ifdhandler = /usr/sbin/ifdhandler;
+
+#
+# Configuration for ifdproxy (if you use it)
+ifdproxy {
+#	server-port     = /var/run/openct/.ifdproxy,
+#	device-port     = :6666;
+};
+
+# Configure static, non-hotplug aware readers here
+#
+# For a list of drivers try command 'ifdhandler -i', please
+# notice that not all drivers have serial device capability.
+
+#reader towitoko {
+#	driver = towitoko;
+#	device = serial:/dev/ttyS0;
+#};
+
+#
+# Hotplug IDs
+driver	egate {
+	ids = {
+		usb:0973/0001,
+	};
+};
+driver	etoken {
+	ids = {
+		usb:0529/050c,
+		usb:0529/0514,
+	};
+};
+driver	eutron {
+	ids = {
+		usb:073d/0005,
+	};
+};
+driver	ikey2k {
+	ids = {
+		usb:04b9/1202,
+	};
+};
+driver	ikey3k {
+	ids = {
+		usb:04b9/1300,
+	};
+};
+driver	cardman {
+	ids = {
+		usb:076b/0596, # OMNIKEY CardMan 2020
+		usb:076b/1784, # OMNIKEY CardMan 6020
+		usb:08d4/0009, # Fujitsu Siemens SCR USB SmartCard Reader
+	};
+};
+driver	ccid {
+	ids = {
+		usb:08e6/3437,
+		usb:08e6/3438,
+		usb:08e6/4433,
+		usb:04e6/5115,
+		usb:04e6/E001,
+		usb:04e6/E003,
+		usb:076b/3021,
+		usb:0783/0003,
+	};
+};
+

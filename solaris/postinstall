@@ -1,0 +1,4 @@
+#!/bin/sh
+
+svccfg import /var/svc/manifest/system/device/devices-openct-fabric.xml
+exit 0

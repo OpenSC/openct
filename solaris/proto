@@ -1,0 +1,67 @@
+d none usr 0755 root sys
+d none usr/include 0755 root bin
+d none usr/include/openct 0755 root bin
+f none usr/include/openct/apdu.h 0644 root bin
+f none usr/include/openct/buffer.h 0644 root bin
+f none usr/include/openct/conf.h 0644 root bin
+f none usr/include/openct/device.h 0644 root bin
+f none usr/include/openct/driver.h 0644 root bin
+f none usr/include/openct/error.h 0644 root bin
+f none usr/include/openct/ifd.h 0644 root bin
+f none usr/include/openct/logging.h 0644 root bin
+f none usr/include/openct/openct.h 0644 root bin
+f none usr/include/openct/protocol.h 0644 root bin
+f none usr/include/openct/server.h 0644 root bin
+f none usr/include/openct/socket.h 0644 root bin
+f none usr/include/openct/tlv.h 0644 root bin
+f none usr/include/openct/types.h 0644 root bin
+f none usr/include/openct/ctapi.h 0644 root bin
+d none usr/lib 0755 root bin
+s none usr/lib/libopenct.so.0=libopenct.so.0.0.2
+f none usr/lib/libopenct.so.0.0.2 0755 root bin
+s none usr/lib/libopenct.so=libopenct.so.0.0.2
+d none usr/lib/pkgconfig 0755 root other
+f none usr/lib/pkgconfig/libopenct.pc 0644 root other
+f none usr/lib/libopenct.la 0755 root bin
+f none usr/lib/libopenct.a 0644 root bin
+s none usr/lib/libifd.so.0=libifd.so.0.0.2
+f none usr/lib/libifd.so.0.0.2 0755 root bin
+s none usr/lib/libifd.so=libifd.so.0.0.2
+f none usr/lib/libifd.la 0755 root bin
+f none usr/lib/libifd.a 0644 root bin
+f none usr/lib/libopenctapi.so 0755 root bin
+f none usr/lib/libopenctapi.la 0755 root bin
+f none usr/lib/libopenctapi.a 0644 root bin
+f none usr/lib/openct-ifd.so 0755 root bin
+f none usr/lib/openct-ifd.la 0755 root bin
+f none usr/lib/openct-ifd.a 0644 root bin
+d none usr/lib/openct-ifd.bundle 0755 root bin
+d none usr/lib/openct-ifd.bundle/Contents 0755 root bin
+d none usr/lib/openct-ifd.bundle/Contents/SunOS 0755 root bin
+f none usr/lib/openct-ifd.bundle/Contents/SunOS/openct-ifd 0755 root bin
+f none usr/lib/openct-ifd.bundle/Contents/PkgInfo 0644 root bin
+f none usr/lib/openct-ifd.bundle/Contents/Info.plist 0644 root bin
+d none usr/sbin 0755 root bin
+f none usr/sbin/ifdhandler 0755 root bin
+f none usr/sbin/ifdproxy 0755 root bin
+f none usr/sbin/openct-control 0755 root bin
+f none usr/sbin/openct-hotplug 0755 root bin
+d none usr/bin 0755 root bin
+f none usr/bin/openct-tool 0755 root bin
+d none etc 0755 root sys
+d none etc/openct 0755 root sys
+f none etc/openct/openct.conf 0644 root sys
+d none lib 0755 root bin
+d none lib/svc 0755 root bin
+d none lib/svc/method 0755 root bin
+f none lib/svc/method/openct-fabric 0755 root bin
+d none var 0755 root sys
+d none var/svc 0755 root sys
+d none var/svc/manifest 0755 root sys
+d none var/svc/manifest/system 0755 root sys
+d none var/svc/manifest/system/device 0755 root sys
+f none var/svc/manifest/system/device/devices-openct-fabric.xml 0644 root sys
+i checkinstall=checkinstall
+i postinstall=postinstall
+i preremove=preremove
+i pkginfo=pkginfo

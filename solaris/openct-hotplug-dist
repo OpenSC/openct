@@ -1,0 +1,42 @@
+#!/bin/sh
+#
+# USB Hotplug script for OpenCT on Solaris
+#
+# This script should be run by sysevent daemon (sysevent[conf]d).
+#
+# This can be configured by issuing the followin comand as "root".
+#
+# syseventadm add -v SUNW -p ddi -c EC_devfs -s ESC_devfs_devi_add \
+#	/usr/sbin/openct-hotplug '${di.path}'
+#
+# The script will search for the applicable /dev link file for
+# the given device. If such link is found it means that the
+# device is bound in the system through the ugen device driver
+# and should be accessable by OpenCT.  An openct-control command
+# is then issued to attach the device.
+#
+OPENCT_CONTROL=/usr/sbin/openct-control
+DEVICE=$1
+
+for CNTRL0 in `ls /devices$DEVICE:[0-9a-f]*.[0-9a-f]*.cntrl0 2>/dev/null`
+do
+    #echo "CNTRL0=$CNTRL0"
+    VENDOR_PRODUCT=`echo $CNTRL0 | sed "s|/devices$DEVICE:\([0-9a-f]*\.[0-9a-f]*\).cntrl0|\1|"`
+    #echo "VENDOR_PRODUCT=$VENDOR_PRODUCT"
+    for CNTRL0_INSTANCE in `ls /dev/usb/$VENDOR_PRODUCT/*/cntrl0 2>/dev/null`
+    do
+	#echo "CNTRL0_INSTANCE=$CNTRL0_INSTANCE"
+	if `ls -l "$CNTRL0_INSTANCE" | grep "$DEVICE" >/dev/null`
+	then
+	    #echo "$CNTRL0_INSTANCE points to /pci@1f,0/pci@5/usb@0,1/device@2"
+	    VENDOR=`echo $VENDOR_PRODUCT | sed "s|\([0-9a-f]*\)\.\([0-9a-f]*\)|\1|"`
+	    PRODUCT=`echo $VENDOR_PRODUCT | sed "s|\([0-9a-f]*\)\.\([0-9a-f]*\)|\2|"`
+	    #echo "VENDOR=$VENDOR"
+	    #echo "PRODUCT=$PRODUCT"
+	    ID_INSTANCE=`printf "usb:%04x/%04x" 0x$VENDOR 0x$PRODUCT`
+	    logger -i -p local0.notice -t openct-hotplug "$OPENCT_CONTROL attach $CNTRL0_INSTANCE $ID_INSTANCE"
+	    $OPENCT_CONTROL attach $CNTRL0_INSTANCE $ID_INSTANCE
+	fi
+    done
+done
+exit 0

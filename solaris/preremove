@@ -1,0 +1,5 @@
+#!/bin/sh
+
+svcadm disable openct-fabric
+svccfg delete openct-fabric
+exit 0
