@@ -119,7 +119,7 @@ dnl Automatically update the libtool script if it becomes out-of-date.
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([errno.h fcntl.h malloc.h stdlib.h string.h strings.h sys/time.h unistd.h getopt.h dlfcn.h])
+AC_CHECK_HEADERS([errno.h fcntl.h malloc.h stdlib.h string.h strings.h sys/time.h unistd.h getopt.h dlfcn.h sys/poll.h])
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -238,6 +238,8 @@ fi
 
 # Always link lib{socket,nsl,resolv) if found, sigh.
 LIBS="$LIBS $LIBSOCKET $LIBRESOLV"
+
+AC_CHECK_LIB(poll, poll, [LIBS="$LIBS -lpoll" ac_cv_func_poll_lpoll=yes], ac_cv_func_poll_lpoll=no)
 
 PCSC_MSG=no
 pcsc_path=/usr
