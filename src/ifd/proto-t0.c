@@ -18,7 +18,7 @@ typedef struct {
 	int		state;
 	long		timeout;
 	unsigned int	max_nulls;
-} t0_data_t;
+} t0_state_t;
 
 enum {
 	IDLE, SENDING, RECEIVING, CONFUSED
@@ -29,13 +29,13 @@ static int	t0_xcv(ifd_protocol_t *,
 			void *, size_t);
 static int	t0_send(ifd_protocol_t *, ct_buf_t *, int);
 static int	t0_recv(ifd_protocol_t *, ct_buf_t *, int, long);
-static int	t0_resynch(t0_data_t *);
+static int	t0_resynch(t0_state_t *);
 
 /*
  * Set default T=1 protocol parameters
  */
 static void
-t0_set_defaults(t0_data_t *t0)
+t0_set_defaults(t0_state_t *t0)
 {
 	t0->state = IDLE;
 	t0->timeout = 1000;
@@ -48,7 +48,7 @@ t0_set_defaults(t0_data_t *t0)
 static int
 t0_init(ifd_protocol_t *prot)
 {
-	t0_set_defaults((t0_data_t *) prot);
+	t0_set_defaults((t0_state_t *) prot);
 	return 0;
 }
 
@@ -67,7 +67,7 @@ t0_release(ifd_protocol_t *prot)
 static int
 t0_set_param(ifd_protocol_t *prot, int type, long value)
 {
-	t0_data_t	*t0 = (t0_data_t *) prot;
+	t0_state_t	*t0 = (t0_state_t *) prot;
 
 	switch (type) {
 	case IFD_PROTOCOL_RECV_TIMEOUT:
@@ -84,7 +84,7 @@ t0_set_param(ifd_protocol_t *prot, int type, long value)
 static int
 t0_get_param(ifd_protocol_t *prot, int type, long *result)
 {
-	t0_data_t	*t0 = (t0_data_t *) prot;
+	t0_state_t	*t0 = (t0_state_t *) prot;
 	long		value;
 
 	switch (type) {
@@ -108,7 +108,7 @@ t0_get_param(ifd_protocol_t *prot, int type, long *result)
 static int
 t0_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 {
-	t0_data_t	*t0 = (t0_data_t *) prot;
+	t0_state_t	*t0 = (t0_state_t *) prot;
 	ifd_iso_apdu_t	iso;
 	unsigned char	sdata[5];
 	unsigned int	cla, cse, lc, le;
@@ -219,7 +219,7 @@ static int
 t0_xcv(ifd_protocol_t *prot, void *sdata, size_t slen,
 			void *rdata, size_t rlen)
 {
-	t0_data_t	*t0 = (t0_data_t *) prot;
+	t0_state_t	*t0 = (t0_state_t *) prot;
 	ct_buf_t	sbuf, rbuf;
 	unsigned int	null_count = 0;
 	unsigned int	ins;
@@ -322,7 +322,7 @@ t0_recv(ifd_protocol_t *prot, ct_buf_t *bp, int count, long timeout)
 }
 
 int
-t0_resynch(t0_data_t *t0)
+t0_resynch(t0_state_t *t0)
 {
 	return -1;
 }
@@ -333,7 +333,7 @@ t0_resynch(t0_data_t *t0)
 struct ifd_protocol_ops	ifd_protocol_t0 = {
 	IFD_PROTOCOL_T0,
 	"T=0",
-	sizeof(t0_data_t),
+	sizeof(t0_state_t),
 	t0_init,
 	t0_release,
 	t0_set_param,
