@@ -23,6 +23,7 @@
 #define IFD_ERROR_INVALID_MSG	-100
 #define IFD_ERROR_INVALID_CMD	-101
 #define IFD_ERROR_MISSING_ARG	-102
+#define IFD_ERROR_NOT_CONNECTED	-103
 
 extern const char *	ct_hexdump(const unsigned char *, size_t);
 
