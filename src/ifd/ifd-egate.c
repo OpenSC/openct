@@ -101,13 +101,16 @@ eg_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 	/* Reset the device*/
 	rc = ifd_usb_control(dev, EGATE_DIR_OUT, EGATE_CMD_RESET,
 			     0, 0, NULL, 0, EG_TIMEOUT);
-	if (rc < 0)
-		goto failed;
+	if (rc < 0) {
+failed:
+		ct_error("egate: failed to activate token");
+		return IFD_ERROR_COMM_ERROR;
+	}
 
 	rc = ifd_usb_control(reader->device, EGATE_DIR_IN, EGATE_CMD_STATUS,
 			     0, 0, &stat, 1, EG_TIMEOUT);
 	if (rc != 1)
-		return -1;
+		return IFD_ERROR_COMM_ERROR;
 
 
 	/* Fetch the ATR */
@@ -126,8 +129,6 @@ eg_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 
 	return atrlen;
 
-failed:	ct_error("egate: failed to activate token");
-	return -1;
 }
 
 static int
@@ -139,14 +140,14 @@ eg_set_protocol(ifd_reader_t *reader, int s, int proto)
      ifd_debug(1, "proto=%d", proto);
      if (proto != IFD_PROTOCOL_T0 && proto != IFD_PROTOCOL_TRANSPARENT) {
           ct_error("%s: protocol %d not supported", reader->name, proto);
-          return -1;
+          return IFD_ERROR_NOT_SUPPORTED;
      }
      slot = &reader->slot[s];
      p = ifd_protocol_new(IFD_PROTOCOL_TRANSPARENT,
                                     reader, slot->dad);
      if (p == NULL) {
           ct_error("%s: internal error", reader->name);
-          return -1;
+          return IFD_ERROR_GENERIC;
      }
      if (slot->proto) {
                 ifd_protocol_free(slot->proto);
@@ -195,25 +196,27 @@ eg_transparent(ifd_reader_t *reader, int dad, const void *inbuffer, size_t inlen
 	rc = ifd_usb_control(reader->device, EGATE_DIR_OUT, EGATE_CMD_RESET,
 			     0, 0, NULL, 0, EG_TIMEOUT);
 	if (rc < 0)
-		return -1;
+		return IFD_ERROR_COMM_ERROR;
      }
      if (ifd_iso_apdu_parse(inbuffer, inlen, &iso) < 0) 
-         return -1;
+         return IFD_ERROR_INVALID_ARG;
+     if (inlen < 5 + iso.lc || outlen < 2 + iso.le)
+	 return IFD_ERROR_BUFFER_TOO_SMALL;
      memset(cmdbuf,0,5);
      memmove(cmdbuf, inbuffer, inlen < 5 ? inlen : 5);
      rc=ifd_usb_control(reader->device, EGATE_DIR_OUT, EGATE_CMD_SEND_APDU,
 		        0, 0, (void *) cmdbuf, 5, -1);
      if (rc != 5)
-          return -1;
+          return IFD_ERROR_COMM_ERROR;
      stat=eg_status(reader);
      if (inlen > 5 && stat == EGATE_STATUS_DATA) {
           rc=ifd_usb_control(reader->device, EGATE_DIR_OUT, EGATE_CMD_WRITE,
 			  0, 0, (void *) (((unsigned char *)inbuffer)+5), iso.lc, -1);
 	  if (rc < 0)
-	       return rc;
+	       return IFD_ERROR_COMM_ERROR;
           if (rc != iso.lc) {
 	       ifd_debug(1, "short USB write (%u of %u bytes)", rc, iso.lc);
-               return -1;
+               return IFD_ERROR_COMM_ERROR;
 	  }
           ifd_debug(3, "sent %d bytes of data", iso.lc);
           stat=eg_status(reader);
@@ -222,21 +225,21 @@ eg_transparent(ifd_reader_t *reader, int dad, const void *inbuffer, size_t inlen
           rc=ifd_usb_control(reader->device, EGATE_DIR_IN, EGATE_CMD_READ, 0, 0,
                          (void *) outbuffer, iso.le, EG_TIMEOUT);
 	  if (rc < 0)
-	       return rc;
+	       return IFD_ERROR_COMM_ERROR;
           if (rc != iso.le) {
 	       ifd_debug(1, "short USB read (%u of %u bytes)", rc, iso.le);
-               return -1;
+               return IFD_ERROR_COMM_ERROR;
           }
           ifd_debug(3, "received %d bytes of data", iso.le);
           stat=eg_status(reader);
      } else
        iso.le=0;
      if (stat != EGATE_STATUS_SW)
-          return -1;
+          return IFD_ERROR_DEVICE_DISCONNECTED;
      rc=ifd_usb_control(reader->device, EGATE_DIR_IN, EGATE_CMD_READ, 0, 0,
                     (void *) (((unsigned char *)outbuffer)+iso.le), 2, EG_TIMEOUT);
      if (rc != 2)
-          return -1;
+          return IFD_ERROR_COMM_ERROR;
      ifd_debug(2, "returning a %d byte response", iso.le + 2);
      return iso.le+2;
 }
