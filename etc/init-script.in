@@ -2,7 +2,7 @@
 #
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=SBINDIR/sbin/openct-control
+DAEMON=SBINDIR/openct-control
 NAME=OpenCT
 DESC="smart card terminal framework"
 
