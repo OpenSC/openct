@@ -10,7 +10,7 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <sys/signal.h>
+#include <signal.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -31,7 +31,7 @@ ct_map_status(int flags, size_t *size)
 	const char	*path = OPENCT_STATUS_PATH;
 	struct stat	stb;
 	int		fd, prot;
-	void		*addr;
+	void		*addr = NULL;
 
 	if ((fd = open(path, flags)) < 0) {
 		ct_error("unable to open %s: %m", path);
@@ -129,14 +129,14 @@ ct_status_alloc_slot(unsigned int *num)
 		/* unblock signals */
 		sigprocmask(SIG_SETMASK, &sigset, NULL);
 	} else if (*num >= max) {
-		munmap(info, size);
+		munmap((void *) info, size);
 		return NULL;
 	}
 
 	memset(&info[*num], 0, sizeof(ct_info_t));
 	info[*num].ct_pid = getpid();
 	
-	msync(info, size, MS_SYNC);
+	msync((void *) info, size, MS_SYNC);
 	return info + *num;
 }
 
@@ -174,7 +174,7 @@ ct_status_lock(void)
 	int	fd, retries = 10;
 
 	snprintf(locktemp, sizeof(locktemp),
-			OPENCT_STATUS_PATH ".%u", getpid());
+			OPENCT_STATUS_PATH ".%u", (unsigned int) getpid());
 
 	if ((fd = open(locktemp, O_CREAT|O_RDWR, 0600)) < 0)
 		return -1;

@@ -237,6 +237,7 @@ mgr_status(int argc, char **argv)
 		}
 		printf("\n");
 	}
+	return 0;
 }
 
 /*

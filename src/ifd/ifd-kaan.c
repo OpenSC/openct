@@ -323,8 +323,7 @@ kaan_card_request(ifd_reader_t *reader, int slot,
 {
 	ct_buf_t	buf;
 	unsigned char	buffer[256] = { 0x20, 0x17, slot+1, 0x01, 0x00 };
-	unsigned short	sw;
-	int		n, rc;
+	int		n;
 
 	/* Build the APDU, which is basically a modified CTBCS OUTPUT command */
 	ct_buf_init(&buf, buffer, sizeof(buffer)-1);
@@ -557,7 +556,6 @@ kaan_sync_detect(ifd_reader_t *reader, int nslot)
 	kaan_status_t	*st = (kaan_status_t *) reader->driver_data;
 	ifd_slot_t	*slot = &reader->slot[nslot];
 	unsigned char	protocol;
-	size_t		size, n;
 	int		rc;
 
 	rc = kaan_get_tlv_from_file(reader,
@@ -597,7 +595,7 @@ kaan_get_tlv_from_file(ifd_reader_t *reader,
 			unsigned char tag, unsigned char *data, size_t len)
 {
 	unsigned char	buffer[256+2], *ptr;
-	size_t		size, n;
+	size_t		size;
 	int		rc;
 
 	if ((rc = kaan_select_file(reader, 0x12, 0x3F00, &size)) < 0
@@ -692,7 +690,6 @@ kaan_update_binary(ifd_reader_t *reader, unsigned char nad,
 			unsigned int offset,
 			const unsigned char *data, size_t len)
 {
-	kaan_status_t	*st = (kaan_status_t *) reader->driver_data;
 	unsigned char	cmd[256+5] = { 0x00, 0xD0, 0x00, 0x00, 0x00 };
 	unsigned char	resp[2];
 	size_t		count, total = 0;

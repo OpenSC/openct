@@ -371,7 +371,7 @@ again:	s = (char *) ct_buf_head(&config_buf);
 	if (n && issepa(*s)) {
 		m = 1;
 	} else {
-		for (m = 0; !isspace(s[m]) && !issepa(s[m]) && m < n; m++)
+		for (m = 0; !isspace((int) s[m]) && !issepa(s[m]) && m < n; m++)
 			;
 	}
 
@@ -447,7 +447,7 @@ again:
 	for (m = 0; m < n; m++, s++) {
 		if (*s == '#') {
 			in_comment = 1;
-		} else if (!in_comment && !isspace(*s)) {
+		} else if (!in_comment && !isspace((int) *s)) {
 			break;
 		} else if (*s == '\n') {
 			config_line++;

@@ -343,25 +343,63 @@ ifd_open_serial(const char *name)
 static struct {
 	int	bits, speed;
 } termios_speed[] = {
+#ifdef B0
       {	B0,		0 },
+#endif
+#ifdef B50
       {	B50,		50 },
+#endif
+#ifdef B75
       {	B75,		75 },
+#endif
+#ifdef B110
       {	B110,		110 },
+#endif
+#ifdef B134
       {	B134,		134 },
+#endif
+#ifdef B150
       {	B150,		150 },
+#endif
+#ifdef B200
       {	B200,		200 },
+#endif
+#ifdef B300
       {	B300,		300 },
+#endif
+#ifdef B600
       {	B600,		600 },
+#endif
+#ifdef B1200
       {	B1200,		1200 },
+#endif
+#ifdef B1800
       {	B1800,		1800 },
+#endif
+#ifdef B2400
       {	B2400,		2400 },
+#endif
+#ifdef B4800
       {	B4800,		4800 },
+#endif
+#ifdef B9600
       {	B9600,		9600 },
+#endif
+#ifdef B19200
       {	B19200,		19200 },
+#endif
+#ifdef B38400
       {	B38400,		38400 },
+#endif
+#ifdef B57600
       {	B57600,		57600 },
+#endif
+#ifdef B115200
       {	B115200,	115200 },
+#endif
+#ifdef B230400
       {	B230400,	230400 },
+#endif
       { -1, -1 }
 };
 

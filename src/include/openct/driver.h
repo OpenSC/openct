@@ -75,7 +75,7 @@ extern int		ifd_protocol_transceive(ifd_protocol_t *proto,
 				int dad,
 				const void *, size_t,
 				void *, size_t);
-extern int		ifd_protocol_resync(ifd_protocol_t *, int);
+extern int		ifd_protocol_resynchronize(ifd_protocol_t *, int);
 
 
 #endif /* OPENCT_DRIVER_H */

@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
+#include <ctype.h>
 #include <openct/openct.h>
 #include <openct/logging.h>
 
@@ -346,7 +346,7 @@ dump(unsigned char *data, size_t len)
 			printf(" %02x", data[offset+i]);
 		printf("   ");
 		for (i = 0; i < 16 && offset + i < len; i++) {
-			char	c = data[offset+i];
+			int	c = data[offset+i];
 
 			if (!isprint(c) || (isspace(c) && c != ' '))
 				c = '.';

@@ -294,7 +294,6 @@ ct_card_write_memory(ct_handle *h, unsigned int slot,
 			unsigned short address,
 			const void *send_buf, size_t send_len)
 {
-	ct_tlv_parser_t tlv;
 	unsigned char	buffer[CT_SOCKET_BUFSIZ];
 	ct_buf_t	args, resp;
 	int		rc;
