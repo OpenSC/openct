@@ -161,9 +161,11 @@ kaan_display(ifd_reader_t *reader, const char *string)
 		len = 32;
 
 	n = 4;
+	buffer[n++] = len + 2;
 	buffer[n++] = 0x50;
 	buffer[n++] = len;
 	memcpy(buffer + n, string, len);
+	n += len;
 
 	rc = kaan_apdu_xcv(reader, buffer, n, buffer, sizeof(buffer));
 	return kaan_check_sw("kaan_display", buffer, rc);
