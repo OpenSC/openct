@@ -171,6 +171,14 @@ ifd_device_transceive(ifd_device_t *dev,
 	return ifd_device_recv(dev, rbuf, rlen, timeout);
 }
 
+int
+ifd_device_poll_presence(ifd_device_t *dev, struct pollfd *pfd)
+{
+	if (!dev || !dev->ops || !dev->ops->poll_presence)
+		return 1;
+	return dev->ops->poll_presence(dev, pfd);
+}
+
 void
 ifd_device_close(ifd_device_t *dev)
 {

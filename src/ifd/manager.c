@@ -4,11 +4,9 @@
  * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
-#include "internal.h"
 #include <string.h>
 #include <stdlib.h>
-
-#define IFD_MAX_READERS		8
+#include "internal.h"
 
 static ifd_reader_t *		ifd_readers[IFD_MAX_READERS];
 static unsigned int		ifd_reader_handle = 1;
@@ -78,10 +76,8 @@ ifd_reader_by_index(unsigned int index)
 		ct_error("ifd_reader_by_index: invalid index %u", index);
 		return NULL;
 	}
-	if (!(reader = ifd_readers[index])) {
-		ifd_debug(1, "no reader at index %u", index);
+	if (!(reader = ifd_readers[index]))
 		return NULL;
-	}
 
 	return reader;
 }

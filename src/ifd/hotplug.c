@@ -9,6 +9,7 @@
  * 	pcmcia:id=vendor/product
  */
 
+#include <stdlib.h>
 #include "internal.h"
 
 int
@@ -25,24 +26,25 @@ ifd_hotplug_init(void)
 	return 0;
 }
 
-int
+ifd_reader_t *
 ifd_hotplug_attach(const char *device, const char *id)
 {
 	const char	*driver;
 	ifd_reader_t	*reader;
 
 	if (!(driver = ifd_driver_for_id(id)))
-		return 0;
+		return NULL;
 
 	if (!(reader = ifd_open(driver, device)))
-		return 0;
+		return NULL;
 
 	if (ifd_attach(reader) < 0) {
 		ifd_close(reader);
-		return 0;
+		return NULL;
 	}
 
-	return reader->handle;
+	reader->flags |= IFD_READER_HOTPLUG;
+	return reader;
 }
 
 int

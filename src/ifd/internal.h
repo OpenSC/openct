@@ -16,9 +16,6 @@
 #include <openct/error.h>
 #include <openct/buffer.h>
 
-/* For poll_presence */
-struct pollfd;
-
 struct ifd_device {
 	char *		name;
 	int		type;
@@ -102,13 +99,6 @@ extern struct ifd_protocol_ops	ifd_protocol_t1;
 extern struct ifd_protocol_ops	ifd_protocol_t0;
 extern struct ifd_protocol_ops	ifd_protocol_trans;
 
-/* Debugging macros */
-#define ifd_debug(level, fmt, args...) \
-	do { \
-		if ((level) <= ct_config.debug) \
-			ct_debug("%s: " fmt, __FUNCTION__ , ##args); \
-	} while (0)
-
 /* reader.c */
 extern int		ifd_send_command(ifd_protocol_t *,
 				const void *, size_t);
@@ -136,8 +126,6 @@ extern unsigned int	csum_crc_compute(const unsigned char *, size_t, unsigned cha
 
 /* hotplug.c */
 extern int		ifd_hotplug_init(void);
-extern int		ifd_hotplug_attach(const char *, const char *);
-extern int		ifd_hotplug_detach(const char *, const char *);
 
 /* module.c */
 extern int		ifd_load_module(const char *, const char *);

@@ -6,6 +6,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include "internal.h"
 
 static int		ifd_recv_atr(ifd_device_t *, ct_buf_t *,
@@ -390,7 +391,15 @@ ifd_recv_response(ifd_protocol_t *prot, void *buffer, size_t len, long timeout)
 void
 ifd_close(ifd_reader_t *reader)
 {
+	pid_t	pid;
+
 	ifd_detach(reader);
+
+	if ((pid = reader->pid) != 0) {
+		reader->pid = 0;
+		if (kill(pid, SIGTERM) < 0)
+			ct_error("failed to kill reader process: %m");
+	}
 
 	if (reader->device)
 		ifd_device_close(reader->device);

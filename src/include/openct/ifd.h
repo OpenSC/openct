@@ -14,6 +14,10 @@
 typedef struct ifd_device	ifd_device_t;
 typedef union ifd_device_params	ifd_device_params_t;
 
+/* Various implementation limits */
+#define IFD_MAX_READERS		8
+#define IFD_MAX_SLOTS		8
+
 enum {
 	IFD_PROTOCOL_DEFAULT = -1,
 	IFD_PROTOCOL_T0 = 0,
@@ -47,7 +51,6 @@ typedef struct ifd_slot {
 } ifd_slot_t;
 
 
-#define IFD_MAX_SLOTS		8
 typedef struct ifd_reader {
 	unsigned int		num;
 	unsigned int		handle;
@@ -59,12 +62,14 @@ typedef struct ifd_reader {
 
 	const ifd_driver_t *	driver;
 	ifd_device_t *		device;
+	pid_t			pid; /* used by resource manager */
 
 	/* In case the IFD needs to keep state */
 	void *			driver_data;
 } ifd_reader_t;
 
 #define IFD_READER_ACTIVE	0x0001
+#define IFD_READER_HOTPLUG	0x0002
 #define IFD_READER_DISPLAY	0x0100
 #define IFD_READER_KEYPAD	0x0200
 
@@ -102,6 +107,7 @@ extern int			ifd_attach(ifd_reader_t *);
 extern void			ifd_detach(ifd_reader_t *);
 extern ifd_reader_t *		ifd_reader_by_handle(unsigned int handle);
 extern ifd_reader_t *		ifd_reader_by_index(unsigned int index);
+extern ifd_reader_t *		ifd_hotplug_attach(const char *, const char *);
 
 extern int			ifd_activate(ifd_reader_t *);
 extern int			ifd_deactivate(ifd_reader_t *);
@@ -137,5 +143,14 @@ extern int			ifd_protocol_get_parameter(ifd_protocol_t *p,
 					int type,
 					long *value);
 extern void			ifd_protocol_free(ifd_protocol_t *);
+
+
+/* Debugging macro */
+#define ifd_debug(level, fmt, args...) \
+	do { \
+		if ((level) <= ct_config.debug) \
+			ct_debug("%s: " fmt, __FUNCTION__ , ##args); \
+	} while (0)
+
 
 #endif /* IFD_CORE_H */

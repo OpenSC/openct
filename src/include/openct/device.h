@@ -9,6 +9,8 @@
 
 #include <openct/ifd.h>
 
+struct pollfd; /* for poll_presence */
+
 /* Types of devices supported by libifd */
 enum {
 	IFD_DEVICE_TYPE_SERIAL = 0,
@@ -66,6 +68,8 @@ extern int		ifd_device_transceive(ifd_device_t *,
 extern int		ifd_device_send(ifd_device_t *, const void *, size_t);
 extern int		ifd_device_recv(ifd_device_t *, void *, size_t, long);
 extern int		ifd_device_control(ifd_device_t *, void *, size_t);
+extern int		ifd_device_poll_presence(ifd_device_t *,
+				struct pollfd *);
 extern void		ifd_device_close(ifd_device_t *);
 
 /* Internal system dependent device functions */
