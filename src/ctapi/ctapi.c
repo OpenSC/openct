@@ -556,7 +556,8 @@ CT_init(unsigned short ctn, unsigned short pn)
 	ct_lock_handle lock;
 	int i;
 
-	if ((ct=malloc(sizeof(struct CardTerminal)))==(struct CardTerminal*)0)
+	ct=(struct CardTerminal*) malloc(sizeof(struct CardTerminal));
+	if (ct==NULL)
 		return ERR_MEMORY;
 	if (!(h = ct_reader_connect(pn))) {
 		free(ct);
