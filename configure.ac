@@ -295,7 +295,7 @@ if test "x$prefix" = xNONE; then
   prefix=$ac_default_prefix
 fi
 if test "x$exec_prefix" = xNONE; then
-  exec_prefix=$prefix
+  exec_prefix='${prefix}'
 fi
 
 dnl Enable/disable debugging messages.
@@ -331,7 +331,7 @@ AC_DEFINE_UNQUOTED(OPENCT_IFDHANDLER_PATH, "$openct_ifdhandler_path", [ifdhandle
 pkgdata=`eval echo ${datadir}/${PACKAGE}` ; pkgdata=`eval echo ${pkgdata}`
 AC_SUBST(pkgdata)
 
-sysincludedir="${exec_prefix}/include"
+sysincludedir='${exec_prefix}/include'
 AC_SUBST(sysincludedir)
 
 AC_OUTPUT([
