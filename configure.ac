@@ -142,103 +142,10 @@ fi
 AC_SUBST(LIBDL)
 AC_CHECK_LIB(dl, dlopen, [LIBDL="$LIBDL -ldl" ac_cv_func_dlopen_ldl=yes], ac_cv_func_dlopen_ldl=no)
 
-#
-#  We check for various libraries
-#  - SysVr4 style of "-lsocket" at first (unless in libc)
-#    The hallmark is  connect()  routine (we presume)
-#
-AC_SUBST(LIBSOCKET)dnl
-ac_cv_libsocket_both=1
-AC_CHECK_FUNC(connect, ac_cv_libsocket_both=0)
-AC_CHECK_FUNC(gethostbyname, ac_cv_libsocket_both=0)
-if test "$ac_cv_libsocket_both" = 1 ; then
-  # Check cache
-  if test "$ac_cv_func_socket_lsocket" = yes ; then
-    AC_MSG_RESULT([need -lsocket library (cached)])
-    LIBSOCKET="-lsocket"
-    if test "$ac_cv_func_gethostbyname_lnsl" = yes ; then
-	LIBSOCKET="-lsocket -lnsl"
-    fi
-  else
-    # Well, will this work ?  SysVR4, but not Sun Solaris ?
-    AC_CHECK_LIB(socket, connect, [LIBSOCKET="-lsocket"
-				   ac_cv_func_socket_lsocket=yes],
-				   ac_cv_func_socket_lsocket=no)
-    if test "$ac_cv_func_socket_lsocket" = yes ; then
-      t_oldLibs="$LIBS"
-      LIBS="$LIBS -lsocket $LIBRESOLV"
-      AC_TRY_LINK([],[gethostbyname();], ,[
-	  LIBS="$LIBS -lnsl" # Add this Solaris library..
-	  AC_TRY_LINK([],[gethostbyname();],[
-			LIBSOCKET="-lsocket -lnsl"
-			ac_cv_func_gethostbyname_lnsl=yes
-		], [
-		   AC_MSG_ERROR([Weird, '$LIBS' not enough to find  gethostbyname() ?!])
-		])
-	])
-      LIBS="$t_oldLibs"
-    fi
-  fi
-fi
+dnl See if socket() is found from libsocket
+AC_CHECK_LIB(socket, socket, [LIBS="$LIBS -lsocket"])
 
-AC_SUBST(LIBRESOLV)dnl
-if test "x$LIBRESOLV" = "x"; then
-  # Ok, No  -lresolv,  is this enough for the  _res  to appear ?
-  t_oldLibs="$LIBS"
-  LIBS="$LIBS $LIBSOCKET"
-  ac_cv_var__res_options=no
-  # This following is for IRIX6.4, and I sincerely hope it
-  # will not fail on other systems...  It did! It did!
-  # Many systems don't have idemponent headers, they need specific
-  # includes before latter ones, or the latter ones won't be successful...
-  AC_TRY_LINK([#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/nameser.h>
-#include <resolv.h>],
-	      [_res.options = RES_INIT;],
-		ac_cv_var__res_options=yes);
-  if test "$ac_cv_var__res_options" != "yes"; then
-    LIBRESOLV="-lresolv"
-  fi
-  LIBS="$t_oldLibs"
-fi
-
-if test "x$LIBRESOLV" = "x"; then
-  # glibc 2.2.4 and libresolv is difficult
-  #  -	gethostbyname won't require lresolv because all
-  #	queries are made through the nsswitch
-  #  -	checking for the variable _res will not require
-  #	lresolv because _res is defined somewhere
-  AC_CHECK_LIB(resolv, res_query, [LIBRESOLV=-lresolv])
-  LIBS="$t_oldLibs"
-fi
-
-# See about the routines that possibly exist at the libraries..
-LIBS="$t_oldLibs $LIBSOCKET"
-AC_CHECK_FUNCS(socket socketpair)
-LIBS="$t_oldLibs"
-
-if test "$ac_cv_func_socket" = no -a "$LIBSOCKET" != ""; then
-  LIBS="$LIBS $LIBSOCKET"
-  AC_TRY_LINK([],[socket();], ac_cv_func_socket=yes)
-  if test $ac_cv_func_socket = yes; then
-    AC_DEFINE(HAVE_SOCKET, 1, [Have socket])
-  fi
-  LIBS="$t_oldLibs"
-fi
-if test "$ac_cv_func_socketpair" = no -a "$LIBSOCKET" != ""; then
-  LIBS="$LIBS $LIBSOCKET"
-  AC_TRY_LINK([],[socketpair();], ac_cv_func_socketpair=yes)
-  if test $ac_cv_func_socketpair = yes; then
-    AC_DEFINE(HAVE_SOCKETPAIR, 1, [Have socketpair])
-  fi
-  LIBS="$t_oldLibs"
-fi
-
-# Always link lib{socket,nsl,resolv) if found, sigh.
-LIBS="$LIBS $LIBSOCKET $LIBRESOLV"
-
+dnl see if poll() is found from libpoll
 AC_CHECK_LIB(poll, poll, [LIBS="$LIBS -lpoll" ac_cv_func_poll_lpoll=yes], ac_cv_func_poll_lpoll=no)
 
 PCSC_MSG=no
