@@ -24,26 +24,18 @@ typedef struct kaan_status {
 	int			icc_proto[IFD_MAX_SLOTS];
 } kaan_status_t;
 
-typedef struct kaan_apdu {
-	unsigned char		cse, cla, ins, p1, p2, lc, le;
-	unsigned int		sw;
-	void *			snd_buf;
-	void *			rcv_buf;
-	size_t			snd_len, rcv_len;
-} kaan_apdu_t;
-
 static int		kaan_reset_ct(ifd_reader_t *reader);
 static int		kaan_get_units(ifd_reader_t *reader);
 static int		kaan_display(ifd_reader_t *, const char *);
-static void		kaan_apdu_init(kaan_apdu_t *,
+static void		kaan_apdu_init(ifd_iso_apdu_t *,
 				unsigned char cse,
 				unsigned char cla,
 				unsigned char ins,
 				unsigned char p1,
 				unsigned char p2);
 static int		kaan_apdu_xcv(ifd_reader_t *,
-				kaan_apdu_t *);
-static int		kaan_get_tlv(kaan_apdu_t *,
+				ifd_iso_apdu_t *);
+static int		kaan_get_tlv(ifd_iso_apdu_t *,
 				unsigned char tag,
 				unsigned char **ptr);
 
@@ -108,7 +100,7 @@ kaan_open(ifd_reader_t *reader, const char *device_name)
 int
 kaan_reset_ct(ifd_reader_t *reader)
 {
-	kaan_apdu_t apdu;
+	ifd_iso_apdu_t apdu;
 
 	kaan_apdu_init(&apdu, IFD_APDU_CASE_1, 0x20, 0x10, 0x00, 0x00);
 	return kaan_apdu_xcv(reader, &apdu);
@@ -121,7 +113,7 @@ int
 kaan_get_units(ifd_reader_t *reader)
 {
 	unsigned char buffer[16], *units;
-	kaan_apdu_t apdu;
+	ifd_iso_apdu_t apdu;
 	int n;
 
 	kaan_apdu_init(&apdu, IFD_APDU_CASE_2S, 0x20, 0x13, 0x00, 0x81);
@@ -161,7 +153,7 @@ int
 kaan_display(ifd_reader_t *reader, const char *string)
 {
 	unsigned char	data[256];
-	kaan_apdu_t	apdu;
+	ifd_iso_apdu_t	apdu;
 	int		len = 0;
 
 	if (!(reader->flags & IFD_READER_DISPLAY))
@@ -204,7 +196,7 @@ static int
 kaan_card_status(ifd_reader_t *reader, int slot, int *status)
 {
 	unsigned char	buffer[6], *byte;
-	kaan_apdu_t	apdu;
+	ifd_iso_apdu_t	apdu;
 	int		n;
 
 	DEBUG("slot=%d", slot);
@@ -228,7 +220,7 @@ static int
 kaan_card_reset(ifd_reader_t *reader, int slot, void *result, size_t size)
 {
 	unsigned char	buffer[64];
-	kaan_apdu_t	apdu;
+	ifd_iso_apdu_t	apdu;
 	int		n;
 
 	kaan_apdu_init(&apdu, IFD_APDU_CASE_2S, 0x20, 0x10, slot+1, 0x01);
@@ -261,7 +253,7 @@ kaan_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 	kaan_status_t	*st = (kaan_status_t *) reader->driver_data;
 	unsigned char	cmd[] = { 0x22, 0x01, 0x00 };
 	ifd_slot_t	*slot;
-	kaan_apdu_t	apdu;
+	ifd_iso_apdu_t	apdu;
 	int		n;
 
 	DEBUG("proto=%d", proto);
@@ -330,7 +322,7 @@ kaan_transparent(ifd_reader_t *reader, int dad, ifd_apdu_t *apdu)
 		unsigned char	*sw = tpdu.rcv_buf;
 		unsigned char	cmd[5];
 
-		if (sw[0] == 0x61 && sw[1]) {
+		if (sw[0] == 0x61) {
 			cmd[0] = ((unsigned char *) tpdu.snd_buf)[0];
 			cmd[1] = 0xC0;
 			cmd[2] = 0x00;
@@ -356,7 +348,7 @@ kaan_transparent(ifd_reader_t *reader, int dad, ifd_apdu_t *apdu)
  * APDU exchange with terminal
  */
 int
-kaan_apdu_xcv(ifd_reader_t *reader, kaan_apdu_t *apdu)
+kaan_apdu_xcv(ifd_reader_t *reader, ifd_iso_apdu_t *apdu)
 {
 	kaan_status_t	*st = (kaan_status_t *) reader->driver_data;
 	ifd_apdu_t	tpdu;
@@ -423,7 +415,7 @@ kaan_recv(ifd_reader_t *reader, unsigned int dad, void *buffer, size_t len, long
  * Extract data from TLV encoded result
  */
 int
-kaan_get_tlv(kaan_apdu_t *apdu, unsigned char tag, unsigned char **res)
+kaan_get_tlv(ifd_iso_apdu_t *apdu, unsigned char tag, unsigned char **res)
 {
 	unsigned char *p = apdu->rcv_buf;
 	unsigned int n, len;
@@ -447,7 +439,7 @@ kaan_get_tlv(kaan_apdu_t *apdu, unsigned char tag, unsigned char **res)
  * build an ISO apdu
  */
 void
-kaan_apdu_init(kaan_apdu_t *apdu,
+kaan_apdu_init(ifd_iso_apdu_t *apdu,
 		unsigned char cse, unsigned char cla,
 		unsigned char ins, unsigned char p1, unsigned char p2)
 {
