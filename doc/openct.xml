@@ -90,7 +90,7 @@
 
 		<variablelist>
 			<varlistentry>
-				<term><ulink url="http://www.towitoko.de/hpeng/prod_micro.htm">Towitoko CHIPDRIVE micro</ulink></term>
+				<term><ulink url="http://www.chipdrive.de/cgi-bin/edcstore.cgi?user_action=detail&amp;catalogno=P209005">Towitoko CHIPDRIVE micro</ulink></term>
 				<listitem>
 					A cheap and very popular smart card
 					reader for the serial interfaces
@@ -123,7 +123,7 @@
 			</varlistentry>
 
 			<varlistentry>
-				<term><ulink url="http://www.ealaddin.com/etoken/PRO/">Aladdin eToken PRO</ulink></term>
+				<term><ulink url="http://www.ealaddin.com/etoken/pro/usb.asp">Aladdin eToken PRO USB</ulink></term>
 				<listitem>
 					A USB crypto Token by <ulink
 					url="http://www.ealaddin.com/">
@@ -154,7 +154,7 @@
 			</varlistentry>
 
 			<varlistentry>
-				<term><ulink url="http://www.omnikey.com/en/kat_smartcard.php3">OMNIKEY CardMan</ulink></term>
+				<term><ulink url="http://www.omnikey.com/en/kat_smartcard.php?katid=1">OMNIKEY CardMan</ulink></term>
 				<listitem>
 					A USB smart card reader. Not fully working as of yet.
 				</listitem>
