@@ -66,8 +66,6 @@ kaan_open(ifd_reader_t *reader, const char *device_name)
 
 	reader->name = "Kobil Kaan PRO";
 	reader->nslots = 1;
-	reader->slot[0].dad = 0x02;
-	reader->slot[1].dad = 0x32;
 
 	if (!(dev = ifd_device_open(device_name)))
 		return -1;
@@ -132,7 +130,7 @@ kaan_reset_ct(ifd_reader_t *reader)
 		ct_error("kaan_reset_ct: %s", ct_strerror(rc));
 		return rc;
 	}
-	ifd_debug(1, "kaan_reset_ct: rc=%d\n", rc);
+	ifd_debug(1, "kaan_reset_ct: rc=%d", rc);
 	if ((rc = kaan_get_sw(resp, rc, &sw)) < 0)
 		return rc;
 	if (sw == 0x6b00) {
@@ -290,7 +288,7 @@ kaan_freeze(ifd_reader_t *reader)
  * Common code for card_reset and card_request
  */
 static int
-kaan_do_reset(ifd_reader_t *reader, int slot,
+kaan_do_reset(ifd_reader_t *reader, int nslot,
 		const unsigned char *cmd, size_t cmd_len,
 		unsigned char *atr, size_t atr_len,
 		unsigned int timeout)
@@ -300,7 +298,7 @@ kaan_do_reset(ifd_reader_t *reader, int slot,
 	unsigned short	sw;
 	int		rc;
 
-	st->icc_proto[slot] = -1;
+	st->icc_proto[nslot] = -1;
 	if ((rc = kaan_apdu_xcv(reader, cmd, cmd_len, buffer, sizeof(buffer), timeout)) < 0)
 		return rc;
 
@@ -316,7 +314,7 @@ kaan_do_reset(ifd_reader_t *reader, int slot,
 			rc = atr_len;
 		memcpy(atr, buffer, rc);
 
-		if ((rc = kaan_sync_detect(reader, slot)) < 0)
+		if ((rc = kaan_sync_detect(reader, nslot)) < 0)
 			return rc;
 		break;
 	case 0x9001:
@@ -328,7 +326,7 @@ kaan_do_reset(ifd_reader_t *reader, int slot,
 	case 0x62a7:
 		/* synchronous ICC, unknown proto - try to detect 
 		 * the standard way */
-		rc = ifd_sync_detect_icc(reader, slot, atr, atr_len);
+		rc = ifd_sync_detect_icc(reader, nslot, atr, atr_len);
 		break;
 	default:
 		ifd_debug(1, "kaan_card_reset: unable to reset card, sw=0x%04x", sw);
