@@ -29,6 +29,9 @@ CT_init(unsigned short ctn, unsigned short pn)
 	if (!(my_reader = ifd_open(DRIVER_NAME, name)))
 		return ERR_INVALID;
 
+	if (ifd_activate(my_reader) < 0)
+		return ERR_INVALID;
+
 	return OK;
 }
 
@@ -64,6 +67,10 @@ CT_data(unsigned short ctn,
 	apdu.rcv_len = *lr;
 	apdu.rcv_buf = rsp;
 
+	if (ifd_config.debug > 1) {
+		ifd_debug("CT_data(dad=%d lc=%u lr=%u cmd=%s",
+				*dad, lc, *lr, ifd_hexdump(cmd, lc));
+	}
 	switch (*dad) {
 	case 0:
 		rc = ifd_card_command(my_reader, 0, &apdu);

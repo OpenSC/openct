@@ -74,7 +74,7 @@ enum {
 #define CTBCS_INS_MODIFY_VERIFICATION	0x19
 
 /*
- * CT-BCS functional units
+ * CT-BCS functional units (P1 byte)
  */
 #define CTBCS_UNIT_CT			0x00
 #define CTBCS_UNIT_INTERFACE1		0x01
@@ -122,6 +122,21 @@ enum {
 #define CTBCS_PIN_CONTROL_LEN_MASK	0x0F
 #define CTBCS_PIN_CONTROL_ENCODE_ASCII	0x01
 
+/*
+ * Status words returned by CTBCS
+ */
+#define CTBCS_SW_BAD_LENGTH		0x6700
+#define CTBCS_SW_BAD_COMMAND		0x6900
+#define CTBCS_SW_BAD_PARAMS		0x6a00
+#define CTBCS_SW_BAD_INS		0x6d00
+#define CTBCS_SW_BAD_CLASS		0x6e00
+
+/*
+ * Data returned by Get Status command
+ */
+#define CTBCS_DATA_STATUS_NOCARD        0x00    /* No card present */
+#define CTBCS_DATA_STATUS_CARD          0x01    /* Card present */
+#define CTBCS_DATA_STATUS_CARD_CONNECT  0x05    /* Card present */
 
 
 #ifdef __cplusplus
