@@ -5,7 +5,6 @@ dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.52)
 
 AC_INIT(openct, CVS)
-AC_CONFIG_SRCDIR(src/ct/client.c)
 AM_INIT_AUTOMAKE
 AM_CONFIG_HEADER(config.h)
 
@@ -211,6 +210,7 @@ case "$host" in
 esac
 
 saved_LIBS="$LIBS"
+saved_CFLAGS="$CFLAGS"
 saved_LDFLAGS="$LDFLAGS"
 saved_CPPFLAGS="$CPPFLAGS"
 AC_ARG_WITH(pcsclite,
@@ -221,10 +221,10 @@ if test "x$pcsc_path" = "xno"; then
 fi
 if test "x$pcsc_path" != "xno" -a "x$PCSC_MSG" != "xyes"; then
 	PKG_CHECK_MODULES(PCSC, libpcsclite, [
-		PCSC_MSG="yes" 
+		PCSC_MSG="yes"
 		AC_MSG_RESULT($PCSC_MSG)
-		], [
-	AC_MSG_CHECKING(for PC/SC Lite support)
+		],[
+	AC_MSG_CHECKING(for PC/SC Lite support (old style))
 	for pcscdir in "" /pcsc /PCSC; do
 		CPPFLAGS="$saved_CPPFLAGS"
 		LDFLAGS="$saved_LDFLAGS"
@@ -277,6 +277,28 @@ if test "x$PCSC_MSG" = "xyes"; then
 else
 	PCSC_LIBS=""
 	PCSC_CFLAGS=""
+fi
+
+if test "x$PCSC_MSG" = "xyes"; then
+	CPPFLAGS="${PCSC_CFLAGS} $saved_CPPFLAGS"
+	CFLAGS="$PCSC_CFLAGS $saved_CFLAGS"
+	LIBS="$PCSC_LIBS $saved_LIBS"
+	AC_TRY_LINK([
+#include <stdlib.h>
+#ifdef __APPLE__
+#include <PCSC/wintypes.h>
+#include <PCSC/winscard.h>
+#else
+#include <winscard.h>
+#endif
+	], [
+SCardControl(NULL, NULL, 0, NULL, NULL);
+	], [
+		AC_DEFINE(HAVE_PCSC_OLD, 1, [old version of pc/sc-lite])
+	])
+	CPPFLAGS="$saved_CPPFLAGS"
+	CFLAGS="$saved_CFLAGS"
+	LIBS="$saved_LIBS"
 fi
 
 USB_MSG=no
