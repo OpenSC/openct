@@ -143,7 +143,7 @@ dnl Checks for library functions.
 AC_FUNC_ERROR_AT_LINE
 AC_FUNC_STAT
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([gettimeofday])
+AC_CHECK_FUNCS([gettimeofday daemon])
 
 dnl C Compiler features
 AC_C_INLINE
