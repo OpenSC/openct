@@ -4,8 +4,8 @@
  * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
-#ifndef IFD_DEVICE_H
-#define IFD_DEVICE_H
+#ifndef OPENCT_DEVICE_H
+#define OPENCT_DEVICE_H
 
 #include <openct/ifd.h>
 
@@ -103,4 +103,4 @@ extern int		ifd_serial_get_cts(ifd_device_t *);
 extern int		ifd_serial_get_dsr(ifd_device_t *);
 extern int		ifd_serial_get_dtr(ifd_device_t *);
 
-#endif /* IFD_DEVICE_H */
+#endif /* OPENCT_DEVICE_H */

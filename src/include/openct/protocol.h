@@ -5,8 +5,8 @@
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
-#ifndef IFDMGR_PROTOCOL_H
-#define IFDMGR_PROTOCOL_H
+#ifndef OPENCT_PROTOCOL_H
+#define OPENCT_PROTOCOL_H
 
 /*
  * A protocol message from client to server
@@ -50,4 +50,4 @@
 #define CT_TAG_PIN_DATA		0x83	/* CTBCS verify APDU */
 
 
-#endif /* IFDMGR_PROTOCOL_H */
+#endif /* OPENCT_PROTOCOL_H */

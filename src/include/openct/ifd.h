@@ -4,8 +4,8 @@
  * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
-#ifndef IFD_CORE_H
-#define IFD_CORE_H
+#ifndef OPENCT_IFD_H
+#define OPENCT_IFD_H
 
 #include <sys/types.h>
 #include <openct/openct.h>
@@ -165,4 +165,4 @@ extern void			ifd_protocol_free(ifd_protocol_t *);
 	} while (0)
 
 
-#endif /* IFD_CORE_H */
+#endif /* OPENCT_IFD_H */

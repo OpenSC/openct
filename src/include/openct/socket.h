@@ -4,8 +4,8 @@
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
-#ifndef IFDD_SOCKET_H
-#define IFDD_SOCKET_H
+#ifndef OPENCT_SOCKET_H
+#define OPENCT_SOCKET_H
 
 #include <sys/types.h>
 #include <openct/buffer.h>
@@ -60,4 +60,4 @@ extern int		ct_socket_read(ct_socket_t *, void *, size_t);
 extern void		ct_socket_link(ct_socket_t *, ct_socket_t *);
 extern void		ct_socket_unlink(ct_socket_t *);
 
-#endif /* IFDD_SOCKET_H */
+#endif /* OPENCT_SOCKET_H */

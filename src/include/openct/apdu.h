@@ -4,8 +4,8 @@
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
-#ifndef IFD_APDU_H
-#define IFD_APDU_H
+#ifndef OPENCT_APDU_H
+#define OPENCT_APDU_H
 
 typedef struct ifd_iso_apdu {
 	unsigned char		cse, cla, ins, p1, p2;
@@ -36,4 +36,4 @@ enum {
 extern int	ifd_iso_apdu_parse(const void *, size_t, ifd_iso_apdu_t *);
 extern int	ifd_apdu_case(const void *, size_t);
 
-#endif /* IFD_APDU_H */
+#endif /* OPENCT_APDU_H */

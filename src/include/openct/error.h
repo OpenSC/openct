@@ -4,8 +4,8 @@
  * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
-#ifndef IFD_ERROR_H
-#define IFD_ERROR_H
+#ifndef OPENCT_ERROR_H
+#define OPENCT_ERROR_H
 
 #define IFD_SUCCESS			0
 #define IFD_ERROR_GENERIC		-1
@@ -31,4 +31,4 @@
 
 extern const char *	ct_hexdump(const unsigned char *, size_t);
 
-#endif /* IFD_ERROR_H */
+#endif /* OPENCT_ERROR_H */
