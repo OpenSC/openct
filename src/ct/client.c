@@ -1,11 +1,12 @@
 /*
- * Communication with ifd manager
+ * Communication with ifd handler
  *
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <openct/openct.h>
 #include <openct/socket.h>
 #include <openct/tlv.h>
@@ -13,42 +14,15 @@
 #include <openct/protocol.h>
 #include <openct/pathnames.h>
 
+struct ct_handle {
+	ct_socket_t *		sock;
+	unsigned int		index;			/* reader index */
+	unsigned int		card[OPENCT_MAX_SLOTS];	/* card seq */
+	const ct_info_t *	info;
+};
+
 static void	ct_args_int(ct_buf_t *, ifd_tag_t, unsigned int);
 static void	ct_args_string(ct_buf_t *, ifd_tag_t, const char *);
-
-/*
- * Send a control command to the master socket
- */
-int
-ct_master_control(const char *cmd, char *buf, size_t size)
-{
-	ct_socket_t	*sock;
-	char		path[128];
-	int		rc;
-
-	snprintf(path, sizeof(path), "%s/master", OPENCT_SOCKET_PATH);
-	if (!(sock = ct_socket_new(512)))
-		return IFD_ERROR_NO_MEMORY;
-
-	if ((rc = ct_socket_connect(sock, path)) < 0)
-		goto out;
-
-	/* Put command into send buffer and transmit */
-	if ((rc = ct_socket_puts(sock, cmd)) < 0
-	 || (rc = ct_socket_flsbuf(sock, 2)) < 0)
-		goto out;
-
-	/* Get complete response from server */
-	while (!sock->eof) {
-		if ((rc = ct_socket_filbuf(sock)) < 0)
-			goto out;
-	}
-
-	rc = ct_socket_gets(sock, buf, size);
-
-out:	ct_socket_close(sock);
-	return rc;
-}
 
 /*
  * Connect to a reader manager
@@ -56,20 +30,43 @@ out:	ct_socket_close(sock);
 ct_handle *
 ct_reader_connect(unsigned int reader)
 {
-	ct_socket_t	*sock;
+	const ct_info_t	*info;
 	char		path[128];
+	ct_handle	*h;
+	int		rc;
 
-	snprintf(path, sizeof(path), "%s/%u",
-			OPENCT_SOCKET_PATH, reader);
-
-	if (!(sock = ct_socket_new(512)))
+	if ((rc = ct_status(&info)) < 0
+	 || reader > (unsigned int) rc)
 		return NULL;
-	if (ct_socket_connect(sock, path) < 0) {
-		ct_socket_free(sock);
+
+	if (!(h = (ct_handle *) calloc(1, sizeof(*h))))
+		return NULL;
+
+	if (!(h->sock = ct_socket_new(512))) {
+		free(h);
 		return NULL;
 	}
 
-	return sock;
+	snprintf(path, sizeof(path), "%u", reader);
+	if (ct_socket_connect(h->sock, path) < 0) {
+		ct_reader_disconnect(h);
+		return NULL;
+	}
+
+	h->info = info + reader;
+	return h;
+}
+
+/*
+ * Disconnect from reader manager
+ */
+void
+ct_reader_disconnect(ct_handle *h)
+{
+	if (h->sock)
+		ct_socket_close(h->sock);
+	memset(h, 0, sizeof(*h));
+	free(h);
 }
 
 /*
@@ -78,47 +75,7 @@ ct_reader_connect(unsigned int reader)
 int
 ct_reader_status(ct_handle *h, ct_info_t *info)
 {
-	ct_tlv_parser_t tlv;
-	unsigned char	buffer[256], *units;
-	ct_buf_t	args, resp;
-	size_t		nunits;
-	int		rc;
-
-	memset(info, 0, sizeof(*info));
-
-	ct_buf_init(&args, buffer, sizeof(buffer));
-	ct_buf_init(&resp, buffer, sizeof(buffer));
-
-	ct_buf_putc(&args, CT_CMD_STATUS);
-	ct_buf_putc(&args, CT_UNIT_READER);
-
-	rc = ct_socket_call(h, &args, &resp);
-	if (rc < 0)
-		return rc;
-
-	if ((rc = ct_tlv_parse(&tlv, &resp)) < 0)
-		return rc;
-
-	/* Get the reader name first */
-	ct_tlv_get_string(&tlv, CT_TAG_READER_NAME,
-			info->ct_name, sizeof(info->ct_name));
-
-	/* Get the list of device units */
-	if (ct_tlv_get_opaque(&tlv, CT_TAG_READER_UNITS, &units, &nunits) >= 0) {
-		while (nunits--) {
-			unsigned int	u = *units++;
-
-			if (u < CT_UNIT_READER) {
-				if (u >= info->ct_slots)
-					info->ct_slots = u + 1;
-			} else if (u == CT_UNIT_DISPLAY) {
-				info->ct_display = 1;
-			} else if (u == CT_UNIT_KEYPAD) {
-				info->ct_keypad = 1;
-			}
-		}
-	}
-
+	*info = *h->info;
 	return 0;
 }
 
@@ -128,26 +85,24 @@ ct_reader_status(ct_handle *h, ct_info_t *info)
 int
 ct_card_status(ct_handle *h, unsigned int slot, int *status)
 {
-	ct_tlv_parser_t tlv;
-	unsigned char	buffer[256];
-	ct_buf_t	args, resp;
-	int		rc;
+	const ct_info_t	*info;
+	unsigned int	seq;
 
-	ct_buf_init(&args, buffer, sizeof(buffer));
-	ct_buf_init(&resp, buffer, sizeof(buffer));
+	info = h->info;
+	if (slot > info->ct_slots) 
+		return IFD_ERROR_INVALID_ARG;
 
-	ct_buf_putc(&args, CT_CMD_STATUS);
-	ct_buf_putc(&args, slot);
+	seq = info->ct_card[slot];
 
-	rc = ct_socket_call(h, &args, &resp);
-	if (rc < 0)
-		return rc;
+	*status = 0;
+	if (seq != 0) {
+		*status = IFD_CARD_PRESENT;
+		if (seq != h->card[slot])
+			*status |= IFD_CARD_STATUS_CHANGED;
+	}
 
-	if ((rc = ct_tlv_parse(&tlv, &resp)) < 0)
-		return rc;
-
-	/* Get the card status */
-	return ct_tlv_get_int(&tlv, CT_TAG_CARD_STATUS, status);
+	h->card[slot] = seq;
+	return 0;
 }
 
 /*
@@ -181,7 +136,7 @@ ct_card_request(ct_handle *h, unsigned int slot,
 	if (message)
 		ct_args_string(&args, CT_TAG_MESSAGE, message);
 
-	rc = ct_socket_call(h, &args, &resp);
+	rc = ct_socket_call(h->sock, &args, &resp);
 	if (rc < 0)
 		return rc;
 
@@ -212,7 +167,7 @@ ct_card_transact(ct_handle *h, unsigned int slot,
 	if ((rc = ct_buf_put(&args, send_data, send_len)) < 0)
 		return rc;
 
-	rc = ct_socket_call(h, &args, &resp);
+	rc = ct_socket_call(h->sock, &args, &resp);
 	if (rc < 0)
 		return rc;
 
@@ -238,7 +193,7 @@ ct_card_lock(ct_handle *h, unsigned int slot, int type, ct_lock_handle *res)
 
 	ct_args_int(&args, CT_TAG_LOCKTYPE, type);
 
-	rc = ct_socket_call(h, &args, &resp);
+	rc = ct_socket_call(h->sock, &args, &resp);
 	if (rc < 0)
 		return rc;
 
@@ -265,7 +220,7 @@ ct_card_unlock(ct_handle *h, unsigned int slot, ct_lock_handle lock)
 
 	ct_args_int(&args, CT_TAG_LOCK, lock);
 
-	return ct_socket_call(h, &args, &resp);
+	return ct_socket_call(h->sock, &args, &resp);
 }
 
 /*

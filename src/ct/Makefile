@@ -3,7 +3,7 @@ CFLAGS	= -I../../include $(DEBUG)
 LDFLAGS	= $(DEBUG)
 LIBS	= libopenct.so
 OBJS	= buffer.o socket.o tlv.o error.o \
-	  client.o mainloop.o
+	  client.o status.o mainloop.o
 LIBDIR	= $(DESTDIR)/usr/lib
 
 all:: $(LIBS)
