@@ -1,11 +1,16 @@
 CFLAGS	= $(DEBUG) -Wall -fPIC -I../../include
 DEBUG	= -g
 ALL	= towitoko.so etoken.so kaan.so
+CTAPI	= $(addprefix ctapi-,$(ALL))
 
-all:	$(ALL)
+all:	$(ALL) $(CTAPI)
 
 clean distclean:
 	rm -f *.o *.so
+
+ctapi-%.so: ctapi.c
+	driver=`expr $@ : 'ctapi-\(.*\)\.so'`; \
+	$(CC) $(DEBUG) -shared -DDRIVER_NAME='"'$$driver'"' -o $@ $(CFLAGS) $<
 
 %.so: %.c
 	$(CC) $(DEBUG) -shared -o $@ $(CFLAGS) $<

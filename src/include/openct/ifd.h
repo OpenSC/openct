@@ -111,6 +111,7 @@ enum {
 
 extern ifd_reader_t *		ifd_open(const char *driver_name,
 					const char *device_name);
+extern void			ifd_close(ifd_reader_t *);
 extern int			ifd_attach(ifd_reader_t *);
 extern void			ifd_detach(ifd_reader_t *);
 
