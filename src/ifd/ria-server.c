@@ -26,7 +26,6 @@
 #include <openct/ifd.h>
 #include "internal.h"
 #include "ria.h"
-#include "openct/ifd.h"
 
 typedef struct ria_peer {
 	struct ria_peer *	next;
