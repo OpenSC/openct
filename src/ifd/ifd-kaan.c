@@ -1,7 +1,8 @@
 /*
- * Driver for Kobil Kaan Professional
+ * Driver for Kobil Kaan Professional and Telesec B1
  *
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
+ * Copyright (C) 2003 Michael Haardt (B1 support)
  */
 
 #include "internal.h"
@@ -115,6 +116,75 @@ kaan_open(ifd_reader_t *reader, const char *device_name)
 }
 
 /*
+ * Initialize the device
+ */
+static int
+b1_open(ifd_reader_t *reader, const char *device_name)
+{
+	kaan_status_t *st;
+	ifd_device_t *dev;
+	ifd_device_params_t params;
+	unsigned long w;
+	int r;
+
+	reader->name = "DTAG/T-TeleSec B1 standard";
+	reader->nslots = 1;
+
+	if (!(dev = ifd_device_open(device_name)))
+		return -1;
+
+	if (ifd_device_type(dev) == IFD_DEVICE_TYPE_SERIAL) {
+		if (ifd_device_get_parameters(dev, &params) >= 0) {
+			/* The default configuration for B1 serial
+			 * readers is 8E1 at 9600 bps */
+			params.serial.bits = 8;
+			params.serial.parity = IFD_SERIAL_PARITY_EVEN;
+			params.serial.stopbits = 1;
+			params.serial.dtr = 0;
+			params.serial.rts = 0;
+			ifd_device_set_parameters(dev, &params);
+	                /* wait 35+-15 = 50 ms for DSR low */
+	                poll((struct pollfd*)0,0,50);
+			if (ifd_serial_get_dsr(dev))
+				return -1;
+	                /* wait further 300 ms until setting DTR */
+        	        poll((struct pollfd*)0,0,300);
+			/* set DTR */
+			params.serial.dtr = 1;
+			ifd_device_set_parameters(dev, &params);
+			/* wait until DSR is set, which may take up to 5 s (typically 0.8 s) */
+			for (w=0; w<=5000; w+=210)
+			{
+				poll((struct pollfd*)0,0,210);
+				if (ifd_serial_get_dsr(dev)) break;
+			}
+			if (w>5000) return -1;
+		}
+		else return -1;
+	}
+
+	reader->device = dev;
+	if ((st = (kaan_status_t *) calloc(1, sizeof(*st))) == NULL)
+		return IFD_ERROR_NO_MEMORY;
+
+	reader->driver_data = st;
+	if (!(st->p = ifd_protocol_new(IFD_PROTOCOL_T1, reader, 0x12))) {
+		ct_error("unable to get T1 protocol handler");
+		return IFD_ERROR_GENERIC;
+	}
+
+	/* Reset the CT */
+	if ((r = kaan_reset_ct(reader)) < 0)
+		return r;
+
+	/* Get list of functional units */
+	if ((r = kaan_get_units(reader)) < 0)
+		return r;
+
+	return 0;
+}
+
+/*
  * Reset the card reader
  */
 int
@@ -161,6 +231,7 @@ kaan_get_units(ifd_reader_t *reader)
 	int		rc, n;
 	unsigned short	sw;
 
+	reader->slot[0].dad = 0x02;
 	if ((rc = kaan_apdu_xcv(reader, cmd, sizeof(cmd), buffer, sizeof(buffer), 0)) < 0) {
 		ct_error("kaan_get_units: %s", ct_strerror(rc));
 		return rc;
@@ -168,13 +239,11 @@ kaan_get_units(ifd_reader_t *reader)
 	if ((rc = kaan_get_sw(buffer, rc, &sw)) < 0)
 		return rc;
 	if (sw != 0x9000) {
-		reader->slot[0].dad = 0x12;
 		return 0;
 	}
 	if ((n = kaan_get_tlv(buffer, rc, 0x81, &units)) < 0)
 		return 0;
 
-	reader->slot[0].dad = 0x02;
 
 	while (n--) {
 		switch (units[n]) {
@@ -383,7 +452,8 @@ kaan_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 {
 	kaan_status_t	*st = (kaan_status_t *) reader->driver_data;
 	unsigned char	cmd[] = { 0x80, 0x60, nslot+1, 0x00, 0x03, 0x22, 0x01, 0x00 };
-	unsigned char	sw[2];
+	unsigned char	buffer[2];
+	unsigned short	sw;
 	ifd_slot_t	*slot;
 	int		rc;
 
@@ -396,14 +466,23 @@ kaan_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 	case IFD_PROTOCOL_I2C_LONG:  cmd[7] = 0x80; break;
 	case IFD_PROTOCOL_3WIRE:     cmd[7] = 0x81; break;
 	case IFD_PROTOCOL_2WIRE:     cmd[7] = 0x82; break;
+	case IFD_PROTOCOL_4401:      cmd[7] = 0x90; break;
+	case IFD_PROTOCOL_4402:      cmd[7] = 0x91; break;
+	case IFD_PROTOCOL_4403:      cmd[7] = 0x92; break;
+	case IFD_PROTOCOL_4433:      cmd[7] = 0x93; break;
 	default:
 		ifd_debug(1, "kaan_set_protocol: protocol %d not supported", proto);
 		return -1;
 	}
 
-	if ((rc = kaan_apdu_xcv(reader, cmd, sizeof(cmd), sw, sizeof(sw), 0)) < 0
-	 || (rc = kaan_check_sw("kaan_set_protocol", sw, rc)) < 0)
+	if ((rc = kaan_apdu_xcv(reader, cmd, sizeof(cmd), buffer, sizeof(buffer), 0)) < 0
+	 || (rc = kaan_get_sw(buffer, rc, &sw)) < 0)
 		return rc;
+	/* B1 returns 6985 for German KVK health care cards */
+	if (sw != 0x9000 && sw != 0x6985) {
+		ifd_debug(1, "kaan_set_protocol: protocol %d not supported, sw=04%x", proto);
+		return -1;
+	}
 
 	slot = &reader->slot[nslot];
 	slot->proto = ifd_protocol_new(IFD_PROTOCOL_TRANSPARENT,
@@ -877,7 +956,7 @@ kaan_get_tlv(unsigned char *buf, size_t len,
 /*
  * Driver operations
  */
-static struct ifd_driver_ops	kaan_driver;
+static struct ifd_driver_ops	kaan_driver, b1_driver;
 
 /*
  * Initialize this module
@@ -900,5 +979,21 @@ ifd_kaan_register(void)
 	kaan_driver.sync_read = kaan_sync_read;
 	kaan_driver.sync_write = kaan_sync_write;
 
+	b1_driver.open = b1_open;
+	b1_driver.activate = kaan_activate;
+	b1_driver.deactivate = kaan_deactivate;
+	b1_driver.card_status = kaan_card_status;
+	b1_driver.card_reset = kaan_card_reset;
+	b1_driver.card_request = kaan_card_request;
+	b1_driver.output= kaan_display;
+	b1_driver.perform_verify = kaan_perform_verify;
+	b1_driver.send= kaan_send;
+	b1_driver.recv= kaan_recv;
+	b1_driver.set_protocol = kaan_set_protocol;
+	b1_driver.transparent = kaan_transparent;
+	b1_driver.sync_read = kaan_sync_read;
+	b1_driver.sync_write = kaan_sync_write;
+
 	ifd_driver_register("kaan", &kaan_driver);
+	ifd_driver_register("b1", &b1_driver);
 }
