@@ -29,6 +29,7 @@ extern "C" {
 #define IFD_ERROR_NO_ATR		-15
 #define IFD_ERROR_INCOMPATIBLE_DEVICE	-16
 #define IFD_ERROR_DEVICE_DISCONNECTED	-17
+#define IFD_ERROR_INVALID_ATR		-18
 
 /* for application/resource manager protocol */
 #define IFD_ERROR_INVALID_MSG		-100

@@ -126,6 +126,7 @@ const char *ct_strerror(int rc)
 		"Unable to reset card",
 		"Device cannot perform requested operation",
 		"Device was disconnected",
+		"Card returned invalid ATR",
 	};
 	const int gen_base = -IFD_SUCCESS;
 	const char *proxy_errors[] = {
