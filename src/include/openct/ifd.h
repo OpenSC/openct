@@ -58,6 +58,7 @@ typedef struct ifd_slot {
 	unsigned char		atr[IFD_MAX_ATR_LEN];
 
 	ifd_protocol_t *	proto;
+	void *			reader_data;
 } ifd_slot_t;
 
 #define IFD_MAX_SLOTS		8
