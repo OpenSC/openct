@@ -8,6 +8,14 @@
 
 #include <ifd/core.h>
 
+/* Types of devices supported by libifd */
+enum {
+	IFD_DEVICE_TYPE_SERIAL,
+	IFD_DEVICE_TYPE_USB,
+	IFD_DEVICE_TYPE_PS2,
+	IFD_DEVICE_TYPE_OTHER
+};
+
 union ifd_device_params {
 	struct {
 		unsigned int	speed;
@@ -26,12 +34,21 @@ enum {
 };
 #define IFD_SERIAL_PARITY_TOGGLE(n)	((n)? ((n) ^ 3) : 0)
 
-enum {
-	IFD_DEVICE_TYPE_SERIAL,
-	IFD_DEVICE_TYPE_USB,
-	IFD_DEVICE_TYPE_PS2,
-	IFD_DEVICE_TYPE_OTHER
-};
+/*
+ * Control messages to be sent through
+ * ifd_device_control must always have a guard word
+ * that contains the device type.
+ */
+typedef struct ifd_usb_cmsg {
+	int		guard;	/* device type */
+
+	int		requesttype;
+	int		request;
+	int		value;
+	int		index;
+	void *		data;
+	size_t		len;
+} ifd_usb_cmsg_t;
 
 extern ifd_device_t *	ifd_device_open(const char *);
 extern int		ifd_device_type(ifd_device_t *);
