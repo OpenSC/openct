@@ -342,7 +342,7 @@ if (test x$enable_debug = xyes); then
 	AC_DEFINE(DEBUG, 1, [Enable debug messages.])
 fi
 
-CPPFLAGS="-I\${top_builddir}/include -I\${top_srcdir}/include $CPPFLAGS"
+CPPFLAGS="-I\${top_builddir}/src/include -I\${top_srcdir}/src/include $CPPFLAGS"
 AM_CONDITIONAL(HAVE_BUNDLES, test "x$with_bundles" = "xyes")
 
 openct_etc_path=`eval echo ${sysconfdir}` ; openct_etc_path=`eval echo ${openct_etc_path}`
@@ -375,19 +375,19 @@ Makefile
 aclocal/Makefile
 doc/Makefile
 etc/Makefile
-include/Makefile
-include/openct/Makefile
 src/Makefile
 src/control/Makefile
 src/ct/Makefile
 src/ct/libopenct.pc
 src/ctapi/Makefile
 src/ifd/Makefile
+src/include/Makefile
+src/include/openct/Makefile
 src/pcsc/Makefile
 src/tools/Makefile
 ])
 
-AC_CREATE_STDINT_H(include/openct/types.h)
+AC_CREATE_STDINT_H(src/include/openct/types.h)
 
 echo ""
 echo "OpenCT has been configured with the following options"

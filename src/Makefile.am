@@ -2,4 +2,5 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-SUBDIRS = . ct ifd ctapi pcsc control tools
+# Order IS important
+SUBDIRS = include ct ifd ctapi pcsc control tools
