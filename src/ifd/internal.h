@@ -130,6 +130,7 @@ extern void	ifd_towitoko_register(void);
 extern void	ifd_cardman_register(void);
 extern void	ifd_smartboard_register(void);
 extern void	ifd_gempc_register(void);
+extern void	ifd_ccid_register(void);
 
 /* reader.c */
 extern int		ifd_send_command(ifd_protocol_t *,

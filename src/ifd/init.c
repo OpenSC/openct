@@ -28,6 +28,7 @@ ifd_init(void)
 	ifd_cardman_register();
 	ifd_smartboard_register();
 	ifd_gempc_register();
+	ifd_ccid_register();
 
 	/* Register all builtin protocols */
 	ifd_protocol_register(&ifd_protocol_t0);
