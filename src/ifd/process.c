@@ -21,22 +21,38 @@
 
 #include "ifdhandler.h"
 
-static const char *	cmd_name[256] = {
-	[CT_CMD_STATUS]		= "CT_CMD_STATUS",
-	[CT_CMD_LOCK]		= "CT_CMD_LOCK",
-	[CT_CMD_UNLOCK]		= "CT_CMD_UNLOCK",
-	[CT_CMD_RESET]		= "CT_CMD_RESET",
-	[CT_CMD_REQUEST_ICC]	= "CT_CMD_REQUEST_ICC",
-	[CT_CMD_EJECT_ICC]	= "CT_CMD_EJECT_ICC",
-	[CT_CMD_OUTPUT]		= "CT_CMD_OUTPUT",
-	[CT_CMD_INPUT]		= "CT_CMD_INPUT",
-	[CT_CMD_PERFORM_VERIFY]	= "CT_CMD_PERFORM_VERIFY",
-	[CT_CMD_CHANGE_PIN]	= "CT_CMD_CHANGE_PIN",
-	[CT_CMD_MEMORY_READ]	= "CT_CMD_MEMORY_READ",
-	[CT_CMD_MEMORY_WRITE]	= "CT_CMD_MEMORY_WRITE",
-	[CT_CMD_TRANSACT_OLD]	= "CT_CMD_TRANSACT_OLD",
-	[CT_CMD_TRANSACT]	= "CT_CMD_TRANSACT",
+static struct cmd_name {
+	unsigned int value;
+	const char *str;
+} cmd_name[] = {
+	{ CT_CMD_STATUS, "CT_CMD_STATUS" },
+	{ CT_CMD_LOCK, "CT_CMD_LOCK" },
+	{ CT_CMD_UNLOCK, "CT_CMD_UNLOCK" },
+	{ CT_CMD_RESET, "CT_CMD_RESET" },
+	{ CT_CMD_REQUEST_ICC, "CT_CMD_REQUEST_ICC" },
+	{ CT_CMD_EJECT_ICC, "CT_CMD_EJECT_ICC" },
+	{ CT_CMD_OUTPUT, "CT_CMD_OUTPUT" },
+	{ CT_CMD_INPUT, "CT_CMD_INPUT" },
+	{ CT_CMD_PERFORM_VERIFY, "CT_CMD_PERFORM_VERIFY" },
+	{ CT_CMD_CHANGE_PIN, "CT_CMD_CHANGE_PIN" },
+	{ CT_CMD_MEMORY_READ, "CT_CMD_MEMORY_READ" },
+	{ CT_CMD_MEMORY_WRITE, "CT_CMD_MEMORY_WRITE" },
+	{ CT_CMD_TRANSACT_OLD, "CT_CMD_TRANSACT_OLD" },
+	{ CT_CMD_TRANSACT, "CT_CMD_TRANSACT" },
+	{ 0, NULL },
 };
+
+static const char *
+get_cmd_name(unsigned int cmd)
+{
+	struct cmd_name *c;
+
+	for (c = cmd_name; c->str; c++) {
+		if (c->value == cmd)
+			return c->str;
+	}
+	return "<unknown>";
+}
 
 static int do_status(ifd_reader_t *, int,
 			ct_tlv_parser_t *, ct_tlv_builder_t *);
@@ -76,8 +92,7 @@ ifdhandler_process(ct_socket_t *sock, ifd_reader_t *reader,
 		return IFD_ERROR_INVALID_MSG;
 
 	ifd_debug(1, "ifdhandler_process(cmd=%s, unit=%u)",
-			cmd_name[cmd]? cmd_name[cmd] : "<unknown>",
-			unit);
+			get_cmd_name(cmd), unit);
 
 	/* First, handle commands that don't do TLV encoded
 	 * arguments - currently this is only CT_CMD_TRANSACT. */
