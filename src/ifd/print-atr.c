@@ -6,6 +6,7 @@
 
 #include <getopt.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <ifd/core.h>
 #include <ifd/config.h>
