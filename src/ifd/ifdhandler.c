@@ -213,6 +213,7 @@ ifdhandler_poll_presence(struct pollfd *pfd, unsigned int max, void *ptr)
 		return 0;
 	if (!dev->ops->poll_presence(dev, pfd)) {
 		ifd_debug(1, "Reader %s detached", reader->name);
+		memset(reader->status, 0, sizeof(*reader->status));
 		exit(0);
 	}
 	return 1;
