@@ -228,6 +228,7 @@ int ifd_usb_parse_configuration(struct ifd_usb_config_descriptor *config, unsign
   struct ifd_usb_descriptor_header *header;
 
   memcpy(config, buffer, IFD_USB_DT_CONFIG_SIZE);
+  IFD_USB_LE16_TO_CPU(config->wTotalLength);
   size = config->wTotalLength;
 
   if (config->bNumInterfaces > IFD_USB_MAXINTERFACES) {
