@@ -11,6 +11,7 @@
 
 #include <config.h>
 #include <sys/types.h>
+#include <linux/version.h>
 #include <linux/major.h>
 #include <linux/usbdevice_fs.h>
 #include <sys/sysmacros.h>
@@ -91,6 +92,15 @@ ifd_sysdep_usb_control(int fd,
 	struct usbdevfs_ctrltransfer ctrl;
 	int		rc;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,20)
+	ctrl.bRequestType = requesttype;
+	ctrl.bRequest = request;
+	ctrl.wValue = value;
+	ctrl.wIndex = index;
+	ctrl.wLength = len;
+	ctrl.data = data;
+	ctrl.timeout = timeout;
+#else
 	ctrl.requesttype = requesttype;
 	ctrl.request = request;
 	ctrl.value = value;
@@ -98,6 +108,7 @@ ifd_sysdep_usb_control(int fd,
 	ctrl.length = len;
 	ctrl.data = data;
 	ctrl.timeout = timeout;
+#endif
 
 	if ((rc = ioctl(fd, USBDEVFS_CONTROL, &ctrl)) < 0) {
 		ct_error("usb_control failed: %m");
