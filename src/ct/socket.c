@@ -473,7 +473,7 @@ ct_socket_write(ct_socket_t *sock, void *ptr, size_t len)
 	struct sigaction act;
 	unsigned int	count = 0;
 	int		rc;
-	caddr_t		p;
+	caddr_t		p = (caddr_t) ptr;
 
 	if (sock->fd < 0)
 		return -1;
@@ -484,12 +484,11 @@ ct_socket_write(ct_socket_t *sock, void *ptr, size_t len)
 	sigaction(SIGPIPE, &act, &act);
 
 	while (count < len) {
-		rc = write(sock->fd, ptr, len);
+		rc = write(sock->fd, (const void *) p, len);
 		if (rc < 0) {
 			ct_error("send error: %m");
 			goto done;
 		}
-		p = ptr;
 		p += rc;
 		count += rc;
 	}
@@ -505,13 +504,13 @@ ct_socket_read(ct_socket_t *sock, void *ptr, size_t size)
 {
 	unsigned int	count = 0;
 	int		rc;
-	caddr_t		p;
+	caddr_t		p = (caddr_t) ptr;
 
 	if (sock->fd < 0)
 		return -1;
 
 	while (count < size) {
-		rc = read(sock->fd, ptr, size - count);
+		rc = read(sock->fd, (void *) p, size - count);
 		if (rc < 0) {
 			ct_error("recv error: %m");
 			goto done;
@@ -521,7 +520,6 @@ ct_socket_read(ct_socket_t *sock, void *ptr, size_t size)
 			rc = -1;
 			goto done;
 		}
-		p = ptr;
 		p += rc;
 		count += rc;
 	}
