@@ -6,7 +6,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <openct/core.h>
+#include <openct/ifd.h>
 #include <pcsclite.h>
 #include <wintypes.h>
 #include <ifdhandler.h>
