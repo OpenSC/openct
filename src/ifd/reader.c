@@ -360,7 +360,7 @@ ifd_recv_response(ifd_protocol_t *prot, void *buffer, size_t len, long timeout)
  * Shut down reader
  */
 void
-ifd_shutdown(ifd_reader_t *reader)
+ifd_close(ifd_reader_t *reader)
 {
 	ifd_detach(reader);
 
