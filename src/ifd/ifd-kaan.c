@@ -21,6 +21,7 @@
  */
 typedef struct kaan_status {
 	ifd_protocol_t *	p;
+	int			icc_proto[IFD_MAX_SLOTS];
 } kaan_status_t;
 
 typedef struct kaan_apdu {
@@ -31,6 +32,7 @@ typedef struct kaan_apdu {
 	size_t			snd_len, rcv_len;
 } kaan_apdu_t;
 
+static int		kaan_reset_ct(ifd_reader_t *reader);
 static int		kaan_get_units(ifd_reader_t *reader);
 static void		kaan_apdu_init(kaan_apdu_t *,
 				unsigned char cse,
@@ -83,9 +85,23 @@ kaan_open(ifd_reader_t *reader, const char *device_name)
 	}
 
 	ifd_protocol_set_parameter(st->p, IFD_PROTOCOL_T1_RESYNCH, NULL);
+	if (kaan_reset_ct(reader) < 0)
+		return -1;
 
 	/* Get list of functional units */
 	return kaan_get_units(reader);
+}
+
+/*
+ * Reset the card reader
+ */
+int
+kaan_reset_ct(ifd_reader_t *reader)
+{
+	kaan_apdu_t apdu;
+
+	kaan_apdu_init(&apdu, IFD_APDU_CASE_1, 0x20, 0x10, 0x00, 0x00);
+	return kaan_apdu_xcv(reader, &apdu);
 }
 
 /*
@@ -206,6 +222,7 @@ kaan_card_reset(ifd_reader_t *reader, int slot, void *result, size_t size)
 static int
 kaan_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 {
+	kaan_status_t	*st = (kaan_status_t *) reader->driver_data;
 	unsigned char	cmd[] = { 0x22, 0x01, 0x00 };
 	ifd_slot_t	*slot;
 	kaan_apdu_t	apdu;
@@ -238,30 +255,65 @@ kaan_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 	}
 
 	slot = &reader->slot[nslot];
-	slot->proto = ifd_protocol_new(IFD_PROTOCOL_T1,
+	slot->proto = ifd_protocol_new(IFD_PROTOCOL_TRANSPARENT,
 				reader, slot->dad);
 	if (slot->proto == NULL) {
 		ifd_error("%s: internal error", reader->name);
 		return -1;
 	}
 
+	st->icc_proto[nslot] = proto;
 	return 0;
 }
 
 /*
- * Send/receive T=1 apdu
- * This is just for the communication with the card reader.
+ * APDU exchange with ICC
  */
 static int
-kaan_send(ifd_reader_t *reader, unsigned int dad, const void *buffer, size_t len)
+kaan_transparent(ifd_reader_t *reader, int dad, ifd_apdu_t *apdu)
 {
-	return ifd_device_send(reader->device, buffer, len);
-}
+	kaan_status_t	*st = (kaan_status_t *) reader->driver_data;
+	ifd_apdu_t	tpdu = *apdu;
+	int		nslot, cse, n, prot;
 
-static int
-kaan_recv(ifd_reader_t *reader, unsigned int dad, void *buffer, size_t len, long timeout)
-{
-	return ifd_device_recv(reader->device, buffer, len, timeout);
+	nslot = (dad == 0x02)? 0 : 1;
+	prot = st->icc_proto[nslot];
+
+	cse = ifd_apdu_case(apdu, NULL, NULL);
+	if (prot == IFD_PROTOCOL_T0) {
+		if (cse == IFD_APDU_CASE_4S)
+			tpdu.snd_len--;
+	}
+
+	if ((n = ifd_protocol_transceive(st->p, dad, &tpdu)) < 2) {
+		ifd_error("kaan: T=1 protocol failure, rc=%d", n);
+		return -1;
+	}
+
+	if (cse == IFD_APDU_CASE_4S && n == 2) {
+		unsigned char	*sw = tpdu.rcv_buf;
+		unsigned char	cmd[5];
+
+		if (sw[0] == 0x61 && sw[1]) {
+			cmd[0] = ((unsigned char *) tpdu.snd_buf)[0];
+			cmd[1] = 0xC0;
+			cmd[2] = 0x00;
+			cmd[3] = 0x00;
+			cmd[4] = sw[1];
+
+			tpdu.snd_buf = cmd;
+			tpdu.snd_len = 5;
+			tpdu.rcv_len = sw[1] + 2;
+
+			if ((n = ifd_protocol_transceive(st->p, dad, &tpdu)) < 2) {
+				ifd_error("kaan: T=1 protocol failure, rc=%d", n);
+				return -1;
+			}
+		}
+	}
+
+	apdu->rcv_len = tpdu.rcv_len;
+	return tpdu.rcv_len;
 }
 
 /*
@@ -316,6 +368,22 @@ kaan_apdu_xcv(ifd_reader_t *reader, kaan_apdu_t *apdu)
 }
 
 /*
+ * Send/receive T=1 apdu
+ * This is just for the communication with the card reader.
+ */
+static int
+kaan_send(ifd_reader_t *reader, unsigned int dad, const void *buffer, size_t len)
+{
+	return ifd_device_send(reader->device, buffer, len);
+}
+
+static int
+kaan_recv(ifd_reader_t *reader, unsigned int dad, void *buffer, size_t len, long timeout)
+{
+	return ifd_device_recv(reader->device, buffer, len, timeout);
+}
+
+/*
  * Extract data from TLV encoded result
  */
 int
@@ -367,6 +435,7 @@ static struct ifd_driver_ops	kaan_driver = {
 	.send		= kaan_send,
 	.recv		= kaan_recv,
 	.set_protocol	= kaan_set_protocol,
+	.transparent	= kaan_transparent,
 };
 
 /*
