@@ -29,6 +29,7 @@ static int		opt_command = -1;
 enum {
 	CMD_LIST = 0,
 	CMD_WAIT,
+	CMD_RWAIT,
 	CMD_ATR,
 	CMD_MF,
 };
@@ -67,6 +68,8 @@ main(int argc, char **argv)
 		opt_command = CMD_LIST;
 	else if (!strcmp(cmd, "atr"))
 		opt_command = CMD_ATR;
+	else if (!strcmp(cmd, "rwait"))
+		opt_command = CMD_RWAIT;
 	else if (!strcmp(cmd, "wait"))
 		opt_command = CMD_WAIT;
 	else if (!strcmp(cmd, "mf"))
@@ -89,6 +92,16 @@ main(int argc, char **argv)
 			print_reader_info(&info);
 		}
 
+		exit(0);
+	}
+
+	if (opt_command == CMD_RWAIT) {
+		while (1) {
+			h = ct_reader_connect(opt_reader);
+			if (h) 
+				break;
+			sleep(1);
+		}
 		exit(0);
 	}
 
@@ -133,6 +146,7 @@ usage(int exval)
 " list  list all readers found\n"
 " atr   print ATR of card in selected reader\n"
 " wait  wait for card to be inserted\n"
+" rwait wait for reader to attached\n"
 " mf    try to select main folder of card\n"
 );
 	exit(exval);
