@@ -1,31 +1,27 @@
 
-libifd, pre-alpha snapshot
+OpenCT, pre-alpha snapshot
 ==========================
 
-This is libifd, a library for building drivers for smartcard
-readers. Its main purpose is to provide a framework for driver
-authors that supports different types of devices (serial, USB,
-etc), as well as various standard protocols (such as T=0, T=1).
+This is OpenCT, a middleware framework for smart card terminals.
 
-This library also includes drivers for several readers. Currently,
-these are
+It all started with a reader driver library - I wanted to write a
+library to provide a framework for people writing drivers for smart
+card readers. The idea was to provide all the usualy stuff (T=0, T=1,
+serial vs USB device handling, etc) in a single place, and reduce
+driver writing to interaction with the device itself.
+
+I added interface bindings for CTAPI (tested) and PCSC (untested),
+but ended up writing my own resource manager.
+
+All of this is still work in progress, but I hope to have OpenCT
+support in OpenSC very soon.
+
+Currently, the following smart card readers are supported:
 
 etoken		for the Aladdin eToken; tested with Aladdin eToken PRO
 kaan		for Kobil readers; tested with Kobil Kaan Professional
 towitoko	Towitoko Chipdrives; tested with the Chipdrive micro
 
-
-
-There is also a CTAPI library that lets you use libifd readers
-from CTAPI applications. This CTAPI implementation doesn't
-support all CTBCS commands yet.
-
-
-I also plan to do a PCSC driver for libifd.
-
-
-There is also one small sample application for using the library
-directly.
 
 
 Configuring libifd
