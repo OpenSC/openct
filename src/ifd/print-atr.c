@@ -18,6 +18,7 @@ static void	dump(unsigned char *data, size_t len);
 
 static unsigned int	opt_reader = 0;
 static const char *	opt_config = NULL;
+static int		opt_debug = 0;
 
 int
 main(int argc, char **argv)
@@ -28,7 +29,7 @@ main(int argc, char **argv)
 	while ((c = getopt(argc, argv, "df:r:h")) != -1) {
 		switch (c) {
 		case 'd':
-			ifd_config.debug++;
+			opt_debug++;
 			break;
 		case 'f':
 			opt_config = optarg;
@@ -48,8 +49,14 @@ main(int argc, char **argv)
 	/* Initialize IFD library */
 	ifd_init();
 
+	/* Parse IFD config file */
 	if (ifd_config_parse(opt_config) < 0)
 		exit(1);
+
+	if (opt_debug > ifd_config.debug)
+		ifd_config.debug = opt_debug;
+
+	ifd_hotplug_init();
 
 	if (!(reader = ifd_reader_by_index(opt_reader))) {
 		fprintf(stderr, "Unknown reader #%u\n", opt_reader);

@@ -12,6 +12,15 @@
 #include "internal.h"
 
 int
+ifd_hotplug_init(void)
+{
+	if (ifd_config.hotplug_scan_on_startup) {
+		ifd_sysdep_usb_scan();
+	}
+	return 0;
+}
+
+int
 ifd_hotplug_attach(const char *device, const char *id)
 {
 	const char	*driver;

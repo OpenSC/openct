@@ -90,6 +90,7 @@ enum {
 #define IFD_CARD_STATUS_CHANGED	0x0002
 
 extern int			ifd_init(void);
+extern int			ifd_hotplug_init(void);
 
 extern ifd_reader_t *		ifd_open(const char *driver_name,
 					const char *device_name);

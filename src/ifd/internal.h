@@ -98,10 +98,13 @@ extern ifd_device_t *	ifd_device_new(const char *, struct ifd_device_ops *,
 				size_t);
 extern void		ifd_device_free(ifd_device_t *);
 
-/* Checksum functions */
+/* checksum.c */
 extern unsigned int	csum_lrc_compute(const unsigned char *, size_t, unsigned char *);
 extern unsigned int	csum_crc_compute(const unsigned char *, size_t, unsigned char *);
 
+/* hotplug.c */
+extern int		ifd_hotplug_attach(const char *, const char *);
+extern int		ifd_hotplug_detach(const char *, const char *);
 
 /* module.c */
 extern int		ifd_load_module(const char *, const char *);

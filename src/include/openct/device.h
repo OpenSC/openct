@@ -71,6 +71,7 @@ extern void		ifd_device_close(ifd_device_t *);
 extern int		ifd_sysdep_device_type(const char *);
 extern const char *	ifd_sysdep_channel_to_name(unsigned int num);
 extern int		ifd_sysdep_usb_control(int, ifd_usb_cmsg_t *, long);
+extern int		ifd_sysdep_usb_scan(void);
 
 /* scheduled to go away */
 extern ifd_device_t *	ifd_open_serial(const char *);

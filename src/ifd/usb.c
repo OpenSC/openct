@@ -1,5 +1,5 @@
 /*
- * USB handling
+ * USB device handling
  *
  * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
@@ -71,4 +71,44 @@ ifd_open_usb(const char *device)
 	dev->fd = fd;
 
 	return (ifd_device_t *) dev;
+}
+
+#include <usb.h>
+#include <stdio.h>
+
+/*
+ * Scan all usb devices to see if there is one we support
+ * This function is called at start-up because we can't be
+ * sure the hotplug system notifies us of devices that were
+ * attached at startup time already.
+ */
+int
+ifd_sysdep_usb_scan(void)
+{
+	struct usb_bus	*bus;
+	struct usb_device *dev;
+
+	usb_init();
+	usb_find_busses();
+	usb_find_devices();
+
+	for (bus = usb_busses; bus; bus = bus->next) {
+		for (dev = bus->devices; dev; dev = dev->next) {
+			char	idstring[64], device[PATH_MAX];
+
+			snprintf(idstring, sizeof(idstring),
+				"usb:%04x,%04x",
+				dev->descriptor.idVendor,
+				dev->descriptor.idProduct);
+
+			snprintf(device, sizeof(device),
+				"/proc/bus/usb/%s/%s",
+				bus->dirname,
+				dev->filename);
+
+			ifd_hotplug_attach(device, idstring);
+		}
+	}
+
+	return 0;
 }
