@@ -1,9 +1,10 @@
-
-
-OpenCT Release 0.5.0
+OpenCT Release 0.6.1
 ====================
 
-We are pleased to announce the availability of OpenCT 0.5.0.
+We are pleased to announce the availability of OpenCT 0.6.1.
+This is a test version in alpha code quality. It has several
+severe problems and is only intended for testing. Please
+use the older stable release 0.5.0 in procuction environments.
 
 OpenCT is a library for accessing smart card terminals.  It provides a
 rich set of functions for driver writers, protocol drivers for T=0 and
@@ -27,6 +28,7 @@ and USB tokens:
  -	Rainbow iKey 2032 / 3000
  -	Cryptoflex eGate
  -	Eutron Cypto-Identity ITSEC
+ -	generic USB smart cards readers conforming to the CCID standart.
 
 More drivers are currently under development.
 
