@@ -1,4 +1,4 @@
-MAINTAINERCLEANFILES=Makefile.in
+MAINTAINERCLEANFILES=Makefile.in ifdhandler.la
 
 INCLUDES=-I$(top_srcdir)/src/ifd -I$(top_builddir)/include
 
