@@ -22,6 +22,7 @@
 #define IFD_ERROR_USER_TIMEOUT		-12
 #define IFD_ERROR_USER_ABORT		-13
 #define IFD_ERROR_PIN_MISMATCH		-14
+#define IFD_ERROR_NO_ATR		-15
 
 /* for application/resource manager protocol */
 #define IFD_ERROR_INVALID_MSG	-100
