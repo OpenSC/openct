@@ -215,7 +215,7 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 		if ((n = t1_xcv(t1, sdata, slen, sizeof(sdata))) < 0) {
 			ifd_debug(1, "transmit/receive failed");
 			if (retries == 0 || last_send)
-				return -1;
+				goto error;
 			slen = t1_build(t1, sdata, dad,
 					T1_R_BLOCK | T1_OTHER_ERROR,
 					NULL, NULL);
@@ -225,7 +225,7 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 		if (!t1_verify_checksum(t1, sdata, n)) {
 			ifd_debug(1, "checksum failed");
 			if (retries == 0 || last_send)
-				return -1;
+				goto error;
 			slen = t1_build(t1, sdata,
 					dad, T1_R_BLOCK | T1_EDC_ERROR,
 					NULL, NULL);
@@ -238,7 +238,7 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 			if (T1_IS_ERROR(pcb)) {
 				ifd_debug(1, "received error block, err=%d", T1_IS_ERROR(pcb));
 				if (retries == 0)
-					return -1;
+					goto error;
 				if (t1->state == SENDING) {
 					slen = t1_build(t1, sdata,
 							dad, T1_I_BLOCK,
@@ -266,7 +266,7 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 			/* If there's no data available, the ICC
 			 * shouldn't be asking for more */
 			if (ct_buf_avail(&sbuf) == 0)
-				return -1;
+				goto error;
 
 			slen = t1_build(t1, sdata,
 					dad, T1_I_BLOCK,
@@ -297,7 +297,7 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 			t1->nr ^= 1;
 
 			if (ct_buf_put(&rbuf, sdata + 3, sdata[2]) < 0)
-				return -1;
+				goto error;
 
 			if ((pcb & T1_MORE_BLOCKS) == 0)
 				goto done;
@@ -307,7 +307,7 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 
 		case T1_S_BLOCK:
 			if (T1_S_IS_RESPONSE(pcb))
-				return -1;
+				goto error;
 
 			ct_buf_init(&tbuf, sblk, sizeof(sblk));
 
@@ -315,16 +315,16 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 			case T1_S_RESYNC:
 				ifd_debug(1, "resynch requested");
 				if (retries == 0)
-					return -1;
+					goto error;
 				t1_set_defaults(t1);
 				break;
 			case T1_S_ABORT:
 				ifd_debug(1, "abort requested");
-				return -1;
+				goto error;
 			case T1_S_IFS:
 				ifd_debug(1, "CT sent S-block with ifs=%u", sdata[3]);
 				if (sdata[3] == 0)
-					return -1;
+					goto error;
 				t1->ifsc = sdata[3];
 				ct_buf_putc(&tbuf, sdata[3]);
 				break;
@@ -337,7 +337,7 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 				break;
 			default:
 				ct_error("T=1: Unknown S block type 0x%02x", T1_S_TYPE(pcb));
-				return -1;
+				goto error;
 			}
 
 			slen = t1_build(t1, sdata, dad,
@@ -350,6 +350,9 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 	}
 
 done:	return ct_buf_avail(&rbuf);
+
+error:	t1->state = RESYNCH;
+	return -1;
 }
 
 static unsigned
