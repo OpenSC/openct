@@ -20,21 +20,19 @@
 		</para>
 
 		<para>
-			It all started with a reader driver library - Olaf
+			It all started with a reader driver library - Olaf Kirch
 			wanted to write a library to provide a framework for
 			people writing drivers for smart card readers. The idea
 			was to provide all the usual stuff (T=0, T=1, serial
 			vs. USB device handling, etc) in a single place, and
 			reduce driver writing to interaction with the device
-			itself. 
+			itself.
 		</para>
 
 		<para>
-			Olaf added interface bindings for CT-API and PC/SC, both
-			of which are broken at the moment because he ended up
-			writing my own resource manager.
+			OpenCT provides a native OpenCT, CT-API and PC/SC Lite IFD interface with
+			an OpenCT ifdhandler resource manager.
 		</para>
-		
 
 		<para>
 			OpenCT is an open source implementation providing card
@@ -60,8 +58,6 @@
 				 The eToken driver is loosely based on code
 				 written by Andreas Jellinghaus
 				 <email>aj@dungeon.inka.de</email>
-				 (the ikey3k and eutron driver, too,
-				 and most of the documentation)
 			 </listitem>
 
 			 <listitem>
@@ -73,27 +69,14 @@
 				 the documentation.
 			 </listitem>
 		</itemizedlist>
-
-		<para>
-			OpenCT provides CT-API drivers, ifdhandler drivers
-			as well as it's own resource manager for direct
-			use by applications.
-		</para>
 	</chapter>
 
 	<chapter id="openct.copyright">
 		<title>Copyright and license</title>
 
 		<para>
-			Most of OpenCT is copyright by Olaf Kirch
-			<email>okir@suse.de</email>, but see every
-			source file for the individual authors.
-		</para>
-
-		<para>
-			FIXME: Olaf should really assign some license
-			to the whole think. I vote for LGPL or BSD
-			license (or both). 
+			Most of OpenCT is copyright by Olaf Kirch <email>okir@suse.de</email>
+			under BSD license, but see every source file for the individual authors.
 		</para>
 	</chapter>
 
@@ -168,8 +151,7 @@
 			<varlistentry>
 				<term><ulink url="http://www.omnikey.com/en/kat_smartcard.php3">OMNIKEY CardMan</ulink></term>
 				<listitem>
-					A USB smart card reader? Supported?
-					FIXME: I have no idea.
+					A USB smart card reader? Not fully working as of yet.
 				</listitem>
 			</varlistentry>
 		</variablelist>
@@ -188,17 +170,16 @@
 		<para>
 			To use OpenCT with smart card readers attached
 			via USB you need a bit more: your kernel needs
-			to support USB and your kernel needs to support
-			the USB controller you are using. On most computers
-			the USB controller is part of the mainboard. If
-			your mainboard uses Intel chips you need most
-			likely the "uhci" USB controller support, for
-			other vendors most likely the "ohci" controller support.
+			to support the USB controller you are using. On
+			most computers the USB controller is part of the
+			mainboard. If your mainboard uses Intel chips
+			you need most likely the "uhci" USB controller
+			support, for other vendors most likely the "ohci"
+			controller support.
 		</para>
 
 		<para>
-			FIXME: I'd like to link to some USB howto with all
-			the details and more help. Is there such a HOWTO?
+			FIXME: Add an URL to a generic USB HOWTO
 		</para>
 
 		<para>
@@ -242,7 +223,7 @@ none	/proc/bus/usb	usbfs		defaults	0	0
 			and utilities. You do this by first invoking
 			the configure script, for instance
 			<screen>
-$ ./configure --prefix=/usr --sysconfdir=/etc
+% ./configure --prefix=/usr --sysconfdir=/etc
 			</screen>
 		</para>
 
@@ -260,8 +241,8 @@ $ ./configure --prefix=/usr --sysconfdir=/etc
 			Next, you need to compile and install
 			all libraries and utilities using
 			<screen>
-$ make
-$ make install
+% make
+% make install
 			</screen>
 		</para>
 
@@ -270,8 +251,8 @@ $ make install
 			<filename>/var/run/openct</filename> and set the
 			permissions. Do this with the commands:
 			<screen>
-$ mkdir /var/run/openct
-$ chmod 755 /var/run/openct
+# mkdir /var/run/openct
+# chmod 755 /var/run/openct
 			</screen>
 		</para>
 
@@ -293,7 +274,7 @@ $ chmod 755 /var/run/openct
 			using the options shown above, the file
 			should go to <filename>/etc</filename>:
 			<screen>
-$ cp etc/openct.conf /etc/
+# cp etc/openct.conf /etc/
 			</screen>
 		</para>
 
@@ -311,7 +292,7 @@ $ cp etc/openct.conf /etc/
 			Install the script by copying it from the
 			source directory:
 			<screen>
-$ cp etc/init-script /etc/init.d/openct
+# cp etc/init-script /etc/init.d/openct
 			</screen>
 		</para>
 
@@ -327,7 +308,7 @@ $ cp etc/init-script /etc/init.d/openct
 		<para>
 			Debian users can do this with a single command:
 			<screen>
-$ update-rc.d openct start 90 2 3 4 5 . stop 10 0 1 6 .
+# update-rc.d openct start 90 2 3 4 5 . stop 10 0 1 6 .
 			</screen>
 		</para>
 
@@ -335,7 +316,7 @@ $ update-rc.d openct start 90 2 3 4 5 . stop 10 0 1 6 .
 			Call the init script once with "start".
 			Or reboot. :-)
 			<screen>
-$ /etc/init.d/openct start
+# /etc/init.d/openct start
 			</screen>
 		</para>
 
@@ -355,13 +336,13 @@ $ /etc/init.d/openct start
 			not have hotplug utils installed. If this command
 			succeeds, go to the other section:
 			<screen>
-$ ls /sbin/hotplug
+% ls /sbin/hotplug
 			</screen>
 		</para>
 
 		<para>
 			If there is no such file, the installation
-			is very easy: 
+			is very easy:
 			<screen>
 ln -s /path/to/openct/sbin/hotplug.openct /sbin/hotplug
 			</screen>
@@ -370,7 +351,7 @@ ln -s /path/to/openct/sbin/hotplug.openct /sbin/hotplug
 		<para>
 			Now attach some USB smart card reader or USB crypto
 			token. The kernel will start
-			<filename>/sbin/hotplug</filename>, and 
+			<filename>/sbin/hotplug</filename>, and
 			<prompt>openct-tool list</prompt>
 			should list the new reader.
 		</para>
@@ -424,12 +405,12 @@ ln -s /path/to/openct/sbin/hotplug.openct /etc/hotplug/usb/openct
 		<para>
 			If the problem is with some USB crypto token
 			(e.g. Aladdin eToken PRO), please grep for
-			usb_control - these are the lines I need
+			usb_control - these are the lines we need
 			to see what is happening (or not working).
 		</para>
 
 	</chapter>
-	
+
 	<chapter id="openct.files">
 		<title>OpenCT files and tools</title>
 
@@ -448,11 +429,11 @@ mkdir /var/run/openct
 chmod 755 /var/run/openct
 				</screen>
 			</para>
-			
+
 			<para>
 				By default everyone can use smart cards via
 				OpenCT. You can create a group "openct", assign
-				users to that group, and limit access to 
+				users to that group, and limit access to
 				smart cards via openct like this:
 				<screen>
 chgrp openct /var/run/openct
@@ -473,7 +454,7 @@ chmod 750 /var/run/openct
 
 			<para>
 				<screen>
-aj@simulacron:~/openct$ sbin/openct-control 
+# /usr/sbin/openct-control
 usage: openct-control [-d] [-f configfile] command
   -d   enable debugging; repeat to increase verbosity
   -f   specify config file (default /etc/openct.conf
@@ -484,11 +465,6 @@ init - initialize OpenCT
 attach device ident - attach a hotplug device
 shutdown - shutdown OpenCT
 				</screen>
-			</para>
-
-			<para>
-				FIXME: maybe run openct-control every time
-				on bootup ?
 			</para>
 		</section>
 
@@ -552,7 +528,7 @@ ln -s /path/to/openct/sbin/hotplug.openct /sbin/htplug
 
 			<para>
 				<screen>
-aj@simulacron:~/openct/bin$ ./ifdhandler 
+# /usr/sbin/ifdhandler
 usage: ifdhandler [-Hds] driver device socket
   -d   enable debugging; repeat to increase verbosity
   -H   hotplug device, monitor for detach
@@ -567,7 +543,7 @@ usage: ifdhandler [-Hds] driver device socket
 
 			<para>
 				<screen>
-aj@simulacron:~/openct/bin$ ./openct-tool 
+# /usr/bin/openct-tool
 usage: print-atr [-d] [-f configfile] [-r reader] command ...
   -d   enable debugging; repeat to increase verbosity
   -f   specify config file (default /etc/ifd.conf
@@ -618,80 +594,34 @@ driver	egate {
 				</screen>
 			</para>
 		</section>
-
-		<section id="openct.files.includes">
-			<title>include/openct/</title>
-
-			<para>
-				<screen>
-aj@simulacron:~/openct$ ls include/openct/
-apdu.h    conf.h    driver.h  ifd.h      openct.h     protocol.h  socket.h
-buffer.h  device.h  error.h   logging.h  pathnames.h  server.h    tlv.h
-				</screen>
-			</para>
-		</section>
-
-		<section id="openct.files.lib">
-			<title>lib/libifd.so</title>
-
-			<para>
-				<screen>
-aj@simulacron:~/openct$ /bin/ls lib/libifd.*    
-lib/libifd.a   lib/libifd.so    lib/libifd.so.0.0.0
-lib/libifd.la  lib/libifd.so.0
-				</screen>
-			</para>
-		</section>
-
 	</chapter>
 
 	<chapter id="openct.ct-api">
-		<title>Using OpenCT as CT-API driver</title>
+		<title>Using OpenCT via CT-API interface</title>
 
 		<para>
-			Install and configure the directory
+			Install and configure the file
 			<filename>/etc/openct.conf</filename> as discussed.
 			Configure your CT-API application to load
-			<filename>lib/ifd-ctapi.so</filename>.
-		</para>
-
-		<para>
-			For example to use OpenCT with PC/SC Lite,
-			configure <filename>/etc/reader.conf</filename>
-			this way:
-			<screen>
-FIXME: 
-add valid reader.conf entry to use
-openct ifd-ctapi.so
-			</screen>
-		</para>
-
-		<para>
-			If your application does not support shared
-			libraries, maybe you have better luck with the
-			static library <filename>lib/ifd-ctapi.a</filename>.
-			(This is completely untested.)
+			<filename>lib/libopenctapi.so</filename>.
 		</para>
 	</chapter>
 
 	<chapter id="openct.pcsc">
-		<title>Using OpenCT as IfdHandler</title>
+		<title>Using OpenCT via PC/SC Lite</title>
 
 		<para>
-			Install and configure the directory
+			Install and configure the file
 			<filename>/etc/openct.conf</filename> as discussed.
-			Configure your CT-API application to load
-			<filename>lib/ifdhandler.so</filename>.
+			Configure PC/SC Lite /etc/reader.conf to load <filename>lib/openct-ifd.so</filename>.
 		</para>
 
 		<para>
-			For example to use OpenCT with PC/SC Lite,
-			configure <filename>/etc/reader.conf</filename>
-			this way:
 			<screen>
-FIXME: 
-add valid reader.conf entry to use
-openct ifdhandler.so
+FRIENDLYNAME     "OpenCT"
+DEVICENAME       OPENCT_DEV
+LIBPATH          /usr/lib/openct-ifd.so
+CHANNELID        1
 			</screen>
 		</para>
 
@@ -703,8 +633,8 @@ openct ifdhandler.so
 		<para>
 			OpenCT has a proprietary, but very easy to use
 			interface. Take a look at the header files
-			<filename>include/opensc/*.h</filename> and 
-			the library <filename>lib/libopenct*</filename>.
+			<filename>include/openct/*.h</filename> and
+			the library <filename>lib/libopenct.*</filename>.
 		</para>
 
 		<para>
@@ -748,9 +678,9 @@ openct ifdhandler.so
 			Is your kernel compiled with hotplugging support?
 			This command give the same output on your system:
 			<screen>
-$ cat /proc/sys/kernel/hotplug 
+% cat /proc/sys/kernel/hotplug
 /sbin/hotplug
-$ 
+%
 			</screen>
 		</para>
 
@@ -767,12 +697,12 @@ $
 			Try this command, it should work and give you a
 			similar output:
 			<screen>
-$ ls -la /var/run/openct/
+% ls -la /var/run/openct/
 total 8
 drwxr-xr-x    2 root     root         4096 2003-07-02 08:13 ./
 drwxr-xr-x    8 root     root         4096 2003-07-02 08:13 ../
 -rw-r--r--    1 root     root         1728 2003-07-02 08:13 status
-$ 
+%
 			</screen>
 			See the <link linkend="openct.security">security
 			chapter</link> for details on file permissions
@@ -792,7 +722,7 @@ $
 			<filename>openct.conf</filename>? If not, please
 			add it.
 		</para>
-		
+
 		<para>
 			If you have a file
 			<filename>/etc/hotplug/usb.usermap</filename>, is the
@@ -803,7 +733,7 @@ $
 			The vendor ID is the second number, the product ID
 			the third number.
 		</para>
-		
+
 		<para>
 			If that solves the problem, please let the OpenCT
 			developers know, so we can improve the default
@@ -832,8 +762,8 @@ $
 			OpenCT to one user with these
 			commands:
 			<screen>
-$ chown user /var/run/openct
-$ chmod 700 /var/run/openct
+# chown user /var/run/openct
+# chmod 700 /var/run/openct
 			</screen>
 		</para>
 
@@ -842,8 +772,8 @@ $ chmod 700 /var/run/openct
 			and restrict access to smart card readers using OpenCT
 			to that group with these commands:
 			<screen>
-$ chgrp group /var/run/openct
-$ chmod 750 /var/run/openct
+# chgrp group /var/run/openct
+# chmod 750 /var/run/openct
 			</screen>
 		</para>
 
@@ -858,7 +788,7 @@ $ chmod 750 /var/run/openct
 			If you want all users to be able to access smart card
 			readers using OpenCT:
 			<screen>
-$ chmod 755 /var/run/openct
+# chmod 755 /var/run/openct
 			</screen>
 		</para>
 	</chapter>
