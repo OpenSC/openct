@@ -21,7 +21,9 @@ ifd_init(void)
 	ifd_egate_register();
 	ifd_etoken_register();
 	ifd_eutron_register();
+#ifdef notyet
 	ifd_ikey2k_register();
+#endif
 	ifd_ikey3k_register();
 	ifd_kaan_register();
 	ifd_towitoko_register();
