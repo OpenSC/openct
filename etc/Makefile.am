@@ -4,7 +4,8 @@ DISTCLEANFILES=openct.conf hotplug.openct openct
 
 EXTRA_DIST = openct.conf.in hotplug.openct.in init-script.in
 
-sysconf_DATA = openct.conf
+etcdir=$DESTDIR/etc
+etc_DATA = openct.conf
 
 sbin_SCRIPTS = hotplug.openct
 
