@@ -232,7 +232,7 @@ ria_svc_dev_handler(ct_socket_t *sock, header_t *hdr,
 		clnt->device = devinfo;
 		snprintf(clnt->device.handle, RIA_NAME_MAX,
 				"%s%u", clnt->device.type, dev_handle++);
-		ifd_debug(1, "%s registered new device %s, name `%s'",
+		ifd_debug(1, "%s registered new %s device , handle '%s', name `%s'",
 			clnt->device.address,
 			clnt->device.type,
 			clnt->device.handle,

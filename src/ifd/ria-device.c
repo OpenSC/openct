@@ -120,6 +120,14 @@ ria_devsock_process(ct_socket_t *sock, header_t *hdr,
 	case RIA_FLUSH_DEVICE:
 		ifd_device_flush(dev);
 		return 0;
+	case RIA_SEND_BREAK:
+		{
+		unsigned int usec;
+		if ((rc = ct_buf_get(args, &usec, sizeof(usec))) < 0)
+                        return rc;
+                ifd_device_send_break(dev, ntohl(usec));
+                return 0;
+		}
 	case RIA_SERIAL_GET_CONFIG:
 		{
 		ifd_device_params_t	parms;

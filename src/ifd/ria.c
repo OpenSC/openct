@@ -273,6 +273,20 @@ ifd_remote_flush(ifd_device_t *dev)
 	ct_buf_clear(&clnt->data);
 }
 
+static void
+ifd_remote_send_break(ifd_device_t *dev, unsigned int usec)
+{
+        ria_client_t    *clnt = (ria_client_t *) dev->user_data;
+	unsigned int 	wait;
+                                                                                                                             
+        ifd_debug(2, "called");
+        if (clnt == NULL)
+                return;
+	wait = htonl(usec);
+        ria_command(clnt, RIA_SEND_BREAK, &wait, sizeof(wait), NULL, 0, -1);
+        ct_buf_clear(&clnt->data);
+}
+
 static int
 ifd_remote_send(ifd_device_t *dev, const unsigned char *buffer, size_t len)
 {
@@ -423,6 +437,7 @@ ifd_open_remote(const char *ident)
 	ifd_remote_ops.get_params = ifd_remote_get_params;
 	ifd_remote_ops.flush = ifd_remote_flush;
 	ifd_remote_ops.send = ifd_remote_send;
+	ifd_remote_ops.send_break = ifd_remote_send_break;
 	ifd_remote_ops.recv = ifd_remote_recv;
 	ifd_remote_ops.close = ifd_remote_close;
 	ifd_remote_ops.poll_presence = ifd_remote_poll_presence;
@@ -484,6 +499,8 @@ ria_print_packet(ct_socket_t *sock,
 			msg = "RESET_DEVICE"; break;
 		case RIA_FLUSH_DEVICE:
 			msg = "FLUSH_DEVICE"; break;
+		case RIA_SEND_BREAK:
+			msg = "SEND_BREAK"; break;
 		case RIA_SERIAL_GET_CONFIG:
 			msg = "SERIAL_GET_CONFIG"; break;
 		case RIA_SERIAL_SET_CONFIG:

@@ -265,7 +265,7 @@ list_devices(int argc, char **argv)
 	}
 
 	printf("Exported devices\n");
-	for (info = (ria_device_t *) buffer, n = 0; n < count; n++) {
+	for (info = (ria_device_t *) buffer, n = 0; n < count; info++, n++) {
 		printf("  %-16s %-30s %s\n",
 				info->handle,
 				info->address,

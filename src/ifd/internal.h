@@ -54,6 +54,7 @@ struct ifd_device_ops {
 
 	/* Flush any pending input */
 	void		(*flush)(ifd_device_t *);
+	void		(*send_break)(ifd_device_t *, unsigned int);
 
 	/*
 	 * Send/receive data. Some devices such as USB will support

@@ -75,6 +75,7 @@ extern void		ifd_device_close(ifd_device_t *);
 extern int		ifd_device_type(ifd_device_t *);
 extern int		ifd_device_reset(ifd_device_t *);
 extern void		ifd_device_flush(ifd_device_t *);
+extern void		ifd_device_send_break(ifd_device_t *, unsigned int);
 extern int		ifd_device_identify(const char *, char *, size_t);
 extern int		ifd_device_get_parameters(ifd_device_t *,
 				ifd_device_params_t *);
@@ -112,7 +113,7 @@ extern int		ifd_usb_capture(ifd_device_t *,
 extern int		ifd_usb_end_capture(ifd_device_t *,
 				ifd_usb_capture_t *);
 
-extern void		ifd_serial_send_break(ifd_device_t *);
+extern void		ifd_serial_send_break(ifd_device_t *, unsigned int usec);
 extern int		ifd_serial_get_cts(ifd_device_t *);
 extern int		ifd_serial_get_dsr(ifd_device_t *);
 extern int		ifd_serial_get_dtr(ifd_device_t *);

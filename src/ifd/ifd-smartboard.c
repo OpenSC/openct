@@ -94,7 +94,7 @@ smartboard_open(ifd_reader_t *reader, const char *device_name)
 		usleep(100000);
 	}
 
-	ifd_serial_send_break(dev);
+	ifd_serial_send_break(dev,500000);
 	ifd_device_flush(dev);
 
 	reader->device = dev;

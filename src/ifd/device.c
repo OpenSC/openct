@@ -18,7 +18,7 @@ ifd_device_open(const char *name)
 		return ifd_open_serial(name + 7);
 	if (!strncmp(name, "usb:", 4))
 		return ifd_open_usb(name + 4);
-	if (!strncmp(name, "remote:", 4))
+	if (!strncmp(name, "remote:", 7))
 		return ifd_open_remote(name + 7);
 
 	switch (ifd_sysdep_device_type(name)) {
@@ -124,6 +124,14 @@ ifd_device_flush(ifd_device_t *dev)
 	if (!dev || !dev->ops || !dev->ops->flush)
 		return;
 	dev->ops->flush(dev);
+}
+
+void
+ifd_device_send_break(ifd_device_t *dev, unsigned int usec)
+{
+        if (!dev || !dev->ops || !dev->ops->send_break)
+                return;
+        dev->ops->send_break(dev, usec);
 }
 
 int

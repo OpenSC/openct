@@ -202,10 +202,10 @@ ifd_serial_flush(ifd_device_t *dev)
  * Send a BREAK command
  */
 void
-ifd_serial_send_break(ifd_device_t *dev)
+ifd_serial_send_break(ifd_device_t *dev, unsigned int usec)
 {
 	ioctl(dev->fd, TIOCSBRK);
-	usleep(500000);
+	usleep(usec);
 	ioctl(dev->fd, TIOCCBRK);
 }
 
@@ -389,6 +389,7 @@ ifd_open_serial(const char *name)
 	ifd_serial_ops.set_params = ifd_serial_set_params;
 	ifd_serial_ops.get_params = ifd_serial_get_params;
 	ifd_serial_ops.flush = ifd_serial_flush;
+	ifd_serial_ops.send_break = ifd_serial_send_break;
 	ifd_serial_ops.send = ifd_serial_send;
 	ifd_serial_ops.recv = ifd_serial_recv;
 	ifd_serial_ops.close = ifd_serial_close;
