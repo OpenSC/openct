@@ -2,8 +2,8 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-lib_LTLIBRARIES = libopenctapi.la
+lib_LTLIBRARIES = openct-ctapi.la
 
-libopenctapi_la_SOURCES = ctapi.c ctapi.h
-libopenctapi_la_LDFLAGS = -module -avoid-version
-libopenctapi_LIBS = ../ct/libopenct.la ../ifd/libifd.la
+openct_ctapi_la_SOURCES = ctapi.c ctapi.h
+openct_ctapi_la_LDFLAGS = -module -avoid-version
+openct_ctapi_LIBS = ../ct/libopenct.la ../ifd/libifd.la
