@@ -20,6 +20,7 @@
 typedef struct gpc_status {
 	/* We need a GBP driver to talk to serial readers */
 	ifd_protocol_t	*p;
+	int		icc_proto;
 	int		card_state;
 	unsigned char	cmd_buf[260];
 	size_t		cmd_len;
@@ -255,6 +256,7 @@ gpc_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 static int
 gpc_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 {
+	gpc_status_t	*st = (gpc_status_t *) reader->driver_data;
 	ifd_slot_t	*slot;
 
 	ifd_debug(1, "called, proto=%d", proto);
@@ -265,12 +267,14 @@ gpc_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 	}
 
 	slot = &reader->slot[nslot];
-	slot->proto = ifd_protocol_new(proto, reader, slot->dad);
+	slot->proto = ifd_protocol_new(IFD_PROTOCOL_TRANSPARENT,
+				reader, slot->dad);
 	if (slot->proto == NULL) {
 		ct_error("%s: internal error", reader->name);
 		return IFD_ERROR_GENERIC;
 	}
 
+	st->icc_proto = proto;
 	return 0;
 }
 /*
@@ -376,6 +380,7 @@ gpc_transceive(ifd_reader_t *reader, unsigned int dad,
 		unsigned char *res_buf, size_t res_len,
 		long timeout)
 {
+	gpc_status_t	*st = (gpc_status_t *) reader->driver_data;
 	ifd_protocol_t	*proto = reader->slot[0].proto;
 	long		orig_timeout = 0;
 	int		rc;
@@ -389,7 +394,7 @@ gpc_transceive(ifd_reader_t *reader, unsigned int dad,
 				timeout * 1000);
 	}
 
-	switch (proto->ops->id) {
+	switch (st->icc_proto) {
 	case IFD_PROTOCOL_T0:
 		rc = gpc_transceive_t0(reader, dad,
 				cmd_buf, cmd_len,
