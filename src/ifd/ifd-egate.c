@@ -200,7 +200,9 @@ eg_transparent(ifd_reader_t *reader, int dad, const void *inbuffer, size_t inlen
      }
      if (ifd_iso_apdu_parse(inbuffer, inlen, &iso) < 0) 
          return IFD_ERROR_INVALID_ARG;
-     if (inlen < 5 + iso.lc || outlen < 2 + iso.le)
+     if (inlen >= 5 && inlen < 5 + iso.lc)
+	 return IFD_ERROR_BUFFER_TOO_SMALL;
+     if (outlen < 2 + iso.le)
 	 return IFD_ERROR_BUFFER_TOO_SMALL;
      memset(cmdbuf,0,5);
      memmove(cmdbuf, inbuffer, inlen < 5 ? inlen : 5);
