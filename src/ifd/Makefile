@@ -1,6 +1,6 @@
 DEBUG	= -Wall -g
 CFLAGS	= -I../../include $(DEBUG)
-LDFLAGS	= -Wl,-export-dynamic
+LDFLAGS	= $(DEBUG)
 LIBS	= libifd.a libifd.so
 APPS	= print-atr
 DRIVERS	= etoken.c kaan.c towitoko.c
