@@ -233,24 +233,16 @@ IFDHSetProtocolParameters(DWORD Lun, DWORD Protocol,
 	pthread_mutex_lock(&ifdh_context_mutex[ctn]);
 #endif
 	if (ifdh_context[ctn][slot] != NULL) {
-		cmd[0] = CTBCS_CLA;
-		cmd[1] = CTBCS_INS_RESET;
-		cmd[2] = (UCHAR) (slot + 1);
-		cmd[3] = CTBCS_P2_RESET_GET_ATR;
-		cmd[4] = 0x06;
-		cmd[5] = 0xFF;
-		cmd[6] = (Flags << 4) | (0x0F & Protocol);
+		cmd[0] = CTBCS_CLA_2;
+               cmd[1] = CTBCS_INS_SET_INTERFACE_PARAM;
+               cmd[2] = (UCHAR) (slot + 1);
+               cmd[3] = 0x00;
+               cmd[4] = 0x03;
+               cmd[5] = CTBCS_TAG_TPP;
+               cmd[6] = 0x01;
+		cmd[7] = Protocol & 0xFF;
 
-		lc = 7;
-
-		if ((Flags & 0x10) == 0x10)
-			cmd[lc++] = PTS1;
-
-		if ((Flags & 0x20) == 0x20)
-			cmd[lc++] = PTS2;
-
-		if ((Flags & 0x40) == 0x40)
-			cmd[lc++] = PTS3;
+		lc = 8;
 
 		dad = 0x01;
 		sad = 0x02;
@@ -258,10 +250,7 @@ IFDHSetProtocolParameters(DWORD Lun, DWORD Protocol,
 
 		ret = CT_data(ctn, &dad, &sad, lc, cmd, &lr, rsp);
 
-		if ((ret == OK) && (lr >= 2)) {
-			ifdh_context[ctn][slot]->ATR_Length = (DWORD) lr - 2;
-			memcpy(ifdh_context[ctn][slot]->icc_state.ATR, rsp, lr - 2);
-
+		if (ret == OK)  {
 			rv = IFD_SUCCESS;
 		} else {
 			rv = IFD_ERROR_PTS_FAILURE;

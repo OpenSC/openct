@@ -34,6 +34,7 @@ extern "C" {
 #define CT_CMD_INPUT		0x18
 #define CT_CMD_TRANSACT_OLD	0x20	/* transceive APDU */
 #define CT_CMD_TRANSACT		0x21	/* transceive APDU */
+#define CT_CMD_SET_PROTOCOL	0x22
 
 #define CT_UNIT_ICC1		0x00
 #define CT_UNIT_ICC2		0x01
@@ -60,6 +61,7 @@ extern "C" {
 #define CT_TAG_ADDRESS		0x85
 #define CT_TAG_DATA		0x86
 #define CT_TAG_COUNT		0x87
+#define CT_TAG_PROTOCOL		0x88
 
 #define __CT_TAG_LARGE		0x40
 

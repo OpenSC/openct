@@ -39,6 +39,7 @@ static struct cmd_name {
 	{ CT_CMD_MEMORY_WRITE, "CT_CMD_MEMORY_WRITE" },
 	{ CT_CMD_TRANSACT_OLD, "CT_CMD_TRANSACT_OLD" },
 	{ CT_CMD_TRANSACT, "CT_CMD_TRANSACT" },
+	{ CT_CMD_SET_PROTOCOL, "CT_CMD_SET_PROTOCOL" },
 	{ 0, NULL },
 };
 
@@ -153,7 +154,9 @@ ifdhandler_process(ct_socket_t *sock, ifd_reader_t *reader,
 	case CT_CMD_TRANSACT:
 		rc = do_transact(reader, unit, &args, &resp);
 		break;
-
+	case CT_CMD_SET_PROTOCOL:
+                rc = do_set_protocol(reader, unit, &args, &resp);
+                break;
 	default:
 		return IFD_ERROR_INVALID_CMD;
 	}
@@ -406,6 +409,26 @@ do_transact_old(ifd_reader_t *reader, int unit, ct_buf_t *args, ct_buf_t *resp)
 	ct_buf_put(resp, NULL, rc);
 	return 0;
 }
+
+int
+do_set_protocol(ifd_reader_t *reader, int unit,
+                ct_tlv_parser_t *args, ct_tlv_builder_t *resp)
+{
+        unsigned int    protocol = 0xFF;
+        int             rc;
+                                                                                                                             
+        if (unit > reader->nslots)
+                return IFD_ERROR_INVALID_SLOT;
+                                                                                                                             
+        ct_tlv_get_int(args, CT_TAG_PROTOCOL, &protocol);
+                                                                                                                             
+        rc = ifd_set_protocol(reader, unit, protocol);
+        if (rc < 0)
+                return rc;
+                                                                                                                             
+        return 0;
+}
+
 
 /*
  * Synchronous ICC read/write

@@ -223,6 +223,21 @@ ct_card_eject(ct_handle *h, unsigned int slot,
 	return ct_socket_call(h->sock, &args, &resp);
 }
 
+int 
+ct_card_set_protocol(ct_handle *h, unsigned int slot, unsigned int protocol)
+{
+	unsigned char   buffer[256];
+        ct_buf_t        args, resp;
+                                                                                                                             
+        ct_buf_init(&args, buffer, sizeof(buffer));
+        ct_buf_init(&resp, buffer, sizeof(buffer));
+                                                                                                                             
+        ct_buf_putc(&args, CT_CMD_SET_PROTOCOL);
+        ct_buf_putc(&args, slot);
+	ct_args_int(&args, CT_TAG_PROTOCOL, protocol);
+        return ct_socket_call(h->sock, &args, &resp);
+}
+
 
 /*
  * Transceive an APDU

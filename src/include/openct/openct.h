@@ -63,6 +63,8 @@ extern ct_handle *	ct_reader_connect(unsigned int);
 extern void		ct_reader_disconnect(ct_handle *);
 extern int		ct_reader_status(ct_handle *, ct_info_t *);
 extern int		ct_card_status(ct_handle *h, unsigned int slot, int *status);
+extern int 		ct_card_set_protocol(ct_handle *h, unsigned int slot,
+				 unsigned int protocol);
 extern int		ct_card_reset(ct_handle *h, unsigned int slot,
 				void *atr, size_t atr_len);
 extern int		ct_card_request(ct_handle *h, unsigned int slot,

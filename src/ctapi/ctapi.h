@@ -52,6 +52,7 @@ enum {
  * CT-BCS commands
  */
 #define CTBCS_CLA			0x20
+#define CTBCS_CLA_2			0x80
 #define CTBCS_INS_RESET			0x11
 #define CTBCS_INS_REQUEST_ICC		0x12
 #define CTBCS_INS_STATUS		0x13
@@ -60,6 +61,7 @@ enum {
 #define CTBCS_INS_OUTPUT		0x17
 #define CTBCS_INS_PERFORM_VERIFICATION	0x18
 #define CTBCS_INS_MODIFY_VERIFICATION	0x19
+#define CTBCS_INS_SET_INTERFACE_PARAM	0x60
 
 /*
  * CT-BCS functional units (P1 byte)
@@ -102,6 +104,8 @@ enum {
 #define CTBCS_TAG_PROMPT		0x50
 #define CTBCS_TAG_VERIFY_CMD		0x52
 #define CTBCS_TAG_TIMEOUT		0x80
+#define CTBCS_TAG_TPP			0x22
+#define CTBCS_TAG_TPC			0x45
 
 /*
  * PIN command control flags
@@ -113,11 +117,19 @@ enum {
 /*
  * Status words returned by CTBCS
  */
+
 #define CTBCS_SW_BAD_LENGTH		0x6700
 #define CTBCS_SW_BAD_COMMAND		0x6900
+#define CTBCS_SW_NOT_EXECUTABLE	0x6985
 #define CTBCS_SW_BAD_PARAMS		0x6a00
+#define CTBCS_SW_NOT_SUPPORTED		0x6a80
+#define CTBCS_SW_INVALID_TLV		0x6a85
+#define CTBCS_SW_BAD_LE		0x6c00
 #define CTBCS_SW_BAD_INS		0x6d00
 #define CTBCS_SW_BAD_CLASS		0x6e00
+#define CTBCS_SW_BAD_ICC		0x6f00
+#define CTBCS_SW_SUCCESS		0x9000
+
 
 /*
  * Data returned by Get Status command

@@ -301,6 +301,68 @@ bad_length:
 }
 
 static int
+ctapi_set_interface_parameter(struct CardTerminal *ct, char p1, char p2,
+                ct_buf_t *sbuf, ct_buf_t *rbuf)
+{
+	char 	proto = 0xff;
+	unsigned int slot;
+	int 	rc;
+
+	if ((p1 == 0x00) || (p1 > 2))
+		return ctapi_error(rbuf, CTBCS_SW_BAD_PARAMS);
+	slot = p1 - 1;
+	if (p2 != 0x00)
+                return ctapi_error(rbuf, CTBCS_SW_BAD_PARAMS);
+	while (ct_buf_avail(sbuf)) {
+		unsigned char   type, len, val;
+
+                if (ct_buf_get(sbuf, &type, 1) < 0
+                 || ct_buf_get(sbuf, &len, 1) < 0
+                 || ct_buf_avail(sbuf) < len)
+                        goto bad_length;
+                                                                                                                             
+                if (type == CTBCS_TAG_TPP) { /* Transmission Protocol Preference */
+			if (len != 1)
+				goto bad_length;
+                        ct_buf_get(sbuf, &proto, len);
+			switch (proto) {
+			case 0x01:	proto = IFD_PROTOCOL_T0; /* T=0 */
+					break;
+			case 0x02:	proto = IFD_PROTOCOL_T1; /* T=1 */
+					break;
+			case 0x80:
+			case 0x81:
+			case 0x82:
+			case 0x83:	return ctapi_error(rbuf, CTBCS_SW_NOT_SUPPORTED);
+			default:	
+				return ctapi_error(rbuf, CTBCS_SW_BAD_PARAMS);
+			} 
+                } else if (type == CTBCS_TAG_TPC) {	/* Transmission Protocol Conventions */
+                        if (len != 1)
+                                goto bad_length;
+                        ct_buf_get(sbuf, &val, len);
+			switch (val) {
+			case 0x00:
+			case 0x01:	ctapi_error(rbuf, CTBCS_SW_NOT_SUPPORTED);
+			default:	return	ctapi_error(rbuf, CTBCS_SW_BAD_PARAMS);
+			}
+                } else {
+                        /* Ignore unknown tag */
+                        ct_buf_get(sbuf, NULL, len);
+			return  ctapi_error(rbuf, CTBCS_SW_INVALID_TLV);
+                }
+        }
+	if (proto == 0xff)
+		return ctapi_error(rbuf, CTBCS_SW_BAD_PARAMS);
+	if (!ct_card_set_protocol(ct->h, slot, proto)) 
+		return ctapi_error(rbuf, CTBCS_SW_SUCCESS);
+	else 
+		return ctapi_error(rbuf, CTBCS_SW_NOT_EXECUTABLE);
+bad_length:
+	return ctapi_error(rbuf, CTBCS_SW_BAD_LENGTH);	
+}
+
+static int
 ctapi_status(ct_handle *h, ct_buf_t *rbuf)
 {
 	unsigned int	n;
@@ -365,8 +427,14 @@ ctapi_control(struct CardTerminal *ct,
         if (le == 0) le = 256;
 
 	switch ((cmd[0]<<8)|cmd[1]) {
+		case (CTBCS_CLA<<8)|0x10: /* native reset command */
+			if (cmd_len != 5)
+				return  ctapi_error(&rbuf,CTBCS_SW_BAD_LENGTH);
 		case (CTBCS_CLA<<8)|CTBCS_INS_RESET: /* compatibility reset command */
-		case (CTBCS_CLA<<8)|0x10:            /* native reset command */
+			if (cmd_len > 5) 
+				return  ctapi_error(&rbuf,CTBCS_SW_BAD_LENGTH);
+			if ((cmd_len == 5) && (cmd[4] != 0x00))
+				return  ctapi_error(&rbuf,CTBCS_SW_BAD_LE);
 			rc = ctapi_reset(ct, cmd[2], cmd[3], &rbuf, 0, NULL);
 			break;
 		case (CTBCS_CLA<<8)|CTBCS_INS_REQUEST_ICC:
@@ -384,6 +452,9 @@ ctapi_control(struct CardTerminal *ct,
 				rc = ctapi_error(&rbuf, CTBCS_SW_BAD_CLASS);
 			} else
 				rc = CardTerminalFile_select(ct, (id[0]<<8)|id[1],&rbuf);
+			break;
+		case (CTBCS_CLA_2<<8)|CTBCS_INS_SET_INTERFACE_PARAM:
+			rc = ctapi_set_interface_parameter(ct, cmd[2], cmd[3], &sbuf, &rbuf);
 			break;
 		default:
 			if (cmd[0]!=CTBCS_CLA && cmd[0]!=0x00) {
