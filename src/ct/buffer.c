@@ -42,6 +42,38 @@ ct_buf_get(ct_buf_t *bp, void *mem, size_t len)
 }
 
 int
+ct_buf_gets(ct_buf_t *bp, char *buffer, size_t size)
+{
+	unsigned int	n, avail;
+	char		*s;
+
+	size -= 1; /* room for NUL byte */
+
+	/* Limit string to what we have */
+	avail = bp->tail - bp->head;
+	if (size > avail)
+		size = avail;
+
+	/* Look for newline */
+	s = bp->base + bp->head;
+	for (n = 0; n < size && s[n] != '\n'; n++)
+		;
+
+	/* Copy string (excluding newline) */
+	memcpy(buffer, s, n);
+	buffer[n] = '\0';
+
+	/* And eat any characters that weren't copied
+	 * (including the newline)
+	 */
+	while (n < avail && s[n++] != '\n')
+		;
+	
+	bp->head += n;
+	return 0;
+}
+
+int
 ct_buf_put(ct_buf_t *bp, const void *mem, size_t len)
 {
 	if (len > bp->size - bp->tail)
@@ -58,6 +90,12 @@ ct_buf_putc(ct_buf_t *bp, int byte)
 	unsigned char	c = byte;
 
 	return ct_buf_put(bp, &c, 1);
+}
+
+int
+ct_buf_puts(ct_buf_t *bp, const char *string)
+{
+	return ct_buf_put(bp, string, strlen(string));
 }
 
 unsigned int
