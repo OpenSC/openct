@@ -23,7 +23,6 @@
 #include <openct/pathnames.h>
 #include <openct/error.h>
 
-#define SOCK_BUFSIZ	512
 
 static unsigned int	ifd_xid = 0;
 
@@ -142,7 +141,7 @@ ct_socket_accept(ct_socket_t *sock)
 	ct_socket_t	*svc;
 	int		fd;
 
-	if (!(svc = ct_socket_new(SOCK_BUFSIZ)))
+	if (!(svc = ct_socket_new(CT_SOCKET_BUFSIZ)))
 		return NULL;
 
 	if ((fd = accept(sock->fd, NULL, NULL)) < 0) {
@@ -238,7 +237,7 @@ ct_socket_call(ct_socket_t *sock, ct_buf_t *args, ct_buf_t *resp)
 	if (avail > ct_buf_tailroom(resp)) {
 		ct_error("received truncated reply (%u out of %u bytes)",
 				rc, header.count);
-		return -1;
+		return IFD_ERROR_BUFFER_TOO_SMALL;
 	}
 
 	ct_buf_put(resp, ct_buf_head(&data), avail);

@@ -255,7 +255,7 @@ int
 ifdhandler_recv(ct_socket_t *sock)
 {
 	ifd_reader_t	*reader;
-	char		buffer[512];
+	char		buffer[CT_SOCKET_BUFSIZ+64];
 	header_t	header;
 	ct_buf_t	args, resp;
 	int		rc;
