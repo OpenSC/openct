@@ -95,6 +95,14 @@ ifd_device_send(ifd_device_t *dev, const void *data, size_t len)
 }
 
 int
+ifd_device_control(ifd_device_t *dev, void *cmsg, size_t len)
+{
+	if (!dev || !dev->ops || !dev->ops->control)
+		return -1;
+	return dev->ops->control(dev, cmsg, len);
+}
+
+int
 ifd_device_recv(ifd_device_t *dev, void *data, size_t len, long timeout)
 {
 	if (timeout < 0)

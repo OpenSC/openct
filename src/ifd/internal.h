@@ -50,6 +50,7 @@ struct ifd_device_ops {
 					ifd_apdu_t *, long);
 	int			(*send)(ifd_device_t *, const void *, size_t);
 	int			(*recv)(ifd_device_t *, void *, size_t, long);
+	int			(*control)(ifd_device_t *, void *, size_t);
 
 	void			(*close)(ifd_device_t *);
 };

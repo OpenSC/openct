@@ -46,6 +46,7 @@ extern int		ifd_device_transceive(ifd_device_t *,
 				ifd_apdu_t *, long);
 extern int		ifd_device_send(ifd_device_t *, const void *, size_t);
 extern int		ifd_device_recv(ifd_device_t *, void *, size_t, long);
+extern int		ifd_device_control(ifd_device_t *, void *, size_t);
 extern void		ifd_device_close(ifd_device_t *);
 
 /* scheduled to go away */
