@@ -406,6 +406,9 @@ ctapi_control(struct CardTerminal *ct,
 	if (rsp_len < 2)
 		return ERR_INVALID;
 
+	if (cmd_len < 4) 
+		return ctapi_error(&rbuf, CTBCS_SW_BAD_LENGTH);
+
 	ct_buf_set(&sbuf, (void *) cmd, cmd_len);
 	ct_buf_init(&rbuf, rsp, rsp_len);
 
@@ -427,10 +430,14 @@ ctapi_control(struct CardTerminal *ct,
         if (le == 0) le = 256;
 
 	switch ((cmd[0]<<8)|cmd[1]) {
-		case (CTBCS_CLA<<8)|0x10: /* native reset command */
+		case (CTBCS_CLA<<8)|0x10: /* B1 compatibility reset command */
 			if (cmd_len != 5)
 				return  ctapi_error(&rbuf,CTBCS_SW_BAD_LENGTH);
-		case (CTBCS_CLA<<8)|CTBCS_INS_RESET: /* compatibility reset command */
+			if ((cmd_len == 5) && (cmd[4] != 0x00))
+				return  ctapi_error(&rbuf,CTBCS_SW_BAD_LE);
+			rc = ctapi_reset(ct, cmd[2], cmd[3], &rbuf, 0, NULL);
+			break;
+		case (CTBCS_CLA<<8)|CTBCS_INS_RESET: /* RESET_CT command */
 			if (cmd_len > 5) 
 				return  ctapi_error(&rbuf,CTBCS_SW_BAD_LENGTH);
 			if ((cmd_len == 5) && (cmd[4] != 0x00))
