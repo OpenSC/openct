@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <errno.h>
+#include <string.h>
 
 #include "internal.h"
 

@@ -4,6 +4,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include "internal.h"
 
 static ifd_reader_t *	ifd_new_reader(ifd_device_t *, const char *);

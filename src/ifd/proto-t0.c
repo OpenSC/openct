@@ -8,6 +8,7 @@
 #include <sys/poll.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "internal.h"
 
@@ -230,8 +231,8 @@ t0_xcv(ifd_device_t *dev, t0_params_t *t0, ifd_apdu_t *apdu)
 	 * bytes we expect to receive (le + status word)
 	 */
 	if (apdu->snd_len <= 5) {
-		 /* The APDU may be short (no Le), hence the need to
-		  * clear the buffer */
+		/* The APDU may be short (no Le), hence the need to
+		 * clear the buffer */
 		memset(sdata, 0, sizeof(sdata));
 		memcpy(sdata, apdu->snd_buf, apdu->snd_len);
 
