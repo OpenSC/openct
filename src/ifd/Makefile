@@ -3,7 +3,7 @@ CFLAGS	= -I../../include $(DEBUG)
 LDFLAGS	= $(DEBUG)
 LIBS	= libifd.a libifd.so
 APPS	= print-atr ifdhandler
-DRIVERS	= etoken.c kaan.c towitoko.c
+DRIVERS	= etoken.c kaan.c towitoko.c egate.c
 LIBOBJS	= init.o manager.o device.o reader.o driver.o \
           modules.o conf.o \
 	  protocol.o proto-t0.o proto-t1.o proto-trans.o \

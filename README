@@ -21,6 +21,7 @@ Currently, the following smart card readers are supported:
 etoken		for the Aladdin eToken; tested with Aladdin eToken PRO
 kaan		for Kobil readers; tested with Kobil Kaan Professional
 towitoko	Towitoko Chipdrives; tested with the Chipdrive micro
+egate		for the Schlumberger e-gate; by Chaskiel M Grundman
 
 
 How everything works
