@@ -90,6 +90,8 @@ twt_open(ifd_reader_t *reader, const char *device_name)
 		reader->name = "Towitoko Kartenzwerg";
 		params.serial.stopbits = 1;
 		params.serial.parity = IFD_SERIAL_PARITY_NONE;
+		/* XXX - Kartenzwerg is for synchronous cards
+		 * only. Should we have a flag for this? */
 		break;
 	case 0x84:
 		reader->name = "Towitoko Chipdrive External";
@@ -291,7 +293,7 @@ twt_send(ifd_reader_t *reader, unsigned int dad,
 	if (!(dev = reader->device))
 		return -1;
 
-	DEBUG("data=%s", ifd_hexdump(buffer, len));
+	DEBUG("data:%s", ifd_hexdump(buffer, len));
 	while (len) {
 		if ((count = len) > 255)
 			count = 255;
@@ -322,7 +324,7 @@ twt_recv(ifd_reader_t *reader, unsigned int dad,
 	n = ifd_device_recv(reader->device, buffer, len, timeout);
 	if (n < 0)
 		return -1;
-	DEBUG("data=%s", ifd_hexdump(buffer, len));
+	DEBUG("data:%s", ifd_hexdump(buffer, len));
 	return n;
 }
 
@@ -349,7 +351,7 @@ twt_command(ifd_reader_t *reader, const char *cmd, size_t cmd_len,
 	ifd_apdu_t	apdu;
 
 	if (ifd_config.debug > 1)
-		DEBUG("sending %s", ifd_hexdump(cmd, cmd_len));
+		DEBUG("sending:%s", ifd_hexdump(cmd, cmd_len));
 
 	if (res_len > sizeof(buffer)-1
 	 || cmd_len > sizeof(buffer)-1)
@@ -364,6 +366,9 @@ twt_command(ifd_reader_t *reader, const char *cmd, size_t cmd_len,
 		ifd_error("towitoko: transceive error");
 		return -1;
 	}
+
+	if (ifd_config.debug > 1)
+		DEBUG("received:%s", ifd_hexdump(buffer, res_len + 1));
 
 	if (!twt_recv_checksum(buffer, res_len + 1)) {
 		ifd_error("towitoko: command failed (bad checksum)");
