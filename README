@@ -1,0 +1,49 @@
+
+libifd, pre-alpha snapshot
+==========================
+
+This is libifd, a library for building drivers for smartcard
+readers. Its main purpose is to provide a framework for driver
+authors that supports different types of devices (serial, USB,
+etc), as well as various standard protocols (such as T=0, T=1).
+
+This library also includes drivers for several readers. Currently,
+these are
+
+etoken		for the Aladdin eToken; tested with Aladdin eToken PRO
+kaan		for Kobil readers; tested with Kobil Kaan Professional
+towitoko	Towitoko Chipdrives; tested with the Chipdrive micro
+
+
+
+There is also a CTAPI library that lets you use libifd readers
+from CTAPI applications. This CTAPI implementation doesn't
+support all CTBCS commands yet.
+
+
+I also plan to do a PCSC driver for libifd.
+
+
+There is also one small sample application for using the library
+directly.
+
+
+Configuring libifd
+==================
+
+libifd supports both statically configured readers as well as
+USB hotplugging (PCMCIA isn't supported yet, because I don't have
+a PCMCIA reader).
+
+To configure libifd, copy the sample ifd.conf file to /etc/ifd.conf
+and edit it.
+
+To configure a reader statically (you do this for serial readers),
+you need statements like this:
+
+	reader  kaan            /dev/ttyS0;
+	reader	towitoko	/dev/ttyS1;
+
+To support USB tokens and the like, simply use "hotplug"
+statements that define which driver should be used for a
+specific USB device ID.
