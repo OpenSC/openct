@@ -10,8 +10,9 @@
 #define IFD_DEFAULT_MODULES_DIR		"/usr/lib/ifd"
 
 extern struct ifd_config {
-	int			autoload;
 	int			debug;
+	int			autoload;
+	int			hotplug_scan_on_startup;
 	int			hush_errors;
 	const char *		modules_dir;
 	const char *		driver_modules_dir;

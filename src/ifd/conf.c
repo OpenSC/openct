@@ -13,8 +13,9 @@
 #include "internal.h"
 
 struct ifd_config	ifd_config = {
-	.autoload	= 1,
 	.debug		= 0,
+	.autoload	= 1,
+	.hotplug_scan_on_startup = 1,
 };
 
 static const char *	config_filename = NULL;
