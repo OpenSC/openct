@@ -7,6 +7,8 @@
 #ifndef IFD_DRIVER_H
 #define IFD_DRIVER_H
 
+#include <openct/device.h>
+
 struct ifd_driver_ops {
 	int		default_protocol;
 
@@ -48,7 +50,7 @@ extern void		ifd_driver_register(const char *,
 				struct ifd_driver_ops *);
 extern const ifd_driver_t *ifd_driver_get(const char *);
 extern void		ifd_driver_add_id(const char *, const char *);
-extern const char *	ifd_driver_for_id(const char *);
+extern const char *	ifd_driver_for_id(ifd_devid_t *);
 
 /*
  * Protocol handling for card terminal drivers

@@ -31,6 +31,12 @@ ifd_open(const char *driver_name, const char *device_name)
 			      device_name);
 			return NULL;
 		}
+
+#if 1
+		/* Currently not supported */
+		ct_error("%s: plug and play not supported", device_name);
+		return NULL;
+#else
 		if (!(driver_name = ifd_driver_for_id(pnp_id))) {
 			ct_error("%s: no driver for ID %s, "
 			      "please specify driver",
@@ -45,6 +51,7 @@ ifd_open(const char *driver_name, const char *device_name)
 				   device_name, driver_name, pnp_id);
 			return NULL;
 		}
+#endif
 	} else {
 		driver = ifd_driver_get(driver_name);
 		if (driver == NULL) {

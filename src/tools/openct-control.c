@@ -32,17 +32,12 @@ static const char *	opt_config = NULL;
 static int		opt_debug = 0;
 static int		opt_foreground = 0;
 
-static pid_t		mgr_spawn_handler(unsigned int, ifd_reader_t *);
-static int		mgr_accept(ct_socket_t *);
-static int		mgr_recv(ct_socket_t *);
-static int		mgr_send(ct_socket_t *);
-static void		mgr_close(ct_socket_t *);
+static void		configure_reader(ifd_conf_node_t *);
 
 int
 main(int argc, char **argv)
 {
-	unsigned int	n;
-	int	c;
+	int	n, c;
 
 	/* Make sure the mask is good */
 	umask(033);
@@ -89,21 +84,43 @@ main(int argc, char **argv)
 	/* Initialize IFD library */
 	ifd_init();
 
-	/* Create sub-processes for every reader present */
-	for (n = 0; n < IFD_MAX_READERS; n++) {
-		ifd_reader_t	*reader;
+	/* Create sub-processes for every reader defined
+	 * in the config file */
+	n = ifd_conf_get_nodes("reader", NULL, 0);
+	if (n >= 0) {
+		ifd_conf_node_t	**nodes;
+		int		i;
 
-		if ((reader = ifd_reader_by_index(n)) != NULL) {
-			pid_t	pid;
-
-			if ((pid = mgr_spawn_reader(n, reader)) < 0)
-				continue;
-			reader->pid = pid;
-		}
+		nodes = (ifd_conf_node_t **) calloc(n, sizeof(*nodes));
+		n = ifd_conf_get_nodes("reader", nodes, n);
+		for (i = 0; i < n; i++)
+			configure_reader(nodes[i]);
+		free(nodes);
 	}
+
+	mgr_scan_usb();
 
 	mgr_master();
 	return 0;
+}
+
+/*
+ * Configure a reader using info from the config file
+ */
+void
+configure_reader(ifd_conf_node_t *cf)
+{
+	char		*device, *driver;
+
+	if (ifd_conf_node_get_string(cf, "device", &device) < 0) {
+		ct_error("no device specified in reader configuration");
+		return;
+	}
+
+	if (ifd_conf_node_get_string(cf, "driver", &driver) < 0)
+		driver = "auto";
+
+	mgr_spawn_ifdhandler(driver, device, 0);
 }
 
 /*

@@ -14,6 +14,7 @@ extern struct ct_config {
 	int			autoload;
 	int			hotplug;
 	int			hush_errors;
+	const char *		ifdhandler;
 	const char *		modules_dir;
 	const char *		driver_modules_dir;
 	const char *		protocol_modules_dir;

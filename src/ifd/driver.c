@@ -14,7 +14,7 @@ struct ifd_driver_info {
 	ifd_driver_t		driver;
 
 	unsigned int		nids;
-	char **			id;
+	ifd_devid_t *		id;
 };
 
 static struct ifd_driver_info *	list;
@@ -63,20 +63,21 @@ ifd_driver_add_id(const char *id, const char *name)
 
 	ifd_debug(3, "ifd_driver_add_id(%s, %s)", id, name);
 	ip = find_by_name(name, 1);
-	ip->nids++;
-	ip->id = (char **) realloc(ip->id, ip->nids * sizeof(char *));
-	ip->id[ip->nids - 1] = strdup(id);
+	ip->id = (ifd_devid_t *) realloc(ip->id,
+			(ip->nids + 1) * sizeof(ifd_devid_t ));
+	if (ifd_device_id_parse(id, &ip->id[ip->nids]) >= 0)
+		ip->nids++;
 }
 
 const char *
-ifd_driver_for_id(const char *id)
+ifd_driver_for_id(ifd_devid_t *id)
 {
 	struct ifd_driver_info *ip;
 	unsigned int n;
 
 	for (ip = list; ip; ip = ip->next) {
 		for (n = 0; n < ip->nids; n++) {
-			if (!strcmp(ip->id[n], id))
+			if (ifd_device_id_match(&ip->id[n], id))
 				return ip->driver.name;
 		}
 	}

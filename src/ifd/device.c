@@ -188,3 +188,47 @@ ifd_device_close(ifd_device_t *dev)
 		dev->ops->close(dev);
 	ifd_device_free(dev);
 }
+
+/*
+ * Device ID handling
+ */
+int
+ifd_device_id_parse(const char *str, ifd_devid_t *id)
+{
+	unsigned int	n;
+
+	id->type = IFD_DEVICE_TYPE_OTHER;
+
+	n = strcspn(str, ":");
+	if (str[n] == ':') {
+		if (!strncmp(str, "usb", n))
+			id->type = IFD_DEVICE_TYPE_USB;
+		else
+		if (!strncmp(str, "pcmcia", n))
+			id->type = IFD_DEVICE_TYPE_PCMCIA;
+		else
+			return -1;
+		str += n + 1;
+	}
+
+	for (n = 0; *str && n < IFD_MAX_DEVID_PARTS; n++) {
+		id->val[n] = strtoul(str, (char **) &str, 16);
+		if (*str == '/')
+			str++;
+	}
+
+	if (*str || n == 0)
+		return -1;
+	id->num = n;
+	return 0;
+}
+
+int
+ifd_device_id_match(const ifd_devid_t *match, const ifd_devid_t *id)
+{
+	if (id->type != match->type
+	 || id->num < match->num
+	 || memcmp(id->val, match->val, match->num * sizeof(id->val[0])))
+		return 0;
+	return 1;
+}

@@ -16,6 +16,7 @@
 #include <openct/tlv.h>
 
 #include "internal.h"
+#include "ifdhandler.h"
 
 static int do_status(ifd_reader_t *, int,
 			ct_tlv_parser_t *, ct_tlv_builder_t *);
@@ -29,7 +30,7 @@ static int do_transact(ifd_reader_t *, int,
 			ct_buf_t *, ct_buf_t *);
 
 int
-mgr_process(ct_socket_t *sock, ifd_reader_t *reader,
+ifdhandler_process(ct_socket_t *sock, ifd_reader_t *reader,
 		ct_buf_t *argbuf, ct_buf_t *resbuf)
 {
 	unsigned char		cmd, unit;
@@ -47,7 +48,7 @@ mgr_process(ct_socket_t *sock, ifd_reader_t *reader,
 	if (cmd == CT_CMD_TRANSACT) {
 		/* Security - deny any APDUs if there's an
 		 * exclusive lock held by some other client. */
-		if ((rc = mgr_check_lock(sock, unit, IFD_LOCK_EXCLUSIVE)) < 0)
+		if ((rc = ifdhandler_check_lock(sock, unit, IFD_LOCK_EXCLUSIVE)) < 0)
 			return rc;
 		return do_transact(reader, unit, argbuf, resbuf);
 	}
@@ -138,7 +139,7 @@ do_lock(ct_socket_t *sock, ifd_reader_t *reader, int unit,
 	if (ct_tlv_get_int(args, CT_TAG_LOCKTYPE, &lock_type) < 0)
 		return IFD_ERROR_MISSING_ARG;
 
-	if ((rc = mgr_lock(sock, unit, lock_type, &lock)) < 0)
+	if ((rc = ifdhandler_lock(sock, unit, lock_type, &lock)) < 0)
 		return rc;
 
 	/* Return the lock handle */
@@ -159,7 +160,7 @@ do_unlock(ct_socket_t *sock, ifd_reader_t *reader, int unit,
 	if (ct_tlv_get_int(args, CT_TAG_LOCK, &lock) < 0)
 		return IFD_ERROR_MISSING_ARG;
 
-	if ((rc = mgr_unlock(sock, unit, lock)) < 0)
+	if ((rc = ifdhandler_unlock(sock, unit, lock)) < 0)
 		return rc;
 
 	return 0;
@@ -169,7 +170,8 @@ do_unlock(ct_socket_t *sock, ifd_reader_t *reader, int unit,
  * Reset card
  */
 int
-do_reset(ifd_reader_t *reader, int unit, ct_tlv_parser_t *args, ct_tlv_builder_t *resp)
+do_reset(ifd_reader_t *reader, int unit,
+		ct_tlv_parser_t *args, ct_tlv_builder_t *resp)
 {
 	unsigned char	atr[64];
 	char		msgbuf[128];
@@ -185,7 +187,8 @@ do_reset(ifd_reader_t *reader, int unit, ct_tlv_parser_t *args, ct_tlv_builder_t
 	if (ct_tlv_get_string(args, CT_TAG_MESSAGE, msgbuf, sizeof(msgbuf)) > 0)
 		message = msgbuf;
 
-	if ((rc = ifd_card_request(reader, unit, timeout, message, atr, sizeof(atr))) < 0)
+	rc = ifd_card_request(reader, unit, timeout, message, atr, sizeof(atr));
+	if (rc < 0)
 		return rc;
 
 	/* Add the ATR to the response */

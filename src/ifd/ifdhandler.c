@@ -21,54 +21,85 @@
 #include <openct/logging.h>
 #include <openct/socket.h>
 #include <openct/device.h>
+#include <openct/server.h>
 
+#include "ifdhandler.h"
 #include "internal.h"
 
-static int	mgr_accept(ct_socket_t *);
-static int	mgr_recv(ct_socket_t *);
-static int	mgr_send(ct_socket_t *);
-static void	mgr_close(ct_socket_t *);
+static int	opt_debug = 0;
+static int	opt_hotplug = 0;
+
+static void	usage(int exval);
+static void	ifdhandler_run(const char *, ifd_reader_t *);
+static int	ifdhandler_poll_presence(struct pollfd *, unsigned int, void *);
+static int	ifdhandler_accept(ct_socket_t *);
+static int	ifdhandler_recv(ct_socket_t *);
+static int	ifdhandler_send(ct_socket_t *);
+static void	ifdhandler_close(ct_socket_t *);
+
+int
+main(int argc, char **argv)
+{
+	const char	*socket, *device, *driver;
+	ifd_reader_t	*reader;
+	int		c;
+
+	/* Make sure the mask is good */
+	umask(033);
+
+	while ((c = getopt(argc, argv, "dHhs")) != -1) {
+		switch (c) {
+		case 'd':
+			opt_debug++;
+			break;
+		case 'H':
+			opt_hotplug = 1;
+			break;
+		case 'h':
+			usage(0);
+		case 's':
+			ct_log_destination("@syslog");
+			break;
+		default:
+			usage(1);
+		}
+	}
+
+	if (optind != argc - 3)
+		usage(1);
+	driver = argv[optind++];
+	device = argv[optind++];
+	socket = argv[optind++];
+
+	ct_config.debug = opt_debug;
+
+	/* Initialize IFD library */
+	ifd_init();
+
+	/* Create reader */
+	if (!(reader = ifd_open(driver, device))) {
+		ct_error("unable to open reader %s@%s", driver, device);
+		return 1;
+	}
+
+	ifdhandler_run(socket, reader);
+	return 0;
+}
 
 /*
  * Spawn a new ifd handler thread
  */
-pid_t
-mgr_spawn_reader(unsigned int idx, ifd_reader_t *reader)
+void
+ifdhandler_run(const char *socket_name, ifd_reader_t *reader)
 {
-	char		socket_name[128];
 	ct_socket_t	*sock;
-	pid_t		pid;
 	int		rc;
-
-	/* fork process here */
-	if ((pid = fork()) < 0) {
-		ct_error("failed to fork reader handler: %m");
-		return -1;
-	}
-
-	/* parent returns */
-	if (pid != 0)
-		return pid;
-
-	setsid();
 
 	/* Activate reader */
 	if ((rc = ifd_activate(reader)) < 0) {
 		ct_error("Failed to activate reader; err=%d", rc);
 		exit(1);
 	}
-
-	/* Make sure directory exists */
-	if (mkdir(ct_config.socket_dir, 0755) < 0
-	 && errno != EEXIST) {
-		ct_error("Unable to create %s: %m",
-				ct_config.socket_dir);
-		exit(1);
-	}
-	chmod(ct_config.socket_dir, 0755);
-
-	snprintf(socket_name, sizeof(socket_name),
-			"%s/%u", ct_config.socket_dir, idx);
 
 	sock = ct_socket_new(0);
 	if (ct_socket_listen(sock, socket_name, 0666) < 0) {
@@ -77,18 +108,40 @@ mgr_spawn_reader(unsigned int idx, ifd_reader_t *reader)
 	}
 
 	sock->user_data = reader;
-	sock->recv = mgr_accept;
+	sock->recv = ifdhandler_accept;
 
 	/* Call the server loop */
-	mgr_mainloop(sock, 0);
+	if (opt_hotplug)
+		ct_mainloop(sock, ifdhandler_poll_presence, reader);
+	else
+		ct_mainloop(sock, NULL, NULL);
 	exit(0);
 }
+
+/*
+ * Poll for presence of hotplug device
+ */
+int
+ifdhandler_poll_presence(struct pollfd *pfd, unsigned int max, void *ptr)
+{
+	ifd_reader_t	*reader = (ifd_reader_t *) ptr;
+	ifd_device_t	*dev = reader->device;
+
+	if (!dev->ops->poll_presence)
+		return 0;
+	if (!dev->ops->poll_presence(dev, pfd)) {
+		ifd_debug(1, "Reader %s detached", reader->name);
+		exit(0);
+	}
+	return 1;
+}
+
 
 /*
  * Handle connection request from client
  */
 static int
-mgr_accept(ct_socket_t *listener)
+ifdhandler_accept(ct_socket_t *listener)
 {
 	ct_socket_t	*sock;
 
@@ -96,9 +149,9 @@ mgr_accept(ct_socket_t *listener)
 		return 0;
 
 	sock->user_data = listener->user_data;
-	sock->recv = mgr_recv;
-	sock->send = mgr_send;
-	sock->close = mgr_close;
+	sock->recv = ifdhandler_recv;
+	sock->send = ifdhandler_send;
+	sock->close = ifdhandler_close;
 	return 0;
 }
 
@@ -106,7 +159,7 @@ mgr_accept(ct_socket_t *listener)
  * Receive data from client
  */
 int
-mgr_recv(ct_socket_t *sock)
+ifdhandler_recv(ct_socket_t *sock)
 {
 	ifd_reader_t	*reader;
 	char		buffer[512];
@@ -127,7 +180,7 @@ mgr_recv(ct_socket_t *sock)
 	ct_buf_init(&resp, buffer, sizeof(buffer));
 
 	reader = (ifd_reader_t *) sock->user_data;
-	header.error = mgr_process(sock, reader, &args, &resp);
+	header.error = ifdhandler_process(sock, reader, &args, &resp);
 
 	if (header.error)
 		ct_buf_clear(&resp);
@@ -145,7 +198,7 @@ mgr_recv(ct_socket_t *sock)
  * Transmit data to client
  */
 int
-mgr_send(ct_socket_t *sock)
+ifdhandler_send(ct_socket_t *sock)
 {
 	return ct_socket_flsbuf(sock, 0);
 }
@@ -155,7 +208,24 @@ mgr_send(ct_socket_t *sock)
  * Release any locks held by this client
  */
 void
-mgr_close(ct_socket_t *sock)
+ifdhandler_close(ct_socket_t *sock)
 {
-	mgr_unlock_all(sock);
+	ifdhandler_unlock_all(sock);
 }
+
+/*
+ * Usage message
+ */
+void
+usage(int exval)
+{
+	fprintf(stderr,
+"usage: ifdhandler [-Hds] driver device socket\n"
+"  -d   enable debugging; repeat to increase verbosity\n"
+"  -H   hotplug device, monitor for detach\n"
+"  -s   send error and debug messages to syslog\n"
+"  -h   display this message\n"
+);
+	exit(exval);
+}
+

@@ -16,6 +16,7 @@ enum {
 	IFD_DEVICE_TYPE_SERIAL = 0,
 	IFD_DEVICE_TYPE_USB,
 	IFD_DEVICE_TYPE_PS2,
+	IFD_DEVICE_TYPE_PCMCIA,
 	IFD_DEVICE_TYPE_OTHER,
 };
 
@@ -37,6 +38,13 @@ enum {
 };
 #define IFD_SERIAL_PARITY_TOGGLE(n)	((n)? ((n) ^ 3) : 0)
 
+#define IFD_MAX_DEVID_PARTS	5
+typedef struct ifd_devid {
+	int		type;
+	unsigned int	num;
+	unsigned int	val[IFD_MAX_DEVID_PARTS];
+} ifd_devid_t;
+
 /*
  * Control messages to be sent through
  * ifd_device_control must always have a guard word
@@ -55,6 +63,7 @@ typedef struct ifd_usb_cmsg {
 
 extern ifd_device_t *	ifd_device_open(const char *);
 extern ifd_device_t *	ifd_device_open_channel(unsigned int num);
+extern void		ifd_device_close(ifd_device_t *);
 extern int		ifd_device_type(ifd_device_t *);
 extern void		ifd_device_flush(ifd_device_t *);
 extern int		ifd_device_identify(const char *, char *, size_t);
@@ -70,12 +79,9 @@ extern int		ifd_device_recv(ifd_device_t *, void *, size_t, long);
 extern int		ifd_device_control(ifd_device_t *, void *, size_t);
 extern int		ifd_device_poll_presence(ifd_device_t *,
 				struct pollfd *);
-extern void		ifd_device_close(ifd_device_t *);
 
-/* Internal system dependent device functions */
-extern int		ifd_sysdep_device_type(const char *);
-extern const char *	ifd_sysdep_channel_to_name(unsigned int num);
-extern int		ifd_sysdep_usb_control(int, ifd_usb_cmsg_t *, long);
-extern int		ifd_sysdep_usb_scan(void);
+extern int		ifd_device_id_parse(const char *, ifd_devid_t *);
+extern int		ifd_device_id_match(const ifd_devid_t *,
+				const ifd_devid_t *);
 
 #endif /* IFD_DEVICE_H */

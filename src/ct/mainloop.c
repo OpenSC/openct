@@ -8,42 +8,28 @@
 #include <sys/stat.h>
 #include <sys/poll.h>
 #include <getopt.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#include <assert.h>
 
-#include <openct/ifd.h>
-#include <openct/conf.h>
-#include <openct/logging.h>
 #include <openct/socket.h>
-#include <openct/device.h>
-
-#include "internal.h"
+#include <openct/server.h>
+#include <openct/logging.h>
 
 #define IFD_MAX_SOCKETS	256
 
 static int	leave_mainloop;
-static void	mgr_reader_die(int);
-static void	mgr_master_die(int);
 
 /*
  * Main loop
  */
 void
-mgr_mainloop(ct_socket_t *listener, int master)
+ct_mainloop(ct_socket_t *listener, ct_poll_fn_t *poll_more, void *user_data)
 {
-	struct sigaction act;
 	ct_socket_t	head;
-	struct pollfd	pfd[IFD_MAX_READERS + IFD_MAX_SOCKETS];
-
-	/* Initialize signals */
-	act.sa_handler = master? mgr_master_die : mgr_reader_die;
-	sigaction(SIGTERM, &act, NULL);
-	sigaction(SIGINT, &act, NULL);
+	struct pollfd	pfd[IFD_MAX_SOCKETS + 1];
 
 	head.next = head.prev = NULL;
 	ct_socket_link(&head, listener);
@@ -51,9 +37,8 @@ mgr_mainloop(ct_socket_t *listener, int master)
 	leave_mainloop = 0;
 	while (!leave_mainloop) {
 		ct_socket_t	*poll_socket[IFD_MAX_SOCKETS];
-		ifd_reader_t	*poll_reader[IFD_MAX_READERS];
 		ct_socket_t	*sock, *next;
-		unsigned int	nsockets = 0, nreaders = 0, npoll = 0;
+		unsigned int	nsockets = 0, npoll = 0;
 		unsigned int	n = 0;
 		int		rc;
 
@@ -78,22 +63,11 @@ mgr_mainloop(ct_socket_t *listener, int master)
 			}
 		}
 
-		/* poll for unplug events of hotplug readers */
-		if (master && ct_config.hotplug) {
-			ifd_reader_t	*reader;
-			ifd_device_t	*dev;
+		/* poll for unplug events of hotplug devices */
+		if (poll_more)
+			npoll += poll_more(&pfd[npoll], 1, user_data);
 
-			for (n = 0; n < IFD_MAX_READERS; n++) {
-				if (!(reader = ifd_reader_by_index(n))
-				 || !(dev = reader->device))
-					continue;
-				poll_reader[nreaders++] = reader;
-				ifd_device_poll_presence(dev, &pfd[npoll]);
-				npoll++;
-			}
-		}
-
-		if (nsockets == 0 && nreaders)
+		if (npoll == 0)
 			break;
 
 		/* Stop accepting new connections if there are
@@ -124,31 +98,13 @@ mgr_mainloop(ct_socket_t *listener, int master)
 			}
 		}
 
-		for (n = 0; n < nreaders; n++) {
-			ifd_reader_t	*reader;
-			ifd_device_t	*dev;
-
-			reader = poll_reader[n];
-			dev = reader->device;
-			if (!ifd_device_poll_presence(dev,  &pfd[nsockets+n])) {
-				ifd_debug(1, "Reader \"%s\" detached",
-						reader->name);
-				ifd_close(reader);
-			}
-		}
+		if (nsockets < npoll)
+			poll_more(&pfd[nsockets], npoll - nsockets, user_data);
 	}
 }
 
 void
-mgr_reader_die(int sig)
+ct_mainloop_leave(void)
 {
-	ifd_debug(1, "reader process terminated by signal %d", sig);
-	exit(0);
-}
-
-void
-mgr_master_die(int sig)
-{
-	ifd_debug(1, "master process received signal %d", sig);
 	leave_mainloop = 1;
 }

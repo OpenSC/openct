@@ -107,7 +107,6 @@ extern int			ifd_attach(ifd_reader_t *);
 extern void			ifd_detach(ifd_reader_t *);
 extern ifd_reader_t *		ifd_reader_by_handle(unsigned int handle);
 extern ifd_reader_t *		ifd_reader_by_index(unsigned int index);
-extern ifd_reader_t *		ifd_hotplug_attach(const char *, const char *);
 
 extern int			ifd_activate(ifd_reader_t *);
 extern int			ifd_deactivate(ifd_reader_t *);

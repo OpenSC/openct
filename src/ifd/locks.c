@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <openct/error.h>
 #include <openct/logging.h>
-#include "internal.h"
+#include "ifdhandler.h"
 
 typedef struct ct_lock {
 	struct ct_lock *next;
@@ -32,13 +32,13 @@ static unsigned int	lock_handle = 0;
  * Try to establish a lock
  */
 int
-mgr_lock(ct_socket_t *sock, int slot, int type, ct_lock_handle *res)
+ifdhandler_lock(ct_socket_t *sock, int slot, int type, ct_lock_handle *res)
 {
 	ct_lock_t	*l;
 	int		rc;
 
 	/* See if we have a locking conflict */
-	if ((rc = mgr_check_lock(sock, slot, type)) < 0)
+	if ((rc = ifdhandler_check_lock(sock, slot, type)) < 0)
 		return rc;
 
 	/* No conflict - grant lock and record this fact */
@@ -64,7 +64,7 @@ mgr_lock(ct_socket_t *sock, int slot, int type, ct_lock_handle *res)
  * Check if a slot is locked by someone else
  */
 int
-mgr_check_lock(ct_socket_t *sock, int slot, int type)
+ifdhandler_check_lock(ct_socket_t *sock, int slot, int type)
 {
 	ct_lock_t	*l;
 
@@ -88,7 +88,7 @@ mgr_check_lock(ct_socket_t *sock, int slot, int type)
  * Release a lock
  */
 int
-mgr_unlock(ct_socket_t *sock, int slot, ct_lock_handle handle)
+ifdhandler_unlock(ct_socket_t *sock, int slot, ct_lock_handle handle)
 {
 	ct_lock_t	*l, **lp;
 
@@ -113,7 +113,7 @@ mgr_unlock(ct_socket_t *sock, int slot, ct_lock_handle handle)
  * (called when the client socket is closed)
  */
 void
-mgr_unlock_all(ct_socket_t *sock)
+ifdhandler_unlock_all(ct_socket_t *sock)
 {
 	ct_lock_t	*l, **lp;
 

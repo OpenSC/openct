@@ -22,7 +22,8 @@
 struct ct_config	ct_config = {
 	.debug		= 0,
 	.autoload	= 1,
-	.hotplug	= 0,
+	.hotplug	= 1,
+	.ifdhandler	= OPENCT_IFDHANDLER_PATH,
 	.modules_dir	= OPENCT_MODULES_PATH,
 	.socket_dir	= OPENCT_SOCKET_PATH,
 };

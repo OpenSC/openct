@@ -7,12 +7,6 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include <openct/ifd.h>
-#include <openct/driver.h>
-#include <openct/device.h>
-#include <openct/logging.h>
-#include <openct/conf.h>
-#include <openct/error.h>
 #include "internal.h"
 
 

@@ -109,7 +109,6 @@ extern int		ifd_recv_response(ifd_protocol_t *,
 extern void		ifd_driver_register(const char *,
 				struct ifd_driver_ops *);
 extern const ifd_driver_t *ifd_driver_get(const char *);
-extern const char *	ifd_driver_for_id(const char *);
 
 /* device.c */
 extern ifd_device_t *	ifd_open_serial(const char *);
@@ -124,8 +123,10 @@ extern void		ifd_device_free(ifd_device_t *);
 extern unsigned int	csum_lrc_compute(const unsigned char *, size_t, unsigned char *);
 extern unsigned int	csum_crc_compute(const unsigned char *, size_t, unsigned char *);
 
-/* hotplug.c */
-extern int		ifd_hotplug_init(void);
+/* Internal system dependent device functions */
+extern int		ifd_sysdep_device_type(const char *);
+extern const char *	ifd_sysdep_channel_to_name(unsigned int num);
+extern int		ifd_sysdep_usb_control(int, ifd_usb_cmsg_t *, long);
 
 /* module.c */
 extern int		ifd_load_module(const char *, const char *);

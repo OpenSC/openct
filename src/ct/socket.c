@@ -14,11 +14,12 @@
 #include <string.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <fcntl.h>
 
 #include <openct/logging.h>
-
-#include "socket.h"
+#include <openct/socket.h>
+#include "config.h"
 
 #define SOCK_BUFSIZ	512
 
@@ -65,6 +66,20 @@ ct_socket_free(ct_socket_t *sock)
 }
 
 /*
+ * Make the socket path
+ */
+static char *
+ct_socket_makepath(char *path, size_t size, const char *name)
+{
+	if (name[0] == '/') {
+		snprintf(path, size, "%s", name);
+	} else {
+		snprintf(path, size, OPENCT_SOCKET_PATH "/%s", name);
+	}
+	return path;
+}
+
+/*
  * Create a client socket
  */
 int
@@ -77,7 +92,7 @@ ct_socket_connect(ct_socket_t *sock, const char *path)
 
 	memset(&un, 0, sizeof(un));
 	un.sun_family = AF_UNIX;
-	strcpy(un.sun_path, path);
+	ct_socket_makepath(un.sun_path, sizeof(un.sun_path), path);
 
 	if ((fd = socket(PF_UNIX, SOCK_STREAM, 0)) < 0
 	 || fcntl(fd, F_SETFD, 1) < 0 /* close on exec */
@@ -94,22 +109,22 @@ ct_socket_connect(ct_socket_t *sock, const char *path)
 int
 ct_socket_listen(ct_socket_t *sock, const char *pathname, int mode)
 {
-	struct sockaddr_un suns;
+	struct sockaddr_un un;
 	int		fd;
 
 	ct_socket_close(sock);
 
-	memset(&suns, 0, sizeof(suns));
-	suns.sun_family = AF_UNIX;
-	strcpy(suns.sun_path, pathname);
-	unlink(pathname);
+	memset(&un, 0, sizeof(un));
+	un.sun_family = AF_UNIX;
+	ct_socket_makepath(un.sun_path, sizeof(un.sun_path), pathname);
+	unlink(un.sun_path);
 
 	if ((fd = socket(PF_UNIX, SOCK_STREAM, 0)) < 0
-	 || bind(fd, (struct sockaddr *) &suns, sizeof(suns)) < 0
+	 || bind(fd, (struct sockaddr *) &un, sizeof(un)) < 0
 	 || listen(fd, 5) < 0)
 		return -1;
 
-	chmod(pathname, mode);
+	chmod(un.sun_path, mode);
 
 	sock->events = POLLIN;
 	sock->fd = fd;
