@@ -4,6 +4,7 @@
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  * Copyright (C) 2003 Andreas Jellinghaus <aj@dungeon.inka.de>
  * Copyright (C) 2003 Markus Friedl <markus@openbsd.org>
+ * Copyright (C) 2004-2005 William Wanders <william@wanders.org>
  *
  * These functions need to be re-implemented for every
  * new platform.
@@ -24,6 +25,8 @@
 #include <errno.h>
 #include <openct/driver.h>
 
+#include "usb-descriptors.h"
+
 int
 ifd_sysdep_device_type(const char *name)
 {
@@ -35,26 +38,11 @@ ifd_sysdep_device_type(const char *name)
 
 	if (!strncmp(name, "/dev/ugen", 9)) {
 		ifd_debug(1, "BSD: returning IFD_DEVICE_TYPE_USB");
+		if (stat(name, &stb) < 0)
+			return -1;
 		return IFD_DEVICE_TYPE_USB;
 	}
 
-	if (stat(name, &stb) < 0)
-		return -1;
-#if 0
-	if (S_ISCHR(stb.st_mode)) {
-		int major = major(stb.st_rdev);
-		int minor = minor(stb.st_rdev);
-
-		if (major == TTY_MAJOR
-		 || major == PTY_SLAVE_MAJOR
-		 || (UNIX98_PTY_SLAVE_MAJOR <= major
-		  && major < UNIX98_PTY_SLAVE_MAJOR + UNIX98_PTY_MAJOR_COUNT))
-			return IFD_DEVICE_TYPE_SERIAL;
-
-		if (major == MISC_MAJOR && minor == 1)
-			return IFD_DEVICE_TYPE_PS2;
-	}
-#endif
 	return -1;
 }
 
@@ -64,15 +52,167 @@ ifd_sysdep_device_type(const char *name)
 int
 ifd_sysdep_usb_poll_presence(ifd_device_t *dev, struct pollfd *pfd)
 {
-#if 0
 	if (pfd->revents & POLLHUP)
 		return 0;
 	pfd->fd = dev->fd;
 	pfd->events = POLLHUP;
 	return 1;
-#else
+}
+
+typedef struct ep {
+    int ep_fd;
+} ep_t;
+
+typedef ep_t interface_t[128];
+
+static interface_t interfaces[1];
+
+#define USB_REQUEST_SIZE	8
+
+/*
+ * Open interface endpoint
+ */
+int
+open_ep(char *name, int interface, int endpoint, int flags)
+{
+    char filename[256];
+
+    if(interfaces[interface][endpoint].ep_fd) {
+	ifd_debug(6, "open_ep: endpoint already opened");
+	return 0;
+    }
+
+    sprintf((char *)&filename,"%s.%d", name, endpoint);
+	
+    if((interfaces[interface][endpoint].ep_fd=open(
+	filename, flags)) < 0) {
+	ifd_debug(6, "open_ep: error opening \"%s\": %s", filename, strerror(errno));
+        interfaces[interface][endpoint].ep_fd=0;
 	return -1;
-#endif
+    }
+    return 0;
+}
+
+close_ep(int interface, int endpoint)
+{
+    if(interfaces[interface][endpoint].ep_fd) {
+        close(interfaces[interface][endpoint].ep_fd);
+        interfaces[interface][endpoint].ep_fd=0;
+    }
+}
+
+int
+ifd_sysdep_usb_bulk(ifd_device_t *dev, int ep, void *buffer, size_t len, long timeout)
+{
+    int	bytes_to_process;
+    int	bytes_processed;
+    int direction = (ep & IFD_USB_ENDPOINT_DIR_MASK) == IFD_USB_ENDPOINT_IN ? 1 : 0;
+    int endpoint = (ep & ~IFD_USB_ENDPOINT_DIR_MASK);
+
+    ct_debug("ifd_sysdep_usb_bulk: endpoint=%d direction=%d", endpoint, direction);
+    if(open_ep(dev->name,0,endpoint,O_RDWR|O_NONBLOCK)) {
+	ct_debug("ifd_sysdep_usb_bulk: opening endpoint failed");
+	return -1;
+    }
+    if(direction) {
+	if((bytes_to_process=read(interfaces[0][endpoint].ep_fd,buffer,len))<0) {
+	    ifd_debug(6, "ifd_sysdep_usb_bulk: read failed: %s", strerror(errno));
+	    ct_error("usb_bulk read failed: %s", strerror(errno));
+	    return IFD_ERROR_COMM_ERROR;
+	}
+	ct_debug("ifd_sysdep_usb_bulk: read %d bytes", bytes_to_process);
+	return bytes_to_process;
+    } else {
+	bytes_to_process=len;
+	if((bytes_processed=write(interfaces[0][endpoint].ep_fd,buffer,bytes_to_process))!=bytes_to_process) {
+	    ifd_debug(6, "ifd_sysdep_usb_bulk: write failed: %s", strerror(errno));
+	    ct_error("usb_bulk write failed: %s", strerror(errno));
+	    return IFD_ERROR_COMM_ERROR;
+	}
+	ct_debug("ifd_sysdep_usb_bulk: wrote buffer[%d]=%s", bytes_processed, ct_hexdump(buffer,len));
+	return bytes_processed;
+    }
+}
+
+/*
+ * USB URB capture
+ */
+struct ifd_usb_capture {
+    int			type;
+    int			endpoint;
+    size_t		maxpacket;
+    unsigned int	interface;
+};
+
+int
+ifd_sysdep_usb_begin_capture(ifd_device_t *dev,
+	int type, int ep, size_t maxpacket,
+	ifd_usb_capture_t **capret)
+{
+    ifd_usb_capture_t	*cap;
+    int			 direction = (ep & IFD_USB_ENDPOINT_DIR_MASK) == IFD_USB_ENDPOINT_IN ? 1 : 0;
+    int			 endpoint = (ep & ~IFD_USB_ENDPOINT_DIR_MASK);
+
+    if(!(cap = (ifd_usb_capture_t *) calloc(1, sizeof(*cap) + maxpacket))) {
+	ct_debug("ifd_sysdep_usb_begin_capture: calloc failed");
+	return -1;
+    }
+    cap->type = type;
+    cap->endpoint = ep;
+    cap->maxpacket = maxpacket;
+
+    if(!interfaces[0][endpoint].ep_fd) {
+	if(open_ep(dev->name,0,endpoint,O_RDONLY|O_NONBLOCK)) {
+	    ct_debug("ifd_sysdep_usb_begin_capture: opening endpoint failed");
+	    return -1;
+	}
+    }
+    *capret = cap;
+    return 0;
+}
+
+int
+ifd_sysdep_usb_capture(ifd_device_t *dev,
+	ifd_usb_capture_t *cap,
+	void *buffer, size_t len,
+	long timeout)
+{
+    struct timeval	begin;
+    int			bytes_to_process=0;
+    int			direction = (cap->endpoint & IFD_USB_ENDPOINT_DIR_MASK) == IFD_USB_ENDPOINT_IN ? 1 : 0;
+    int			endpoint = (cap->endpoint & ~IFD_USB_ENDPOINT_DIR_MASK);
+
+    gettimeofday(&begin,NULL);
+    do {
+	struct pollfd	pfd;
+	long		wait;
+
+	if ((wait = (timeout - ifd_time_elapsed(&begin))) <= 0)
+	    return IFD_ERROR_TIMEOUT;
+
+	pfd.fd = interfaces[0][endpoint].ep_fd;
+	pfd.events = POLLIN;
+	if(poll(&pfd,1,wait)!=1)
+	    continue;
+
+	if((bytes_to_process=read(interfaces[0][endpoint].ep_fd,buffer,len))<0) {
+	    ifd_debug(6, "ifd_sysdep_usb_bulk: read failed: %s", strerror(errno));
+	    ct_error("usb_bulk read failed: %s", strerror(errno));
+	    return IFD_ERROR_COMM_ERROR;
+	}
+    } while (!bytes_to_process);
+    ct_debug("ifd_sysdep_usb_capture: read buffer[%d]=%s", bytes_to_process, ct_hexdump(buffer,bytes_to_process));
+    return bytes_to_process;
+}
+
+int
+ifd_sysdep_usb_end_capture(ifd_device_t *dev, ifd_usb_capture_t *cap)
+{
+    int	direction = (cap->endpoint & IFD_USB_ENDPOINT_DIR_MASK) == IFD_USB_ENDPOINT_IN ? 1 : 0;
+    int	endpoint = (cap->endpoint & ~IFD_USB_ENDPOINT_DIR_MASK);
+    close_ep(0,endpoint);
+    if(cap) free(cap);
+    return 0;
 }
 
 /*
@@ -133,58 +273,52 @@ ifd_sysdep_usb_control(ifd_device_t *dev,
 int
 ifd_sysdep_usb_set_configuration(ifd_device_t *dev, int config) 
 {
-     return -1;
+    int value, rc;
+    value = config;
+    if ((rc = ioctl(dev->fd, USB_SET_CONFIG, &value)) < 0) {
+	ifd_debug(1,"USB_SET_CONFIG failed: %d", rc);
+	ct_error("usb_set_configuration failed: %s(%d)",
+			strerror(errno), errno);
+       	return IFD_ERROR_COMM_ERROR;
+    }
+    return 0;
 }
+
 
 int
 ifd_sysdep_usb_set_interface(ifd_device_t *dev, int ifc, int alt) 
 {
-     return -1;
+    int rc;
+    struct usb_alt_interface {
+	int uai_config_index;
+	int uai_interface_index;
+	int uai_alt_no;
+    } value;
+
+    value.uai_config_index=ifc;
+    value.uai_interface_index=0;
+    value.uai_alt_no=alt;
+    if ((rc = ioctl(dev->fd, USB_SET_ALTINTERFACE, &value)) < 0) {
+	ifd_debug(1,"USB_SET_ALTINTERFACE failed: %d", rc);
+	ct_error("usb_set_interface failed: %s(%d)",
+			strerror(errno), errno);
+       	return IFD_ERROR_COMM_ERROR;
+    }
+    return 0;
 }
 
 int
 ifd_sysdep_usb_claim_interface(ifd_device_t *dev, int interface) 
 {
-     return -1;
+    ct_debug("ifd_sysdep_usb_claim_interface: interface=%d (not yet implemented)", interface);
+    return 0;
 }
 
 int
 ifd_sysdep_usb_release_interface(ifd_device_t *dev, int interface) 
 {
-     return -1;
-}
-
-/*
- * USB bulk transfer
- */
-int
-ifd_sysdep_usb_bulk(ifd_device_t *dev, int ep, void *buffer, size_t len,
-		    long timeout) 
-{
-     return -1;
-}
-
-int
-ifd_sysdep_usb_begin_capture(ifd_device_t *dev,
-		int type, int endpoint, size_t maxpacket,
-	       	ifd_usb_capture_t **capret)
-{
-	return -1;
-}
-
-int
-ifd_sysdep_usb_capture(ifd_device_t *dev,
-		ifd_usb_capture_t *cap,
-		void *buffer, size_t len,
-		long timeout)
-{
-	return -1;
-}
-
-int
-ifd_sysdep_usb_end_capture(ifd_device_t *dev, ifd_usb_capture_t *cap)
-{
-	return -1;
+    ct_debug("ifd_sysdep_usb_release_interface: interface=%d (not yet implemented)", interface);
+    return 0;
 }
 
 /*
