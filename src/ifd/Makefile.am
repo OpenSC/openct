@@ -5,7 +5,7 @@ LDADD=-L$(top_builddir)/src/ct
 
 lib_LTLIBRARIES = libifd.la
 
-bin_PROGRAMS = print-atr ifdhandler
+bin_PROGRAMS = ifdhandler
 
 DRIVERS	= etoken.c kaan.c towitoko.c egate.c
 libifd_la_SOURCES= apdu.c checksum.c conf.c confparse.c device.c driver.c \
