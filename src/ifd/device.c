@@ -160,6 +160,7 @@ ifd_device_transceive(ifd_device_t *dev, ifd_apdu_t *apdu, long timeout)
 		return dev->ops->transceive(dev, apdu, timeout);
 
 	/* Fall back to send/recv */
+	ifd_device_flush(dev);
 	if (ifd_device_send(dev, apdu->snd_buf, apdu->snd_len) < 0)
 		return -1;
 	return ifd_device_recv(dev, apdu->rcv_buf, apdu->rcv_len, timeout);
