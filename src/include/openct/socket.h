@@ -17,6 +17,8 @@ typedef struct ct_socket {
 	int		eof;
 	ct_buf_t	buf;
 
+	unsigned int	use_large_tags : 1;
+
 	/* events to poll for */
 	int		events;
 
@@ -35,6 +37,8 @@ typedef struct header {
 	int16_t		error;
 	u_int16_t       count;
 } header_t;
+
+#define CT_SOCKET_BUFSIZ 4096
 
 extern ct_socket_t *	ct_socket_new(unsigned int);
 extern void		ct_socket_free(ct_socket_t *);
