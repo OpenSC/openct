@@ -22,6 +22,9 @@
 #define CT_CMD_RESET		0x10
 #define CT_CMD_REQUEST_ICC	0x11
 #define CT_CMD_EJECT_ICC	0x12
+#define CT_CMD_OUTPUT		0x13
+#define CT_CMD_INPUT		0x13
+#define CT_CMD_PERFORM_VERIFY	0x14
 #define CT_CMD_TRANSACT		0x20	/* transceive APDU */
 
 #define CT_UNIT_ICC1		0x00

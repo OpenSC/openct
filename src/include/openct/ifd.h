@@ -107,6 +107,7 @@ extern ifd_reader_t *		ifd_reader_by_index(unsigned int index);
 
 extern int			ifd_activate(ifd_reader_t *);
 extern int			ifd_deactivate(ifd_reader_t *);
+extern int			ifd_output(ifd_reader_t *, const char *);
 
 extern int			ifd_set_protocol(ifd_reader_t *reader,
 					unsigned int slot,
@@ -128,6 +129,10 @@ extern int			ifd_card_request(ifd_reader_t *reader,
 					const char *message,
 					void *atr_buf,
 					size_t atr_len);
+extern int			ifd_card_eject(ifd_reader_t *reader,
+					unsigned int slot,
+					time_t timeout,
+					const char *message);
 
 extern ifd_protocol_t *		ifd_protocol_new(int id,
 					ifd_reader_t *reader,

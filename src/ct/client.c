@@ -104,6 +104,28 @@ ct_reader_status(ct_handle *h, ct_info_t *info)
 }
 
 /*
+ * Print something to the reader's display
+ */
+int
+ct_reader_output(ct_handle *h, const char *message)
+{
+	unsigned char	buffer[256];
+	ct_buf_t	args, resp;
+
+	ct_buf_init(&args, buffer, sizeof(buffer));
+	ct_buf_init(&resp, buffer, sizeof(buffer));
+
+	ct_buf_putc(&args, CT_CMD_OUTPUT);
+	ct_buf_putc(&args, CT_UNIT_READER);
+
+	/* Add arguments if given */
+	if (message)
+		ct_args_string(&args, CT_TAG_MESSAGE, message);
+
+	return ct_socket_call(h->sock, &args, &resp);
+}
+
+/*
  * Get card status
  */
 int
@@ -170,6 +192,29 @@ ct_card_request(ct_handle *h, unsigned int slot,
 	/* Get the ATR */
 	return ct_tlv_get_bytes(&tlv, CT_TAG_ATR, atr, atr_len);
 }
+
+int
+ct_card_eject(ct_handle *h, unsigned int slot,
+		unsigned int timeout, const char *message)
+{
+	unsigned char	buffer[256];
+	ct_buf_t	args, resp;
+
+	ct_buf_init(&args, buffer, sizeof(buffer));
+	ct_buf_init(&resp, buffer, sizeof(buffer));
+
+	ct_buf_putc(&args, CT_CMD_EJECT_ICC);
+	ct_buf_putc(&args, slot);
+
+	/* Add arguments if given */
+	if (timeout)
+		ct_args_int(&args, CT_TAG_TIMEOUT, timeout);
+	if (message)
+		ct_args_string(&args, CT_TAG_MESSAGE, message);
+
+	return ct_socket_call(h->sock, &args, &resp);
+}
+
 
 /*
  * Transceive an APDU

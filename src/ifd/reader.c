@@ -137,6 +137,20 @@ ifd_deactivate(ifd_reader_t *reader)
 }
 
 /*
+ * Output to reader's display
+ */
+int
+ifd_output(ifd_reader_t *reader, const char *message)
+{
+	const ifd_driver_t *drv = reader->driver;
+
+	if (!drv || !drv->ops || !drv->ops->output)
+		return -1;
+
+	return drv->ops->output(reader, message);
+}
+
+/*
  * Detect card status
  */
 int

@@ -20,11 +20,15 @@
 
 static int do_status(ifd_reader_t *, int,
 			ct_tlv_parser_t *, ct_tlv_builder_t *);
+static int do_output(ifd_reader_t *, int,
+			ct_tlv_parser_t *, ct_tlv_builder_t *);
 static int do_lock(ct_socket_t *, ifd_reader_t *, int,
 			ct_tlv_parser_t *, ct_tlv_builder_t *);
 static int do_unlock(ct_socket_t *, ifd_reader_t *, int,
 			ct_tlv_parser_t *, ct_tlv_builder_t *);
 static int do_reset(ifd_reader_t *, int,
+			ct_tlv_parser_t *, ct_tlv_builder_t *);
+static int do_eject(ifd_reader_t *, int,
 			ct_tlv_parser_t *, ct_tlv_builder_t *);
 static int do_transact(ifd_reader_t *, int,
 			ct_buf_t *, ct_buf_t *);
@@ -64,8 +68,17 @@ ifdhandler_process(ct_socket_t *sock, ifd_reader_t *reader,
 		rc = do_status(reader, unit, &args, &resp);
 		break;
 
+	case CT_CMD_OUTPUT:
+		rc = do_output(reader, unit, &args, &resp);
+		break;
+
 	case CT_CMD_RESET:
+	case CT_CMD_REQUEST_ICC:
 		rc = do_reset(reader, unit, &args, &resp);
+		break;
+
+	case CT_CMD_EJECT_ICC:
+		rc = do_eject(reader, unit, &args, &resp);
 		break;
 
 	case CT_CMD_LOCK:
@@ -120,6 +133,26 @@ do_status(ifd_reader_t *reader, int unit,
 	}
 
 	return 0;
+}
+
+/*
+ * Output string to reader's display
+ */
+int
+do_output(ifd_reader_t *reader, int unit,
+		ct_tlv_parser_t *args, ct_tlv_builder_t *resp)
+{
+	char		msgbuf[128];
+	const char	*message = NULL;
+
+	if (unit > CT_UNIT_READER)
+		return IFD_ERROR_INVALID_ARG;
+
+	/* See if we have message parameter */
+	if (ct_tlv_get_string(args, CT_TAG_MESSAGE, msgbuf, sizeof(msgbuf)) > 0)
+		message = msgbuf;
+
+	return ifd_output(reader, message);
 }
 
 /*
@@ -194,6 +227,33 @@ do_reset(ifd_reader_t *reader, int unit,
 	/* Add the ATR to the response */
 	ct_tlv_put_tag(resp, CT_TAG_ATR);
 	ct_tlv_add_bytes(resp, atr, rc);
+
+	return 0;
+}
+
+/*
+ * Eject card
+ */
+int
+do_eject(ifd_reader_t *reader, int unit,
+		ct_tlv_parser_t *args, ct_tlv_builder_t *resp)
+{
+	char		msgbuf[128];
+	const char	*message = NULL;
+	unsigned int	timeout = 0;
+	int		rc;
+
+	if (unit > reader->nslots)
+		return IFD_ERROR_INVALID_SLOT;
+
+	/* See if we have timeout and/or message parameters */
+	ct_tlv_get_int(args, CT_TAG_TIMEOUT, &timeout);
+	if (ct_tlv_get_string(args, CT_TAG_MESSAGE, msgbuf, sizeof(msgbuf)) > 0)
+		message = msgbuf;
+
+	rc = ifd_card_eject(reader, unit, timeout, message);
+	if (rc < 0)
+		return rc;
 
 	return 0;
 }

@@ -3,7 +3,6 @@
 TODO list
 
  -	error handling: use error codes everywhere, add ct_strerror
- -	resource manager: request icc, eject icc
  -	find out why client hangs when resource manager crashes
  -	reader backend for opensc
  -	pin verification via keypad
