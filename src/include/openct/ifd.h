@@ -112,6 +112,8 @@ extern int			ifd_activate(ifd_reader_t *);
 extern int			ifd_deactivate(ifd_reader_t *);
 extern int			ifd_output(ifd_reader_t *, const char *);
 
+extern int			ifd_atr_complete(const unsigned char *, size_t);
+
 extern int			ifd_set_protocol(ifd_reader_t *reader,
 					unsigned int slot,
 					int id);

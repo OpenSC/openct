@@ -351,6 +351,35 @@ ifd_recv_atr(ifd_device_t *dev, ct_buf_t *bp,
 }
 
 /*
+ * Check ATR for completeness
+ */
+int
+ifd_atr_complete(const unsigned char *atr, size_t len)
+{
+	unsigned int	j = 2, num, c;
+	int		proto = 0;
+
+	do {
+		c = atr[j-1];
+		if (j > 2)
+			proto = c & 0xF;
+		if ((j += ifd_count_bits(c & 0xF0)) > len)
+			return 0;
+	} while (c & 0x80);
+
+	/* Historical bytes */
+	if ((j += (atr[1] & 0xF)) > len)
+		return 0;
+
+	/* If a protocol other than T0 was specified,
+	 * read check byte */
+	if (proto && j + 1 > len)
+		return 0;
+
+	return 1;
+}
+
+/*
  * Eject the card
  */
 int
