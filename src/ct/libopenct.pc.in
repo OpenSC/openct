@@ -7,5 +7,5 @@ Name: libopenct
 Description: libopenct
 Version: @VERSION@
 Libs: -L${libdir} -lopenct
-Cflags: -I${includedir}/openct
+Cflags: -I${includedir}
 
