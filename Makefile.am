@@ -1,4 +1,4 @@
-EXTRA_DIST = README 
+EXTRA_DIST = README bootstrap
 
 MAINTAINERCLEANFILES = configure Makefile.in aclocal.m4
 DISTCLEANFILES = config.log
