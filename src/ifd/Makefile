@@ -14,7 +14,7 @@ SUBDIRS	= drivers
 all:: $(LIBS) $(APPS)
 
 clean distclean::
-	rm -rf .objs *.a
+	rm -rf .objs *.a *.o $(APPS)
 
 all clean distclean::
 	for dir in $(SUBDIRS); do \
