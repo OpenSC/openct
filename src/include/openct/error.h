@@ -1,6 +1,7 @@
 /*
  * Error codes
  *
+ * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
 #ifndef IFD_ERROR_H

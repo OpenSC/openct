@@ -1,6 +1,7 @@
 /*
  * Device functions of the IFD handler library
  *
+ * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
 #ifndef IFD_DEVICE_H

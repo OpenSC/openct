@@ -1,6 +1,7 @@
 /*
  * Configuration stuff for IFD library
  *
+ * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
 #ifndef IFD_CONFIG_H
