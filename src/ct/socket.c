@@ -110,10 +110,13 @@ __ct_socket_make(ct_socket_t *sock, int op,
 	switch (op) {
 	case CT_MAKESOCK_BIND:
 #ifdef IPV6_V6ONLY
+# ifndef SOL_IPV6
+#  define SOL_IPV6 IPPROTO_IPV6
+# endif
 		if (sa->sa_family == AF_INET6) {
 			int val = 1;
 
-			setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY,
+			setsockopt(fd, SOL_IPV6, IPV6_V6ONLY,
 					&val, sizeof(val));
 		}
 #endif
