@@ -9,8 +9,6 @@
 #include <sys/types.h>
 
 typedef struct ifd_apdu {
-	unsigned char		cla, ins, p1, p2;
-	unsigned int		le, lc;
 	unsigned char *		snd_buf;
 	unsigned int		snd_len;
 	unsigned char *		rcv_buf;
