@@ -1,6 +1,6 @@
 CFLAGS	= $(DEBUG) -Wall -fPIC -I../../include
 DEBUG	= -g
-ALL	= towitoko.so
+ALL	= towitoko.so etoken.so
 
 all:	$(ALL)
 
