@@ -8,6 +8,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include <ifd/core.h>
 #include <ifd/driver.h>
 #include <ifd/device.h>

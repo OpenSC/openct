@@ -10,7 +10,7 @@ clean distclean:
 
 ctapi-%.so: ctapi.c
 	driver=`expr $@ : 'ctapi-\(.*\)\.so'`; \
-	$(CC) $(DEBUG) -shared -DDRIVER_NAME='"'$$driver'"' -o $@ $(CFLAGS) $<
+	$(CC) $(DEBUG) -shared -DDRIVER_NAME='"'$$driver'"' -o $@ $(CFLAGS) $< -L.. -lifd
 
 %.so: %.c
 	$(CC) $(DEBUG) -shared -o $@ $(CFLAGS) $<
