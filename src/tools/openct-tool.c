@@ -1,6 +1,7 @@
 /*
- * openct-util
+ * openct-tool
  *
+ * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
 #include <getopt.h>
@@ -9,28 +10,33 @@
 #include <string.h>
 #include <unistd.h>
 #include <openct/openct.h>
+#include <openct/logging.h>
 
 static void	usage(int exval);
 static void	print_reader(ct_handle *h);
+static void	print_reader_info(ct_info_t *info);
 static void	print_atr(ct_handle *);
 static void	select_mf(ct_handle *reader);
 static void	dump(unsigned char *data, size_t len);
 
 
 static unsigned int	opt_reader = 0;
+static unsigned int	opt_slot = 0;
 static const char *	opt_config = NULL;
 static int		opt_debug = 0;
 static int		opt_command = -1;
 
 enum {
-	CMD_ATR = 0,
+	CMD_LIST = 0,
+	CMD_WAIT,
+	CMD_ATR,
 	CMD_MF,
-	CMD_LIST,
 };
 
 int
 main(int argc, char **argv)
 {
+	const char	*cmd;
 	ct_handle	*h;
 	int		c;
 
@@ -52,41 +58,37 @@ main(int argc, char **argv)
 		}
 	}
 
-	if (optind + 1 == argc) {
-		const char	*cmd = argv[optind];
+	if (optind == argc)
+		usage(1);
 
-		if (!strcmp(cmd, "list"))
-			opt_command = CMD_LIST;
-		else
-		if (!strcmp(cmd, "atr"))
-			opt_command = CMD_ATR;
-		else
-		if (!strcmp(cmd, "mf"))
-			opt_command = CMD_MF;
-		else {
-			fprintf(stderr,
-				"Unknown command \"%s\"\n", cmd);
-			usage(1);
-		}
-	} else {
+	cmd = argv[optind];
+
+	if (!strcmp(cmd, "list"))
 		opt_command = CMD_LIST;
-		if (optind != argc)
-			usage(1);
+	else if (!strcmp(cmd, "atr"))
+		opt_command = CMD_ATR;
+	else if (!strcmp(cmd, "wait"))
+		opt_command = CMD_WAIT;
+	else if (!strcmp(cmd, "mf"))
+		opt_command = CMD_MF;
+	else {
+		fprintf(stderr,
+			"Unknown command \"%s\"\n", cmd);
+		usage(1);
 	}
 
 	if (opt_command == CMD_LIST) {
-		int	i = 0, num = OPENCT_MAX_READERS;
+		int	i;
 
-		printf("Available reader positions: %d\n", num);
-		for (i = 0; i < num; i++) {
-			if (!(h = ct_reader_connect(i)))
+		for (i = 0; i < OPENCT_MAX_READERS; i++) {
+			ct_info_t	info;
+
+			if (ct_reader_info(i, &info) < 0)
 				continue;
 			printf(" %2d ", i);
-			print_reader(h);
-			// ct_reader_disconnect(h);
+			print_reader_info(&info);
 		}
 
-		printf("Try option \"-h\" for help\n");
 		exit(0);
 	}
 
@@ -95,7 +97,25 @@ main(int argc, char **argv)
 		return 1;
 	}
 
-	print_atr(h);
+	if (opt_command == CMD_WAIT) {
+		int	status, rc;
+
+		while (1) {
+			if ((rc = ct_card_status(h, opt_slot, &status)) < 0) {
+				fprintf(stderr,
+					"failed to get card status: %s\n",
+					ct_strerror(rc));
+				return 1;
+			}
+			if (status)
+				break;
+			sleep(1);
+		}
+		printf("Card detected\n");
+	} else {
+		print_atr(h);
+	}
+
 	return 0;
 }
 
@@ -103,7 +123,7 @@ void
 usage(int exval)
 {
 	fprintf(stderr,
-"usage: print-atr [-d] [-f configfile] [-r reader] [command]\n"
+"usage: print-atr [-d] [-f configfile] [-r reader] command ...\n"
 "  -d   enable debugging; repeat to increase verbosity\n"
 "  -f   specify config file (default /etc/ifd.conf\n"
 "  -r   specify index of reader to use\n"
@@ -112,6 +132,7 @@ usage(int exval)
 "command: can be one of the following\n"
 " list  list all readers found\n"
 " atr   print ATR of card in selected reader\n"
+" wait  wait for card to be inserted\n"
 " mf    try to select ATR of card\n"
 );
 	exit(exval);
@@ -121,25 +142,32 @@ void
 print_reader(ct_handle *h)
 {
 	ct_info_t	info;
-	const char	*sepa;
 	int		rc;
 
 	if ((rc = ct_reader_status(h, &info)) < 0) {
 		printf("ct_reader_status: err=%d\n", rc);
-		return;
+	} else {
+		print_reader_info(&info);
 	}
-	printf("%s", info.ct_name);
+}
+
+void
+print_reader_info(ct_info_t *info)
+{
+	const char	*sepa;
+
+	printf("%s", info->ct_name);
 
 	sepa = " (";
-	if (info.ct_slots != 1) {
-		printf("%s%d slots", sepa, info.ct_slots);
+	if (info->ct_slots != 1) {
+		printf("%s%d slots", sepa, info->ct_slots);
 		sepa = ", ";
 	}
-	if (info.ct_display) {
+	if (info->ct_display) {
 		printf("%sdisplay", sepa);
 		sepa = ", ";
 	}
-	if (info.ct_keypad) {
+	if (info->ct_keypad) {
 		printf("%skeypad", sepa);
 		sepa = ", ";
 	}
