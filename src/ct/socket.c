@@ -277,6 +277,7 @@ ct_socket_accept(ct_socket_t *sock)
 		return NULL;;
 	}
 
+	svc->use_network_byte_order = sock->use_network_byte_order;
 	svc->events = POLLIN;
 	svc->fd = fd;
 
