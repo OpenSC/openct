@@ -382,12 +382,17 @@ src/tools/Makefile
 
 AC_CREATE_STDINT_H(src/include/openct/types.h)
 
+A=`eval echo ${prefix}` ; A=`eval echo ${A}`
+B=`eval echo ${bindir}` ; B=`eval echo ${B}`
+C=`eval echo ${sysconfdir}` ; C=`eval echo ${C}`
+
 echo ""
 echo "OpenCT has been configured with the following options"
 
 echo ""
-echo "User binaries:       ${bindir}"
-echo "Configuration files: ${sysconfdir}"
+echo "Version:             ${PACKAGE_VERSION}"
+echo "User binaries:       ${B}"
+echo "Configuration files: ${C}"
 
 echo ""
 echo "Host:                ${host}"
