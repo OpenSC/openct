@@ -10,8 +10,8 @@ card readers. The idea was to provide all the usualy stuff (T=0, T=1,
 serial vs USB device handling, etc) in a single place, and reduce
 driver writing to interaction with the device itself.
 
-I added interface bindings for CTAPI (tested) and PCSC (untested),
-but ended up writing my own resource manager.
+I added interface bindings for CTAPI and PCSC, both of which are broken
+at the moment because I ended up writing my own resource manager.
 
 All of this is still work in progress, but I hope to have OpenCT
 support in OpenSC very soon.
@@ -23,23 +23,79 @@ kaan		for Kobil readers; tested with Kobil Kaan Professional
 towitoko	Towitoko Chipdrives; tested with the Chipdrive micro
 
 
+How everything works
+====================
 
-Configuring libifd
+OpenCT comes with the following components
+
+ifdhandler
+	This is a standalone program that will manage a
+	single reader. It is invoked with the name of 
+	a driver and a device, and a socket path. It will
+	listen on the socket and service requests for the
+	reader device.
+
+	If the -H flag was specified in addition, it will
+	assume the device is a hotplug device, and will
+	monitor it for detach events (currently supported
+	for USB only). When the device is detached, ifdhandler
+	will exit.
+
+ifdmaster
+	This is the master process. At startup, it will
+	start ifdhandler processes for all devices
+	listed in the configuration file, as well as all
+	hotplug devices it finds by scanning the system.
+
+	It also opens a master socket on which it listens
+	for control messages. The only control message
+	currently implemented is "attach", which informs
+	ifdmaster about a new hotplug device attached.
+	If it finds this is a supported card reader,
+	ifdmaster will allocate a socket for it, and
+	fork ifdhandler.
+
+openct-control
+	This is the utility used to send control messages
+	to ifdmaster. To inform ifdmaster of a newly
+	attached eToken, for instance, invoke it like this:
+
+	openct-control attach usb 529/50c/1 /proc/bus/usb/001/002
+
+	(If anyone tells me how to efficiently monitor
+	the USB subsystem for attach events, let me know)
+
+libopenct
+	This is the library that client application use
+	to talk to card readers managed by OpenCT. Sorry,
+	no manuals so far. For a very sketchy example,
+	see openct-tool.
+
+
+Configuring OpenCT
 ==================
 
 libifd supports both statically configured readers as well as
 USB hotplugging (PCMCIA isn't supported yet, because I don't have
 a PCMCIA reader).
 
-To configure libifd, copy the sample ifd.conf file to /etc/ifd.conf
+To configure OpenCT, copy the sample openct.conf file to /etc/openct.conf
 and edit it.
 
 To configure a reader statically (you do this for serial readers),
 you need statements like this:
 
-	reader  kaan            /dev/ttyS0;
-	reader	towitoko	/dev/ttyS1;
+	reader {
+		driver	= towitoko;
+		device	= /dev/ttyS0;
+	};
 
-To support USB tokens and the like, simply use "hotplug"
-statements that define which driver should be used for a
-specific USB device ID.
+To support USB tokens and the like, you need to add lists of
+which driver supports what devices:
+
+	driver  etoken {
+		ids = {
+			usb:0529/050c,
+			# ... more ids follow
+		};
+	};
