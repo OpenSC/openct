@@ -60,7 +60,12 @@ print_atr(const char *device)
 	if (!(reader = ifd_open(opt_driver, device)))
 		exit(1);
 
-	printf("Detected %s\n", reader->name);
+	printf("Detected %s (%d slot%s%s%s)\n",
+		reader->name,
+		reader->nslots,
+		(reader->nslots == 1)? "" : "s",
+		(reader->flags & IFD_READER_KEYPAD)? ", keypad" : "",
+		(reader->flags & IFD_READER_DISPLAY)? ", display" : "");
 
 	if (ifd_activate(reader) < 0)
 		exit(1);
