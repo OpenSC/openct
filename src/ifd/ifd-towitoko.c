@@ -274,6 +274,55 @@ twt_change_parity(ifd_reader_t *reader, int parity)
 }
 
 /*
+ * Send command to IFD
+ */
+static int
+twt_send(ifd_reader_t *reader, unsigned int dad,
+		const void *buffer, size_t len)
+{
+	unsigned char	cmd[] = { 0x6F, 0x00, 0x05, 0x00 };
+	unsigned int	count;
+	ifd_device_t	*dev;
+
+	if (!(dev = reader->device))
+		return -1;
+
+	DEBUG("data=%s", ifd_hexdump(buffer, len));
+	while (len) {
+		if ((count = len) > 255)
+			count = 255;
+
+		cmd[1] = count;
+		twt_send_checksum(cmd, 3);
+
+		if (ifd_device_send(dev, cmd, 4) < 0
+		 || ifd_device_send(dev, buffer, count) < 0)
+			return -1;
+
+		(caddr_t) buffer += count;
+		len -= count;
+	}
+
+	return 0;
+}
+
+/*
+ * Receive data from IFD
+ */
+static int
+twt_recv(ifd_reader_t *reader, unsigned int dad,
+		void *buffer, size_t len, long timeout)
+{
+	int	n;
+
+	n = ifd_device_recv(reader->device, buffer, len, timeout);
+	if (n < 0)
+		return -1;
+	DEBUG("data=%s", ifd_hexdump(buffer, len));
+	return n;
+}
+
+/*
  * Turn LED on/off
  */
 int
@@ -374,6 +423,8 @@ static struct ifd_driver_ops	towitoko_driver = {
 	deactivate:	twt_deactivate,
 	card_status:	twt_card_status,
 	card_reset:	twt_card_reset,
+	send:		twt_send,
+	recv:		twt_recv,
 };
 
 void

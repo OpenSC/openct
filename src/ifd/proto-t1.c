@@ -159,7 +159,7 @@ t1_get_param(ifd_protocol_t *prot, int type, long *result)
  * Send an APDU through T=1
  */
 static int
-t1_transceive(ifd_protocol_t *prot, unsigned char nad, ifd_apdu_t *apdu)
+t1_transceive(ifd_protocol_t *prot, unsigned char dad, ifd_apdu_t *apdu)
 {
 	t1_data_t	*t1 = (t1_data_t *) prot;
 	ifd_apdu_t	block;
@@ -182,7 +182,7 @@ t1_transceive(ifd_protocol_t *prot, unsigned char nad, ifd_apdu_t *apdu)
 	block.rcv_buf = rdata;
 	block.rcv_len = sizeof(rdata);
 
-	sdata[0] = nad;
+	sdata[0] = (dad << 4) | IFD_DAD_IFD;
 
 	/* Send the first block */
 	last_send = t1_build(&block, t1, T1_I_BLOCK, &sbuf);
@@ -413,7 +413,7 @@ t1_verify_checksum(t1_data_t *t1, ifd_apdu_t *apdu)
 int
 t1_xcv(t1_data_t *t1, ifd_apdu_t *apdu)
 {
-	ifd_device_t	*dev = t1->base.device;
+	ifd_device_t	*dev = t1->base.reader->device;
 	struct timeval	now, end;
 	unsigned int	n;
 	long		timeout;

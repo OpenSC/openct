@@ -107,11 +107,6 @@ ifd_new_reader(ifd_device_t *dev, const char *driver_name)
 		return NULL;
 	}
 
-	if (ifd_set_protocol(reader, IFD_PROTOCOL_DEFAULT) < 0) {
-		free(reader);
-		return NULL;
-	}
-
 	return reader;
 }
 
@@ -119,23 +114,34 @@ ifd_new_reader(ifd_device_t *dev, const char *driver_name)
  * Select a different protocol for this reader
  */
 int
-ifd_set_protocol(ifd_reader_t *reader, int prot)
+ifd_set_protocol(ifd_reader_t *reader, unsigned int idx, int prot)
 {
 	const ifd_driver_t *drv = reader->driver;
+	ifd_slot_t *slot;
 	ifd_protocol_t *p;
 
+	if (idx > reader->nslots)
+		return -1;
+
 	if (drv && drv->ops && drv->ops->set_protocol)
-		return drv->ops->set_protocol(reader, prot);
+		return drv->ops->set_protocol(reader, idx, prot);
 
 	if (prot == IFD_PROTOCOL_DEFAULT)
 		prot = drv->ops->default_protocol;
-	p = ifd_protocol_by_id(prot);
-	if (p == 0) {
-		ifd_error("unknown protocol id %u\n", prot);
+
+	slot = &reader->slot[idx];
+	if (slot->proto && slot->proto->ops->id == prot)
+		return 0;
+
+	if (!(p = ifd_protocol_new(prot, reader, slot->dad)))
 		return -1;
+
+	if (slot->proto) {
+		ifd_protocol_free(slot->proto);
+		slot->proto = NULL;
 	}
 
-	reader->proto = p;
+	slot->proto = p;
 	return 0;
 }
 
@@ -210,6 +216,11 @@ ifd_card_reset(ifd_reader_t *reader, unsigned int idx, void *atr, size_t size)
 
 	slot = &reader->slot[idx];
 	slot->atr_len = 0;
+
+	if (slot->proto) {
+		ifd_protocol_free(slot->proto);
+		slot->proto = NULL;
+	}
 
 	/* Serial devices need special frobbing */
 	if (dev->type != IFD_DEVICE_TYPE_SERIAL
@@ -301,6 +312,10 @@ ifd_card_reset(ifd_reader_t *reader, unsigned int idx, void *atr, size_t size)
 	if (atr)
 		memcpy(atr, slot->atr, count);
 
+	slot->proto = ifd_protocol_select(slot, reader, IFD_PROTOCOL_DEFAULT);
+	if (slot->proto == NULL)
+		ifd_error("Protocol selection failed");
+
 	return count;
 }
 
@@ -327,13 +342,56 @@ ifd_recv_atr(ifd_device_t *dev, ifd_buf_t *bp,
 }
 
 /*
- * Send/receive APDU
+ * Send/receive APDU to the ICC
  */
 int
-ifd_transceive(ifd_reader_t *reader, int dad, ifd_apdu_t *apdu)
+ifd_icc_command(ifd_reader_t *reader, unsigned int idx, ifd_apdu_t *apdu)
 {
-	ifd_error("ifd_transceive: not yet implemented");
-	return -1;
+	ifd_slot_t	*slot;
+
+	if (idx > reader->nslots)
+		return -1;
+
+	/* XXX handle driver specific methods of transmitting
+	 * commands */
+
+	slot = &reader->slot[idx];
+	if (slot->proto == NULL) {
+		ifd_error("No communication protocol selected");
+		return -1;
+	}
+
+	return ifd_protocol_transceive(slot->proto, slot->dad, apdu);
+}
+
+/*
+ * Transfer/receive APDU using driver specific mechanisms
+ * This functions is called from the protocol (T=0,1,...) layer
+ */
+int
+ifd_send_command(ifd_protocol_t *prot, const void *buffer, size_t len)
+{
+	const ifd_driver_t *drv;
+
+	if (!prot || !prot->reader
+	 || !(drv = prot->reader->driver)
+	 || !drv->ops || !drv->ops->send)
+		return -1;
+
+	return drv->ops->send(prot->reader, prot->dad, buffer, len);
+}
+
+int
+ifd_recv_response(ifd_protocol_t *prot, void *buffer, size_t len, long timeout)
+{
+	const ifd_driver_t *drv;
+
+	if (!prot || !prot->reader
+	 || !(drv = prot->reader->driver)
+	 || !drv->ops || !drv->ops->recv)
+		return -1;
+
+	return drv->ops->recv(prot->reader, prot->dad, buffer, len, timeout);
 }
 
 /*

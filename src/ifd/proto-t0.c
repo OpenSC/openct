@@ -24,9 +24,9 @@ enum {
 	IDLE, SENDING, RECEIVING, CONFUSED
 };
 
-static int	t0_xcv(ifd_device_t *, t0_data_t *, ifd_apdu_t *);
-static int	t0_send(ifd_device_t *, ifd_buf_t *, int);
-static int	t0_recv(ifd_device_t *, ifd_buf_t *, int, long);
+static int	t0_xcv(ifd_protocol_t *, ifd_apdu_t *);
+static int	t0_send(ifd_protocol_t *, ifd_buf_t *, int);
+static int	t0_recv(ifd_protocol_t *, ifd_buf_t *, int, long);
 static int	t0_resynch(t0_data_t *);
 
 /*
@@ -104,10 +104,9 @@ t0_get_param(ifd_protocol_t *prot, int type, long *result)
  * Send an APDU through T=0
  */
 static int
-t0_transceive(ifd_protocol_t *prot, unsigned char nad, ifd_apdu_t *apdu)
+t0_transceive(ifd_protocol_t *prot, ifd_apdu_t *apdu)
 {
 	t0_data_t	*t0 = (t0_data_t *) prot;
-	ifd_device_t	*dev = prot->device;
 	ifd_apdu_t	tpdu;
 	unsigned char	sdata[5];
 	unsigned int	cla, cse, lc, le;
@@ -125,13 +124,19 @@ t0_transceive(ifd_protocol_t *prot, unsigned char nad, ifd_apdu_t *apdu)
 	tpdu = *apdu;
 
 	/* Get class byte */
-	cla = ((unsigned char *) apdu->rcv_buf)[0];
+	cla = ((unsigned char *) tpdu.snd_buf)[0];
 
 	/* Check the APDU case */
 	cse = ifd_apdu_case(&tpdu, &lc, &le);
 
 	switch (cse) {
 	case IFD_APDU_CASE_1:
+		/* Include a NUL lc byte */
+		memcpy(sdata, tpdu.snd_buf, 4);
+		sdata[4] = 0;
+		tpdu.snd_buf = sdata;
+		tpdu.snd_len = 5;
+		break;
 	case IFD_APDU_CASE_2S:
 	case IFD_APDU_CASE_3S:
 		break;
@@ -153,7 +158,7 @@ t0_transceive(ifd_protocol_t *prot, unsigned char nad, ifd_apdu_t *apdu)
 		t0->state = SENDING;
 		tpdu.rcv_len = 2;
 
-		if (t0_xcv(dev, t0, &tpdu) < 0)
+		if (t0_xcv(prot, &tpdu) < 0)
 			return -1;
 
 		/* Can this happen? */
@@ -167,16 +172,10 @@ t0_transceive(ifd_protocol_t *prot, unsigned char nad, ifd_apdu_t *apdu)
 
 			sw = (unsigned char *) tpdu.rcv_buf;
 
-			sdata[0] = cla;
-			sdata[1] = 0xC0;
-			sdata[2] = 0x00;
-			sdata[3] = 0x00;
-			sdata[4] = le;
-
-			if (sw[0] == 0x61) {
+			if (sw[0] == 0x61 && sw[1]) {
 				/* additional length info */
 				if (sw[1] != 0 && sw[1] < le)
-					sdata[4] = sw[1];
+					le = sw[1];
 			} else if ((sw[0] & 0xF0) == 0x60) {
 				/* Command not accepted, do not
 				 * retrieve response
@@ -187,6 +186,13 @@ t0_transceive(ifd_protocol_t *prot, unsigned char nad, ifd_apdu_t *apdu)
 			/* Transmit a Get Response command */
 			tpdu.snd_buf = sdata;
 			tpdu.snd_len = 5;
+			tpdu.rcv_len = le + 2;
+
+			sdata[0] = cla;
+			sdata[1] = 0xC0;
+			sdata[2] = 0x00;
+			sdata[3] = 0x00;
+			sdata[4] = le;
 		} else {
 			goto done;
 		}
@@ -194,7 +200,7 @@ t0_transceive(ifd_protocol_t *prot, unsigned char nad, ifd_apdu_t *apdu)
 
 	t0->state = RECEIVING;
 	tpdu.rcv_len = le + 2;
-	if (t0_xcv(dev, t0, &tpdu) < 0)
+	if (t0_xcv(prot, &tpdu) < 0)
 		return -1;
 
 done:	t0->state = IDLE;
@@ -203,67 +209,29 @@ done:	t0->state = IDLE;
 }
 
 static int
-t0_xcv(ifd_device_t *dev, t0_data_t *t0, ifd_apdu_t *apdu)
+t0_xcv(ifd_protocol_t *prot, ifd_apdu_t *apdu)
 {
+	t0_data_t	*t0 = (t0_data_t *) prot;
 	ifd_buf_t	sbuf, rbuf;
 	unsigned char	sdata[5];
 	unsigned int	ins, lc, le;
 	unsigned int	null_count = 0;
 
-	/* Initialize send/recv buffers.
-	 * The receive buffer is initialized to exactly the number of
-	 * bytes we expect to receive (le + status word)
-	 */
-	if (apdu->snd_len <= 5) {
-		/* The APDU may be short (no Le), hence the need to
-		 * clear the buffer */
-		memset(sdata, 0, sizeof(sdata));
-		memcpy(sdata, apdu->snd_buf, apdu->snd_len);
-
-		/* Extract lc and le */
-		lc = 0;
-		le = sdata[4];
-
-		/* Depending on the APDU case, an Le of 0 may
-		 * mean 256 in fact.
-		 */
-		if (le == 0 && apdu->rcv_len >= 258)
-			le = 256;
-
-		t0->state = RECEIVING;
-	} else {
-		memcpy(sdata, apdu->snd_buf, 5);
-
-		/* Fill send buffer */
-		lc = apdu->snd_len - 5;
-		le = 0;
-
-		t0->state = SENDING;
-	}
-
 	/* Set up the send buffer */
-	ifd_buf_init(&sbuf, apdu->snd_buf, lc);
-
-	/* Set up the receive buffer for Le + status word */
-	if (le + 2 > apdu->rcv_len) {
-		ifd_error("%s: recv buffer too small (le=%u)",
-				__FUNCTION__, le);
-		t0->state = IDLE;
-		return -1;
-	}
-	ifd_buf_init(&rbuf, apdu->rcv_buf, le + 2);
+	ifd_buf_set(&sbuf, apdu->snd_buf, apdu->snd_len);
+	ifd_buf_init(&rbuf, apdu->rcv_buf, apdu->rcv_len);
 
 	/* Get the INS */
-	ins = sdata[1];
+	ins = sbuf.base[1];
 
-	if (ifd_device_send(dev, sdata, 5) < 0)
+	if (t0_send(prot, &sbuf, 5) < 0)
 		goto failed;
 
 	while (1) {
 		unsigned char	byte;
 		int		count;
 
-		if (ifd_device_recv(dev, &byte, 1, t0->timeout) < 0)
+		if (ifd_recv_response(prot, &byte, 1, t0->timeout) < 0)
 			goto failed;
 
 		/* Null byte to extend wait time */
@@ -277,7 +245,7 @@ t0_xcv(ifd_device_t *dev, t0_data_t *t0, ifd_apdu_t *apdu)
 		if ((byte & 0xF0) == 0x60 || (byte & 0xF0) == 0x90) {
 			/* Store SW1, then get SW2 and store it */
 			if (!ifd_buf_put(&rbuf, &byte, 1)
-			 || t0_recv(dev, &rbuf, 1, t0->timeout) < 0)
+			 || t0_recv(prot, &rbuf, 1, t0->timeout) < 0)
 				goto failed;
 
 			break;
@@ -302,11 +270,13 @@ t0_xcv(ifd_device_t *dev, t0_data_t *t0, ifd_apdu_t *apdu)
 		}
 
 		if (t0->state == SENDING) {
-			if (t0_send(dev, &sbuf, count) < 0)
+			if (t0_send(prot, &sbuf, count) < 0)
 				goto failed;
 		} else {
-			if (t0_recv(dev, &rbuf, count, t0->timeout) < 0)
+			if (t0_recv(prot, &rbuf, count, t0->timeout) < 0)
 				goto failed;
+			if (ifd_buf_tailroom(&rbuf) == 0)
+				break;
 		}
 	}
 
@@ -318,26 +288,29 @@ failed:	t0->state = CONFUSED;
 }
 
 int
-t0_send(ifd_device_t *dev, ifd_buf_t *bp, int count)
+t0_send(ifd_protocol_t *prot, ifd_buf_t *bp, int count)
 {
-	int	n;
+	int	n, avail;
 
+	avail = ifd_buf_avail(bp);
 	if (count < 0)
-		count = ifd_buf_avail(bp);
-	n = ifd_device_send(dev, ifd_buf_head(bp), count);
+		count = avail;
+	if (count > avail || !avail)
+		return -1;
+	n = ifd_send_command(prot, ifd_buf_head(bp), count);
 	if (n >= 0)
-		ifd_buf_get(bp, NULL, n);
+		ifd_buf_get(bp, NULL, count);
 	return n;
 }
 
 int
-t0_recv(ifd_device_t *dev, ifd_buf_t *bp, int count, long timeout)
+t0_recv(ifd_protocol_t *prot, ifd_buf_t *bp, int count, long timeout)
 {
 	int	n;
 
 	if (count < 0)
 		count = ifd_buf_tailroom(bp);
-	n = ifd_device_recv(dev, ifd_buf_tail(bp), count, timeout);
+	n = ifd_recv_response(prot, ifd_buf_tail(bp), count, timeout);
 	if (n >= 0)
 		ifd_buf_put(bp, NULL, count);
 	return n;

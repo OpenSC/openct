@@ -31,10 +31,10 @@ typedef struct ifd_device	ifd_device_t;
 typedef union ifd_device_params	ifd_device_params_t;
 
 enum {
-	IFD_PROTOCOL_DEFAULT = 0,
-	IFD_PROTOCOL_T0 = 1,
+	IFD_PROTOCOL_DEFAULT = -1,
+	IFD_PROTOCOL_T0 = 0,
 	IFD_PROTOCOL_T1,
-	IFD_PROTOCOL_2WIRE,
+	IFD_PROTOCOL_2WIRE = 16,
 	IFD_PROTOCOL_3WIRE,
 	IFD_PROTOCOL_I2C,
 	IFD_PROTOCOL_TLP,		/* older Gemplus protocool */
@@ -53,6 +53,7 @@ typedef struct ifd_driver {
 typedef struct ifd_slot {
 	unsigned int		handle;
 	int			status;
+	unsigned char		dad;	/* address when using T=1 */
 	unsigned int		atr_len;
 	unsigned char		atr[IFD_MAX_ATR_LEN];
 
@@ -91,9 +92,10 @@ enum {
 };
 
 enum {
-	IFD_DAD_ICC1 = 0,
-	IFD_DAD_IFD = 1,
-	IFD_DAD_ICC2 = 2,
+	IFD_DAD_HOST = 0,
+	IFD_DAD_IFD,
+	IFD_DAD_ICC1,
+	IFD_DAD_ICC2,
 };
 
 #define IFD_CARD_PRESENT	0x0001
@@ -107,19 +109,23 @@ extern void			ifd_detach(ifd_reader_t *);
 extern int			ifd_activate(ifd_reader_t *);
 extern int			ifd_deactivate(ifd_reader_t *);
 
-extern int			ifd_set_protocol(ifd_reader_t *, int);
-extern int			ifd_set_protocol_param(ifd_reader_t *,
-					int, long);
-extern int			ifd_transceive(ifd_reader_t *, int,
+extern int			ifd_set_protocol(ifd_reader_t *reader,
+					unsigned int slot,
+					int id);
+extern int			ifd_icc_command(ifd_reader_t *reader,
+					unsigned int slot,
 					ifd_apdu_t *);
-extern int			ifd_card_status(ifd_reader_t *,
-					unsigned int, int *);
-extern int			ifd_card_reset(ifd_reader_t *,
-					unsigned int,
-					void *, size_t);
+extern int			ifd_card_status(ifd_reader_t *reader,
+					unsigned int slot,
+					int *status);
+extern int			ifd_card_reset(ifd_reader_t *reader,
+					unsigned int slot,
+					void *atr_buf,
+					size_t atr_len);
 
-extern int			ifd_apdu_case(const ifd_apdu_t *,
-					unsigned int *, unsigned int *);
+extern int			ifd_apdu_case(const ifd_apdu_t *apdu,
+					unsigned int *lc,
+					unsigned int *le);
 
 extern struct ifd_protocol_ops *ifd_protocol_by_id(int);
 extern struct ifd_protocol_ops *ifd_protocol_by_name(const char *);

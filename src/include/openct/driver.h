@@ -20,8 +20,17 @@ struct ifd_driver_ops {
 	int		(*card_status)(ifd_reader_t *, int, int *);
 	int		(*card_reset)(ifd_reader_t *, int, void *, size_t);
 
-	int		(*set_protocol)(ifd_reader_t *, int);
-	int		(*transceive)(ifd_reader_t *, ifd_apdu_t *);
+	int		(*set_protocol)(ifd_reader_t *, int, int);
+
+	int		(*send)(ifd_reader_t *reader,
+				unsigned int dad,
+				const void *buffer,
+				size_t len);
+	int		(*recv)(ifd_reader_t *reader,
+				unsigned int dad,
+				void *buffer,
+				size_t len,
+				long timeout);
 };
 
 extern void		ifd_driver_register(const char *,

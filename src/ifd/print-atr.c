@@ -12,6 +12,7 @@
 
 static void	usage(int exval);
 static void	print_atr(const char *);
+static void	select_mf(ifd_reader_t *reader);
 
 static const char *	opt_driver = "auto";
 
@@ -78,7 +79,34 @@ print_atr(const char *device)
 		for (m = 0; m < n; m++)
 			printf(" %02x", atr[m]);
 		printf("\n");
+
+		select_mf(reader);
 	}
 
 	sleep(1);
+}
+
+void
+select_mf(ifd_reader_t *reader)
+{
+	unsigned char	cmd[] = { 0x00, 0xA4, 0x00, 0x00, 0x02, 0x3f, 0x00, 0xfe };
+	unsigned char	res[256];
+	ifd_apdu_t	apdu;
+	int		m, n;
+
+	apdu.snd_buf = cmd;
+	apdu.snd_len = sizeof(cmd);
+	apdu.rcv_buf = res;
+	apdu.rcv_len = sizeof(res);
+
+	if (ifd_icc_command(reader, 0, &apdu) < 0) {
+		fprintf(stderr, "card communication failure\n");
+		return;
+	}
+
+	printf("Selected MF, response:\n");
+	n = apdu.rcv_len;
+	for (m = 0; m < n; m++)
+		printf(" %02x", res[m]);
+	printf("\n");
 }

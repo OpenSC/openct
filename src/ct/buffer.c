@@ -17,6 +17,13 @@ ifd_buf_init(ifd_buf_t *bp, void *mem, size_t len)
 }
 
 void
+ifd_buf_set(ifd_buf_t *bp, void *mem, size_t len)
+{
+	ifd_buf_init(bp, mem, len);
+	bp->tail = len;
+}
+
+void
 ifd_buf_clear(ifd_buf_t *bp)
 {
 	bp->head = bp->tail = 0;
@@ -27,7 +34,8 @@ ifd_buf_get(ifd_buf_t *bp, void *mem, size_t len)
 {
 	if (len > bp->tail - bp->head)
 		return -1;
-	memcpy(mem, bp->base + bp->head, len);
+	if (mem)
+		memcpy(mem, bp->base + bp->head, len);
 	bp->head += len;
 	return len;
 }
@@ -37,7 +45,8 @@ ifd_buf_put(ifd_buf_t *bp, const void *mem, size_t len)
 {
 	if (len > bp->size - bp->tail)
 		return -1;
-	memcpy(bp->base + bp->tail, mem, len);
+	if (mem)
+		memcpy(bp->base + bp->tail, mem, len);
 	bp->tail += len;
 	return len;
 }
