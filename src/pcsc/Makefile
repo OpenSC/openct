@@ -8,6 +8,8 @@ all:: $(LIBS) $(APPS)
 clean distclean::
 	rm -rf .sobjs $(LIBS)
 
+install: ;
+
 ifdhandler.so: $(addprefix .sobjs/,$(OBJS))
 	ld -shared -o $@ $(addprefix .sobjs/,$(OBJS)) -L../../lib -lifd
 

@@ -14,11 +14,17 @@ LIBOBJS	= init.o manager.o device.o reader.o driver.o \
 IFDOBJS	= ifdhandler.o process.o locks.o
 SYSDEP	= linux.o
 LINK	= -L../../lib -lopenct -ldl -lusb
+LIBDIR	= $(DESTDIR)/usr/lib
 
 all:: $(LIBS) $(APPS)
 
 clean distclean::
 	rm -rf .objs .sobjs *.so *.a *.o $(APPS)
+
+install:
+	mkdir -p $(LIBDIR)
+	install -m 444 libifd.a $(LIBDIR)
+	install -m 555 libifd.so $(LIBDIR)
 
 libifd.a: $(addprefix .objs/,$(LIBOBJS))
 	ar cr $@ $(addprefix .objs/,$(LIBOBJS))
