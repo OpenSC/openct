@@ -94,6 +94,8 @@ extern ifd_reader_t *		ifd_open(const char *driver_name,
 extern void			ifd_close(ifd_reader_t *);
 extern int			ifd_attach(ifd_reader_t *);
 extern void			ifd_detach(ifd_reader_t *);
+extern ifd_reader_t *		ifd_reader_by_handle(unsigned int handle);
+extern ifd_reader_t *		ifd_reader_by_index(unsigned int index);
 
 extern int			ifd_activate(ifd_reader_t *);
 extern int			ifd_deactivate(ifd_reader_t *);
