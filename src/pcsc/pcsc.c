@@ -69,6 +69,9 @@ static pthread_mutex_t ifdh_context_mutex[IFDH_MAX_READERS] =
 };
 #endif
 
+/* PC/SC Lite hotplugging base channel */
+#define HOTPLUG_BASE_PORT	0x200000
+
 RESPONSECODE
 IFDHCreateChannel(DWORD Lun, DWORD Channel)
 {
@@ -78,10 +81,14 @@ IFDHCreateChannel(DWORD Lun, DWORD Channel)
 
 	ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
 	slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
+
 #ifdef HAVE_PTHREAD
 	pthread_mutex_lock(&ifdh_context_mutex[ctn]);
 #endif
 	if (ifdh_context[ctn][slot] == NULL) {
+		if (Channel >= HOTPLUG_BASE_PORT) {
+			Channel -= HOTPLUG_BASE_PORT;
+		}
 		/* We don't care that much about IFDH CHANNELID handling */
 		if (Channel > IFDH_MAX_READERS) {
 			pn = 0;
@@ -162,6 +169,7 @@ IFDHGetCapabilities(DWORD Lun, DWORD Tag, PDWORD Length, PUCHAR Value)
 
 	ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
 	slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
+
 #ifdef HAVE_PTHREAD
 	pthread_mutex_lock(&ifdh_context_mutex[ctn]);
 #endif
@@ -220,6 +228,7 @@ IFDHSetProtocolParameters(DWORD Lun, DWORD Protocol,
 
 	ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
 	slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
+
 #ifdef HAVE_PTHREAD
 	pthread_mutex_lock(&ifdh_context_mutex[ctn]);
 #endif
@@ -280,6 +289,7 @@ IFDHPowerICC(DWORD Lun, DWORD Action, PUCHAR Atr, PDWORD AtrLength)
 
 	ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
 	slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
+
 #ifdef HAVE_PTHREAD
 	pthread_mutex_lock(&ifdh_context_mutex[ctn]);
 #endif
@@ -384,6 +394,7 @@ IFDHTransmitToICC(DWORD Lun, SCARD_IO_HEADER SendPci,
 
 	ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
 	slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
+
 #ifdef HAVE_PTHREAD
 	pthread_mutex_lock(&ifdh_context_mutex[ctn]);
 #endif
@@ -428,6 +439,7 @@ IFDHControl(DWORD Lun, PUCHAR TxBuffer,
 
 	ctn = ((unsigned short) (Lun >> 16)) % IFDH_MAX_READERS;
 	slot = ((unsigned short) (Lun & 0x0000FFFF)) % IFDH_MAX_SLOTS;
+
 #ifdef HAVE_PTHREAD
 	pthread_mutex_lock(&ifdh_context_mutex[ctn]);
 #endif
