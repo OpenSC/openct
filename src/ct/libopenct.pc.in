@@ -7,6 +7,6 @@ sysincludedir=@sysincludedir@
 Name: libopenct
 Description: libopenct
 Version: @VERSION@
-Libs: -L${libdir} -lopenct
+Libs: -L${libdir} @LIBS@ -lopenct
 Cflags: -I${sysincludedir} -I${includedir}
 
