@@ -14,7 +14,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#include <assert.h>
+#include <fcntl.h>
 
 #include <openct/ifd.h>
 #include <openct/conf.h>
@@ -28,6 +28,7 @@
 
 static int	opt_debug = 0;
 static int	opt_hotplug = 0;
+static int	opt_foreground = 0;
 static int	opt_reader = -1;
 
 static void	usage(int exval);
@@ -49,10 +50,13 @@ main(int argc, char **argv)
 	/* Make sure the mask is good */
 	umask(033);
 
-	while ((c = getopt(argc, argv, "dHhr:s")) != -1) {
+	while ((c = getopt(argc, argv, "dFHhr:s")) != -1) {
 		switch (c) {
 		case 'd':
 			opt_debug++;
+			break;
+		case 'F':
+			opt_foreground = 1;
 			break;
 		case 'H':
 			opt_hotplug = 1;
@@ -72,6 +76,7 @@ main(int argc, char **argv)
 
 	if (optind < argc - 2 || optind > argc - 1)
 		usage(1);
+
 	driver = argv[optind++];
 	if (optind < argc)
 		device = argv[optind++];
@@ -89,6 +94,33 @@ main(int argc, char **argv)
 	if (status == NULL) {
 		ct_error("too many readers, no reader slot available");
 		return 1;
+	}
+
+	/* Become a daemon if needed - we do this after allocating the
+	 * slot so openct-control can synchronize slot allocation */
+	if (!opt_foreground) {
+		pid_t	pid;
+		int	fd;
+
+		if ((pid = fork()) < 0) {
+			ct_error("fork: %m");
+			return 1;
+		}
+
+		if (pid) {
+			status->ct_pid = pid;
+			return 0;
+		}
+
+		if ((fd = open("/dev/null", O_RDWR)) >= 0) {
+			dup2(fd, 0);
+			dup2(fd, 1);
+			dup2(fd, 2);
+			close(fd);
+		}
+
+		ct_log_destination("@syslog");
+		setsid();
 	}
 
 	/* Create reader */
