@@ -1,5 +1,7 @@
 # Process this file with automake to create Makefile.in
 
+libdir = @libdir@/openct
+
 MAINTAINERCLEANFILES = Makefile.in
 
 INCLUDES = @CPPFLAGS@ @CFLAGS_PCSC@
@@ -10,5 +12,6 @@ endif
 
 openct_ifd_la_SOURCES = pcsc.c
 openct_ifd_la_LDFLAGS = -module -avoid-version
+openct_ifd_la_LIBADD = ../ct/libopenct.la ../ifd/libifd.la
 
 noinst_HEADERS = ifdhandler.h
