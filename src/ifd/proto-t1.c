@@ -12,6 +12,10 @@
 
 #include "internal.h"
 
+#define DEBUG(fmt, args...) \
+	do { ifd_debug("%s: "  fmt, __FUNCTION__ , ##args); } while (0)
+		
+
 typedef struct t1_apdu {
 	unsigned char	nad;
 	unsigned char	pcb;
@@ -73,8 +77,8 @@ static unsigned int	t1_seq(unsigned char);
 static unsigned	int	t1_build(ifd_apdu_t *, t1_data_t *,
 				unsigned char, ifd_buf_t *);
 static void		t1_compute_checksum(t1_data_t *, ifd_apdu_t *);
-static int		t1_verify_checksum(t1_data_t *, ifd_apdu_t *);
-static int		t1_xcv(t1_data_t *, ifd_apdu_t *);
+static int		t1_verify_checksum(t1_data_t *, unsigned char *, unsigned int);
+static int		t1_xcv(ifd_protocol_t *, ifd_apdu_t *);
 
 /*
  * Set default T=1 protocol parameters
@@ -82,6 +86,7 @@ static int		t1_xcv(t1_data_t *, ifd_apdu_t *);
 static void
 t1_set_defaults(t1_data_t *t1)
 {
+	t1->retries = 3;
 	t1->timeout = 3000;
 	t1->ifsc    = 32;
 	t1->ifsd    = 32;
@@ -159,7 +164,7 @@ t1_get_param(ifd_protocol_t *prot, int type, long *result)
  * Send an APDU through T=1
  */
 static int
-t1_transceive(ifd_protocol_t *prot, unsigned char dad, ifd_apdu_t *apdu)
+t1_transceive(ifd_protocol_t *prot, ifd_apdu_t *apdu)
 {
 	t1_data_t	*t1 = (t1_data_t *) prot;
 	ifd_apdu_t	block;
@@ -174,7 +179,7 @@ t1_transceive(ifd_protocol_t *prot, unsigned char dad, ifd_apdu_t *apdu)
 	retries = t1->retries;
 
 	/* Initialize send/recv buffer */
-	ifd_buf_init(&sbuf, apdu->snd_buf, apdu->snd_len);
+	ifd_buf_set(&sbuf, apdu->snd_buf, apdu->snd_len);
 	ifd_buf_init(&rbuf, apdu->rcv_buf, apdu->rcv_len);
 
 	block.snd_buf = sdata;
@@ -182,7 +187,7 @@ t1_transceive(ifd_protocol_t *prot, unsigned char dad, ifd_apdu_t *apdu)
 	block.rcv_buf = rdata;
 	block.rcv_len = sizeof(rdata);
 
-	sdata[0] = (dad << 4) | IFD_DAD_IFD;
+	sdata[0] = prot->dad;
 
 	/* Send the first block */
 	last_send = t1_build(&block, t1, T1_I_BLOCK, &sbuf);
@@ -193,14 +198,16 @@ t1_transceive(ifd_protocol_t *prot, unsigned char dad, ifd_apdu_t *apdu)
 
 		retries--;
 
-		if ((n = t1_xcv(t1, &block)) < 0) {
+		if ((n = t1_xcv(prot, &block)) < 0) {
+			DEBUG("transmit/receive failed");
 			if (retries == 0)
 				return -1;
 			t1_build(&block, t1, T1_R_BLOCK | T1_OTHER_ERROR, NULL);
 			continue;
 		}
 
-		if (!t1_verify_checksum(t1, &block)) {
+		if (!t1_verify_checksum(t1, block.rcv_buf, n)) {
+			DEBUG("checksum failed");
 			if (retries == 0)
 				return -1;
 			t1_build(&block, t1, T1_R_BLOCK | T1_EDC_ERROR, NULL);
@@ -210,12 +217,18 @@ t1_transceive(ifd_protocol_t *prot, unsigned char dad, ifd_apdu_t *apdu)
 		pcb = rdata[1];
 		switch (t1_block_type(pcb)) {
 		case T1_R_BLOCK:
-			if (T1_IS_ERROR(pcb) && retries == 0)
-				return -1;
+			if (T1_IS_ERROR(pcb)) {
+				if (retries == 0)
+					return -1;
+				if (t1->state == SENDING) {
+					last_send = t1_build(&block, t1, T1_I_BLOCK, &sbuf);
+					continue;
+				}
+			}
 
 			if (t1->state == RECEIVING) {
 				t1_build(&block, t1, T1_R_BLOCK, NULL);
-				continue;
+				break;
 			}
 
 			/* If the card terminal requests the next
@@ -275,9 +288,13 @@ t1_transceive(ifd_protocol_t *prot, unsigned char dad, ifd_apdu_t *apdu)
 
 			switch (T1_S_TYPE(pcb)) {
 			case T1_S_RESYNC:
+				DEBUG("resynch requested");
+				if (retries == 0)
+					return -1;
 				t1_set_defaults(t1);
 				break;
 			case T1_S_ABORT:
+				DEBUG("abort requested");
 				return -1;
 			case T1_S_IFS:
 				if (rdata[3] == 0)
@@ -339,7 +356,7 @@ t1_build(ifd_apdu_t *apdu, t1_data_t *t1, unsigned char pcb, ifd_buf_t *bp)
 {
 	unsigned int	len;
 
-	len = ifd_buf_avail(bp);
+	len = bp? ifd_buf_avail(bp) : 0;
 	if (len > t1->ifsc) {
 		pcb |= T1_MORE_BLOCKS;
 		len = t1->ifsc;
@@ -360,7 +377,9 @@ t1_build(ifd_apdu_t *apdu, t1_data_t *t1, unsigned char pcb, ifd_buf_t *bp)
 	/* apdu->snd_buf[0] is already set to NAD */
 	apdu->snd_buf[1] = pcb;
 	apdu->snd_buf[2] = len;
-	memcpy(apdu->snd_buf, bp->base + bp->head, len);
+
+	if (len)
+		memcpy(apdu->snd_buf + 3, bp->base + bp->head, len);
 
 	t1_compute_checksum(t1, apdu);
 
@@ -392,65 +411,71 @@ t1_compute_checksum(t1_data_t *t1, ifd_apdu_t *apdu)
 }
 
 int
-t1_verify_checksum(t1_data_t *t1, ifd_apdu_t *apdu)
+t1_verify_checksum(t1_data_t *t1, unsigned char *rbuf, size_t len)
 {
 	unsigned char	csum[2];
 	int		m, n;
 
-	m = apdu->rcv_len - t1->rc_bytes;
+	m = len - t1->rc_bytes;
 	n = t1->rc_bytes;
 
 	if (m < 0)
 		return 0;
 
-	t1->checksum(apdu->rcv_buf, m, csum);
-	return !memcmp(apdu->rcv_buf + m, csum, n);
+	t1->checksum(rbuf, m, csum);
+	if (!memcmp(rbuf + m, csum, n))
+		return 1;
+
+	/* Some (e.g. eToken) will send a 0 checksum */
+	if (rbuf[m] == 0 && (n == 1 || rbuf[m+1] == 0))
+		return 1;
+
+	return 0;
 }
 
 /*
  * Send/receive block
  */
 int
-t1_xcv(t1_data_t *t1, ifd_apdu_t *apdu)
+t1_xcv(ifd_protocol_t *prot, ifd_apdu_t *apdu)
 {
-	ifd_device_t	*dev = t1->base.reader->device;
-	struct timeval	now, end;
-	unsigned int	n;
-	long		timeout;
+	t1_data_t	*t1 = (t1_data_t *) prot;
+	int		n, m;
 
-	if (dev->ops->transceive)
-		return ifd_device_transceive(dev, apdu, t1->timeout);
+	DEBUG("sending %s", ifd_hexdump(apdu->snd_buf, apdu->snd_len));
+	n = ifd_send_command(prot, apdu->snd_buf, apdu->snd_len);
+	if (n < 0)
+		return n;
 
-	/* We need to do it the hard way... */
-	if (ifd_device_send(dev, apdu->snd_buf, apdu->snd_len) < 0)
-		return -1;
+	if (prot->reader->device->type != IFD_DEVICE_TYPE_SERIAL) {
+		n = ifd_recv_response(prot, apdu->rcv_buf,
+				apdu->rcv_len, t1->timeout);
+		if (n >= 0) {
+			 m = apdu->rcv_buf[2] + 3 + t1->rc_bytes;
+			 if (m < n)
+				 n = m;
+		}
+	} else {
+		/* Get the header */
+		if (ifd_recv_response(prot, apdu->rcv_buf, 3, t1->timeout) < 0)
+			return -1;
 
-	gettimeofday(&end, 0);
-	end.tv_sec  += t1->timeout / 1000;
-	end.tv_usec += t1->timeout % 1000;
+		n = apdu->rcv_buf[2] + t1->rc_bytes;
+		if (n + 3 > apdu->rcv_len || apdu->rcv_buf[2] >= 254) {
+			ifd_error("receive buffer too small");
+			return -1;
+		}
 
-	/* Get the header */
-	if (ifd_device_recv(dev, apdu->rcv_buf, 3, t1->timeout) < 0)
-		return -1;
+		/* Now get the rest */
+		if (ifd_recv_response(prot, apdu->rcv_buf + 3, n, t1->timeout) < 0)
+			return -1;
 
-	n = apdu->rcv_buf[2] + t1->rc_bytes;
-	if (n + 3 > apdu->rcv_len || apdu->rcv_buf[2] >= 254) {
-		ifd_error("receive buffer too small");
-		return -1;
+		n += 3;
 	}
 
-	/* Now get the rest */
-	gettimeofday(&now, 0);
-	timeout = (end.tv_usec - now.tv_usec) / 1000
-		+ (end.tv_sec - now.tv_sec) * 1000;
-	if (timeout <= 0) {
-		ifd_error("Timed out while talking to %s", dev->name);
-		return -1;
-	}
+	if (n >= 0)
+		DEBUG("received %s", ifd_hexdump(apdu->rcv_buf, n));
 
-	if (ifd_device_recv(dev, apdu->rcv_buf + 3, n, timeout) < 0)
-		return -1;
-
-	return apdu->rcv_buf[2];
+	return n;
 }
 

@@ -103,6 +103,21 @@ failed:	ifd_error("etoken: failed to activate token");
 }
 
 /*
+ * Send/receive routines
+ */
+static int
+et_send(ifd_reader_t *reader, unsigned int dad, const void *buffer, size_t len)
+{
+	return et_control(reader->device, 0x40, 0x06, 0, 0, buffer, len, -1);
+}
+
+static int
+et_recv(ifd_reader_t *reader, unsigned int dad, void *buffer, size_t len, long timeout)
+{
+	return et_control(reader->device, 0xc0, 0x86, 0, 0, buffer, len, timeout);
+}
+
+/*
  * Send USB control message
  */
 int
@@ -134,8 +149,8 @@ static struct ifd_driver_ops	etoken_driver = {
 	deactivate:	et_deactivate,
 	card_status:	et_card_status,
 	card_reset:	et_card_reset,
-//	send:		et_send,
-//	recv:		et_recv,
+	send:		et_send,
+	recv:		et_recv,
 };
 /*
  * Initialize this module
