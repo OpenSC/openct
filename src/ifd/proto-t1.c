@@ -21,7 +21,7 @@ typedef struct {
 	unsigned int	ifsc;
 	unsigned int	ifsd;
 
-	unsigned int	timeout;
+	unsigned int	timeout, wtx;
 	unsigned int	retries;
 	unsigned int	rc_bytes;
 
@@ -83,6 +83,7 @@ t1_set_defaults(t1_state_t *t1)
 	t1->ifsd     = 32;
 	t1->nr	     = 0;
 	t1->ns	     = 0;
+	t1->wtx	     = 0;
 }
 
 void
@@ -337,7 +338,7 @@ do_transceive(ifd_protocol_t *prot, int dad,
 				/* We don't handle the wait time extension
 				 * yet */
 				ifd_debug(1, "CT sent S-block with wtx=%u", sdata[3]);
-				/* t1->wtx = sdata[3]; */
+				t1->wtx = sdata[3];
 				ct_buf_putc(&tbuf, sdata[3]);
 				break;
 			default:
@@ -514,7 +515,7 @@ int
 t1_xcv(t1_state_t *t1, unsigned char *block, size_t slen, size_t rmax)
 {
 	ifd_protocol_t	*prot = &t1->base;
-	unsigned int	rlen;
+	unsigned int	rlen, timeout;
 	int		n, m;
 
 	if (ct_config.debug >= 3)
@@ -529,6 +530,10 @@ t1_xcv(t1_state_t *t1, unsigned char *block, size_t slen, size_t rmax)
 	 * just barf */
 	rlen = 3 + t1->ifsd + t1->rc_bytes;
 
+	/* timeout. For now we our WTX treatment is very dumb */
+	timeout = t1->timeout + 1000 * t1->wtx;
+	t1->wtx = 0;
+
 	if (prot->reader->device->type != IFD_DEVICE_TYPE_SERIAL) {
 		/* Note - Linux USB seems to have an off by one error, you
 		 * actually need the + 1 to get the RC byte */
@@ -537,7 +542,7 @@ t1_xcv(t1_state_t *t1, unsigned char *block, size_t slen, size_t rmax)
 			rmax = rlen;
 
 		/* Get the response en bloc */
-		n = ifd_recv_response(prot, block, rmax, t1->timeout);
+		n = ifd_recv_response(prot, block, rmax, timeout);
 		if (n >= 0) {
 			m = block[2] + 3 + t1->rc_bytes;
 			if (m < n)
@@ -545,7 +550,7 @@ t1_xcv(t1_state_t *t1, unsigned char *block, size_t slen, size_t rmax)
 		}
 	} else {
 		/* Get the header */
-		if (ifd_recv_response(prot, block, 3, t1->timeout) < 0)
+		if (ifd_recv_response(prot, block, 3, timeout) < 0)
 			return -1;
 
 		n = block[2] + t1->rc_bytes;
