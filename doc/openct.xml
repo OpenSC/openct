@@ -28,6 +28,78 @@
 	</chapter>
 
 	<chapter>
+		<title>Supported Readers and Tokens</title>
+
+		<variablelist>
+			<varlistentry>
+				<term>towitoko</term>
+				<listentry>
+					A cheap and very popular smart card
+					reader for the serial interfaces
+					manufactured by the towitoko
+					company. fully supported.
+					FIXME: are there several models? which
+					one is exactly supported?
+				</listentry>
+			</varlistentry>
+
+			<varlistentry>
+				<term>Kobil Kaan Professional</term>
+				<listentry>
+					A smart card reader by Kobil
+					for the serial interfaces. fully supported.
+				</listentry>
+			</varlistentry>
+
+			<varlistentry>
+				<term>Schlumberger eGate</term>
+				<listentry>
+					A usb token / smart card reader from
+					Schlumberger. It was only tested with
+					schlumberger cyberflex 32k cards.
+					FIXME: I don't know if that adapter
+					should work with other cards as well.
+				</listentry>
+			</varlistentry>
+
+			<varlistentry>
+				<term>Aladdin eToken PRO</term>
+				<listentry>
+					A usb crypto Token by Aladdin. 
+					Some older versions could have problems
+					with non-intel mainboards. Except for
+					that issue: fully supported.
+				</listentry>
+			</varlistentry>
+
+			<varlistentry>
+				<term>Eutron Crypto Idendity IT-SEC</term>
+				<listentry>
+					A usb crypto Token by Eutron.
+					Very early support at best. 
+				</listentry>
+			</varlistentry>
+
+			<varlistentry>
+				<term>Rainbow iKey 3000</term>
+				<listentry>
+					A usb crypto Token by Rainbow.
+					Fully supported.
+				</listentry>
+			</varlistentry>
+
+			<varlistentry>
+				<term>Omnikey Cardman</term>
+				<listentry>
+					A usb smart card reader? Supported?
+					FIXME: I have no idea.
+				</listentry>
+			</varlistentry>
+		</variablelist>
+	</chapter>
+
+
+	<chapter>
 		<title>Requirements</title>
 
 		<para>
@@ -176,6 +248,40 @@ ln -s /path/to/openct/sbin/hotplug.openct /sbin/hotplug
 			should list the new reader.
 		</para>
 
+	</section>
+
+	<section>
+		<title>Installation with hotplut utils</title>
+
+		<para>
+			First the general instructions, then the debian
+			specific instructions. As usual debian does everything
+			a bit different. That doesn't mean it is necessarily
+			better or worse.
+		</para>
+
+		<para>
+			Edit <filename>/etc/hotplug/usb.usermap</filename> and
+			add these lines:
+			<screen>
+openct 0x0003 0x0973 0x0001 0x0000 0x0001 0xff 0x00 0x00 0xff 0x00 0x00 0x0000 0000
+openct 0x0003 0x0529 0x050c 0x0000 0x0001 0xff 0x00 0x00 0xff 0x00 0x00 0x0000 0000
+openct 0x0003 0x0529 0x0514 0x0000 0x0001 0xff 0x00 0x00 0xff 0x00 0x00 0x0000 0000
+openct 0x0003 0x073d 0x0005 0x0000 0x0001 0xff 0x00 0x00 0xff 0x00 0x00 0x0000 0000
+openct 0x0003 0x04b9 0x1300 0x0000 0x0001 0xff 0x00 0x00 0xff 0x00 0x00 0x0000 0000
+openct 0x0003 0x076b 0x0596 0x0000 0x0001 0xff 0x00 0x00 0xff 0x00 0x00 0x0000 0000
+			</screen>
+		</para>
+
+		<para>
+			Create the directory
+			<filename>/etc/hotplug/usb</filename> and add a symlink
+			"openct" to hotplug.openc. 
+			<screen>
+mkdir /etc/hotplug/openct
+ln -s /path/to/openct/sbin/hotplug.openct /etc/hotplug/usb/openct
+			</screen>
+		</para>
 	</section>
 
 	</chapter>
