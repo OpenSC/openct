@@ -508,7 +508,7 @@ kaan_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 		return rc;
 	/* B1 returns 6985 for German KVK health care cards */
 	if (sw != 0x9000 && sw != 0x6985) {
-		ifd_debug(1, "kaan_set_protocol: protocol %d not supported, sw=04%x", proto);
+		ifd_debug(1, "kaan_set_protocol: protocol %d not supported, sw=%04hx", proto, sw);
 		return -1;
 	}
 
