@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <errno.h>
 #include <openct/driver.h>
 
@@ -39,7 +40,7 @@ ifd_sysdep_device_type(const char *name)
 
 	if (stat(name, &stb) < 0)
 		return -1;
-
+#if 0
 	if (S_ISCHR(stb.st_mode)) {
 		int major = major(stb.st_rdev);
 		int minor = minor(stb.st_rdev);
@@ -53,7 +54,7 @@ ifd_sysdep_device_type(const char *name)
 		if (major == MISC_MAJOR && minor == 1)
 			return IFD_DEVICE_TYPE_PS2;
 	}
-
+#endif
 	return -1;
 }
 
@@ -159,7 +160,7 @@ ifd_scan_usb(void)
 		struct usb_device_info	 device_info;
 		ifd_devid_t		 id;
 		const char		*driver;
-		char			*device[256];
+		char			device[256];
 
 		device_info.udi_addr = address;
 
