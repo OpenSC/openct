@@ -26,7 +26,7 @@ __ifd_apdu_check(const ifd_apdu_t *apdu, ifd_iso_apdu_t *iso)
 	/* APDU + Le */
 	if (len == 0) {
 		iso->cse = IFD_APDU_CASE_2S;
-		iso->le = b;
+		iso->le = b? b : 256;
 		return 0;
 	}
 
@@ -47,7 +47,7 @@ __ifd_apdu_check(const ifd_apdu_t *apdu, ifd_iso_apdu_t *iso)
 	/* APDU + Lc + data + Le */
 	if (len == b + 1) {
 		iso->cse = IFD_APDU_CASE_4S;
-		iso->le = data[b];
+		iso->le = data[b]? data[b] : 256;
 		iso->snd_len--;
 		return 0;
 	}
