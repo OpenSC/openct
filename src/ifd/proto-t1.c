@@ -185,7 +185,7 @@ t1_get_param(ifd_protocol_t *prot, int type, long *result)
  * Send an APDU through T=1
  */
 static int
-t1_transceive(ifd_protocol_t *prot, ifd_apdu_t *apdu)
+t1_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 {
 	t1_data_t	*t1 = (t1_data_t *) prot;
 	ifd_apdu_t	block;
@@ -212,7 +212,7 @@ t1_transceive(ifd_protocol_t *prot, ifd_apdu_t *apdu)
 	block.rcv_buf = rdata;
 	block.rcv_len = sizeof(rdata);
 
-	sdata[0] = prot->dad;
+	sdata[0] = dad;
 
 	/* Send the first block */
 	last_send = t1_build(&block, t1, T1_I_BLOCK, &sbuf);

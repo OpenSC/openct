@@ -101,7 +101,7 @@ ifd_protocol_transceive(ifd_protocol_t *p, int dad, ifd_apdu_t *apdu)
 		return -1;
 
 	IFD_DEBUG("cmd: %s", ifd_hexdump(apdu->snd_buf, apdu->snd_len));
-	return p->ops->transceive(p, apdu);
+	return p->ops->transceive(p, dad, apdu);
 }
 
 /*

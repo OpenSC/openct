@@ -104,7 +104,7 @@ t0_get_param(ifd_protocol_t *prot, int type, long *result)
  * Send an APDU through T=0
  */
 static int
-t0_transceive(ifd_protocol_t *prot, ifd_apdu_t *apdu)
+t0_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 {
 	t0_data_t	*t0 = (t0_data_t *) prot;
 	ifd_apdu_t	tpdu;
