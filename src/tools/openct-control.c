@@ -4,11 +4,14 @@
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 #include <ifd/core.h>
 #include <ifd/conf.h>
 #include <ifd/logging.h>
@@ -25,6 +28,7 @@ static void		mgr_spawn_handler(unsigned int, ifd_reader_t *);
 static int		mgr_accept(ifd_socket_t *);
 static int		mgr_recv(ifd_socket_t *);
 static int		mgr_send(ifd_socket_t *);
+static void		mgr_close(ifd_socket_t *);
 
 int
 main(int argc, char **argv)
@@ -75,8 +79,24 @@ mgr_spawn_handler(unsigned int idx, ifd_reader_t *reader)
 {
 	char		socket_name[128];
 	ifd_socket_t	*sock;
+	int		rc;
 
 	/* XXX - fork process here */
+
+	/* Activate reader */
+	if ((rc = ifd_activate(reader)) < 0) {
+		ifd_error("Failed to activate reader; err=%d", rc);
+		exit(1);
+	}
+
+	/* Make sure directory exists */
+	if (mkdir(ifd_config.socket_dir, 0755) < 0
+	 && errno != EEXIST) {
+		ifd_error("Unable to create %s: %m",
+				ifd_config.socket_dir);
+		exit(1);
+	}
+	chmod(ifd_config.socket_dir, 0755);
 
 	snprintf(socket_name, sizeof(socket_name),
 			"%s/%u", ifd_config.socket_dir, idx);
@@ -108,6 +128,7 @@ mgr_accept(ifd_socket_t *listener)
 	sock->user_data = listener->user_data;
 	sock->recv = mgr_recv;
 	sock->send = mgr_send;
+	sock->close = mgr_close;
 	return 0;
 }
 
@@ -136,7 +157,7 @@ mgr_recv(ifd_socket_t *sock)
 	ifd_buf_init(&resp, buffer, sizeof(buffer));
 
 	reader = (ifd_reader_t *) sock->user_data;
-	header.error = mgr_process(reader, &args, &resp);
+	header.error = mgr_process(sock, reader, &args, &resp);
 
 	if (header.error)
 		ifd_buf_clear(&resp);
@@ -160,28 +181,15 @@ mgr_send(ifd_socket_t *sock)
 }
 
 /*
-int
-mgr_process(ifd_buf_t *argbuf, ifd_buf_t *resbuf)
-{
-	unsigned char	cmd, unit;
-	ifd_tlv_t	args, resp;
-
-	memset(args, 0, sizeof(args));
-	memset(resp, 0, sizeof(resp));
-
-	if (ifd_buf_get(argbuf, &cmd, 1) < 0
-	 || ifd_buf_get(argbuf, &unit, 1) < 0
-	 || mgr_tlv_parse(argbuf, &args) < 0)
-		return IFD_ERROR_INVALID_MSG;
-
-	switch (cmd) {
-	case IFD_CMD_STATUS:
-		return mgr_status(unit, &args, &resp);
-	}
-
-	return IFD_ERROR_INVALID_CMD;
-}
+ * Socket is closed - for whatever reason
+ * Release any locks held by this client
  */
+void
+mgr_close(ifd_socket_t *sock)
+{
+	mgr_unlock_all(sock);
+}
+
 
 /*
  * Usage message
