@@ -12,15 +12,13 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <errno.h>
+#include <string.h>
 
 #include <openct/openct.h>
 #include <openct/pathnames.h>
 #include <openct/logging.h>
 
 #define OPENCT_STATUS_LOCK	OPENCT_STATUS_PATH ".lock"
-
-static const ct_info_t *ct_reader_info;
-static unsigned int	ct_num_info;
 
 static int		ct_status_lock(void);
 static void		ct_status_unlock(void);
@@ -76,17 +74,20 @@ ct_status_clear(unsigned int count)
 int
 ct_status(const ct_info_t **result)
 {
-	if (ct_reader_info == NULL) {
+	static const ct_info_t *reader_status;
+	static unsigned int	num_status;
+
+	if (reader_status == NULL) {
 		size_t	size;
 
-		ct_reader_info = (ct_info_t *) ct_map_status(O_RDONLY, &size);
-		if (ct_reader_info == NULL)
+		reader_status = (ct_info_t *) ct_map_status(O_RDONLY, &size);
+		if (reader_status == NULL)
 			return -1;
-		ct_num_info = size / sizeof(ct_info_t);
+		num_status = size / sizeof(ct_info_t);
 	}
 
-	*result = ct_reader_info;
-	return ct_num_info;
+	*result = reader_status;
+	return num_status;
 }
 
 ct_info_t *

@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <syslog.h>
+#include <string.h>
 #include <openct/error.h>
 #include <openct/logging.h>
 
