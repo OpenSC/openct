@@ -34,6 +34,7 @@ typedef struct kaan_apdu {
 
 static int		kaan_reset_ct(ifd_reader_t *reader);
 static int		kaan_get_units(ifd_reader_t *reader);
+static int		kaan_display(ifd_reader_t *, const char *);
 static void		kaan_apdu_init(kaan_apdu_t *,
 				unsigned char cse,
 				unsigned char cla,
@@ -85,11 +86,20 @@ kaan_open(ifd_reader_t *reader, const char *device_name)
 	}
 
 	ifd_protocol_set_parameter(st->p, IFD_PROTOCOL_T1_RESYNCH, NULL);
+
+	/* Reset the CT */
 	if (kaan_reset_ct(reader) < 0)
 		return -1;
 
 	/* Get list of functional units */
-	return kaan_get_units(reader);
+	if (kaan_get_units(reader) < 0)
+		return -1;
+
+	/* Clear the display */
+	if (kaan_display(reader, "Kublai Kaan 0.1\nWelcome!") < 0)
+		return -1;
+
+	return 0;
 }
 
 /*
@@ -142,6 +152,32 @@ kaan_get_units(ifd_reader_t *reader)
 	}
 
 	return 0;
+}
+
+/*
+ * Output a string to the display
+ */
+int
+kaan_display(ifd_reader_t *reader, const char *string)
+{
+	unsigned char	data[256];
+	kaan_apdu_t	apdu;
+	int		len = 0;
+
+	if (!(reader->flags & IFD_READER_DISPLAY))
+		return 0;
+
+	kaan_apdu_init(&apdu, IFD_APDU_CASE_3S, 0x20, 0x17, 0x40, 00);
+	if ((len = string? strlen(string) : 0) > 32)
+		len = 32;
+	data[0] = 0x50;
+	data[1] = len;
+	memcpy(data+2, string, len);
+
+	apdu.snd_buf = data;
+	apdu.snd_len = apdu.lc = len + 2;
+
+	return kaan_apdu_xcv(reader, &apdu);
 }
 
 /*
