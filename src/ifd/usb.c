@@ -28,7 +28,37 @@ static int	ifd_usb_scan(struct usb_search_spec *,
 				void *);
 static int	ifd_usb_match(struct usb_device *, struct usb_search_spec *);
 
+/*
+ * Send/receive USB control block
+ */
+static int
+usb_control(ifd_device_t *dev, void *data, size_t len)
+{
+	ifd_usb_t	*usb = (ifd_usb_t *) dev;
+	ifd_usb_cmsg_t	*cmsg;
+	int		n;
+
+	cmsg = (ifd_usb_cmsg_t *) data;
+	if (len < sizeof(*cmsg) || cmsg->guard != IFD_DEVICE_TYPE_USB)
+		return -1;
+
+	n = usb_control_msg(usb->h,
+			cmsg->requesttype,
+			cmsg->request,
+			cmsg->value,
+			cmsg->index,
+			cmsg->data,
+			cmsg->len,
+			10000);
+
+	if (n < 0)
+		ifd_error("USB: %s", usb_strerror());
+
+	return n;
+}
+
 static struct ifd_device_ops	ifd_usb_ops = {
+	control:	usb_control,
 };
 
 /*
@@ -50,7 +80,7 @@ ifd_open_usb(const char *device)
 	} else {
 		const char	*s;
 
-		for (s = device; s; ) {
+		for (s = device; *s; ) {
 			char *end;
 
 			while (*s == ',')
@@ -62,8 +92,8 @@ ifd_open_usb(const char *device)
 				spec.product  = strtoul(end, &end, 16);
 				s = end;
 			} else
-			if (!strncmp(s, "dev=", 3)) {
-				spec.bus = strtoul(s+3, &end, 10);
+			if (!strncmp(s, "dev=", 4)) {
+				spec.bus = strtoul(s+4, &end, 10);
 				if (*end++ != ':')
 					goto badspec;
 				spec.dev  = strtoul(end, &end, 10);
@@ -92,6 +122,8 @@ ifd_open_usb(const char *device)
 
 	dev = (ifd_usb_t *) ifd_device_new(spec.found->filename,
 			&ifd_usb_ops, sizeof(*dev));
+	dev->base.type = IFD_DEVICE_TYPE_USB;
+	dev->h = uh;
 
 	return (ifd_device_t *) dev;
 
@@ -153,9 +185,22 @@ ifd_usb_scan(struct usb_search_spec *spec,
 int
 ifd_usb_match(struct usb_device *dev, struct usb_search_spec *spec)
 {
-	if ((spec->vendor && dev->descriptor.idVendor != spec->vendor)
-	 || (spec->product && dev->descriptor.idProduct != spec->product)
-	 || (spec->filename && strcmp(dev->filename, spec->filename)))
+	struct usb_device_descriptor *d = &dev->descriptor;
+	unsigned int num;
+
+	if (spec->bus) {
+		num = strtoul(dev->bus->dirname, NULL, 10);
+		if (spec->bus != num)
+			return 0;
+	}
+	if (spec->dev) {
+		num = strtoul(dev->filename, NULL, 10);
+		if (spec->dev != num)
+			return 0;
+	}
+
+	if ((spec->vendor && d->idVendor != spec->vendor)
+	 || (spec->product && d->idProduct != spec->product))
 		return 0;
 	return 1;
 }
