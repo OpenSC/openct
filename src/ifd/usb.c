@@ -4,6 +4,7 @@
  * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
+#include <sys/poll.h>
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
@@ -41,8 +42,24 @@ usb_control(ifd_device_t *dev, void *data, size_t len)
 	return n;
 }
 
+/*
+ * Check presence of USB device
+ * XXX: make this a system dependent function?
+ */
+static int
+usb_poll_presence(ifd_device_t *dev, struct pollfd *p)
+{
+	if (p->revents & POLLHUP)
+		return 0;
+
+	p->fd = dev->fd;
+	p->events = POLLHUP;
+	return 1;
+}
+
 static struct ifd_device_ops	ifd_usb_ops = {
-	.control =	usb_control,
+	.control	= usb_control,
+	.poll_presence	= usb_poll_presence,
 };
 
 /*

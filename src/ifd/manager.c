@@ -79,8 +79,7 @@ ifd_reader_by_index(unsigned int index)
 		return NULL;
 	}
 	if (!(reader = ifd_readers[index])) {
-		ifd_debug(1, "ifd_reader_by_index: no reader at index %u",
-				index);
+		ifd_debug(1, "no reader at index %u", index);
 		return NULL;
 	}
 

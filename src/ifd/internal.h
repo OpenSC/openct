@@ -16,6 +16,9 @@
 #include <openct/error.h>
 #include <openct/buffer.h>
 
+/* For poll_presence */
+struct pollfd;
+
 struct ifd_device {
 	char *		name;
 	int		type;
@@ -60,6 +63,20 @@ struct ifd_device_ops {
 	int		(*control)(ifd_device_t *, void *, size_t);
 
 	void		(*close)(ifd_device_t *);
+
+	/* Poll for device presence. This function is called
+	 * prior to the poll call (with revents == 0), int this
+	 * case poll_presence is supposed to set up the poll
+	 * structure.
+	 * Then, it is called after poll() returns - in this case
+	 * it should check the contents of pollfd to find out
+	 * whether the device got removed.
+	 *
+	 * This is pretty much tailored for USB support, so
+	 * the addition of PCMCIA devices may cause this
+	 * to change.
+	 */
+	int		(*poll_presence)(ifd_device_t *, struct pollfd *);
 };
 
 struct ifd_protocol_ops {
