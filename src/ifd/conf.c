@@ -15,7 +15,7 @@
 #include <openct/config.h>
 #include <openct/buffer.h>
 
-struct ifd_config	ifd_config = {
+struct ct_config	ct_config = {
 	.debug		= 0,
 	.autoload	= 1,
 	.hotplug_scan_on_startup = 1,
@@ -25,7 +25,7 @@ struct ifd_config	ifd_config = {
 
 #if 0
 static const char *	config_filename = NULL;
-static ifd_buf_t	config_buf;
+static ct_buf_t	config_buf;
 static int		config_fd = -1;
 static int		config_line = 0;
 
@@ -43,7 +43,7 @@ static int		err_unexpected_keyword(const char *, const char *);
  * Parse the ifd config file
  */
 int
-ifd_config_parse(const char *filename)
+ct_config_parse(const char *filename)
 {
 	char	kwd[16], buffer[512];
 	int	rc;
@@ -55,12 +55,12 @@ ifd_config_parse(const char *filename)
 	if ((config_fd = open(config_filename, O_RDONLY)) < 0) {
 		if (errno == ENOENT)
 			return 0;
-		ifd_error("Unable to open %s: %m", filename);
+		ct_error("Unable to open %s: %m", filename);
 		return -1;
 	}
 
 	/* Init parse buffer. */
-	ifd_buf_init(&config_buf, buffer, sizeof(buffer));
+	ct_buf_init(&config_buf, buffer, sizeof(buffer));
 	config_line = 1;
 
 	/* TBD - parse config file */
@@ -77,7 +77,7 @@ ifd_config_parse(const char *filename)
 		} else if (!strcasecmp(kwd, "hotplug")) {
 			rc = parse_hotplug();
 		} else if (!strcasecmp(kwd, "debug")) {
-			rc = get_integer(&ifd_config.debug);
+			rc = get_integer(&ct_config.debug);
 			if (rc >= 0)
 				rc = parse_expect(";");
 		} else {
@@ -187,7 +187,7 @@ get_integer(int *value)
 		return -1;
 	*value = strtol(tok, &end, 0);
 	if (*end) {
-		ifd_error("%s: line %d: "
+		ct_error("%s: line %d: "
 			  "expected integer, got \"%s\"",
 			  tok);
 		return -1;
@@ -209,8 +209,8 @@ get_token(char **tok)
 	if (skipws() < 0)
 		return -1;
 
-again:	s = (char *) ifd_buf_head(&config_buf);
-	n = ifd_buf_avail(&config_buf);
+again:	s = (char *) ct_buf_head(&config_buf);
+	n = ct_buf_avail(&config_buf);
 
 	if (*s == ';') {
 		m = 1;
@@ -223,8 +223,8 @@ again:	s = (char *) ifd_buf_head(&config_buf);
 	 * for white space, read more data and try 
 	 * again */
 	if (m >= n && retry) {
-		if (ifd_buf_read(&config_buf, config_fd) < 0) {
-			ifd_error("%s: error while reading file: %m",
+		if (ct_buf_read(&config_buf, config_fd) < 0) {
+			ct_error("%s: error while reading file: %m",
 					config_filename);
 			return -1;
 		}
@@ -236,10 +236,10 @@ again:	s = (char *) ifd_buf_head(&config_buf);
 		copy = sizeof(buffer)-1;
 	memcpy(buffer, s, copy);
 	buffer[copy] = '\0';
-	ifd_buf_get(&config_buf, NULL, m);
+	ct_buf_get(&config_buf, NULL, m);
 
-	if (ifd_config.debug > 4)
-		ifd_debug("ifd_config_parse: token=\"%s\"\n", buffer);
+	if (ct_config.debug > 4)
+		ct_debug("ct_config_parse: token=\"%s\"\n", buffer);
 	*tok = buffer;
 	return 0;
 }
@@ -256,12 +256,12 @@ again:
 	if (skipws() < 0)
 		return -1;
 
-	if (ifd_buf_avail(&config_buf) == 0) {
+	if (ct_buf_avail(&config_buf) == 0) {
 		if (!retry)
 			return 1;
 
-		if (ifd_buf_read(&config_buf, config_fd) < 0) {
-			ifd_error("%s: error while reading file: %m",
+		if (ct_buf_read(&config_buf, config_fd) < 0) {
+			ct_error("%s: error while reading file: %m",
 					config_filename);
 			return -1;
 		}
@@ -282,8 +282,8 @@ skipws(void)
 	char		*s;
 
 again:
-	s = (char *) ifd_buf_head(&config_buf);
-	n = ifd_buf_avail(&config_buf);
+	s = (char *) ct_buf_head(&config_buf);
+	n = ct_buf_avail(&config_buf);
 
 	for (m = 0; m < n; m++, s++) {
 		if (*s == '#') {
@@ -295,10 +295,10 @@ again:
 		}
 	}
 
-	ifd_buf_get(&config_buf, NULL, m);
+	ct_buf_get(&config_buf, NULL, m);
 	if (in_comment) {
-		if (ifd_buf_read(&config_buf, config_fd) < 0) {
-			ifd_error("%s: error while reading file: %m",
+		if (ct_buf_read(&config_buf, config_fd) < 0) {
+			ct_error("%s: error while reading file: %m",
 					config_filename);
 			return -1;
 		}
@@ -314,7 +314,7 @@ again:
 int
 err_unexpected_keyword(const char *kwd, const char *expect)
 {
-	ifd_error("%s: line %d: unexpected keyword %s%s%s",
+	ct_error("%s: line %d: unexpected keyword %s%s%s",
 		config_filename, config_line, kwd,
 		expect? ", expected ": "", expect? expect : "");
 	return -1;

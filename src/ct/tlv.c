@@ -16,16 +16,16 @@
  * Parse TLV data
  */
 int
-ifd_tlv_parse(ifd_tlv_parser_t *parser, ifd_buf_t *bp)
+ct_tlv_parse(ct_tlv_parser_t *parser, ct_buf_t *bp)
 {
 	unsigned int	avail;
 	unsigned char	*p, tag, len;
 
-	while ((avail = ifd_buf_avail(bp)) != 0) {
+	while ((avail = ct_buf_avail(bp)) != 0) {
 		if (avail < 2)
 			return -1;
 
-		p = ifd_buf_head(bp);
+		p = ct_buf_head(bp);
 		tag = p[0];
 		len = p[1];
 
@@ -34,7 +34,7 @@ ifd_tlv_parse(ifd_tlv_parser_t *parser, ifd_buf_t *bp)
 
 		parser->v[tag] = p + 1;
 
-		ifd_buf_get(bp, NULL, 2 + len);
+		ct_buf_get(bp, NULL, 2 + len);
 	}
 
 	return 0;
@@ -44,7 +44,7 @@ ifd_tlv_parse(ifd_tlv_parser_t *parser, ifd_buf_t *bp)
  * Extract TLV encoded items as strings, integers, etc.
  */
 int
-ifd_tlv_get_string(ifd_tlv_parser_t *parser, ifd_tag_t tag,
+ct_tlv_get_string(ct_tlv_parser_t *parser, ifd_tag_t tag,
 			char *buf, size_t size)
 {
 	unsigned char	*p;
@@ -62,7 +62,7 @@ ifd_tlv_get_string(ifd_tlv_parser_t *parser, ifd_tag_t tag,
 }
 
 int
-ifd_tlv_get_int(ifd_tlv_parser_t *parser, ifd_tag_t tag,
+ct_tlv_get_int(ct_tlv_parser_t *parser, ifd_tag_t tag,
 			unsigned int *value)
 {
 	unsigned char	*p;
@@ -82,7 +82,7 @@ ifd_tlv_get_int(ifd_tlv_parser_t *parser, ifd_tag_t tag,
 }
 
 int
-ifd_tlv_get_opaque(ifd_tlv_parser_t *parser, ifd_tag_t tag,
+ct_tlv_get_opaque(ct_tlv_parser_t *parser, ifd_tag_t tag,
 			unsigned char **data, size_t *lenp)
 {
 	unsigned char	*p;
@@ -98,7 +98,7 @@ ifd_tlv_get_opaque(ifd_tlv_parser_t *parser, ifd_tag_t tag,
 }
 
 int
-ifd_tlv_get_bytes(ifd_tlv_parser_t *parser, ifd_tag_t tag,
+ct_tlv_get_bytes(ct_tlv_parser_t *parser, ifd_tag_t tag,
 			void *buf, size_t size)
 {
 	unsigned char	*p;
@@ -116,7 +116,7 @@ ifd_tlv_get_bytes(ifd_tlv_parser_t *parser, ifd_tag_t tag,
  * Initialize a TLV data builder
  */
 void
-ifd_tlv_builder_init(ifd_tlv_builder_t *builder, ifd_buf_t *bp)
+ct_tlv_builder_init(ct_tlv_builder_t *builder, ct_buf_t *bp)
 {
 	memset(builder, 0, sizeof(*builder));
 	builder->buf = bp;
@@ -126,18 +126,18 @@ ifd_tlv_builder_init(ifd_tlv_builder_t *builder, ifd_buf_t *bp)
  * TLV encode objects
  */
 void
-ifd_tlv_put_int(ifd_tlv_builder_t *builder, ifd_tag_t tag,
+ct_tlv_put_int(ct_tlv_builder_t *builder, ifd_tag_t tag,
 		unsigned int value)
 {
 	int	n;
 
 	if (builder->error)
 		return;
-	ifd_tlv_put_tag(builder, tag);
+	ct_tlv_put_tag(builder, tag);
 	for (n = 0; (value >> (n + 8)) != 0; n += 8)
 		;
 	do {
-		ifd_tlv_add_byte(builder, value >> n);
+		ct_tlv_add_byte(builder, value >> n);
 		n -= 8;
 	} while (n >= 0);
 
@@ -145,29 +145,29 @@ ifd_tlv_put_int(ifd_tlv_builder_t *builder, ifd_tag_t tag,
 }
 
 void
-ifd_tlv_put_string(ifd_tlv_builder_t *builder, ifd_tag_t tag,
+ct_tlv_put_string(ct_tlv_builder_t *builder, ifd_tag_t tag,
 		const char *string)
 {
 	if (builder->error)
 		return;
 
-	ifd_tlv_put_tag(builder, tag);
-	ifd_tlv_add_bytes(builder, string, strlen(string));
+	ct_tlv_put_tag(builder, tag);
+	ct_tlv_add_bytes(builder, string, strlen(string));
 
 	builder->lenp = NULL;
 }
 
 void
-ifd_tlv_put_tag(ifd_tlv_builder_t *builder, ifd_tag_t tag)
+ct_tlv_put_tag(ct_tlv_builder_t *builder, ifd_tag_t tag)
 {
-	ifd_buf_t	*bp = builder->buf;
+	ct_buf_t	*bp = builder->buf;
 
 	if (builder->error < 0)
 		return;
-	if (ifd_buf_putc(bp, tag) < 0)
+	if (ct_buf_putc(bp, tag) < 0)
 		goto err;
-	builder->lenp = ifd_buf_tail(bp);
-	if (ifd_buf_putc(bp, 0) < 0)
+	builder->lenp = ct_buf_tail(bp);
+	if (ct_buf_putc(bp, 0) < 0)
 		goto err;
 	return;
 
@@ -175,23 +175,23 @@ err:	builder->error = -1;
 }
 
 void
-ifd_tlv_add_byte(ifd_tlv_builder_t *builder, unsigned char byte)
+ct_tlv_add_byte(ct_tlv_builder_t *builder, unsigned char byte)
 {
-	ifd_tlv_add_bytes(builder, &byte, 1);
+	ct_tlv_add_bytes(builder, &byte, 1);
 }
 
 void
-ifd_tlv_add_bytes(ifd_tlv_builder_t *builder,
+ct_tlv_add_bytes(ct_tlv_builder_t *builder,
 			const unsigned char *data, size_t num)
 {
-	ifd_buf_t	*bp = builder->buf;
+	ct_buf_t	*bp = builder->buf;
 
 	if (builder->error < 0)
 		return;
 
 	if (!builder->lenp
 	 || *(builder->lenp) + num > 255
-	 || ifd_buf_put(bp, data, num) < 0) {
+	 || ct_buf_put(bp, data, num) < 0) {
 		builder->error = -1;
 	} else {
 		*(builder->lenp) += num;

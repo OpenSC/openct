@@ -7,7 +7,7 @@
 #ifndef OPENCT_H
 #define OPENCT_H
 
-typedef struct ifd_socket		ct_handle;
+typedef struct ct_socket		ct_handle;
 
 #define IFD_MAX_READER		16
 

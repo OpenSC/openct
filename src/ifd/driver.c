@@ -61,8 +61,8 @@ ifd_driver_add_id(const char *id, const char *name)
 {
 	struct ifd_driver_info *ip;
 
-	if (ifd_config.debug > 2)
-		ifd_debug("ifd_driver_add_id(%s, %s)", id, name);
+	if (ct_config.debug > 2)
+		ct_debug("ifd_driver_add_id(%s, %s)", id, name);
 	ip = find_by_name(name, 1);
 	ip->nids++;
 	ip->id = (char **) realloc(ip->id, ip->nids * sizeof(char *));
@@ -92,12 +92,12 @@ ifd_driver_get(const char *name)
 	int	retries = 2;
 
 	while (retries--) {
-		ip = find_by_name(name, ifd_config.autoload);
+		ip = find_by_name(name, ct_config.autoload);
 		if (ip == NULL)
 			break;
 		if (ip->driver.ops != NULL)
 			return &ip->driver;
-		if (!ifd_config.autoload
+		if (!ct_config.autoload
 		 || ifd_load_module("driver", name) < 0)
 			break;
 	}

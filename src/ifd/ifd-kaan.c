@@ -14,7 +14,7 @@
 #include <openct/error.h>
 
 #define DEBUG(fmt, args...) \
-	do { ifd_debug("%s: " fmt, __FUNCTION__ , ##args); } while (0)
+	do { ct_debug("%s: " fmt, __FUNCTION__ , ##args); } while (0)
 
 /*
  * CT status
@@ -73,7 +73,7 @@ kaan_open(ifd_reader_t *reader, const char *device_name)
 
 	reader->driver_data = st;
 	if (!(st->p = ifd_protocol_new(IFD_PROTOCOL_T1, reader, 0x12))) {
-		ifd_error("unable to get T1 protocol handler");
+		ct_error("unable to get T1 protocol handler");
 		return -1;
 	}
 
@@ -230,7 +230,7 @@ kaan_card_reset(ifd_reader_t *reader, int slot, void *result, size_t size)
 		return -1;
 
 	if (apdu.sw != 0x9000 && apdu.sw != 0x9001) {
-		ifd_error("unable to reset card, SW=%04x", apdu.sw);
+		ct_error("unable to reset card, SW=%04x", apdu.sw);
 		return -1;
 	}
 
@@ -277,7 +277,7 @@ kaan_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 		return n;
 
 	if (apdu.sw != 0x9000) {
-		ifd_error("%s: unable to select protocol, SW=0x%04x",
+		ct_error("%s: unable to select protocol, SW=0x%04x",
 				reader->name, apdu.sw);
 		return -1;
 	}
@@ -286,7 +286,7 @@ kaan_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 	slot->proto = ifd_protocol_new(IFD_PROTOCOL_TRANSPARENT,
 				reader, slot->dad);
 	if (slot->proto == NULL) {
-		ifd_error("%s: internal error", reader->name);
+		ct_error("%s: internal error", reader->name);
 		return -1;
 	}
 
@@ -314,7 +314,7 @@ kaan_transparent(ifd_reader_t *reader, int dad, ifd_apdu_t *apdu)
 	}
 
 	if ((n = ifd_protocol_transceive(st->p, dad, &tpdu)) < 2) {
-		ifd_error("kaan: T=1 protocol failure, rc=%d", n);
+		ct_error("kaan: T=1 protocol failure, rc=%d", n);
 		return -1;
 	}
 
@@ -334,7 +334,7 @@ kaan_transparent(ifd_reader_t *reader, int dad, ifd_apdu_t *apdu)
 			tpdu.rcv_len = sw[1] + 2;
 
 			if ((n = ifd_protocol_transceive(st->p, dad, &tpdu)) < 2) {
-				ifd_error("kaan: T=1 protocol failure, rc=%d", n);
+				ct_error("kaan: T=1 protocol failure, rc=%d", n);
 				return -1;
 			}
 		}
@@ -367,7 +367,7 @@ kaan_apdu_xcv(ifd_reader_t *reader, ifd_iso_apdu_t *apdu)
 	if (IFD_APDU_CASE_LC(apdu->cse)) {
 		sbuf[n++] = apdu->lc;
 		if (n + apdu->lc >= sizeof(sbuf)) {
-			ifd_error("kaan_apdu_xcv: buffer too small");
+			ct_error("kaan_apdu_xcv: buffer too small");
 			return -1;
 		}
 		memcpy(sbuf + n, apdu->snd_buf, apdu->lc);
@@ -384,7 +384,7 @@ kaan_apdu_xcv(ifd_reader_t *reader, ifd_iso_apdu_t *apdu)
 
 	if ((rc = ifd_protocol_transceive(st->p, 0x12, &tpdu)) < 0
 	 || rc < 2 || rc - 2 > apdu->rcv_len) {
-		ifd_error("kaan: T=1 protocol failure, rc=%d", rc);
+		ct_error("kaan: T=1 protocol failure, rc=%d", rc);
 		return -1;
 	}
 

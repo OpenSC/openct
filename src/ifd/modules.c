@@ -16,12 +16,12 @@ ifd_module_path(const char *subdir)
 {
 	static char	path[PATH_MAX];
 
-	if (!ifd_config.modules_dir
-	 && !(ifd_config.modules_dir = getenv("IFD_MODULES")))
-		ifd_config.modules_dir = IFD_DEFAULT_MODULES_DIR;
+	if (!ct_config.modules_dir
+	 && !(ct_config.modules_dir = getenv("IFD_MODULES")))
+		ct_config.modules_dir = IFD_DEFAULT_MODULES_DIR;
 
 	snprintf(path, sizeof(path), "%s/%ss",
-			ifd_config.modules_dir, subdir);
+			ct_config.modules_dir, subdir);
 	return path;
 }
 
@@ -34,17 +34,17 @@ ifd_load_module(const char *type, const char *name)
 	void		(*init_func)(void);
 
 	if (strstr(name, "..")) {
-		ifd_error("Illegal module path \"%s\"", name);
+		ct_error("Illegal module path \"%s\"", name);
 		return -1;
 	}
 
 	if (!strcmp(type, "driver")) {
-		dirname = ifd_config.driver_modules_dir;
+		dirname = ct_config.driver_modules_dir;
 	} else
 	if (!strcmp(type, "protocol")) {
-		dirname = ifd_config.protocol_modules_dir;
+		dirname = ct_config.protocol_modules_dir;
 	} else {
-		ifd_error("Unknown module type \"%s\"", type);
+		ct_error("Unknown module type \"%s\"", type);
 		return -1;
 	}
 
@@ -55,13 +55,13 @@ ifd_load_module(const char *type, const char *name)
 
 	handle = dlopen(path, RTLD_NOW);
 	if (!handle) {
-		ifd_error("Failed to load %s: %s", path, dlerror());
+		ct_error("Failed to load %s: %s", path, dlerror());
 		return -1;
 	}
 
 	init_func = (void (*)(void)) dlsym(handle, "ifd_init_module");
 	if (!init_func) {
-		ifd_error("%s: no function called ifd_init_module", path);
+		ct_error("%s: no function called ifd_init_module", path);
 		dlclose(handle);
 		return -1;
 	}

@@ -8,7 +8,7 @@
 #include <string.h>
 #include "internal.h"
 
-static int		ifd_recv_atr(ifd_device_t *, ifd_buf_t *,
+static int		ifd_recv_atr(ifd_device_t *, ct_buf_t *,
 				unsigned int, int);
 
 /*
@@ -24,13 +24,13 @@ ifd_open(const char *driver_name, const char *device_name)
 		char	pnp_id[64];
 
 		if (ifd_device_identify(device_name, pnp_id, sizeof(pnp_id)) < 0) {
-			ifd_error("%s: unable to identify device, "
+			ct_error("%s: unable to identify device, "
 			      "please specify driver",
 			      device_name);
 			return NULL;
 		}
 		if (!(driver_name = ifd_driver_for_id(pnp_id))) {
-			ifd_error("%s: no driver for ID %s, "
+			ct_error("%s: no driver for ID %s, "
 			      "please specify driver",
 			      device_name, pnp_id);
 			return NULL;
@@ -38,7 +38,7 @@ ifd_open(const char *driver_name, const char *device_name)
 
 		driver = ifd_driver_get(driver_name);
 		if (driver == NULL) {
-			ifd_error("%s: driver \"%s\" not available "
+			ct_error("%s: driver \"%s\" not available "
 				  "(identified as %s)",
 				   device_name, driver_name, pnp_id);
 			return NULL;
@@ -46,7 +46,7 @@ ifd_open(const char *driver_name, const char *device_name)
 	} else {
 		driver = ifd_driver_get(driver_name);
 		if (driver == NULL) {
-			ifd_error("%s: driver not available", driver_name);
+			ct_error("%s: driver not available", driver_name);
 			return NULL;
 		}
 	}
@@ -56,7 +56,7 @@ ifd_open(const char *driver_name, const char *device_name)
 
 	if (driver->ops->open
 	 && driver->ops->open(reader, device_name) < 0) {
-		ifd_error("%s: initialization failed (driver %s)",
+		ct_error("%s: initialization failed (driver %s)",
 				device_name, driver->name);
 		free(reader);
 		return NULL;
@@ -136,7 +136,7 @@ ifd_card_status(ifd_reader_t *reader, unsigned int idx, int *status)
 	const ifd_driver_t *drv = reader->driver;
 
 	if (idx > reader->nslots) {
-		ifd_error("%s: invalid slot number %u", reader->name, idx);
+		ct_error("%s: invalid slot number %u", reader->name, idx);
 		return -1;
 	}
 
@@ -177,7 +177,7 @@ ifd_card_request(ifd_reader_t *reader, unsigned int idx,
 	int		n, parity;
 
 	if (idx > reader->nslots) {
-		ifd_error("%s: invalid slot number %u", reader->name, idx);
+		ct_error("%s: invalid slot number %u", reader->name, idx);
 		return -1;
 	}
 
@@ -236,7 +236,7 @@ ifd_card_request(ifd_reader_t *reader, unsigned int idx,
 		/* If we got just the first byte of the ATR, get the
 		 * rest now */
 		if (count == 1) {
-			ifd_buf_t	rbuf;
+			ct_buf_t	rbuf;
 			unsigned char	c;
 			unsigned int	num, proto = 0;
 			int		revert_bits = 0;
@@ -246,7 +246,7 @@ ifd_card_request(ifd_reader_t *reader, unsigned int idx,
 				slot->atr[0] = 0x3F;
 			}
 
-			ifd_buf_init(&rbuf, slot->atr, sizeof(slot->atr));
+			ct_buf_init(&rbuf, slot->atr, sizeof(slot->atr));
 			rbuf.tail++;
 
 			if (ifd_recv_atr(dev, &rbuf, 1, revert_bits) < 0)
@@ -293,28 +293,28 @@ ifd_card_request(ifd_reader_t *reader, unsigned int idx,
 		memcpy(atr, slot->atr, count);
 
 	if (!ifd_protocol_select(reader, idx, IFD_PROTOCOL_DEFAULT))
-		ifd_error("Protocol selection failed");
+		ct_error("Protocol selection failed");
 
 	return count;
 }
 
 int
-ifd_recv_atr(ifd_device_t *dev, ifd_buf_t *bp,
+ifd_recv_atr(ifd_device_t *dev, ct_buf_t *bp,
 		unsigned int count,
 		int revert_bits)
 {
 	unsigned char	*buf;
 	unsigned int	n;
 
-	if (count > ifd_buf_tailroom(bp)) {
-		ifd_error("ATR buffer too small");
+	if (count > ct_buf_tailroom(bp)) {
+		ct_error("ATR buffer too small");
 		return -1;
 	}
 
-	buf = ifd_buf_tail(bp);
+	buf = ct_buf_tail(bp);
 	for (n = 0; n < count; n++) {
 		if (ifd_device_recv(dev, buf + n, 1, 1000) < 0) {
-			ifd_error("failed to receive ATR");
+			ct_error("failed to receive ATR");
 			return -1;
 		}
 	}
@@ -323,7 +323,7 @@ ifd_recv_atr(ifd_device_t *dev, ifd_buf_t *bp,
 		ifd_revert_bits(buf, count);
 
 	/* Advance tail pointer */
-	ifd_buf_put(bp, NULL, count);
+	ct_buf_put(bp, NULL, count);
 	return count;
 }
 
@@ -343,7 +343,7 @@ ifd_card_command(ifd_reader_t *reader, unsigned int idx, ifd_apdu_t *apdu)
 
 	slot = &reader->slot[idx];
 	if (slot->proto == NULL) {
-		ifd_error("No communication protocol selected");
+		ct_error("No communication protocol selected");
 		return -1;
 	}
 

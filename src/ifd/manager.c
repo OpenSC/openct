@@ -41,7 +41,7 @@ ifd_attach(ifd_reader_t *reader)
 	}
 
 	if (slot >= IFD_MAX_READERS) {
-		ifd_error("Too many readers");
+		ct_error("Too many readers");
 		return -1;
 	}
 
@@ -75,11 +75,11 @@ ifd_reader_by_index(unsigned int index)
 	ifd_reader_t *reader;
 
 	if (index >= IFD_MAX_READERS) {
-		ifd_error("ifd_reader_by_index: invalid index %u", index);
+		ct_error("ifd_reader_by_index: invalid index %u", index);
 		return NULL;
 	}
 	if (!(reader = ifd_readers[index])) {
-		ifd_debug("ifd_reader_by_index: no reader at index %u", index);
+		ct_debug("ifd_reader_by_index: no reader at index %u", index);
 		return NULL;
 	}
 
@@ -99,7 +99,7 @@ ifd_detach(ifd_reader_t *reader)
 
 	if ((slot = reader->num) >= IFD_MAX_READERS
 	 || ifd_readers[slot] != reader) {
-		ifd_error("ifd_detach: unknown reader");
+		ct_error("ifd_detach: unknown reader");
 		return;
 	}
 

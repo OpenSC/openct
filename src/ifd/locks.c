@@ -21,7 +21,7 @@ typedef struct ct_lock {
 	unsigned int	slot;
 	uid_t		uid;
 	ct_lock_handle	handle;
-	ifd_socket_t *	owner;
+	ct_socket_t *	owner;
 	int		exclusive;
 } ct_lock_t;
 
@@ -32,7 +32,7 @@ static unsigned int	lock_handle = 0;
  * Try to establish a lock
  */
 int
-mgr_lock(ifd_socket_t *sock, int slot, int type, ct_lock_handle *res)
+mgr_lock(ct_socket_t *sock, int slot, int type, ct_lock_handle *res)
 {
 	ct_lock_t	*l;
 	int		rc;
@@ -52,7 +52,7 @@ mgr_lock(ifd_socket_t *sock, int slot, int type, ct_lock_handle *res)
 	l->next = locks;
 	locks = l;
 
-	ifd_debug("granted %s lock %u for slot %u by uid=%u",
+	ct_debug("granted %s lock %u for slot %u by uid=%u",
 			l->exclusive? "excl" : "shared",
 			l->handle, l->slot, l->uid);
 
@@ -64,7 +64,7 @@ mgr_lock(ifd_socket_t *sock, int slot, int type, ct_lock_handle *res)
  * Check if a slot is locked by someone else
  */
 int
-mgr_check_lock(ifd_socket_t *sock, int slot, int type)
+mgr_check_lock(ct_socket_t *sock, int slot, int type)
 {
 	ct_lock_t	*l;
 
@@ -88,14 +88,14 @@ mgr_check_lock(ifd_socket_t *sock, int slot, int type)
  * Release a lock
  */
 int
-mgr_unlock(ifd_socket_t *sock, int slot, ct_lock_handle handle)
+mgr_unlock(ct_socket_t *sock, int slot, ct_lock_handle handle)
 {
 	ct_lock_t	*l, **lp;
 
 	for (lp = &locks; (l = *lp) != NULL; lp = &l->next) {
 		if (l->owner == sock && l->slot == slot
 		 && l->handle == handle) {
-			ifd_debug("released %s lock %u for slot %u by uid=%u",
+			ct_debug("released %s lock %u for slot %u by uid=%u",
 					l->exclusive? "excl" : "shared",
 					l->handle, l->slot, l->uid);
 
@@ -113,14 +113,14 @@ mgr_unlock(ifd_socket_t *sock, int slot, ct_lock_handle handle)
  * (called when the client socket is closed)
  */
 void
-mgr_unlock_all(ifd_socket_t *sock)
+mgr_unlock_all(ct_socket_t *sock)
 {
 	ct_lock_t	*l, **lp;
 
 	lp = &locks;
 	while ((l = *lp) != NULL) {
 		if (l->owner == sock) {
-			ifd_debug("released %s lock %u for slot %u by uid=%u",
+			ct_debug("released %s lock %u for slot %u by uid=%u",
 					l->exclusive? "excl" : "shared",
 					l->handle, l->slot, l->uid);
 			*lp = l->next;

@@ -10,7 +10,7 @@
 #include <openct/buffer.h>
 
 void
-ifd_buf_init(ifd_buf_t *bp, void *mem, size_t len)
+ct_buf_init(ct_buf_t *bp, void *mem, size_t len)
 {
 	memset(bp, 0, sizeof(*bp));
 	bp->base = (unsigned char *) mem;
@@ -18,20 +18,20 @@ ifd_buf_init(ifd_buf_t *bp, void *mem, size_t len)
 }
 
 void
-ifd_buf_set(ifd_buf_t *bp, void *mem, size_t len)
+ct_buf_set(ct_buf_t *bp, void *mem, size_t len)
 {
-	ifd_buf_init(bp, mem, len);
+	ct_buf_init(bp, mem, len);
 	bp->tail = len;
 }
 
 void
-ifd_buf_clear(ifd_buf_t *bp)
+ct_buf_clear(ct_buf_t *bp)
 {
 	bp->head = bp->tail = 0;
 }
 
 int
-ifd_buf_get(ifd_buf_t *bp, void *mem, size_t len)
+ct_buf_get(ct_buf_t *bp, void *mem, size_t len)
 {
 	if (len > bp->tail - bp->head)
 		return -1;
@@ -42,7 +42,7 @@ ifd_buf_get(ifd_buf_t *bp, void *mem, size_t len)
 }
 
 int
-ifd_buf_put(ifd_buf_t *bp, const void *mem, size_t len)
+ct_buf_put(ct_buf_t *bp, const void *mem, size_t len)
 {
 	if (len > bp->size - bp->tail)
 		return -1;
@@ -53,50 +53,50 @@ ifd_buf_put(ifd_buf_t *bp, const void *mem, size_t len)
 }
 
 int
-ifd_buf_putc(ifd_buf_t *bp, int byte)
+ct_buf_putc(ct_buf_t *bp, int byte)
 {
 	unsigned char	c = byte;
 
-	return ifd_buf_put(bp, &c, 1);
+	return ct_buf_put(bp, &c, 1);
 }
 
 unsigned int
-ifd_buf_avail(ifd_buf_t *bp)
+ct_buf_avail(ct_buf_t *bp)
 {
 	return bp->tail - bp->head;
 }
 
 unsigned int
-ifd_buf_tailroom(ifd_buf_t *bp)
+ct_buf_tailroom(ct_buf_t *bp)
 {
 	return bp->size - bp->tail;
 }
 
 unsigned int
-ifd_buf_size(ifd_buf_t *bp)
+ct_buf_size(ct_buf_t *bp)
 {
 	return bp->size;
 }
 
 void *
-ifd_buf_head(ifd_buf_t *bp)
+ct_buf_head(ct_buf_t *bp)
 {
 	return bp->base + bp->head;
 }
 
 void *
-ifd_buf_tail(ifd_buf_t *bp)
+ct_buf_tail(ct_buf_t *bp)
 {
 	return bp->base + bp->tail;
 }
 
 int
-ifd_buf_read(ifd_buf_t *bp, int fd)
+ct_buf_read(ct_buf_t *bp, int fd)
 {
 	unsigned int	count;
 	int		n;
 
-	ifd_buf_compact(bp);
+	ct_buf_compact(bp);
 
 	count = bp->size - bp->tail;
 	if ((n = read(fd, bp->base + bp->tail, count)) < 0)
@@ -106,7 +106,7 @@ ifd_buf_read(ifd_buf_t *bp, int fd)
 }
 
 void
-ifd_buf_compact(ifd_buf_t *bp)
+ct_buf_compact(ct_buf_t *bp)
 {
 	unsigned int	count;
 

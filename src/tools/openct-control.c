@@ -25,10 +25,10 @@ static const char *	opt_config = NULL;
 static int		opt_debug = 0;
 
 static void		mgr_spawn_handler(unsigned int, ifd_reader_t *);
-static int		mgr_accept(ifd_socket_t *);
-static int		mgr_recv(ifd_socket_t *);
-static int		mgr_send(ifd_socket_t *);
-static void		mgr_close(ifd_socket_t *);
+static int		mgr_accept(ct_socket_t *);
+static int		mgr_recv(ct_socket_t *);
+static int		mgr_send(ct_socket_t *);
+static void		mgr_close(ct_socket_t *);
 
 int
 main(int argc, char **argv)
@@ -57,11 +57,11 @@ main(int argc, char **argv)
 	ifd_init();
 
 	/* Parse IFD config file */
-	if (ifd_config_parse(opt_config) < 0)
+	if (ct_config_parse(opt_config) < 0)
 		exit(1);
 
-	if (opt_debug > ifd_config.debug)
-		ifd_config.debug = opt_debug;
+	if (opt_debug > ct_config.debug)
+		ct_config.debug = opt_debug;
 
 	ifd_hotplug_init();
 
@@ -78,32 +78,32 @@ void
 mgr_spawn_handler(unsigned int idx, ifd_reader_t *reader)
 {
 	char		socket_name[128];
-	ifd_socket_t	*sock;
+	ct_socket_t	*sock;
 	int		rc;
 
 	/* XXX - fork process here */
 
 	/* Activate reader */
 	if ((rc = ifd_activate(reader)) < 0) {
-		ifd_error("Failed to activate reader; err=%d", rc);
+		ct_error("Failed to activate reader; err=%d", rc);
 		exit(1);
 	}
 
 	/* Make sure directory exists */
-	if (mkdir(ifd_config.socket_dir, 0755) < 0
+	if (mkdir(ct_config.socket_dir, 0755) < 0
 	 && errno != EEXIST) {
-		ifd_error("Unable to create %s: %m",
-				ifd_config.socket_dir);
+		ct_error("Unable to create %s: %m",
+				ct_config.socket_dir);
 		exit(1);
 	}
-	chmod(ifd_config.socket_dir, 0755);
+	chmod(ct_config.socket_dir, 0755);
 
 	snprintf(socket_name, sizeof(socket_name),
-			"%s/%u", ifd_config.socket_dir, idx);
+			"%s/%u", ct_config.socket_dir, idx);
 
-	sock = ifd_socket_new(0);
-	if (ifd_socket_listen(sock, socket_name) < 0) {
-		ifd_error("Failed to create server socket");
+	sock = ct_socket_new(0);
+	if (ct_socket_listen(sock, socket_name) < 0) {
+		ct_error("Failed to create server socket");
 		exit(1);
 	}
 
@@ -111,18 +111,18 @@ mgr_spawn_handler(unsigned int idx, ifd_reader_t *reader)
 	sock->recv = mgr_accept;
 
 	/* Call the server loop */
-	ifd_socket_server_loop(sock);
+	ct_socket_server_loop(sock);
 }
 
 /*
  * Handle connection request from client
  */
 static int
-mgr_accept(ifd_socket_t *listener)
+mgr_accept(ct_socket_t *listener)
 {
-	ifd_socket_t	*sock;
+	ct_socket_t	*sock;
 
-	if (!(sock = ifd_socket_accept(listener)))
+	if (!(sock = ct_socket_accept(listener)))
 		return 0;
 
 	sock->user_data = listener->user_data;
@@ -136,35 +136,35 @@ mgr_accept(ifd_socket_t *listener)
  * Receive data from client
  */
 int
-mgr_recv(ifd_socket_t *sock)
+mgr_recv(ct_socket_t *sock)
 {
 	ifd_reader_t	*reader;
 	char		buffer[512];
 	header_t	header;
-	ifd_buf_t	args, resp;
+	ct_buf_t	args, resp;
 	int		rc;
 
 	/* Error or client closed connection? */
-	if ((rc = ifd_socket_filbuf(sock)) <= 0)
+	if ((rc = ct_socket_filbuf(sock)) <= 0)
 		return -1;
 
 	/* If request is incomplete, go back
 	 * and wait for more
 	 * XXX add timeout? */
-	if (ifd_socket_get_packet(sock, &header, &args) < 0)
+	if (ct_socket_get_packet(sock, &header, &args) < 0)
 		return 0;
 
-	ifd_buf_init(&resp, buffer, sizeof(buffer));
+	ct_buf_init(&resp, buffer, sizeof(buffer));
 
 	reader = (ifd_reader_t *) sock->user_data;
 	header.error = mgr_process(sock, reader, &args, &resp);
 
 	if (header.error)
-		ifd_buf_clear(&resp);
+		ct_buf_clear(&resp);
 
 	/* Put packet into transmit buffer */
-	header.count = ifd_buf_avail(&resp);
-	if (ifd_socket_put_packet(sock, &header, &resp) < 0)
+	header.count = ct_buf_avail(&resp);
+	if (ct_socket_put_packet(sock, &header, &resp) < 0)
 		return -1;
 
 	/* Leave transmitting to the main server loop */
@@ -175,9 +175,9 @@ mgr_recv(ifd_socket_t *sock)
  * Transmit data to client
  */
 int
-mgr_send(ifd_socket_t *sock)
+mgr_send(ct_socket_t *sock)
 {
-	return ifd_socket_flsbuf(sock, 0);
+	return ct_socket_flsbuf(sock, 0);
 }
 
 /*
@@ -185,7 +185,7 @@ mgr_send(ifd_socket_t *sock)
  * Release any locks held by this client
  */
 void
-mgr_close(ifd_socket_t *sock)
+mgr_close(ct_socket_t *sock)
 {
 	mgr_unlock_all(sock);
 }

@@ -25,8 +25,8 @@ enum {
 };
 
 static int	t0_xcv(ifd_protocol_t *, ifd_apdu_t *);
-static int	t0_send(ifd_protocol_t *, ifd_buf_t *, int);
-static int	t0_recv(ifd_protocol_t *, ifd_buf_t *, int, long);
+static int	t0_send(ifd_protocol_t *, ct_buf_t *, int);
+static int	t0_recv(ifd_protocol_t *, ct_buf_t *, int, long);
 static int	t0_resynch(t0_data_t *);
 
 /*
@@ -72,7 +72,7 @@ t0_set_param(ifd_protocol_t *prot, int type, long value)
 		t0->timeout = value;
 		break;
 	default:
-		ifd_error("Unsupported parameter %d", type);
+		ct_error("Unsupported parameter %d", type);
 		return -1;
 	}
 
@@ -90,7 +90,7 @@ t0_get_param(ifd_protocol_t *prot, int type, long *result)
 		value = t0->timeout;
 		break;
 	default:
-		ifd_error("Unsupported parameter %d", type);
+		ct_error("Unsupported parameter %d", type);
 		return -1;
 	}
 
@@ -151,7 +151,7 @@ t0_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 
 	/*
 	if (le + 2 > tpdu.rcv_len) {
-		ifd_error("t0_transceive: recv buffer too small");
+		ct_error("t0_transceive: recv buffer too small");
 		return -1;
 	}
 	 */
@@ -214,13 +214,13 @@ static int
 t0_xcv(ifd_protocol_t *prot, ifd_apdu_t *apdu)
 {
 	t0_data_t	*t0 = (t0_data_t *) prot;
-	ifd_buf_t	sbuf, rbuf;
+	ct_buf_t	sbuf, rbuf;
 	unsigned int	null_count = 0;
 	unsigned int	ins;
 
 	/* Set up the send buffer */
-	ifd_buf_set(&sbuf, apdu->snd_buf, apdu->snd_len);
-	ifd_buf_init(&rbuf, apdu->rcv_buf, apdu->rcv_len);
+	ct_buf_set(&sbuf, apdu->snd_buf, apdu->snd_len);
+	ct_buf_init(&rbuf, apdu->rcv_buf, apdu->rcv_len);
 
 	/* Get the INS */
 	ins = sbuf.base[1];
@@ -245,7 +245,7 @@ t0_xcv(ifd_protocol_t *prot, ifd_apdu_t *apdu)
 		/* ICC sends SW1 SW2 */
 		if ((byte & 0xF0) == 0x60 || (byte & 0xF0) == 0x90) {
 			/* Store SW1, then get SW2 and store it */
-			if (ifd_buf_put(&rbuf, &byte, 1) < 0
+			if (ct_buf_put(&rbuf, &byte, 1) < 0
 			 || t0_recv(prot, &rbuf, 1, t0->timeout) < 0)
 				goto failed;
 
@@ -265,7 +265,7 @@ t0_xcv(ifd_protocol_t *prot, ifd_apdu_t *apdu)
 		} else if (((~byte ^ ins) & 0xFE) == 0) {
 			count = 1;
 		} else {
-			ifd_debug("%s: unexpected byte 0x%02x",
+			ct_debug("%s: unexpected byte 0x%02x",
 					__FUNCTION__, byte);
 			return -1;
 		}
@@ -276,12 +276,12 @@ t0_xcv(ifd_protocol_t *prot, ifd_apdu_t *apdu)
 		} else {
 			if (t0_recv(prot, &rbuf, count, t0->timeout) < 0)
 				goto failed;
-			if (ifd_buf_tailroom(&rbuf) == 0)
+			if (ct_buf_tailroom(&rbuf) == 0)
 				break;
 		}
 	}
 
-	apdu->rcv_len = ifd_buf_avail(&rbuf);
+	apdu->rcv_len = ct_buf_avail(&rbuf);
 	return apdu->rcv_len;
 
 failed:	t0->state = CONFUSED;
@@ -289,31 +289,31 @@ failed:	t0->state = CONFUSED;
 }
 
 int
-t0_send(ifd_protocol_t *prot, ifd_buf_t *bp, int count)
+t0_send(ifd_protocol_t *prot, ct_buf_t *bp, int count)
 {
 	int	n, avail;
 
-	avail = ifd_buf_avail(bp);
+	avail = ct_buf_avail(bp);
 	if (count < 0)
 		count = avail;
 	if (count > avail || !avail)
 		return -1;
-	n = ifd_send_command(prot, ifd_buf_head(bp), count);
+	n = ifd_send_command(prot, ct_buf_head(bp), count);
 	if (n >= 0)
-		ifd_buf_get(bp, NULL, count);
+		ct_buf_get(bp, NULL, count);
 	return n;
 }
 
 int
-t0_recv(ifd_protocol_t *prot, ifd_buf_t *bp, int count, long timeout)
+t0_recv(ifd_protocol_t *prot, ct_buf_t *bp, int count, long timeout)
 {
 	int	n;
 
 	if (count < 0)
-		count = ifd_buf_tailroom(bp);
-	n = ifd_recv_response(prot, ifd_buf_tail(bp), count, timeout);
+		count = ct_buf_tailroom(bp);
+	n = ifd_recv_response(prot, ct_buf_tail(bp), count, timeout);
 	if (n >= 0)
-		ifd_buf_put(bp, NULL, count);
+		ct_buf_put(bp, NULL, count);
 	return n;
 }
 

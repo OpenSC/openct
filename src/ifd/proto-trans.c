@@ -42,14 +42,14 @@ trans_release(ifd_protocol_t *prot)
 static int
 trans_set_param(ifd_protocol_t *prot, int type, long value)
 {
-	ifd_error("set_pameter not supported");
+	ct_error("set_pameter not supported");
 	return -1;
 }
 
 static int
 trans_get_param(ifd_protocol_t *prot, int type, long *result)
 {
-	ifd_error("get_pameter not supported");
+	ct_error("get_pameter not supported");
 	return -1;
 }
 

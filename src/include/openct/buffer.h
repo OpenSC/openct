@@ -9,24 +9,24 @@
 
 #include <sys/types.h>
 
-typedef struct ifd_buf {
+typedef struct ct_buf {
 	unsigned char *		base;
 	unsigned int		head, tail, size;
-} ifd_buf_t;
+} ct_buf_t;
 
-extern void		ifd_buf_init(ifd_buf_t *, void *, size_t);
-extern void		ifd_buf_set(ifd_buf_t *, void *, size_t);
-extern void		ifd_buf_clear(ifd_buf_t *);
-extern int		ifd_buf_get(ifd_buf_t *, void *, size_t);
-extern int		ifd_buf_put(ifd_buf_t *, const void *, size_t);
-extern int		ifd_buf_putc(ifd_buf_t *, int);
-extern unsigned int	ifd_buf_avail(ifd_buf_t *);
-extern unsigned int	ifd_buf_tailroom(ifd_buf_t *);
-extern unsigned int	ifd_buf_size(ifd_buf_t *);
-extern void *		ifd_buf_head(ifd_buf_t *);
-extern void *		ifd_buf_tail(ifd_buf_t *);
-extern int		ifd_buf_read(ifd_buf_t *, int);
-extern void		ifd_buf_compact(ifd_buf_t *);
+extern void		ct_buf_init(ct_buf_t *, void *, size_t);
+extern void		ct_buf_set(ct_buf_t *, void *, size_t);
+extern void		ct_buf_clear(ct_buf_t *);
+extern int		ct_buf_get(ct_buf_t *, void *, size_t);
+extern int		ct_buf_put(ct_buf_t *, const void *, size_t);
+extern int		ct_buf_putc(ct_buf_t *, int);
+extern unsigned int	ct_buf_avail(ct_buf_t *);
+extern unsigned int	ct_buf_tailroom(ct_buf_t *);
+extern unsigned int	ct_buf_size(ct_buf_t *);
+extern void *		ct_buf_head(ct_buf_t *);
+extern void *		ct_buf_tail(ct_buf_t *);
+extern int		ct_buf_read(ct_buf_t *, int);
+extern void		ct_buf_compact(ct_buf_t *);
 
 
 #endif /* IFD_BUFFER_H */

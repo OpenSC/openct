@@ -9,7 +9,7 @@
 
 #define IFD_DEFAULT_MODULES_DIR		"/usr/lib/ifd"
 
-extern struct ifd_config {
+extern struct ct_config {
 	int			debug;
 	int			autoload;
 	int			hotplug_scan_on_startup;
@@ -18,8 +18,8 @@ extern struct ifd_config {
 	const char *		driver_modules_dir;
 	const char *		protocol_modules_dir;
 	const char *		socket_dir;
-} ifd_config;
+} ct_config;
 
-extern int		ifd_config_parse(const char *);
+extern int		ct_config_parse(const char *);
 
 #endif /* IFD_CONFIG_H */

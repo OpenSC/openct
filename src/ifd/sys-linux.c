@@ -64,7 +64,7 @@ ifd_sysdep_channel_to_name(unsigned int num)
 				num & 0xff);
 		break;
 	default:
-		ifd_error("Unknown device channel 0x%x\n", num);
+		ct_error("Unknown device channel 0x%x\n", num);
 		return NULL;
 	}
 
@@ -90,7 +90,7 @@ ifd_sysdep_usb_control(int fd, ifd_usb_cmsg_t *cmsg, long timeout)
 
 	rc = ioctl(fd, USBDEVFS_CONTROL, &ctrl);
 	if (rc < 0)
-		ifd_error("usb ioctl failed: %m");
+		ct_error("usb ioctl failed: %m");
 
 	return rc;
 }

@@ -32,24 +32,24 @@ min(unsigned int a, unsigned int b)
 	return (a < b)? a : b;
 }
 
-static void	ifd_socket_link(ifd_socket_t *, ifd_socket_t *);
-static void	ifd_socket_unlink(ifd_socket_t *);
-static int	ifd_socket_getcreds(ifd_socket_t *);
+static void	ct_socket_link(ct_socket_t *, ct_socket_t *);
+static void	ct_socket_unlink(ct_socket_t *);
+static int	ct_socket_getcreds(ct_socket_t *);
 
 /*
  * Create a socket object
  */
-ifd_socket_t *
-ifd_socket_new(unsigned int bufsize)
+ct_socket_t *
+ct_socket_new(unsigned int bufsize)
 {
-	ifd_socket_t	*sock;
+	ct_socket_t	*sock;
 
-	sock = (ifd_socket_t *) calloc(1, sizeof(*sock) + bufsize);
+	sock = (ct_socket_t *) calloc(1, sizeof(*sock) + bufsize);
 	if (sock == NULL)
 		return NULL;
 
 	/* Initialize socket buffer */
-	ifd_buf_init(&sock->buf, (sock + 1), bufsize);
+	ct_buf_init(&sock->buf, (sock + 1), bufsize);
 	sock->fd = -1;
 
 	return sock;
@@ -59,12 +59,12 @@ ifd_socket_new(unsigned int bufsize)
  * Free a socket object
  */
 void
-ifd_socket_free(ifd_socket_t *sock)
+ct_socket_free(ct_socket_t *sock)
 {
-	ifd_socket_unlink(sock);
+	ct_socket_unlink(sock);
 	if (sock->close)
 		sock->close(sock);
-	ifd_socket_close(sock);
+	ct_socket_close(sock);
 	free(sock);
 }
 
@@ -72,12 +72,12 @@ ifd_socket_free(ifd_socket_t *sock)
  * Create a client socket
  */
 int
-ifd_socket_connect(ifd_socket_t *sock, const char *path)
+ct_socket_connect(ct_socket_t *sock, const char *path)
 {
 	struct sockaddr_un un;
 	int		fd = -1;
 
-	ifd_socket_close(sock);
+	ct_socket_close(sock);
 
 	memset(&un, 0, sizeof(un));
 	un.sun_family = AF_UNIX;
@@ -96,12 +96,12 @@ ifd_socket_connect(ifd_socket_t *sock, const char *path)
  * Listen on a socket
  */
 int
-ifd_socket_listen(ifd_socket_t *sock, const char *pathname)
+ct_socket_listen(ct_socket_t *sock, const char *pathname)
 {
 	struct sockaddr_un suns;
 	int		fd;
 
-	ifd_socket_close(sock);
+	ct_socket_close(sock);
 
 	memset(&suns, 0, sizeof(suns));
 	suns.sun_family = AF_UNIX;
@@ -123,17 +123,17 @@ ifd_socket_listen(ifd_socket_t *sock, const char *pathname)
 /*
  * Accept incoming connection
  */
-ifd_socket_t *
-ifd_socket_accept(ifd_socket_t *sock)
+ct_socket_t *
+ct_socket_accept(ct_socket_t *sock)
 {
-	ifd_socket_t	*svc;
+	ct_socket_t	*svc;
 	int		fd;
 
-	if (!(svc = ifd_socket_new(SOCK_BUFSIZ)))
+	if (!(svc = ct_socket_new(SOCK_BUFSIZ)))
 		return NULL;
 
 	if ((fd = accept(sock->fd, NULL, NULL)) < 0) {
-		ifd_socket_free(svc);
+		ct_socket_free(svc);
 		return NULL;;
 	}
 
@@ -142,10 +142,10 @@ ifd_socket_accept(ifd_socket_t *sock)
 
 	/* obtain client credentials */
 	svc->client_uid = -2;
-	ifd_socket_getcreds(svc);
+	ct_socket_getcreds(svc);
 
 	/* Add socket to list */
-	ifd_socket_link(sock, svc);
+	ct_socket_link(sock, svc);
 
 	return svc;
 }
@@ -155,7 +155,7 @@ ifd_socket_accept(ifd_socket_t *sock)
  * Should move this to a platform specific file
  */
 int
-ifd_socket_getcreds(ifd_socket_t *sock)
+ct_socket_getcreds(ct_socket_t *sock)
 {
 #ifdef SO_PEERCRED
 	struct ucred	creds;
@@ -173,9 +173,9 @@ ifd_socket_getcreds(ifd_socket_t *sock)
  * Close socket
  */
 void
-ifd_socket_close(ifd_socket_t *sock)
+ct_socket_close(ct_socket_t *sock)
 {
-	ifd_buf_clear(&sock->buf);
+	ct_buf_clear(&sock->buf);
 	if (sock->fd >= 0)
 		close(sock->fd);
 	sock->fd = -1;
@@ -185,50 +185,50 @@ ifd_socket_close(ifd_socket_t *sock)
  * Transmit a call and receive the response
  */
 int
-ifd_socket_call(ifd_socket_t *sock, ifd_buf_t *args, ifd_buf_t *resp)
+ct_socket_call(ct_socket_t *sock, ct_buf_t *args, ct_buf_t *resp)
 {
-	ifd_buf_t	*bp = &sock->buf, data;
+	ct_buf_t	*bp = &sock->buf, data;
 	unsigned int	xid = ifd_xid++, avail;
 	header_t	header;
 	int		rc;
 
 	/* Compact send buffer */
-	ifd_buf_compact(bp);
+	ct_buf_compact(bp);
 
 	/* Build header - note there's no need to convert
 	 * integers to network byte order: everything happens
 	 * on the same host, so there's no byte order issue */
 	header.xid   = xid;
-	header.count = ifd_buf_avail(args);
+	header.count = ct_buf_avail(args);
 	header.dest  = 0;
 
 	/* Put everything into send buffer and transmit */
-	if (ifd_socket_put_packet(sock, &header, args) < 0
-	 || ifd_socket_flsbuf(sock, 1) < 0)
+	if (ct_socket_put_packet(sock, &header, args) < 0
+	 || ct_socket_flsbuf(sock, 1) < 0)
 		return -1;
 
 	/* Loop until we receive a complete packet with the
 	 * right xid in it */
 	do {
-		if (ifd_socket_filbuf(sock) < 0)
+		if (ct_socket_filbuf(sock) < 0)
 			return -1;
 
-		ifd_buf_clear(resp);
-		if ((rc = ifd_socket_get_packet(sock, &header, &data)) < 0)
+		ct_buf_clear(resp);
+		if ((rc = ct_socket_get_packet(sock, &header, &data)) < 0)
 			return -1;
 	}  while (rc == 0 || header.xid != xid);
 
 	if (header.error)
 		return header.error;
 
-	avail = ifd_buf_avail(&data);
-	if (avail > ifd_buf_tailroom(resp)) {
-		ifd_error("received truncated reply (%u out of %u bytes)",
+	avail = ct_buf_avail(&data);
+	if (avail > ct_buf_tailroom(resp)) {
+		ct_error("received truncated reply (%u out of %u bytes)",
 				rc, header.count);
 		return -1;
 	}
 
-	ifd_buf_put(resp, ifd_buf_head(&data), avail);
+	ct_buf_put(resp, ct_buf_head(&data), avail);
 	return header.count;
 }
 
@@ -236,15 +236,15 @@ ifd_socket_call(ifd_socket_t *sock, ifd_buf_t *args, ifd_buf_t *resp)
  * Put packet into send buffer
  */
 int
-ifd_socket_put_packet(ifd_socket_t *sock, header_t *hdr, ifd_buf_t *data)
+ct_socket_put_packet(ct_socket_t *sock, header_t *hdr, ct_buf_t *data)
 {
-	ifd_buf_t	*bp = &sock->buf;
+	ct_buf_t	*bp = &sock->buf;
 
-	ifd_buf_clear(bp);
-	if (ifd_buf_put(bp, hdr, sizeof(*hdr)) < 0
+	ct_buf_clear(bp);
+	if (ct_buf_put(bp, hdr, sizeof(*hdr)) < 0
 	 || (data &&
-	     ifd_buf_put(bp, ifd_buf_head(data), ifd_buf_avail(data)) < 0)) {
-		ifd_error("packet too large for buffer");
+	     ct_buf_put(bp, ct_buf_head(data), ct_buf_avail(data)) < 0)) {
+		ct_error("packet too large for buffer");
 		return -1;
 	}
 
@@ -256,33 +256,33 @@ ifd_socket_put_packet(ifd_socket_t *sock, header_t *hdr, ifd_buf_t *data)
  * Get packet from buffer
  */
 int
-ifd_socket_get_packet(ifd_socket_t *sock, header_t *hdr, ifd_buf_t *data)
+ct_socket_get_packet(ct_socket_t *sock, header_t *hdr, ct_buf_t *data)
 {
-	ifd_buf_t	*bp = &sock->buf;
+	ct_buf_t	*bp = &sock->buf;
 	unsigned int	avail;
 	header_t	th;
 
-	avail = ifd_buf_avail(bp);
+	avail = ct_buf_avail(bp);
 	if (avail < sizeof(header_t))
 		return 0;
 
-	memcpy(&th, ifd_buf_head(bp), sizeof(th));
+	memcpy(&th, ct_buf_head(bp), sizeof(th));
 	if (avail >= sizeof(header_t) + th.count) {
 		/* There's enough data in the buffer
 		 * Extract header... */
-		ifd_buf_get(bp, hdr, sizeof(*hdr));
+		ct_buf_get(bp, hdr, sizeof(*hdr));
 
 		/* ... set data buffer (don't copy, just set pointers) ... */
-		ifd_buf_set(data, ifd_buf_head(bp), hdr->count);
+		ct_buf_set(data, ct_buf_head(bp), hdr->count);
 
 		/* ... and advance head pointer */
-		ifd_buf_get(bp, NULL, hdr->count);
+		ct_buf_get(bp, NULL, hdr->count);
 		return 1;
 	}
 
 	/* Check if this packet will ever fit into this buffer */
-	if (ifd_buf_size(bp) < sizeof(header_t) + th.count) {
-		ifd_error("packet too large for buffer");
+	if (ct_buf_size(bp) < sizeof(header_t) + th.count) {
+		ct_error("packet too large for buffer");
 		return -1;
 	}
 
@@ -293,23 +293,23 @@ ifd_socket_get_packet(ifd_socket_t *sock, header_t *hdr, ifd_buf_t *data)
  * Read some data from socket and put it into buffer
  */
 int
-ifd_socket_filbuf(ifd_socket_t *sock)
+ct_socket_filbuf(ct_socket_t *sock)
 {
-	ifd_buf_t	*bp = &sock->buf;
+	ct_buf_t	*bp = &sock->buf;
 	unsigned int	count;
 	int		n;
 
-	if (!(count = ifd_buf_tailroom(bp))) {
-		ifd_buf_compact(bp);
-		if (!(count = ifd_buf_tailroom(bp))) {
-			ifd_error("packet too large");
+	if (!(count = ct_buf_tailroom(bp))) {
+		ct_buf_compact(bp);
+		if (!(count = ct_buf_tailroom(bp))) {
+			ct_error("packet too large");
 			return -1;
 		}
 	}
 
-	n = read(sock->fd, ifd_buf_tail(bp), count);
+	n = read(sock->fd, ct_buf_tail(bp), count);
 	if (n < 0) {
-		ifd_error("socket recv error: %m");
+		ct_error("socket recv error: %m");
 		return -1;
 	}
 
@@ -317,15 +317,15 @@ ifd_socket_filbuf(ifd_socket_t *sock)
 	 * the buffer (otherwise we're probably waiting
 	 * on a partial request) */
 	if (n == 0) {
-		if (ifd_buf_avail(bp)) {
-			ifd_error("Peer closed connection");
+		if (ct_buf_avail(bp)) {
+			ct_error("Peer closed connection");
 			return -1;
 		}
 		return 0;
 	}
 
 	/* Advance buffer tail pointer */
-	ifd_buf_put(bp, NULL, n);
+	ct_buf_put(bp, NULL, n);
 	return n;
 }
 
@@ -334,23 +334,23 @@ ifd_socket_filbuf(ifd_socket_t *sock)
  * FIXME - ignore SIGPIPE while writing
  */
 int
-ifd_socket_flsbuf(ifd_socket_t *sock, int all)
+ct_socket_flsbuf(ct_socket_t *sock, int all)
 {
-	ifd_buf_t	*bp = &sock->buf;
+	ct_buf_t	*bp = &sock->buf;
 	int		n;
 
 	do {
-		if (!(n = ifd_buf_avail(bp))) {
+		if (!(n = ct_buf_avail(bp))) {
 			sock->events = POLLIN;
 			break;
 		}
-		n = write(sock->fd, ifd_buf_head(bp), n);
+		n = write(sock->fd, ct_buf_head(bp), n);
 		if (n < 0) {
-			ifd_error("socket send error: %m");
+			ct_error("socket send error: %m");
 			break;
 		}
 		/* Advance head pointer */
-		ifd_buf_get(bp, NULL, n);
+		ct_buf_get(bp, NULL, n);
 	} while (all);
 
 	return n;
@@ -360,27 +360,27 @@ ifd_socket_flsbuf(ifd_socket_t *sock, int all)
  * Send/receive request
  */
 int
-ifd_socket_send(ifd_socket_t *sock, header_t *hdr, ifd_buf_t *data)
+ct_socket_send(ct_socket_t *sock, header_t *hdr, ct_buf_t *data)
 {
-	if (ifd_socket_write(sock, hdr, sizeof(*hdr)) < 0
-	 || ifd_socket_write(sock, ifd_buf_head(data), hdr->count) < 0)
+	if (ct_socket_write(sock, hdr, sizeof(*hdr)) < 0
+	 || ct_socket_write(sock, ct_buf_head(data), hdr->count) < 0)
 		return -1;
 	return 0;
 }
 
 int
-ifd_socket_recv(ifd_socket_t *sock, header_t *hdr, ifd_buf_t *resp)
+ct_socket_recv(ct_socket_t *sock, header_t *hdr, ct_buf_t *resp)
 {
 	unsigned int	left, count, n;
 	unsigned char	c;
 	int		rc;
 
-	if (ifd_socket_write(sock, hdr, sizeof(*hdr)) < 0)
+	if (ct_socket_write(sock, hdr, sizeof(*hdr)) < 0)
 		return -1;
 
 	if (hdr->count > 1024) {
-		ifd_error("oversize packet, discarding");
-		ifd_socket_close(sock);
+		ct_error("oversize packet, discarding");
+		ct_socket_close(sock);
 		return -1;
 	}
 
@@ -393,11 +393,11 @@ ifd_socket_recv(ifd_socket_t *sock, header_t *hdr, ifd_buf_t *resp)
 	left = hdr->count;
 	count = 0;
 	while (left) {
-		n = min(left, ifd_buf_tailroom(resp));
+		n = min(left, ct_buf_tailroom(resp));
 		if (n == 0) {
-			rc = ifd_socket_read(sock, &c, 1);
+			rc = ct_socket_read(sock, &c, 1);
 		} else {
-			rc = ifd_socket_read(sock, ifd_buf_tail(resp), n);
+			rc = ct_socket_read(sock, ct_buf_tail(resp), n);
 		}
 		if (rc < 0)
 			return -1;
@@ -412,7 +412,7 @@ ifd_socket_recv(ifd_socket_t *sock, header_t *hdr, ifd_buf_t *resp)
  * Socket read/write routines
  */
 int
-ifd_socket_write(ifd_socket_t *sock, void *ptr, size_t len)
+ct_socket_write(ct_socket_t *sock, void *ptr, size_t len)
 {
 	unsigned int	count = 0;
 	int		rc;
@@ -424,7 +424,7 @@ ifd_socket_write(ifd_socket_t *sock, void *ptr, size_t len)
 		/* XXX block SIGPIPE */
 		rc = write(sock->fd, ptr, len);
 		if (rc < 0) {
-			ifd_error("send error: %m");
+			ct_error("send error: %m");
 			goto done;
 		}
 		(caddr_t) ptr += rc;
@@ -435,7 +435,7 @@ done:	return rc;
 }
 
 int
-ifd_socket_write_nb(ifd_socket_t *sock, void *ptr, size_t len)
+ct_socket_write_nb(ct_socket_t *sock, void *ptr, size_t len)
 {
 	int	rc;
 
@@ -445,13 +445,13 @@ ifd_socket_write_nb(ifd_socket_t *sock, void *ptr, size_t len)
 	/* XXX block SIGPIPE */
 	rc = write(sock->fd, ptr, len);
 	if (rc < 0)
-		ifd_error("send error: %m");
+		ct_error("send error: %m");
 
 	return rc;
 }
 
 int
-ifd_socket_read(ifd_socket_t *sock, void *ptr, size_t size)
+ct_socket_read(ct_socket_t *sock, void *ptr, size_t size)
 {
 	unsigned int	count = 0;
 	int		rc;
@@ -462,11 +462,11 @@ ifd_socket_read(ifd_socket_t *sock, void *ptr, size_t size)
 	while (count < size) {
 		rc = read(sock->fd, ptr, size - count);
 		if (rc < 0) {
-			ifd_error("recv error: %m");
+			ct_error("recv error: %m");
 			goto done;
 		}
 		if (rc == 0) {
-			ifd_error("peer closed connection");
+			ct_error("peer closed connection");
 			rc = -1;
 			goto done;
 		}
@@ -479,7 +479,7 @@ done:	return rc;
 }
 
 int
-ifd_socket_read_nb(ifd_socket_t *sock, void *ptr, size_t size)
+ct_socket_read_nb(ct_socket_t *sock, void *ptr, size_t size)
 {
 	int	rc;
 
@@ -488,7 +488,7 @@ ifd_socket_read_nb(ifd_socket_t *sock, void *ptr, size_t size)
 
 	rc = read(sock->fd, ptr, size);
 	if (rc < 0)
-		ifd_error("recv error: %m");
+		ct_error("recv error: %m");
 	return rc;
 }
 
@@ -496,17 +496,17 @@ ifd_socket_read_nb(ifd_socket_t *sock, void *ptr, size_t size)
  * This is the main server loop
  */
 void
-ifd_socket_server_loop(ifd_socket_t *listener)
+ct_socket_server_loop(ct_socket_t *listener)
 {
 	unsigned int	nsockets = 1;
-	ifd_socket_t	head;
+	ct_socket_t	head;
 	struct pollfd	pfd[IFD_MAX_SOCKETS];
 
 	head.next = head.prev = NULL;
-	ifd_socket_link(&head, listener);
+	ct_socket_link(&head, listener);
 
 	while (1) {
-		ifd_socket_t	*sock, *next;
+		ct_socket_t	*sock, *next;
 		unsigned int	n = 0;
 		int		rc;
 
@@ -514,7 +514,7 @@ ifd_socket_server_loop(ifd_socket_t *listener)
 		for (nsockets = 0, sock = head.next; sock; sock = next) {
 			next = sock->next;
 			if (sock->fd < 0)
-				ifd_socket_free(sock);
+				ct_socket_free(sock);
 			else
 				nsockets++;
 		}
@@ -539,7 +539,7 @@ ifd_socket_server_loop(ifd_socket_t *listener)
 		if (rc < 0) {
 			if (rc == EINTR)
 				continue;
-			ifd_error("poll: %m");
+			ct_error("poll: %m");
 			exit(1);
 		}
 
@@ -547,13 +547,13 @@ ifd_socket_server_loop(ifd_socket_t *listener)
 			next = sock->next;
 			if (pfd[n].revents & POLLOUT) {
 				if (sock->send(sock) < 0) {
-					ifd_socket_free(sock);
+					ct_socket_free(sock);
 					continue;
 				}
 			}
 			if (pfd[n].revents & POLLIN) {
 				if ((rc = sock->recv(sock)) < 0) {
-					ifd_socket_free(sock);
+					ct_socket_free(sock);
 					continue;
 				}
 			}
@@ -565,9 +565,9 @@ ifd_socket_server_loop(ifd_socket_t *listener)
  * Link/unlink socket
  */
 void
-ifd_socket_link(ifd_socket_t *prev, ifd_socket_t *sock)
+ct_socket_link(ct_socket_t *prev, ct_socket_t *sock)
 {
-	ifd_socket_t	*next = prev->next;
+	ct_socket_t	*next = prev->next;
 
 	if (next)
 		next->prev = sock;
@@ -578,9 +578,9 @@ ifd_socket_link(ifd_socket_t *prev, ifd_socket_t *sock)
 }
 
 void
-ifd_socket_unlink(ifd_socket_t *sock)
+ct_socket_unlink(ct_socket_t *sock)
 {
-	ifd_socket_t	*next = sock->next,
+	ct_socket_t	*next = sock->next,
 			*prev = sock->prev;
 
 	if (next)
@@ -643,7 +643,7 @@ lpc_server_setup(lpc_server *svc, lpc_proc *prog, lpc_dispatch_t dispatch,
 			unsigned int argsize, unsigned int ressize,
 			void *appdata)
 {
-	if (!(svc->buf = NEW(ifd_buf_t)))
+	if (!(svc->buf = NEW(ct_buf_t)))
 		return;
 	svc->prog	= prog;
 	svc->dispatch	= dispatch;
@@ -708,7 +708,7 @@ over_and_out:
 int
 lpc_server_request(lpc_server *svc)
 {
-	ifd_buf_t		*bp = svc->buf;
+	ct_buf_t		*bp = svc->buf;
 	lpc_header	hdr;
 	lpc_proc	*pc;
 	const char	*msg = NULL;
@@ -799,7 +799,7 @@ lpc_server_close(lpc_server *svc)
  * Send a PDU
  */
 int
-lpc_sendpdu(int fd, lpc_header *hdr, ifd_buf_t *bp)
+lpc_sendpdu(int fd, lpc_header *hdr, ct_buf_t *bp)
 {
 	unsigned int	len = bp->tail - bp->head;
 
@@ -814,7 +814,7 @@ lpc_sendpdu(int fd, lpc_header *hdr, ifd_buf_t *bp)
  * Receive a PDU
  */
 int
-lpc_recvpdu(int fd, lpc_header *hdr, ifd_buf_t *bp)
+lpc_recvpdu(int fd, lpc_header *hdr, ct_buf_t *bp)
 {
 	unsigned int	count, n;
 
@@ -887,13 +887,13 @@ lpc_recv(int fd, void *data, unsigned int count)
  * Codec functions
  */
 int
-lpc_c_void(ifd_buf_t *bp, int enc, void *ptr)
+lpc_c_void(ct_buf_t *bp, int enc, void *ptr)
 {
 	return 1;
 }
 
 int
-lpc_c_int(ifd_buf_t *bp, int enc, void *ptr)
+lpc_c_int(ct_buf_t *bp, int enc, void *ptr)
 {
 	u_int32_t	value;
 
@@ -909,7 +909,7 @@ lpc_c_int(ifd_buf_t *bp, int enc, void *ptr)
 }
 
 int
-lpc_c_string(ifd_buf_t *bp, int enc, void *ptr)
+lpc_c_string(ct_buf_t *bp, int enc, void *ptr)
 {
 	u_int32_t	len;
 	char		*str;
@@ -946,7 +946,7 @@ lpc_c_string(ifd_buf_t *bp, int enc, void *ptr)
 }
 
 int
-lpc_c_blob(ifd_buf_t *bp, int enc, void *ptr)
+lpc_c_blob(ct_buf_t *bp, int enc, void *ptr)
 {
 	lpc_blob	*blob = (lpc_blob *) ptr;
 

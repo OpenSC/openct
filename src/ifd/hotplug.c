@@ -14,7 +14,7 @@
 int
 ifd_hotplug_init(void)
 {
-	if (ifd_config.hotplug_scan_on_startup) {
+	if (ct_config.hotplug_scan_on_startup) {
 		ifd_sysdep_usb_scan();
 	}
 	return 0;
@@ -43,6 +43,6 @@ ifd_hotplug_attach(const char *device, const char *id)
 int
 ifd_hotplug_detach(const char *device, const char *id)
 {
-	ifd_error("hotplug detach not yet implemented");
+	ct_error("hotplug detach not yet implemented");
 	return -1;
 }

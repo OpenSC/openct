@@ -77,12 +77,12 @@ main(int argc, char **argv)
 
 #if 0
 	/* Parse IFD config file */
-	if (ifd_config_parse(opt_config) < 0)
+	if (ct_config_parse(opt_config) < 0)
 		exit(1);
 #endif
 
-	if (opt_debug > ifd_config.debug)
-		ifd_config.debug = opt_debug;
+	if (opt_debug > ct_config.debug)
+		ct_config.debug = opt_debug;
 
 	if (opt_command == CMD_LIST) {
 		int	i = 0, num = IFD_MAX_READER;

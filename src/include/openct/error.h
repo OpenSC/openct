@@ -23,6 +23,6 @@
 #define IFD_ERROR_MISSING_ARG	-102
 #define IFD_ERROR_INVALID_ARG	-103
 
-extern const char *	ifd_hexdump(const unsigned char *, size_t);
+extern const char *	ct_hexdump(const unsigned char *, size_t);
 
 #endif /* IFD_ERROR_H */

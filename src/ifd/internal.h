@@ -79,7 +79,7 @@ extern struct ifd_protocol_ops	ifd_protocol_t0;
 extern struct ifd_protocol_ops	ifd_protocol_trans;
 
 /* Debugging macros */
-#define IFD_DEBUG(fmt, args...)	do { ifd_debug("%s: " fmt, __FUNCTION__ , ##args); } while (0)
+#define IFD_DEBUG(fmt, args...)	do { ct_debug("%s: " fmt, __FUNCTION__ , ##args); } while (0)
 
 /* reader.c */
 extern int		ifd_send_command(ifd_protocol_t *,

@@ -15,7 +15,7 @@
 #include <openct/error.h>
 
 #define DEBUG(fmt, args...) \
-	do { ifd_debug("%s: "  fmt, __FUNCTION__ , ##args); } while (0)
+	do { ct_debug("%s: "  fmt, __FUNCTION__ , ##args); } while (0)
 		
 
 static int		twt_led(ifd_reader_t *, int);
@@ -110,7 +110,7 @@ twt_open(ifd_reader_t *reader, const char *device_name)
 
 	return 0;
 
-failed: ifd_error("towitoko: failed to initialize device");
+failed: ct_error("towitoko: failed to initialize device");
 	return -1;
 }
 
@@ -154,7 +154,7 @@ twt_card_status(ifd_reader_t *reader, int slot, int *status)
 	unsigned char	byte;
 
 	if (slot != 0) {
-		ifd_error("towitoko: bad slot index %u", slot);
+		ct_error("towitoko: bad slot index %u", slot);
 		return -1;
 	}
 
@@ -185,7 +185,7 @@ twt_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 	DEBUG("called.");
 
 	if (slot != 0) {
-		ifd_error("towitoko: bad slot index %u", slot);
+		ct_error("towitoko: bad slot index %u", slot);
 		return -1;
 	}
 
@@ -210,10 +210,10 @@ twt_try_reset(ifd_reader_t *reader,
 	ifd_device_t *dev = reader->device;
 	int rc;
 
-	if (ifd_config.debug > 1)
-		DEBUG("sending %s", ifd_hexdump(cmd, cmd_len));
+	if (ct_config.debug > 1)
+		DEBUG("sending %s", ct_hexdump(cmd, cmd_len));
 
-	ifd_config.hush_errors++;
+	ct_config.hush_errors++;
 	if (ifd_device_type(dev) != IFD_DEVICE_TYPE_SERIAL) {
 		ifd_apdu_t	apdu;
 
@@ -227,7 +227,7 @@ twt_try_reset(ifd_reader_t *reader,
 			return -1;
 		rc = ifd_device_recv(dev, atr, 1, 1000);
 	}
-	ifd_config.hush_errors--;
+	ct_config.hush_errors--;
 
 	if (rc == IFD_ERROR_TIMEOUT)
 		return 0;
@@ -266,12 +266,12 @@ twt_change_parity(ifd_reader_t *reader, int parity)
 		cmd[1] = 0x80;
 		break;
 	default:
-		ifd_error("towitoko: parity NONE not supported");
+		ct_error("towitoko: parity NONE not supported");
 		return -1;
 	}
 
 	if (twt_command(reader, cmd, 4, NULL, 0) < 0) {
-		ifd_error("towitoko: failed to change parity");
+		ct_error("towitoko: failed to change parity");
 		return -1;
 	}
 
@@ -293,7 +293,7 @@ twt_send(ifd_reader_t *reader, unsigned int dad,
 	if (!(dev = reader->device))
 		return -1;
 
-	DEBUG("data:%s", ifd_hexdump(buffer, len));
+	DEBUG("data:%s", ct_hexdump(buffer, len));
 	while (len) {
 		if ((count = len) > 255)
 			count = 255;
@@ -324,7 +324,7 @@ twt_recv(ifd_reader_t *reader, unsigned int dad,
 	n = ifd_device_recv(reader->device, buffer, len, timeout);
 	if (n < 0)
 		return -1;
-	DEBUG("data:%s", ifd_hexdump(buffer, len));
+	DEBUG("data:%s", ct_hexdump(buffer, len));
 	return n;
 }
 
@@ -350,8 +350,8 @@ twt_command(ifd_reader_t *reader, const char *cmd, size_t cmd_len,
 	unsigned char	buffer[254];
 	ifd_apdu_t	apdu;
 
-	if (ifd_config.debug > 1)
-		DEBUG("sending:%s", ifd_hexdump(cmd, cmd_len));
+	if (ct_config.debug > 1)
+		DEBUG("sending:%s", ct_hexdump(cmd, cmd_len));
 
 	if (res_len > sizeof(buffer)-1
 	 || cmd_len > sizeof(buffer)-1)
@@ -363,15 +363,15 @@ twt_command(ifd_reader_t *reader, const char *cmd, size_t cmd_len,
 	twt_build(&apdu, buffer, cmd_len, buffer, res_len + 1);
 
 	if (ifd_device_transceive(reader->device, &apdu, -1) < 0) {
-		ifd_error("towitoko: transceive error");
+		ct_error("towitoko: transceive error");
 		return -1;
 	}
 
-	if (ifd_config.debug > 1)
-		DEBUG("received:%s", ifd_hexdump(buffer, res_len + 1));
+	if (ct_config.debug > 1)
+		DEBUG("received:%s", ct_hexdump(buffer, res_len + 1));
 
 	if (!twt_recv_checksum(buffer, res_len + 1)) {
-		ifd_error("towitoko: command failed (bad checksum)");
+		ct_error("towitoko: command failed (bad checksum)");
 		return -1;
 	}
 

@@ -11,7 +11,7 @@
 #include <openct/conf.h>
 
 void
-ifd_error(const char *fmt, ...)
+ct_error(const char *fmt, ...)
 {
 	va_list	ap;
 
@@ -23,11 +23,11 @@ ifd_error(const char *fmt, ...)
 }
 
 void
-ifd_debug(const char *fmt, ...)
+ct_debug(const char *fmt, ...)
 {
 	va_list	ap;
 
-	if (!ifd_config.debug)
+	if (!ct_config.debug)
 		return;
 
 	va_start(ap, fmt);

@@ -7,7 +7,7 @@
 #ifndef IFD_LOGGING_H
 #define IFD_LOGGING_H
 
-extern void		ifd_error(const char *, ...);
-extern void		ifd_debug(const char *, ...);
+extern void		ct_error(const char *, ...);
+extern void		ct_debug(const char *, ...);
 
 #endif /* IFD_LOGGING_H */

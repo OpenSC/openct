@@ -39,7 +39,7 @@ ifd_serial_get_params(ifd_device_t *dp, ifd_device_params_t *params)
 	memset(params, 0, sizeof(*params));
 
 	if (tcgetattr(dev->fd, &t) < 0) {
-		ifd_error("%s: tcgetattr: %m", dp->name);
+		ct_error("%s: tcgetattr: %m", dp->name);
 		return -1;
 	}
 
@@ -62,7 +62,7 @@ ifd_serial_get_params(ifd_device_t *dp, ifd_device_params_t *params)
 		params->serial.parity = IFD_SERIAL_PARITY_EVEN;
 
 	if (ioctl(dev->fd, TIOCMGET, &control) < 0) {
-		ifd_error("%s: TIOCMGET: %m", dp->name);
+		ct_error("%s: TIOCMGET: %m", dp->name);
 		return -1;
 	}
 	if (control & TIOCM_RTS) params->serial.rts = 1;
@@ -87,7 +87,7 @@ ifd_serial_set_params(ifd_device_t *dp, const ifd_device_params_t *params)
 		goto skip_setattr;
 
 	if (tcgetattr(dev->fd, &t) < 0) {
-		ifd_error("%s: tcgetattr: %m", dp->name);
+		ct_error("%s: tcgetattr: %m", dp->name);
 		return -1;
 	}
 
@@ -121,7 +121,7 @@ ifd_serial_set_params(ifd_device_t *dp, const ifd_device_params_t *params)
 	t.c_lflag = 0;
 
 	if (tcsetattr(dev->fd, TCSANOW, &t) < 0) {
-		ifd_error("%s: tcsetattr: %m", dp->name);
+		ct_error("%s: tcsetattr: %m", dp->name);
 		return -1;
 	}
 
@@ -131,14 +131,14 @@ ifd_serial_set_params(ifd_device_t *dp, const ifd_device_params_t *params)
 
 skip_setattr:
 	if (ioctl(dev->fd, TIOCMGET, &control) < 0) {
-		ifd_error("%s: TIOCMGET: %m", dp->name);
+		ct_error("%s: TIOCMGET: %m", dp->name);
 		return -1;
 	}
 	control &= ~(TIOCM_DTR | TIOCM_RTS);
 	if (params->serial.rts) control |= TIOCM_RTS;
 	if (params->serial.dtr) control |= TIOCM_DTR;
 	if (ioctl(dev->fd, TIOCMSET, &control) < 0) {
-		ifd_error("%s: TIOCMGET: %m", dp->name);
+		ct_error("%s: TIOCMGET: %m", dp->name);
 		return -1;
 	}
 
@@ -169,7 +169,7 @@ ifd_serial_send(ifd_device_t *dp, const void *buffer, size_t len)
 	while (len) {
 		n = write(dev->fd, buffer, len);
 		if (n < 0) {
-			ifd_error("Error writing to %s: %m",
+			ct_error("Error writing to %s: %m",
 					dp->name);
 			return -1;
 		}
@@ -211,7 +211,7 @@ ifd_serial_recv(ifd_device_t *dp, void *buffer, size_t len, long timeout)
 		pfd.events = POLLIN;
 		n = poll(&pfd, 1, wait);
 		if (n < 0) {
-			ifd_error("%s: error while waiting for input: %m",
+			ct_error("%s: error while waiting for input: %m",
 					dp->name);
 			return -1;
 		}
@@ -219,7 +219,7 @@ ifd_serial_recv(ifd_device_t *dp, void *buffer, size_t len, long timeout)
 			continue;
 		n = read(dev->fd, buffer, len);
 		if (n < 0) {
-			ifd_error("%s: failed to read from device: %m",
+			ct_error("%s: failed to read from device: %m",
 					dp->name);
 			return -1;
 		}
@@ -231,8 +231,8 @@ ifd_serial_recv(ifd_device_t *dp, void *buffer, size_t len, long timeout)
 
 timeout:/* Timeouts are a little special; they may happen e.g.
 	 * when trying to obtain the ATR */
-	if (!ifd_config.hush_errors)
-		ifd_error("%s: timed out while waiting for intput",
+	if (!ct_config.hush_errors)
+		ct_error("%s: timed out while waiting for intput",
 				dp->name);
 	return IFD_ERROR_TIMEOUT;
 }
@@ -243,7 +243,7 @@ timeout:/* Timeouts are a little special; they may happen e.g.
 static int
 ifd_serial_identify(ifd_device_t *dev, char *namebuf, size_t len)
 {
-	ifd_error("Serial PNP not yet implemented");
+	ct_error("Serial PNP not yet implemented");
 	return -1;
 }
 
@@ -281,7 +281,7 @@ ifd_open_serial(const char *name)
 	int		fd;
 
 	if ((fd = open(name, O_RDWR|O_NDELAY)) < 0) {
-		ifd_error("Unable to open %s: %m", name);
+		ct_error("Unable to open %s: %m", name);
 		return NULL;
 	}
 

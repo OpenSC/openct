@@ -78,11 +78,11 @@ main(int argc, char **argv)
 	ifd_init();
 
 	/* Parse IFD config file */
-	if (ifd_config_parse(opt_config) < 0)
+	if (ct_config_parse(opt_config) < 0)
 		exit(1);
 
-	if (opt_debug > ifd_config.debug)
-		ifd_config.debug = opt_debug;
+	if (opt_debug > ct_config.debug)
+		ct_config.debug = opt_debug;
 
 	ifd_hotplug_init();
 

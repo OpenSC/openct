@@ -37,7 +37,7 @@ et_open(ifd_reader_t *reader, const char *device_name)
 	if (!(dev = ifd_device_open(device_name)))
 		return -1;
 	if (ifd_device_type(dev) != IFD_DEVICE_TYPE_USB) {
-		ifd_error("etoken: device %s is not a USB device",
+		ct_error("etoken: device %s is not a USB device",
 				device_name);
 		ifd_device_close(dev);
 		return -1;
@@ -127,7 +127,7 @@ et_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 		goto failed;
 	return n;
 
-failed:	ifd_error("etoken: failed to activate token");
+failed:	ct_error("etoken: failed to activate token");
 	return -1;
 }
 

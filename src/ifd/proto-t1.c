@@ -13,7 +13,7 @@
 #include "internal.h"
 
 #define DEBUG(fmt, args...) \
-	do { ifd_debug("%s: "  fmt, __FUNCTION__ , ##args); } while (0)
+	do { ct_debug("%s: "  fmt, __FUNCTION__ , ##args); } while (0)
 		
 
 typedef struct {
@@ -68,7 +68,7 @@ static unsigned	int	t1_block_type(unsigned char);
 static unsigned int	t1_seq(unsigned char);
 static int		t1_resynch(t1_data_t *t1);
 static unsigned	int	t1_build(ifd_apdu_t *, t1_data_t *,
-				unsigned char, ifd_buf_t *);
+				unsigned char, ct_buf_t *);
 static void		t1_compute_checksum(t1_data_t *, ifd_apdu_t *);
 static int		t1_verify_checksum(t1_data_t *, unsigned char *, unsigned int);
 static int		t1_xcv(ifd_protocol_t *, ifd_apdu_t *, size_t *);
@@ -144,7 +144,7 @@ t1_set_param(ifd_protocol_t *prot, int type, long value)
 		t1_set_checksum(t1, type);
 		break;
 	default:
-		ifd_error("Unsupported parameter %d", type);
+		ct_error("Unsupported parameter %d", type);
 		return -1;
 	}
 
@@ -162,7 +162,7 @@ t1_get_param(ifd_protocol_t *prot, int type, long *result)
 		value = t1->timeout;
 		break;
 	default:
-		ifd_error("Unsupported parameter %d", type);
+		ct_error("Unsupported parameter %d", type);
 		return -1;
 	}
 
@@ -180,7 +180,7 @@ t1_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 {
 	t1_data_t	*t1 = (t1_data_t *) prot;
 	ifd_apdu_t	block;
-	ifd_buf_t	sbuf, rbuf, tbuf;
+	ct_buf_t	sbuf, rbuf, tbuf;
 	unsigned char	sdata[T1_BUFFER_SIZE], rdata[T1_BUFFER_SIZE];
 	unsigned int	retries, last_send = 0;
 
@@ -195,8 +195,8 @@ t1_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 	retries = t1->retries;
 
 	/* Initialize send/recv buffer */
-	ifd_buf_set(&sbuf, apdu->snd_buf, apdu->snd_len);
-	ifd_buf_init(&rbuf, apdu->rcv_buf, apdu->rcv_len);
+	ct_buf_set(&sbuf, apdu->snd_buf, apdu->snd_len);
+	ct_buf_init(&rbuf, apdu->rcv_buf, apdu->rcv_len);
 
 	block.snd_buf = sdata;
 	block.snd_len = 0;
@@ -253,14 +253,14 @@ t1_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 			 * sequence number, it received the previous
 			 * block successfully */
 			if (t1_seq(pcb) != t1->ns) {
-				ifd_buf_get(&sbuf, NULL, last_send);
+				ct_buf_get(&sbuf, NULL, last_send);
 				last_send = 0;
 				t1->ns ^= 1;
 			}
 
 			/* If there's no data available, the ICC
 			 * shouldn't be asking for more */
-			if (ifd_buf_avail(&sbuf) == 0)
+			if (ct_buf_avail(&sbuf) == 0)
 				return -1;
 
 			last_send = t1_build(&block, t1, T1_I_BLOCK, &sbuf);
@@ -270,7 +270,7 @@ t1_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 			/* The first I-block sent by the ICC indicates
 			 * the last block we sent was received successfully. */
 			if (t1->state == SENDING) {
-				ifd_buf_get(&sbuf, NULL, last_send);
+				ct_buf_get(&sbuf, NULL, last_send);
 				last_send = 0;
 				t1->ns ^= 1;
 			}
@@ -289,7 +289,7 @@ t1_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 
 			t1->nr ^= 1;
 
-			if (ifd_buf_put(&rbuf, rdata + 3, count) < 0)
+			if (ct_buf_put(&rbuf, rdata + 3, count) < 0)
 				return -1;
 
 			if ((pcb & T1_MORE_BLOCKS) == 0)
@@ -302,7 +302,7 @@ t1_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 			if (T1_S_IS_RESPONSE(pcb))
 				return -1;
 
-			ifd_buf_init(&tbuf, rdata, sizeof(rdata));
+			ct_buf_init(&tbuf, rdata, sizeof(rdata));
 
 			switch (T1_S_TYPE(pcb)) {
 			case T1_S_RESYNC:
@@ -318,16 +318,16 @@ t1_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 				if (rdata[3] == 0)
 					return -1;
 				t1->ifsc = rdata[3];
-				ifd_buf_put(&tbuf, &rdata[3], 1);
+				ct_buf_put(&tbuf, &rdata[3], 1);
 				break;
 			case T1_S_WTX:
 				/* We don't handle the wait time extension
 				 * yet */
 				/* t1->wtx = rdata[3]; */
-				ifd_buf_put(&tbuf, &rdata[3], 1);
+				ct_buf_put(&tbuf, &rdata[3], 1);
 				break;
 			default:
-				ifd_error("T=1: Unknown S block type");
+				ct_error("T=1: Unknown S block type");
 				return -1;
 			}
 
@@ -340,7 +340,7 @@ t1_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 		retries = t1->retries;
 	}
 
-done:	apdu->rcv_len = ifd_buf_avail(&rbuf);
+done:	apdu->rcv_len = ct_buf_avail(&rbuf);
 	return apdu->rcv_len;
 }
 
@@ -371,11 +371,11 @@ t1_seq(unsigned char pcb)
 }
 
 unsigned int
-t1_build(ifd_apdu_t *apdu, t1_data_t *t1, unsigned char pcb, ifd_buf_t *bp)
+t1_build(ifd_apdu_t *apdu, t1_data_t *t1, unsigned char pcb, ct_buf_t *bp)
 {
 	unsigned int	len;
 
-	len = bp? ifd_buf_avail(bp) : 0;
+	len = bp? ct_buf_avail(bp) : 0;
 	if (len > t1->ifsc) {
 		pcb |= T1_MORE_BLOCKS;
 		len = t1->ifsc;
@@ -481,8 +481,8 @@ t1_xcv(ifd_protocol_t *prot, ifd_apdu_t *apdu, size_t *countp)
 	t1_data_t	*t1 = (t1_data_t *) prot;
 	int		n, m;
 
-	if (ifd_config.debug >= 3)
-		DEBUG("sending %s", ifd_hexdump(apdu->snd_buf, apdu->snd_len));
+	if (ct_config.debug >= 3)
+		DEBUG("sending %s", ct_hexdump(apdu->snd_buf, apdu->snd_len));
 
 	n = ifd_send_command(prot, apdu->snd_buf, apdu->snd_len);
 	if (n < 0)
@@ -503,7 +503,7 @@ t1_xcv(ifd_protocol_t *prot, ifd_apdu_t *apdu, size_t *countp)
 
 		n = apdu->rcv_buf[2] + t1->rc_bytes;
 		if (n + 3 > apdu->rcv_len || apdu->rcv_buf[2] >= 254) {
-			ifd_error("receive buffer too small");
+			ct_error("receive buffer too small");
 			return -1;
 		}
 
@@ -515,8 +515,8 @@ t1_xcv(ifd_protocol_t *prot, ifd_apdu_t *apdu, size_t *countp)
 	}
 
 	if (n >= 0) {
-		if (ifd_config.debug >= 3)
-			DEBUG("received %s", ifd_hexdump(apdu->rcv_buf, n));
+		if (ct_config.debug >= 3)
+			DEBUG("received %s", ct_hexdump(apdu->rcv_buf, n));
 		*countp = apdu->rcv_buf[2];
 	}
 
