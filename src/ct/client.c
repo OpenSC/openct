@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <signal.h>
+#include <errno.h>
 #include <openct/openct.h>
 #include <openct/socket.h>
 #include <openct/tlv.h>
@@ -23,6 +25,28 @@ struct ct_handle {
 
 static void	ct_args_int(ct_buf_t *, ifd_tag_t, unsigned int);
 static void	ct_args_string(ct_buf_t *, ifd_tag_t, const char *);
+
+/*
+ * Get reader info
+ */
+int
+ct_reader_info(unsigned int reader, ct_info_t *result)
+{
+	const ct_info_t	*info;
+	int		rc;
+
+	if ((rc = ct_status(&info)) < 0
+	 || reader > (unsigned int) rc)
+		return -1;
+
+	/* Make sure the server process is alive */
+	if (info[reader].ct_pid == 0
+	 || (kill(info[reader].ct_pid, 0) < 0 && errno == ESRCH))
+		return -1;
+
+	*result = info[reader];
+	return 0;
+}
 
 /*
  * Connect to a reader manager
