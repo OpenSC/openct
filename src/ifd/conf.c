@@ -101,7 +101,7 @@ conf_parse_group(ifd_conf_node_t *group, char closing)
 
 	while (1) {
 		if (ateof()) {
-			if (closing == END_OF_FILE)
+			if (closing == (char) END_OF_FILE)
 				break;
 			ct_error("%s:%u: unexpected end of file",
 					config_filename, 
