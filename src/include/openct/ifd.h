@@ -62,7 +62,7 @@ typedef struct ifd_reader {
 
 	const ifd_driver_t *	driver;
 	ifd_device_t *		device;
-	ct_info_t *		info;
+	ct_info_t *		status;
 
 	/* In case the IFD needs to keep state */
 	void *			driver_data;
