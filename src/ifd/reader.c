@@ -267,7 +267,8 @@ ifd_card_request(ifd_reader_t *reader, unsigned int idx,
 	 */
 	if (drv->ops->card_request && (timeout || message)) {
 		n = drv->ops->card_request(reader, idx,
-				timeout, message, atr, size);
+				timeout, message, slot->atr, 
+				sizeof(slot->atr));
 		if (n <= 0)
 			return n;
 		count = n;
