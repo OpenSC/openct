@@ -15,8 +15,10 @@
  */
 int
 ifd_usb_control(ifd_device_t *dev,
-		int requesttype, int request,
-		int value, int index,
+		unsigned int requesttype,
+		unsigned int request,
+		unsigned int value,
+		unsigned int index,
 		void *buffer, size_t len,
 		long timeout)
 {

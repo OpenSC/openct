@@ -82,8 +82,10 @@ extern int		ifd_device_id_match(const ifd_devid_t *,
 				const ifd_devid_t *);
 
 extern int		ifd_usb_control(ifd_device_t *,
-				int requesttype, int request,
-				int value, int index,
+				unsigned int requesttype,
+				unsigned int request,
+				unsigned int value,
+				unsigned int index,
 				void *data, size_t len,
 				long timeout);
 extern int		ifd_usb_begin_capture(ifd_device_t *,

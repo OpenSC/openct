@@ -7,6 +7,9 @@
  * new platform.
  */
 
+#ifdef __linux__
+
+#include <config.h>
 #include <sys/types.h>
 #include <linux/major.h>
 #include <linux/usbdevice_fs.h>
@@ -78,9 +81,12 @@ ifd_sysdep_channel_to_name(unsigned int num)
  * USB control command
  */
 int
-ifd_sysdep_usb_control(int fd, int requesttype, int request,
-			int value, int index,
-			void *data, size_t len, long timeout)
+ifd_sysdep_usb_control(int fd,
+		unsigned int requesttype,
+		unsigned int request,
+		unsigned int value,
+		unsigned int index,
+		void *data, size_t len, long timeout)
 {
 	struct usbdevfs_ctrltransfer ctrl;
 	int		rc;
@@ -238,3 +244,4 @@ ifd_sysdep_usb_end_capture(int fd, ifd_usb_capture_t *cap)
 	free(cap);
 	return rc;
 }
+#endif /* __linux__ */
