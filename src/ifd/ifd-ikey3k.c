@@ -68,7 +68,7 @@ ikey3k_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 {
 	ifd_device_t *dev = reader->device;
 	unsigned char	buffer[256];
-	int		rc, n;
+	int		rc, n, atrlen;
 
 	unsigned char expect5[] =
 	{ 0x0a, 0x61, 0x00, 0x07, 0x2d, 0x2d, 0xc0, 0x80, 0x80, 0x60 };
@@ -97,14 +97,15 @@ ikey3k_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 
 	if (n > size)
 		n = size;
-	memcpy(atr, buffer + 1, n);
+	atrlen = n;
+	memcpy(atr, buffer + 1, atrlen);
 
 	if (ifd_usb_control(dev, 0x41, 0x16, 0x0002, 0, buffer, 0, -1) != 0
 	 || ifd_usb_control(dev, 0xc1, 0x01, 0, 0, buffer, 04, -1) != 4
 	 || memcmp(buffer, expect11, sizeof(expect11)) != 0)
 		goto failed;
 
-	return n;
+	return atrlen;
 
 failed:	ct_error("ikey3k: failed to activate token");
 	return -1;

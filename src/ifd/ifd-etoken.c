@@ -92,7 +92,7 @@ et_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 {
 	ifd_device_t *dev = reader->device;
 	unsigned char	buffer[256];
-	int		rc, n;
+	int		rc, n, atrlen;
 
 	/* Request the ATR */
 	rc = ifd_usb_control(dev, 0x40, 0x01, 0, 0, NULL, 0, ET_TIMEOUT);
@@ -112,11 +112,12 @@ et_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 
 	if (n > size)
 		n = size;
-	memcpy(atr, buffer + 1, n);
+	atrlen = n;
+	memcpy(atr, buffer + 1, atrlen);
 
 	if (et_magic(dev) < 0)
 		goto failed;
-	return n;
+	return atrlen;
 
 failed:	ct_error("etoken: failed to activate token");
 	return -1;

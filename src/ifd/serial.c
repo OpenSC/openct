@@ -243,6 +243,18 @@ ifd_serial_get_dsr(ifd_device_t *dev)
 	return (status & TIOCM_DSR)? 1 : 0;
 }
 
+int
+ifd_serial_get_cts(ifd_device_t *dev)
+{
+	int	status;
+
+	if (ioctl(dev->fd, TIOCMGET, &status) < 0) {
+		ct_error("%s: ioctl(TIOCMGET) failed: %m", dev->name);
+		return -1;
+	}
+	return (status & TIOCM_CTS)? 1 : 0;
+}
+
 /*
  * Identify attached device
  */

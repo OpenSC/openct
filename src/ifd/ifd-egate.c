@@ -65,7 +65,7 @@ eg_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 {
 	ifd_device_t *dev = reader->device;
 	unsigned char	buffer[256];
-	int		rc;
+	int		rc, atrlen;
 
 	/* Reset the device*/
 	rc = ifd_usb_control(dev, 0x40, 0x90, 0, 0, NULL, 0, EG_TIMEOUT);
@@ -82,9 +82,10 @@ eg_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 
 	if (rc > size)
 		rc = size;
-	memcpy(atr, buffer , rc);
+	atrlen = rc;
+	memcpy(atr, buffer, atrlen);
 
-	return rc;
+	return atrlen;
 
 failed:	ct_error("egate: failed to activate token");
 	return -1;
