@@ -25,7 +25,9 @@ struct ifd_device {
 
 	struct ifd_device_ops *ops;
 
-	/* data follows */
+	int		fd;
+
+	/* per-device data may follow */
 };
 
 struct ifd_device_ops {
