@@ -73,7 +73,7 @@ AC_SUBST(LIBUSB)
 AC_CHECK_LIB(usb, usb_init,
 	[
 	      	LIBUSB="$LIBUSB -lusb"
-		AC_DEFINE(HAVE_LIBUSB,1, [Libusb is available]
+		AC_DEFINE(HAVE_LIBUSB,1, [Libusb is available])
 	])
 
 AC_OUTPUT([
