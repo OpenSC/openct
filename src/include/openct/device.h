@@ -66,6 +66,7 @@ typedef struct ifd_usb_capture ifd_usb_capture_t;
 extern ifd_device_t *	ifd_device_open(const char *);
 extern void		ifd_device_close(ifd_device_t *);
 extern int		ifd_device_type(ifd_device_t *);
+extern int		ifd_device_reset(ifd_device_t *);
 extern void		ifd_device_flush(ifd_device_t *);
 extern int		ifd_device_identify(const char *, char *, size_t);
 extern int		ifd_device_get_parameters(ifd_device_t *,
@@ -78,6 +79,7 @@ extern int		ifd_device_transceive(ifd_device_t *,
 extern int		ifd_device_send(ifd_device_t *, const unsigned char *, size_t);
 extern int		ifd_device_recv(ifd_device_t *, unsigned char *, size_t, long);
 extern int		ifd_device_control(ifd_device_t *, void *, size_t);
+extern void		ifd_device_set_hotplug(ifd_device_t *, int);
 extern int		ifd_device_poll_presence(ifd_device_t *,
 				struct pollfd *);
 
