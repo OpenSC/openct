@@ -79,6 +79,8 @@ ct_buf_gets(ct_buf_t *bp, char *buffer, size_t size)
 int
 ct_buf_put(ct_buf_t *bp, const void *mem, size_t len)
 {
+	if (len > bp->size - bp->tail)
+		ct_buf_compact(bp);
 	if (len > bp->size - bp->tail) {
 		bp->overrun = 1;
 		return -1;
@@ -86,6 +88,17 @@ ct_buf_put(ct_buf_t *bp, const void *mem, size_t len)
 	if (mem)
 		memcpy(bp->base + bp->tail, mem, len);
 	bp->tail += len;
+	return len;
+}
+
+int
+ct_buf_push(ct_buf_t *bp, const void *mem, size_t len)
+{
+	if (bp->head < len)
+		return -1;
+	bp->head -= len;
+	if (mem)
+		memcpy(bp->base + bp->head, mem, len);
 	return len;
 }
 
