@@ -171,12 +171,15 @@ ifd_sysdep_device_type(const char *name)
     return -1;
 }
 
+/*
+ * Poll for presence of USB device
+ */
 int
-ifd_sysdep_usb_poll_presence(ifd_device_t *dev, struct pollfd *p)
+ifd_sysdep_usb_poll_presence(ifd_device_t *dev, struct pollfd *pfd)
 {
     int	devstat = 0;
 
-    p->fd = -1;
+    pfd->fd = -1;
     open_devstat(dev->name);
     if(read(devstat_fd, &devstat, sizeof (devstat))) {
 	switch(devstat) {
