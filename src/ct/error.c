@@ -39,12 +39,14 @@ void
 ct_error(const char *fmt, ...)
 {
 	va_list	ap;
+	int	n;
 
 	va_start(ap, fmt);
 	if (log_dest == DST_STDERR) {
 		fprintf(stderr, "Error: ");
 		vfprintf(stderr, fmt, ap);
-		fprintf(stderr, "\n");
+		if (!(n = strlen(fmt)) || fmt[n-1] != '\n')
+			fprintf(stderr, "\n");
 	} else {
 		vsyslog(LOG_WARNING, fmt, ap);
 	}
@@ -112,8 +114,16 @@ const char *ct_strerror(int rc)
 		"Operation aborted by user",
 		"PIN mismatch",
 		"Unable to reset card",
+		"Device cannot perform requested operation",
+		"Device was disconnected",
 	};
 	const int gen_base = -IFD_SUCCESS;
+	const char *proxy_errors[] = {
+		"Device already claimed",
+		"Device busy",
+		"Device not known",
+	};
+	const int proxy_base = -IFD_ERROR_ALREADY_CLAIMED;
 	const char **errors = NULL, *msg = NULL;
 	int count = 0, err_base = 0, error = rc;
 	static char message[64];
@@ -128,6 +138,10 @@ const char *ct_strerror(int rc)
 		errors = gen_errors;
 		count = DIM(gen_errors);
 		err_base = gen_base;
+	} else if (error >= proxy_base) {
+		errors = proxy_errors;
+		count = DIM(proxy_errors);
+		err_base = proxy_base;
 	}
 	error -= err_base;
 	if (error >= count || count == 0) {

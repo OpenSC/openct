@@ -27,12 +27,19 @@ extern "C" {
 #define IFD_ERROR_USER_ABORT		-13
 #define IFD_ERROR_PIN_MISMATCH		-14
 #define IFD_ERROR_NO_ATR		-15
+#define IFD_ERROR_INCOMPATIBLE_DEVICE	-16
+#define IFD_ERROR_DEVICE_DISCONNECTED	-17
 
 /* for application/resource manager protocol */
 #define IFD_ERROR_INVALID_MSG		-100
 #define IFD_ERROR_INVALID_CMD		-101
 #define IFD_ERROR_MISSING_ARG		-102
 #define IFD_ERROR_NOT_CONNECTED		-103
+
+/* Specific error codes for proxy protocol */
+#define IFD_ERROR_ALREADY_CLAIMED	-200
+#define IFD_ERROR_DEVICE_BUSY		-201
+#define IFD_ERROR_UNKNOWN_DEVICE	-202
 
 extern const char *	ct_strerror(int);
 
