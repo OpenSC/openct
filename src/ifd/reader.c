@@ -107,20 +107,24 @@ int
 ifd_activate(ifd_reader_t *reader)
 {
 	const ifd_driver_t *drv = reader->driver;
+	int		rc = 0;
 
 	if (drv && drv->ops && drv->ops->activate)
-		return drv->ops->activate(reader);
-	return 0;
+		rc = drv->ops->activate(reader);
+	reader->flags |= IFD_READER_ACTIVE;
+	return rc;
 }
 
 int
 ifd_deactivate(ifd_reader_t *reader)
 {
 	const ifd_driver_t *drv = reader->driver;
+	int		rc = 0;
 
 	if (drv && drv->ops && drv->ops->deactivate)
-		return drv->ops->deactivate(reader);
-	return 0;
+		rc = drv->ops->deactivate(reader);
+	reader->flags &= ~IFD_READER_ACTIVE;
+	return rc;
 }
 
 /*

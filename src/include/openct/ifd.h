@@ -46,6 +46,7 @@ typedef struct ifd_slot {
 	void *			reader_data;
 } ifd_slot_t;
 
+
 #define IFD_MAX_SLOTS		8
 typedef struct ifd_reader {
 	unsigned int		num;
@@ -63,6 +64,7 @@ typedef struct ifd_reader {
 	void *			driver_data;
 } ifd_reader_t;
 
+#define IFD_READER_ACTIVE	0x0001
 #define IFD_READER_DISPLAY	0x0100
 #define IFD_READER_KEYPAD	0x0200
 

@@ -11,6 +11,7 @@
 #include "device.h"
 #include "driver.h"
 #include <ifd/conf.h>
+#include <ifd/config.h>
 #include <ifd/logging.h>
 #include <ifd/error.h>
 #include <ifd/buffer.h>
