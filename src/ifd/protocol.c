@@ -210,7 +210,7 @@ ifd_protocol_new(int id, ifd_reader_t *reader, unsigned int dad)
 	p->ops = ops;
 	p->dad = dad;
 
-	if (ops->init(p) < 0) {
+	if (ops->init && ops->init(p) < 0) {
 		ct_error("Protocol initialization failed");
 		ifd_protocol_free(p);
 		return NULL;
