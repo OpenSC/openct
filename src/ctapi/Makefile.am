@@ -1,11 +1,9 @@
 # Process this file with automake to create Makefile.in
 
-libdir = @libdir@/openct
-
 MAINTAINERCLEANFILES = Makefile.in
 
-lib_LTLIBRARIES = openct-ctapi.la
+lib_LTLIBRARIES = libopenctapi.la
 
-openct_ctapi_la_SOURCES = ctapi.c ctapi.h
-openct_ctapi_la_LDFLAGS = -module -avoid-version
-openct_ctapi_la_LIBADD = ../ct/libopenct.la ../ifd/libifd.la
+libopenctapi_la_SOURCES = ctapi.c ctapi.h
+libopenctapi_la_LDFLAGS = -module -avoid-version
+libopenctapi_la_LIBADD = ../ct/libopenct.la ../ifd/libifd.la

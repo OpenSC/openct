@@ -1,7 +1,5 @@
 # Process this file with automake to create Makefile.in
 
-libdir = @libdir@/openct
-
 MAINTAINERCLEANFILES = Makefile.in
 
 INCLUDES = @CPPFLAGS@ @CFLAGS_PCSC@
