@@ -105,7 +105,7 @@ ria_devsock_process(ct_socket_t *sock, header_t *hdr,
 	unsigned char	cmd;
 	int		rc, count;
 
-	ria_print_packet(sock, 2, __FUNCTION__, hdr, args);
+	ria_print_packet(sock, 2, "ria_devsock_process", hdr, args);
 
 	/* Unexpected reply on this socket - simply drop */
 	if (hdr->dest != 0) {

@@ -10,7 +10,7 @@
 typedef struct ria_client {
 	/* Socket for communication with ifdproxy */
 	ct_socket_t *	sock;
-	u_int32_t	xid;
+	uint32_t	xid;
 
 	/* queue for buffering data */
 	ct_buf_t	data;
@@ -28,13 +28,13 @@ typedef struct ria_device {
 } ria_device_t;
 
 typedef struct ria_serial_conf {
-	u_int32_t	speed;
-	u_int8_t	bits;
-	u_int8_t	stopbits;
-	u_int8_t	parity;
-	u_int8_t	check_parity;
-	u_int8_t	dtr;
-	u_int8_t	rts;
+	uint32_t	speed;
+	uint8_t	bits;
+	uint8_t	stopbits;
+	uint8_t	parity;
+	uint8_t	check_parity;
+	uint8_t	dtr;
+	uint8_t	rts;
 } ria_serial_conf_t;
 
 enum {

@@ -157,6 +157,36 @@ AC_CHECK_LIB(dl, dlopen, [LIBDL="$LIBDL -ldl" ac_cv_func_dlopen_ldl=yes], ac_cv_
 dnl See if socket() is found from libsocket
 AC_CHECK_LIB(socket, socket, [LIBS="$LIBS -lsocket" ac_cv_func_socket_in_lsocket=yes], ac_cv_func_socket_in_lsocket=no)
 
+AC_CACHE_CHECK([for ss_family field in struct sockaddr_storage],
+		ac_cv_have_ss_family_in_struct_ss, [
+	AC_TRY_COMPILE(
+		[
+#include <sys/types.h>
+#include <sys/socket.h>
+		],
+		[ struct sockaddr_storage s; s.ss_family = 1; ],
+		[ ac_cv_have_ss_family_in_struct_ss="yes" ],
+		[ ac_cv_have_ss_family_in_struct_ss="no" ],
+	)
+])
+
+AC_CACHE_CHECK([for __ss_family field in struct sockaddr_storage],
+		ac_cv_have___ss_family_in_struct_ss, [
+	AC_TRY_COMPILE(
+		[
+#include <sys/types.h>
+#include <sys/socket.h>
+		],
+		[ struct sockaddr_storage s; s.__ss_family = 1; ],
+		[ ac_cv_have___ss_family_in_struct_ss="yes" ],
+		[ ac_cv_have___ss_family_in_struct_ss="no" ]
+	)
+])
+
+if test "x$ac_cv_have___ss_family_in_struct_ss" = "xyes" -a "x$ac_cv_have_ss_family_in_struct_ss" = "xno"; then
+	AC_DEFINE_UNQUOTED(ss_family, __ss_family, [sockaddr_storage.ss_family wrapper])
+fi
+
 dnl see if poll() is found from libpoll
 AC_CHECK_LIB(poll, poll, [LIBS="$LIBS -lpoll" ac_cv_func_poll_lpoll=yes], ac_cv_func_poll_lpoll=no)
 

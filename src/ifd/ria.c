@@ -78,7 +78,7 @@ ria_send(ria_client_t *clnt, unsigned char cmd,
 	memset(&header, 0, sizeof(header));
 	header.xid = clnt->xid;
 
-	ria_print_packet(clnt->sock, 4, __FUNCTION__, &header, &args);
+	ria_print_packet(clnt->sock, 4, "ria_send", &header, &args);
 	if ((rc = ct_socket_put_packet(clnt->sock, &header, &args)) < 0)
 		return rc;
 
@@ -87,7 +87,7 @@ ria_send(ria_client_t *clnt, unsigned char cmd,
 }
 
 int
-ria_recv(ria_client_t *clnt, unsigned char expect, u_int32_t xid,
+ria_recv(ria_client_t *clnt, unsigned char expect, uint32_t xid,
 		void *res_buf, size_t res_len,
 		long timeout)
 {
@@ -136,7 +136,7 @@ ria_recv(ria_client_t *clnt, unsigned char expect, u_int32_t xid,
 			continue;
 		}
 
-		ria_print_packet(sock, 4, __FUNCTION__, &header, &resp);
+		ria_print_packet(sock, 4, "ria_recv", &header, &resp);
 
 		/* Complete packet. Check type */
 		if (header.dest != 0) {

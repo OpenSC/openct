@@ -1,7 +1,7 @@
 /*
  * Socket handling routines
  *
- * Copyright (C) 2003, Olaf Kirch <okir@caldera.de>
+ * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
 #ifdef HAVE_CONFIG_H
@@ -86,7 +86,7 @@ ct_socket_reuseaddr(int n)
 
 /*
  * Make the socket.
- * This code tries to deal with IPv4/IPv6 and AF_LOCAL sockets
+ * This code tries to deal with IPv4/IPv6 and AF_UNIX sockets
  */
 enum { CT_MAKESOCK_BIND, CT_MAKESOCK_CONNECT };
 
@@ -100,7 +100,7 @@ __ct_socket_make(ct_socket_t *sock, int op,
 		return -1;
 
 	/* For non-local sockets, use network byte order */
-	if (sa->sa_family != AF_LOCAL)
+	if (sa->sa_family != AF_UNIX)
 		sock->use_network_byte_order = 1;
 
 	/* set close on exec */
@@ -113,7 +113,7 @@ __ct_socket_make(ct_socket_t *sock, int op,
 		if (sa->sa_family == AF_INET6) {
 			int val = 1;
 
-			setsockopt(fd, SOL_IP, IPV6_V6ONLY,
+			setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY,
 					&val, sizeof(val));
 		}
 #endif
@@ -167,7 +167,7 @@ ct_socket_make(ct_socket_t *sock, int op, const char *addr)
 
 	/* Simple stuff first - unix domain sockets */
 	if (addr[0] == '/') {
-		s.un.sun_family = AF_LOCAL;
+		s.un.sun_family = AF_UNIX;
 		strncpy(s.un.sun_path, addr, sizeof(s.un.sun_path));
 		if (op == CT_MAKESOCK_BIND) {
 			if (unlink(addr) < 0 && errno != ENOENT)
@@ -333,7 +333,7 @@ ct_socket_getpeername(ct_socket_t *sock, char *buf, size_t len)
 			&((struct sockaddr_in6 *) &ss)->sin6_addr,
 			buf, len);
 		break;
-	case AF_LOCAL:
+	case AF_UNIX:
 		snprintf(buf, len, "<local process>");
 		break;
 	default:
