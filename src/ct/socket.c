@@ -92,7 +92,7 @@ ct_socket_connect(ct_socket_t *sock, const char *path)
  * Listen on a socket
  */
 int
-ct_socket_listen(ct_socket_t *sock, const char *pathname)
+ct_socket_listen(ct_socket_t *sock, const char *pathname, int mode)
 {
 	struct sockaddr_un suns;
 	int		fd;
@@ -109,7 +109,7 @@ ct_socket_listen(ct_socket_t *sock, const char *pathname)
 	 || listen(fd, 5) < 0)
 		return -1;
 
-	chmod(pathname, 0666);
+	chmod(pathname, mode);
 
 	sock->events = POLLIN;
 	sock->fd = fd;
@@ -248,6 +248,21 @@ ct_socket_put_packet(ct_socket_t *sock, header_t *hdr, ct_buf_t *data)
 	return 0;
 }
 
+int
+ct_socket_puts(ct_socket_t *sock, const char *string)
+{
+	ct_buf_t	*bp = &sock->buf;
+
+	ct_buf_clear(bp);
+	if (ct_buf_puts(bp, string) < 0) {
+		ct_error("string too large for buffer");
+		return -1;
+	}
+
+	sock->events = POLLOUT;
+	return 0;
+}
+
 /*
  * Get packet from buffer
  */
@@ -285,6 +300,12 @@ ct_socket_get_packet(ct_socket_t *sock, header_t *hdr, ct_buf_t *data)
 	return 0;
 }
 
+int
+ct_socket_gets(ct_socket_t *sock, char *buffer, size_t size)
+{
+	return ct_buf_gets(&sock->buf, buffer, size);
+}
+
 /*
  * Read some data from socket and put it into buffer
  */
@@ -309,14 +330,17 @@ ct_socket_filbuf(ct_socket_t *sock)
 		return -1;
 	}
 
-	/* EOF should only occur when there's no data in 
-	 * the buffer (otherwise we're probably waiting
-	 * on a partial request) */
+	/* When EOF occurs, the server's recv() routine
+	 * should deal with it instantly. If we come here
+	 * a second time we may be looping on a closed
+	 * socket, so error out
+	 */
 	if (n == 0) {
-		if (ct_buf_avail(bp)) {
+		if (sock->eof) {
 			ct_error("Peer closed connection");
 			return -1;
 		}
+		sock->eof = 1;
 		return 0;
 	}
 
@@ -348,6 +372,14 @@ ct_socket_flsbuf(ct_socket_t *sock, int all)
 		/* Advance head pointer */
 		ct_buf_get(bp, NULL, n);
 	} while (all);
+
+	if (all == 2) {
+		/* Shutdown socket for write */
+		if (shutdown(sock->fd, 1) < 0) {
+			ct_error("socket shutdown error: %m");
+			return -1;
+		}
+	}
 
 	return n;
 }
