@@ -111,7 +111,8 @@ do_status(ifd_reader_t *reader, int unit,
 	default:
 		if (unit > reader->nslots)
 			return IFD_ERROR_INVALID_SLOT;
-		if ((rc = ifd_card_status(reader, unit, &status)) < 0)
+		if ((rc = ifd_activate(reader)) < 0
+		 || (rc = ifd_card_status(reader, unit, &status)) < 0)
 			return rc;
 		ifd_tlv_put_int(resp, IFD_TAG_CARD_STATUS, status);
 		break;
