@@ -1,3 +1,5 @@
-MAINTAINERCLEANFILES=Makefile.in
+# Process this file with automake to create Makefile.in
 
-SUBDIRS= ct ifd ctapi pcsc control tools
+MAINTAINERCLEANFILES = Makefile.in
+
+SUBDIRS = . ct ifd ctapi pcsc control tools

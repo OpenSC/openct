@@ -3,7 +3,11 @@
 
 /* from pcsc-lite 1.1.1 src/ifdhandler.h */
 
+#ifdef __APPLE__
+#include <PCSC/wintypes.h>
+#else
 #include <wintypes.h>
+#endif
 
         typedef struct _SCARD_IO_HEADER
         {

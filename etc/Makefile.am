@@ -1,6 +1,8 @@
-MAINTAINERCLEANFILES=Makefile.in
+# Process this file with automake to create Makefile.in
 
-DISTCLEANFILES=openct.conf hotplug.openct init-script
+MAINTAINERCLEANFILES = Makefile.in
+
+DISTCLEANFILES = openct.conf hotplug.openct init-script
 
 EXTRA_DIST = openct.conf.in hotplug.openct.in init-script.in
 

@@ -1,6 +1,9 @@
-MAINTAINERCLEANFILES=Makefile.in
+# Process this file with automake to create Makefile.in
 
-includedir= @includedir@/openct
+MAINTAINERCLEANFILES = Makefile.in
 
-include_HEADERS = apdu.h buffer.h conf.h device.h driver.h error.h ifd.h \
-		logging.h openct.h protocol.h server.h socket.h tlv.h
+includedir = @includedir@/openct
+
+include_HEADERS = \
+	apdu.h buffer.h conf.h device.h driver.h error.h ifd.h \
+	logging.h openct.h protocol.h server.h socket.h tlv.h

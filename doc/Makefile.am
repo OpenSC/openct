@@ -1,4 +1,6 @@
-MAINTAINERCLEANFILES=Makefile.in
+# Process this file with automake to create Makefile.in
+
+MAINTAINERCLEANFILES = Makefile.in
 
 EXTRA_DIST = openct.xml openct.xsl openct.html openct.css
 noinst_DATA = openct.html
@@ -13,4 +15,3 @@ noinst_DATA = openct.html
 		echo "docbook.xsl not installed, cannot generate $@ docs" >&2; \
 		touch $@; \
 	fi
-

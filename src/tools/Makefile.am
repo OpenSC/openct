@@ -1,8 +1,8 @@
-MAINTAINERCLEANFILES=Makefile.in
+# Process this file with automake to create Makefile.in
 
-INCLUDES=-I$(top_srcdir)/include
+MAINTAINERCLEANFILES = Makefile.in
 
-bin_PROGRAMS=openct-tool
+bin_PROGRAMS = openct-tool
 
-openct_tool_SOURCES= openct-tool.c
-openct_tool_LDADD= -L$(top_builddir)/src/ct -lopenct
+openct_tool_SOURCES = openct-tool.c
+openct_tool_LDADD = ../ct/libopenct.la

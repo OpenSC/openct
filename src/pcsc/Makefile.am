@@ -1,12 +1,14 @@
-MAINTAINERCLEANFILES=Makefile.in openct-ifd.la
+# Process this file with automake to create Makefile.in
 
-INCLUDES=-I$(top_srcdir)/src/ifd -I$(top_builddir)/include
+MAINTAINERCLEANFILES = Makefile.in
 
-EXTRA_DIST= pcsc.c
+INCLUDES = @CPPFLAGS@ @CFLAGS_PCSC@
 
 if HAVE_PCSCLITE
-lib_LTLIBRARIES=openct-ifd.la
+lib_LTLIBRARIES = openct-ifd.la
 endif
 
-openct_ifd_la_SOURCES= pcsc.c ifdhandler.h
-openct_ifd_la_LDFLAGS=-module -avoid-version
+openct_ifd_la_SOURCES = pcsc.c
+openct_ifd_la_LDFLAGS = -module -avoid-version
+
+noinst_HEADERS = ifdhandler.h

@@ -339,7 +339,7 @@ if (test x$enable_debug = xyes); then
 	AC_DEFINE(DEBUG, 1, [Enable debug messages.])
 fi
 
-CPPFLAGS="-I\${top_builddir}/include $CPPFLAGS"
+CPPFLAGS="-I\${top_srcdir}/include $CPPFLAGS"
 AM_CONDITIONAL(HAVE_BUNDLES, test "x$with_bundles" = "xyes")
 
 openct_etc_path=`eval echo ${sysconfdir}` ; openct_etc_path=`eval echo ${openct_etc_path}`

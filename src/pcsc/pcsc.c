@@ -10,8 +10,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <openct/ifd.h>
-#include <pcsclite.h>
+#ifdef __APPLE__
+#include <PCSC/wintypes.h>
+#include <PCSC/pcsclite.h>
+#else
 #include <wintypes.h>
+#include <pcsclite.h>
+#endif
 #include "ifdhandler.h"
 
 #define lun_reader(x)	((x) >> 16)

@@ -1,3 +1,5 @@
-MAINTAINERCLEANFILES=Makefile.in config.h config.h.in stamp-h1
+# Process this file with automake to create Makefile.in
 
-SUBDIRS=openct
+MAINTAINERCLEANFILES = Makefile.in
+
+SUBDIRS = . openct
