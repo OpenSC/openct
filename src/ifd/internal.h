@@ -83,6 +83,7 @@ struct ifd_protocol_ops {
 	void		(*release)(ifd_protocol_t *);
 	int		(*set_param)(ifd_protocol_t *, int, long);
 	int		(*get_param)(ifd_protocol_t *, int, long *);
+	int		(*resynchronize)(ifd_protocol_t *, int dad);
 	int		(*transceive)(ifd_protocol_t *, int dad,
 					const void *, size_t,
 					void *, size_t);

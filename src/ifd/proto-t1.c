@@ -80,7 +80,9 @@ static void
 t1_set_defaults(t1_state_t *t1)
 {
 	t1->retries  = 3;
-	t1->timeout  = 3000;
+	/* This timeout is rather insane, but we need this right now
+	 * to support cryptoflex keygen */
+	t1->timeout  = 20000;
 	t1->ifsc     = 32;
 	t1->ifsd     = 32;
 	t1->nr	     = 0;
@@ -136,9 +138,6 @@ t1_set_param(ifd_protocol_t *prot, int type, long value)
 	switch (type) {
 	case IFD_PROTOCOL_RECV_TIMEOUT:
 		t1->timeout = value;
-		break;
-	case IFD_PROTOCOL_T1_RESYNCH:
-		t1->state = RESYNCH;
 		break;
 	case IFD_PROTOCOL_T1_CHECKSUM_LRC:
 	case IFD_PROTOCOL_T1_CHECKSUM_CRC:
@@ -200,6 +199,7 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 	if (t1->state == DEAD)
 		return -1;
 
+	t1->state = SENDING;
 	retries = t1->retries;
 	resyncs = 3;
 
@@ -207,11 +207,7 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 	ct_buf_set(&sbuf, (void *) snd_buf, snd_len);
 	ct_buf_init(&rbuf, rcv_buf, rcv_len);
 
-	if (t1->state == RESYNCH)
-		goto resync;
-
 	/* Send the first block */
-	t1->state = SENDING;
 	slen = t1_build(t1, sdata, dad, T1_I_BLOCK, &sbuf, &last_send);
 
 	while (1) {
@@ -376,6 +372,40 @@ error:	t1->state = DEAD;
 	return -1;
 }
 
+static int
+t1_resynchronize(ifd_protocol_t *p, int nad)
+{
+	t1_state_t	*t1 = (t1_state_t *) p;
+	unsigned char	block[4];
+	unsigned int	retries = 3;
+
+	while (retries--) {
+		t1->ns = 0;
+		t1->nr = 0;
+
+		block[0] = nad;
+		block[1] = T1_S_BLOCK|T1_S_RESYNC;
+		block[2] = 0;
+		t1_compute_checksum(t1, block, 3);
+
+		if (t1_xcv(t1, block, 4, sizeof(block)) != 4) {
+			ifd_debug(1, "fatal: transmit/receive failed");
+			break;
+		}
+
+		if (!t1_verify_checksum(t1, block, 4)) {
+			ifd_debug(1, "checksum failed");
+			continue;
+		}
+
+		if (block[1] == (T1_S_BLOCK | T1_S_RESPONSE | T1_S_RESYNC))
+			return 0;
+	}
+
+	t1->state = DEAD;
+	return -1;
+}
+
 static unsigned
 t1_block_type(unsigned char pcb)
 {
@@ -444,11 +474,12 @@ struct ifd_protocol_ops	ifd_protocol_t1 = {
 	IFD_PROTOCOL_T1,
 	"T=1",
 	sizeof(t1_state_t),
-	t1_init,
-	t1_release,
-	t1_set_param,
-	t1_get_param,
-	t1_transceive,
+	.init		= t1_init,
+	.release	= t1_release,
+	.set_param	= t1_set_param,
+	.get_param	= t1_get_param,
+	.resynchronize	= t1_resynchronize,
+	.transceive	= t1_transceive,
 };
 
 /*
@@ -501,7 +532,7 @@ t1_xcv(t1_state_t *t1, unsigned char *block, size_t slen, size_t rmax)
 	 * just barf */
 	rlen = 3 + t1->ifsd + t1->rc_bytes;
 
-	/* timeout. For now we our WTX treatment is very dumb */
+	/* timeout. For now our WTX treatment is very dumb */
 	timeout = t1->timeout + 1000 * t1->wtx;
 	t1->wtx = 0;
 

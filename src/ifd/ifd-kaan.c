@@ -52,6 +52,7 @@ kaan_open(ifd_reader_t *reader, const char *device_name)
 	kaan_status_t *st;
 	ifd_device_t *dev;
 	ifd_device_params_t params;
+	int		r;
 
 	reader->name = "Kobil Kaan PRO";
 	reader->nslots = 1;
@@ -73,23 +74,27 @@ kaan_open(ifd_reader_t *reader, const char *device_name)
 
 	reader->device = dev;
 	if ((st = (kaan_status_t *) calloc(1, sizeof(*st))) == NULL)
-		return -1;
+		return IFD_ERROR_NO_MEMORY;
 
 	reader->driver_data = st;
 	if (!(st->p = ifd_protocol_new(IFD_PROTOCOL_T1, reader, 0x12))) {
+		/* Something is badly hosed */
 		ct_error("unable to get T1 protocol handler");
-		return -1;
+		return IFD_ERROR_GENERIC;
 	}
 
-	ifd_protocol_set_parameter(st->p, IFD_PROTOCOL_T1_RESYNCH, 0);
+	/* Force a T=1 resync. We don't know what state the reader's
+	 * T=1 engine is in. */
+	if ((r = ifd_protocol_resynchronize(st->p, 0x12)) < 0)
+		return r;
 
 	/* Reset the CT */
-	if (kaan_reset_ct(reader) < 0)
-		return -1;
+	if ((r = kaan_reset_ct(reader)) < 0)
+		return r;
 
 	/* Get list of functional units */
-	if (kaan_get_units(reader) < 0)
-		return -1;
+	if ((r = kaan_get_units(reader)) < 0)
+		return r;
 
 #if 0
 	/* Clear the display */

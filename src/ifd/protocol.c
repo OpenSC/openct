@@ -112,6 +112,19 @@ ifd_protocol_select(ifd_reader_t *reader, int nslot, int preferred)
 }
 
 /*
+ * Force the protocol driver to resynchronize
+ */
+int
+ifd_protocol_resynchronize(ifd_protocol_t *p, int nad)
+{
+	ifd_debug(1, "called.");
+	if (!p || !p->ops || !p->ops->resynchronize)
+		return IFD_ERROR_NOT_SUPPORTED;
+
+	return p->ops->resynchronize(p, nad);
+}
+
+/*
  * Protocol transceive
  */
 int
@@ -122,7 +135,7 @@ ifd_protocol_transceive(ifd_protocol_t *p, int dad,
 	int	rc;
 
 	if (!p || !p->ops || !p->ops->transceive)
-		return -1;
+		return IFD_ERROR_NOT_SUPPORTED;
 
 	ifd_debug(1, "cmd: %s", ct_hexdump(sbuf, slen));
 	rc = p->ops->transceive(p, dad, sbuf, slen, rbuf, rlen);
