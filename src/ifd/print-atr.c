@@ -56,7 +56,7 @@ print_atr(const char *device)
 	unsigned char	atr[64];
 	int		m, n, status;
 
-	if (!(reader = ifd_new_serial(device, opt_driver)))
+	if (!(reader = ifd_open(opt_driver, device)))
 		exit(1);
 
 	printf("Detected %s\n", reader->name);

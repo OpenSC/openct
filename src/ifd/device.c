@@ -9,6 +9,19 @@
 #include "internal.h"
 
 ifd_device_t *
+ifd_device_open(const char *name)
+{
+	switch (ifd_device_guess_type(name)) {
+	case IFD_DEVICE_TYPE_SERIAL:
+		return ifd_open_serial(name);
+	case IFD_DEVICE_TYPE_USB:
+		return ifd_open_usb(name);
+	/* Other types to be added */
+	}
+	return NULL;
+}
+
+ifd_device_t *
 ifd_device_new(const char *name, struct ifd_device_ops *ops, size_t size)
 {
 	ifd_device_t *dev;
@@ -36,11 +49,17 @@ ifd_device_type(ifd_device_t *dev)
 }
 
 int
-ifd_device_identify(ifd_device_t *dev, char *name, size_t len)
+ifd_device_identify(const char *name, char *ident, size_t len)
 {
-	if (!dev || !dev->ops || !dev->ops->identify)
+	ifd_device_t *dev;
+	int res = -1;
+
+	if (!(dev = ifd_device_open(name)))
 		return -1;
-	return dev->ops->identify(dev, name, len);
+	if (dev->ops && dev->ops->identify)
+		res = dev->ops->identify(dev, ident, len);
+	ifd_device_close(dev);
+	return res;
 }
 
 int

@@ -11,6 +11,7 @@ static ifd_reader_t *	ifd_new_reader(ifd_device_t *, const char *);
 static int		ifd_recv_atr(ifd_device_t *, ifd_buf_t *,
 				unsigned int, int);
 
+#if 0
 /*
  * New serial reader
  */
@@ -54,12 +55,13 @@ ifd_new_usb(const char *device_name, const char *driver_name)
 
 	return reader;
 }
+#endif
 
 /*
- * Initialize a reader
+ * Initialize a reader and open the device
  */
-static ifd_reader_t *
-ifd_new_reader(ifd_device_t *dev, const char *driver_name)
+ifd_reader_t *
+ifd_open(const char *driver_name, const char *device_name)
 {
 	const ifd_driver_t *driver;
 	ifd_reader_t	*reader;
@@ -67,16 +69,16 @@ ifd_new_reader(ifd_device_t *dev, const char *driver_name)
 	if (!driver_name || !strcmp(driver_name, "auto")) {
 		char	pnp_id[64];
 
-		if (ifd_device_identify(dev, pnp_id, sizeof(pnp_id)) < 0) {
+		if (ifd_device_identify(device_name, pnp_id, sizeof(pnp_id)) < 0) {
 			ifd_error("%s: unable to identify device, "
 			      "please specify driver",
-			      dev->name);
+			      device_name);
 			return NULL;
 		}
 		if (!(driver_name = ifd_driver_for_id(pnp_id))) {
 			ifd_error("%s: no driver for ID %s, "
 			      "please specify driver",
-			      dev->name, pnp_id);
+			      device_name, pnp_id);
 			return NULL;
 		}
 
@@ -84,7 +86,7 @@ ifd_new_reader(ifd_device_t *dev, const char *driver_name)
 		if (driver == NULL) {
 			ifd_error("%s: driver \"%s\" not available "
 				  "(identified as %s)",
-				   dev->name, driver_name, pnp_id);
+				   device_name, driver_name, pnp_id);
 			return NULL;
 		}
 	} else {
@@ -96,13 +98,12 @@ ifd_new_reader(ifd_device_t *dev, const char *driver_name)
 	}
 
 	reader = (ifd_reader_t *) calloc(1, sizeof(*reader));
-	reader->device = dev;
 	reader->driver = driver;
 
 	if (driver->ops->open
-	 && driver->ops->open(reader) < 0) {
+	 && driver->ops->open(reader, device_name) < 0) {
 		ifd_error("%s: initialization failed (driver %s)",
-				dev->name, driver->name);
+				device_name, driver->name);
 		free(reader);
 		return NULL;
 	}

@@ -42,17 +42,21 @@ enum {
  * Initialize the reader
  */
 static int
-twt_open(ifd_reader_t *reader)
+twt_open(ifd_reader_t *reader, const char *device_name)
 {
 	ifd_device_params_t params;
-	ifd_device_t	*dev = reader->device;
+	ifd_device_t	*dev;
 	unsigned char	buffer[256];
 	ifd_apdu_t	cmd;
 
-	DEBUG("called.");
+	DEBUG("called, device=%s", device_name);
 
 	reader->name = "Towitoko Reader";
 	reader->nslots = 1;
+
+	if (!(dev = ifd_device_open(device_name)))
+		return -1;
+	reader->device = dev;
 
 	if (ifd_device_get_parameters(dev, &params) < 0)
 		return -1;

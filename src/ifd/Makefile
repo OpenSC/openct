@@ -8,7 +8,8 @@ OBJS	= manager.o device.o reader.o driver.o \
 	  protocol.o proto-t0.o proto-t1.o \
 	  serial.o usb.o \
 	  apdu.o checksum.o buffer.o error.o utils.o \
-	  config.o
+	  config.o $(SYSDEP)
+SYSDEP	= linux.o
 SUBDIRS	= drivers
 
 all:: $(LIBS) $(APPS)

@@ -10,7 +10,7 @@
 struct ifd_driver_ops {
 	int		default_protocol;
 
-	int		(*open)(ifd_reader_t *);
+	int		(*open)(ifd_reader_t *, const char *);
 	int		(*close)(ifd_reader_t *);
 	int		(*change_parity)(ifd_reader_t *, int);
 

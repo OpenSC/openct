@@ -33,10 +33,11 @@ enum {
 	IFD_DEVICE_TYPE_OTHER
 };
 
-extern ifd_device_t *	ifd_device_open(int, const char *);
+extern ifd_device_t *	ifd_device_open(const char *);
 extern int		ifd_device_type(ifd_device_t *);
+extern int		ifd_device_guess_type(const char *);
 extern void		ifd_device_flush(ifd_device_t *);
-extern int		ifd_device_identify(ifd_device_t *, char *, size_t);
+extern int		ifd_device_identify(const char *, char *, size_t);
 extern int		ifd_device_get_parameters(ifd_device_t *,
 				ifd_device_params_t *);
 extern int		ifd_device_set_parameters(ifd_device_t *,
