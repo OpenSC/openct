@@ -13,6 +13,7 @@
 
 #define ET_TIMEOUT	1000
 
+static int	et_magic(ifd_device_t *);
 static int	et_control(ifd_device_t *dev, int requesttype, int request,
 			       int value, int index,
 			       void *buf, size_t len,
@@ -38,6 +39,26 @@ et_open(ifd_reader_t *reader, const char *device_name)
 	}
 
 	reader->device = dev;
+
+	return 0;
+}
+
+/* Some magic incantations copied from Andreas
+ * Jellinghaus' eToken driver 
+ * */
+static int
+et_magic(ifd_device_t *dev)
+{
+	unsigned char cookie[] = { 0x00, 0x00, 0x01, 0x00, 0x88, 0x13 };
+	unsigned char buffer[256];
+
+	if (et_control(dev, 0x40, 0x03, 0, 0, NULL, 0, -1) < 0
+	 || et_control(dev, 0xc0, 0x83, 0, 0, buffer, 13, -1) != 13
+	 || et_control(dev, 0x40, 0x02, 0, 0, cookie, sizeof(cookie), -1) < 0
+	 || et_control(dev, 0xc0, 0x82, 0, 0, buffer, 1, -1) != 1
+	 || buffer[0] != 0)
+		return -1;
+
 	return 0;
 }
 
@@ -96,6 +117,9 @@ et_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 	if (n > size)
 		n = size;
 	memcpy(atr, buffer + 1, n);
+
+	if (et_magic(dev) < 0)
+		goto failed;
 	return n;
 
 failed:	ifd_error("etoken: failed to activate token");
