@@ -1,0 +1,9 @@
+Document: openct-manual
+Title: OpenCT Manual
+Author: Andreas Jellinghaus
+Abstract: Manual for OpenCT, a middleware framework for smart card terminals.
+Section: Apps/System
+
+Format: HTML
+Index: /usr/share/doc/openct/html/openct.html
+Files: /usr/share/doc/openct/html/*.html

@@ -1,0 +1,15 @@
+*experimental* package based on the cvs snap shot.
+This package was created by Andreas Jellinghaus <aj@dungeon.inka.de>
+based on Eric Dorlands work. Please send all problem reports with
+this software to Andreas Jellinghaus or the opensc-devel mailing
+list. All bugs are mine, Eric is not to blame.
+
+
+openct for Debian
+-----------------
+
+This package adds an scard group to your system. Any users you want to
+give access to the card readers must be added to that group. Note that
+root always has access to any card readers in the system. 
+
+ -- Eric Dorland <eric@debian.org>, Sun Feb  8 20:39:28 2004

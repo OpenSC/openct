@@ -1,0 +1,12 @@
+debian/tmp/usr/bin/*
+debian/tmp/usr/sbin/*
+debian/tmp/usr/lib/libopenctapi.so
+debian/tmp/usr/lib/libopenctapi.la
+debian/tmp/usr/lib/libopenctapi.a
+debian/tmp/usr/lib/openct-ifd.so
+debian/tmp/usr/lib/openct-ifd.la
+debian/tmp/usr/lib/openct-ifd.a
+debian/tmp/etc/*
+etc/openct.conf etc/
+doc/*.html usr/share/doc/openct/html
+doc/*.css usr/share/doc/openct/html

@@ -1,38 +1,47 @@
-openct (0.5.0-cvs-20040115-1) unstable; urgency=low
-
-  * libifd no longer exported.
-
- -- Andreas Jellinghaus <aj@dungeon.inka.de>  Thu, 15 Jan 2004 10:05:05 +0100
-
-openct (0.5.0-cvs-20040114-1) unstable; urgency=low
-
-  * updated.
-
- -- Andreas Jellinghaus <aj@dungeon.inka.de>  Wed, 14 Jan 2004 20:39:53 +0100
-
-openct (0.5.0-cvs-20040108-1) unstable; urgency=low
+openct (0.5.0-cvs-20040226-1) experimental; urgency=low
 
   * cvs snapshot.
-  * added *.so files.
-  * new version numbers (ugh, quite long)
 
- -- Andreas Jellinghaus <aj@dungeon.inka.de>  Thu,  8 Jan 2004 11:07:09 +0100
+ -- Andreas Jellinghaus <aj@dungeon.inka.de>  Thu, 26 Feb 2004 10:54:13 +0100
 
-openct (0.5.0-0.1) unstable; urgency=low
+openct (0.5.0-5) unstable; urgency=low
 
-  * recompiled.
+  * debian/copyright: Add more copyright notices. Thanks Andreas
+    Jellinghaus.
+  * debian/openct.postinst: /var/run/openct should be writable by group
+    scard. Sorry about that.
 
- -- Andreas Jellinghaus <aj@dungeon.inka.de>  Mon,  8 Dec 2003 14:44:58 +0100
+ -- Eric Dorland <eric@debian.org>  Sun, 22 Feb 2004 23:22:29 -0500
 
-openct (0.5.0-0) unstable; urgency=low
+openct (0.5.0-4) unstable; urgency=low
 
-  * New Version
+  * debian/control: 
+    - It's pkg-config, not pkgconfig.
+    - Have openct depend on adduser and a dpkg with statoverride. 
+  * debian/open.postinst: Add scard group and restrict access to the card
+    readers to the scard group.
+  * openct.README.Debian: Document that you need to add yourself to the
+    scard group.
 
- -- Andreas Jellinghaus <aj@dungeon.inka.de>  Mon,  8 Dec 2003 14:44:58 +0100
+ -- Eric Dorland <eric@debian.org>  Sun,  8 Feb 2004 20:44:32 -0500
 
-openct (0.1.0-1) unstable; urgency=low
+openct (0.5.0-3) unstable; urgency=low
 
-  * Initial Release.
+  * src/ifd/ifd-ikey2k.c: Fix ported from CVS for card reset.
 
- -- Andreas Jellinghaus <aj@dungeon.inka.de>  Thu, 16 Oct 2003 19:21:49 +0200
+ -- Eric Dorland <eric@debian.org>  Wed, 28 Jan 2004 00:31:44 -0500
 
+openct (0.5.0-2) unstable; urgency=low
+
+  * debian/openct.install: 
+    - Actually install the configuration file.
+    - Install html documentation.
+  * debian/openct.doc-base.manual: Include manual.
+
+ -- Eric Dorland <eric@debian.org>  Sat, 10 Jan 2004 19:19:02 -0500
+
+openct (0.5.0-1) unstable; urgency=low
+
+  * Initial release.
+
+ -- Eric Dorland <eric@debian.org>  Sun, 21 Dec 2003 23:50:44 -0500

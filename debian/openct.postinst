@@ -1,0 +1,12 @@
+#!/bin/sh -e
+
+if ! getent group scard >/dev/null; then
+    echo Adding system group: scard.
+    addgroup --system scard
+fi
+
+if ! dpkg-statoverride --list /var/run/openct >/dev/null; then
+    dpkg-statoverride --update --add root scard 770 /var/run/openct
+fi
+
+#DEBHELPER#
