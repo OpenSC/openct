@@ -2,7 +2,7 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-INCLUDES = -I$(top_srcdir)/src/scdl @CPPFLAGS@ @CFLAGS_PCSC@
+INCLUDES = -I$(top_srcdir)/src/scdl @CPPFLAGS@ @PCSC_CFLAGS@
 
 lib_LTLIBRARIES = libifd.la
 

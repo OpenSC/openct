@@ -155,8 +155,8 @@ extern void		ifd_device_free(ifd_device_t *);
 
 
 /* checksum.c */
-extern unsigned int	csum_lrc_compute(const unsigned char *, size_t, unsigned char *);
-extern unsigned int	csum_crc_compute(const unsigned char *, size_t, unsigned char *);
+extern unsigned int	csum_lrc_compute(const uint8_t *, size_t, unsigned char *);
+extern unsigned int	csum_crc_compute(const uint8_t *, size_t, unsigned char *);
 
 /* Internal system dependent device functions */
 extern int		ifd_sysdep_device_type(const char *);

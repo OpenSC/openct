@@ -2,7 +2,7 @@
 
 SUBDIRS = . aclocal doc etc macos src
 
-EXTRA_DIST = ANNOUNCE LICENSE README bootstrap depcomp
+EXTRA_DIST = ANNOUNCE LICENSE README QUICKSTART bootstrap depcomp
 
 MAINTAINERCLEANFILES = \
 	Makefile.in config.h.in configure \
