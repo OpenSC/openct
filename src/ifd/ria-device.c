@@ -93,7 +93,7 @@ ria_register_device(ria_client_t *ria, const char *name)
 		strcpy(devinfo.type, "other");
 
 	return ria_command(ria, RIA_MGR_REGISTER,
-			&devinfo, sizeof(devinfo), NULL, 0);
+			&devinfo, sizeof(devinfo), NULL, 0, -1);
 }
 
 int

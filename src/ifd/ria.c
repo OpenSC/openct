@@ -27,6 +27,7 @@
 #define RIA_RESPONSE	255	/* pseudo command code */
 #define RIA_QUEUE_LEN	256
 #define RIA_SEND_CHUNK	128
+#define RIA_DEFAULT_TIMEOUT	4000
 
 static void	ifd_remote_close(ifd_device_t *);
 
@@ -104,9 +105,9 @@ ria_recv(ria_client_t *clnt, unsigned char expect, uint32_t xid,
 
 	gettimeofday(&begin, NULL);
 	if (timeout < 0)
-		timeout = 1000;
-	/* Allow for a 1 second round trip */
-	timeout += 1000;
+		timeout = 0;
+	/* Always slap on addition timeout for round-trip */
+	timeout += RIA_DEFAULT_TIMEOUT;
 
 	/* Now receive packets until we get the response.
 	 * Handle data packets properly */
@@ -167,14 +168,17 @@ ria_recv(ria_client_t *clnt, unsigned char expect, uint32_t xid,
 int
 ria_command(ria_client_t *clnt, unsigned char cmd,
 		const void *arg_buf, size_t arg_len,
-		void *res_buf, size_t res_len)
+		void *res_buf, size_t res_len,
+		long timeout)
 {
 	int	rc;
 
 	if ((rc = ria_send(clnt, cmd, arg_buf, arg_len)) < 0)
 		return rc;
 
-	rc = ria_recv(clnt, RIA_RESPONSE, clnt->xid, res_buf, res_len, -1);
+	if (timeout < 0)
+		timeout = RIA_DEFAULT_TIMEOUT;
+	rc = ria_recv(clnt, RIA_RESPONSE, clnt->xid, res_buf, res_len, timeout);
 	return rc;
 }
 
@@ -182,7 +186,7 @@ int
 ria_claim_device(ria_client_t *clnt, const char *name, ria_device_t *info)
 {
 	return ria_command(clnt, RIA_MGR_CLAIM, name, strlen(name),
-				info, sizeof(*info));
+				info, sizeof(*info), -1);
 }
 
 /*
@@ -196,7 +200,7 @@ ifd_remote_reset(ifd_device_t *dev)
 	ifd_debug(2, "called");
 	if (clnt == NULL)
 		return IFD_ERROR_DEVICE_DISCONNECTED;
-	return ria_command(clnt, RIA_RESET_DEVICE, NULL, 0, NULL, 0);
+	return ria_command(clnt, RIA_RESET_DEVICE, NULL, 0, NULL, 0, -1);
 }
 
 /*
@@ -216,7 +220,7 @@ ifd_remote_get_params(ifd_device_t *dev, ifd_device_params_t *params)
 		int		rc;
 
 		rc = ria_command(clnt, RIA_SERIAL_GET_CONFIG,
-				NULL, 0, &rconf, sizeof(rconf));
+				NULL, 0, &rconf, sizeof(rconf), -1);
 		params->serial.speed	= ntohl(rconf.speed);
 		params->serial.bits	= rconf.bits;
 		params->serial.stopbits	= rconf.stopbits;
@@ -250,7 +254,7 @@ ifd_remote_set_params(ifd_device_t *dev, const ifd_device_params_t *params)
 		rconf.rts	= params->serial.rts;
 		rconf.dtr	= params->serial.dtr;
 		return ria_command(clnt, RIA_SERIAL_SET_CONFIG,
-				&rconf, sizeof(rconf), NULL, 0);
+				&rconf, sizeof(rconf), NULL, 0, -1);
 	}
 
 	return IFD_ERROR_NOT_SUPPORTED;
@@ -265,7 +269,7 @@ ifd_remote_flush(ifd_device_t *dev)
 	if (clnt == NULL)
 		return;
 
-	ria_command(clnt, RIA_FLUSH_DEVICE, NULL, 0, NULL, 0);
+	ria_command(clnt, RIA_FLUSH_DEVICE, NULL, 0, NULL, 0, -1);
 	ct_buf_clear(&clnt->data);
 }
 

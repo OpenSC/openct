@@ -59,7 +59,8 @@ extern int		ria_send(ria_client_t *, unsigned char,
 				const void *, size_t);
 extern int		ria_command(ria_client_t *, unsigned char,
 				const void *, size_t,
-				void *, size_t);
+				void *, size_t,
+				long timeout);
 
 extern int		ria_svc_listen(const char *, int);
 extern ria_client_t *	ria_export_device(const char *, const char *);
