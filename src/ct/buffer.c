@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <ifd/buffer.h>
+#include <openct/buffer.h>
 
 void
 ifd_buf_init(ifd_buf_t *bp, void *mem, size_t len)

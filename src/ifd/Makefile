@@ -12,7 +12,7 @@ OBJS	= init.o manager.o device.o reader.o driver.o hotplug.o \
 	  apdu.o checksum.o utils.o \
 	  $(SYSDEP)
 SYSDEP	= linux.o
-LINK	= -L../../lib -lcardreader -ldl -lusb
+LINK	= -L../../lib -lopenct -ldl -lusb
 
 all:: $(LIBS) $(APPS)
 

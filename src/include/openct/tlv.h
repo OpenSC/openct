@@ -7,8 +7,8 @@
 #ifndef IFD_TLV_H
 #define IFD_TLV_H
 
-#include <ifd/protocol.h>
-#include <ifd/buffer.h>
+#include <openct/protocol.h>
+#include <openct/buffer.h>
 
 typedef unsigned char	ifd_tag_t;
 

@@ -10,7 +10,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <ifd/tlv.h>
+#include <openct/tlv.h>
 
 /*
  * Parse TLV data

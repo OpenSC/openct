@@ -8,7 +8,7 @@
 #define IFDD_SOCKET_H
 
 #include <sys/types.h>
-#include <ifd/buffer.h>
+#include <openct/buffer.h>
 
 typedef struct ifd_socket {
 	struct ifd_socket *next, *prev;

@@ -8,8 +8,8 @@
 #define IFD_CORE_H
 
 #include <sys/types.h>
-#include <ifd/openct.h>
-#include <ifd/apdu.h>
+#include <openct/openct.h>
+#include <openct/apdu.h>
 
 typedef struct ifd_device	ifd_device_t;
 typedef union ifd_device_params	ifd_device_params_t;

@@ -5,11 +5,11 @@
  */
 
 #include <stdlib.h>
-#include <ifd/core.h>
-#include <ifd/buffer.h>
-#include <ifd/logging.h>
-#include <ifd/conf.h>
-#include <ifd/error.h>
+#include <openct/core.h>
+#include <openct/buffer.h>
+#include <openct/logging.h>
+#include <openct/conf.h>
+#include <openct/error.h>
 #include "ctapi.h"
 
 static int	ifd_ctapi_control(ifd_reader_t *, ifd_apdu_t *);

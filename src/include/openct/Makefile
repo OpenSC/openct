@@ -1,6 +1,6 @@
 all:
-	ln -s ../../src/libcardreader/*.h .
-	ln -s ../../src/libifd/*.h .
+	ln -s ../../src/ct/*.h .
+	ln -s ../../src/ifd/*.h .
 
 clean distclean:
 	rm -f *.h

@@ -1,5 +1,5 @@
 
-SUBDIRS	= ifd
+SUBDIRS	= openct
 
 all clean distclean:
 	for dir in $(SUBDIRS); do \

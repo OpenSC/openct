@@ -6,11 +6,11 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <ifd/openct.h>
-#include <ifd/socket.h>
-#include <ifd/conf.h>
-#include <ifd/tlv.h>
-#include <ifd/error.h>
+#include <openct/openct.h>
+#include <openct/socket.h>
+#include <openct/conf.h>
+#include <openct/tlv.h>
+#include <openct/error.h>
 #include "protocol.h"
 
 static void	ct_args_int(ifd_buf_t *, ifd_tag_t, unsigned int);

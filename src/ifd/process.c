@@ -9,11 +9,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <ifd/core.h>
-#include <ifd/conf.h>
-#include <ifd/logging.h>
-#include <ifd/error.h>
-#include <ifd/tlv.h>
+#include <openct/core.h>
+#include <openct/conf.h>
+#include <openct/logging.h>
+#include <openct/error.h>
+#include <openct/tlv.h>
 
 #include "internal.h"
 

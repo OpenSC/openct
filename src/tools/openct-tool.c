@@ -8,8 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <ifd/conf.h>
-#include <ifd/openct.h>
+#include <openct/conf.h>
+#include <openct/openct.h>
 
 static void	usage(int exval);
 static void	print_reader(ct_handle *h);

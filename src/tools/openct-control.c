@@ -12,11 +12,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#include <ifd/core.h>
-#include <ifd/conf.h>
-#include <ifd/logging.h>
+#include <openct/core.h>
+#include <openct/conf.h>
+#include <openct/logging.h>
 
-#include <ifd/socket.h>
+#include <openct/socket.h>
 #include "internal.h"
 
 static void		usage(int exval);

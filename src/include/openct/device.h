@@ -7,7 +7,7 @@
 #ifndef IFD_DEVICE_H
 #define IFD_DEVICE_H
 
-#include <ifd/core.h>
+#include <openct/core.h>
 
 /* Types of devices supported by libifd */
 enum {

@@ -14,4 +14,4 @@ clean distclean::
 
 openct-tool: openct-tool.o $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $@.o $(OBJS) \
-		-L../../lib -lcardreader
+		-L../../lib -lopenct

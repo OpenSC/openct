@@ -10,11 +10,11 @@
 #include "core.h"
 #include "device.h"
 #include "driver.h"
-#include <ifd/conf.h>
-#include <ifd/config.h>
-#include <ifd/logging.h>
-#include <ifd/error.h>
-#include <ifd/buffer.h>
+#include <openct/conf.h>
+#include <openct/config.h>
+#include <openct/logging.h>
+#include <openct/error.h>
+#include <openct/buffer.h>
 
 struct ifd_device {
 	char *			name;

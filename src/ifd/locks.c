@@ -12,8 +12,8 @@
  */
 
 #include <stdlib.h>
-#include <ifd/error.h>
-#include <ifd/logging.h>
+#include <openct/error.h>
+#include <openct/logging.h>
 #include "internal.h"
 
 typedef struct ct_lock {

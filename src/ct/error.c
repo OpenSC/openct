@@ -6,9 +6,9 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-#include <ifd/error.h>
-#include <ifd/logging.h>
-#include <ifd/conf.h>
+#include <openct/error.h>
+#include <openct/logging.h>
+#include <openct/conf.h>
 
 void
 ifd_error(const char *fmt, ...)

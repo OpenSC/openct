@@ -6,12 +6,12 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <ifd/core.h>
-#include <ifd/driver.h>
-#include <ifd/device.h>
-#include <ifd/logging.h>
-#include <ifd/conf.h>
-#include <ifd/error.h>
+#include <openct/core.h>
+#include <openct/driver.h>
+#include <openct/device.h>
+#include <openct/logging.h>
+#include <openct/conf.h>
+#include <openct/error.h>
 
 #define DEBUG(fmt, args...) \
 	do { ifd_debug("%s: " fmt, __FUNCTION__ , ##args); } while (0)

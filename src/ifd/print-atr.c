@@ -9,8 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <ifd/core.h>
-#include <ifd/conf.h>
+#include <openct/core.h>
+#include <openct/conf.h>
 
 static void	usage(int exval);
 static void	print_atr(ifd_reader_t *);

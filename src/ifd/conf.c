@@ -11,9 +11,9 @@
 #include <errno.h>
 #include <ctype.h>
 
-#include <ifd/conf.h>
-#include <ifd/config.h>
-#include <ifd/buffer.h>
+#include <openct/conf.h>
+#include <openct/config.h>
+#include <openct/buffer.h>
 
 struct ifd_config	ifd_config = {
 	.debug		= 0,
