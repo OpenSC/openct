@@ -76,7 +76,7 @@ main(int argc, char **argv)
 			opt_user = optarg;
 			break;
 		case 'v':
-			version;
+			version();
 			break;
 		default:
 			usage(1);

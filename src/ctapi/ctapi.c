@@ -95,7 +95,7 @@ dir(struct CardTerminal *ct,
 	if (size!=(size_t*)0)
 		*size=0;
 	for (entry=&ct->cwd->dir[0]; *entry; ++entry) {
-		char r[5];
+		unsigned char r[5];
 		int rc;
 
 		r[0]=((*entry)->id>>8)&0xff;
@@ -119,7 +119,7 @@ static int
 hostcf(struct CardTerminal *ct,
 	ct_buf_t *buf, off_t start, size_t length, size_t *size)
 {
-	char data[2];
+	unsigned char data[2];
 	const char *version="OpenCT";
 	int rc;
 
@@ -128,7 +128,7 @@ hostcf(struct CardTerminal *ct,
 	data[1]=strlen(version);
 	if ((rc=put(buf,&start,&length,size,data,2))<0)
 		return rc;
-	if ((rc=put(buf,&start,&length,size,version,strlen(version)))<0)
+	if ((rc=put(buf,&start,&length,size,(const unsigned char *)version,strlen(version)))<0)
 		return rc;
 	return 0;
 }
@@ -168,7 +168,7 @@ CardTerminalFile_select(struct CardTerminal *ct,
 	int id, ct_buf_t *buf)
 {
 	struct CardTerminalFile *cur=(struct CardTerminalFile*)0;
-	char r[12]={ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x90, 0x00 };
+	unsigned char r[12]={ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x90, 0x00 };
 	size_t size=0;
 
 	if (id==0x3f00)
@@ -304,9 +304,8 @@ static int
 ctapi_set_interface_parameter(struct CardTerminal *ct, char p1, char p2,
                 ct_buf_t *sbuf, ct_buf_t *rbuf)
 {
-	char 	proto = 0xff;
+	unsigned char 	proto = 0xff;
 	unsigned int slot;
-	int 	rc;
 
 	if ((p1 == 0x00) || (p1 > 2))
 		return ctapi_error(rbuf, CTBCS_SW_BAD_PARAMS);
@@ -488,7 +487,7 @@ ctapi_control(struct CardTerminal *ct,
  */
 static int
 ctapi_transact(struct CardTerminal *ct, int nslot,
-		const char *cmd, size_t cmd_len,
+		const unsigned char *cmd, size_t cmd_len,
 		void *rsp, size_t rsp_len)
 {
 	static const unsigned char select_kvk[11]={ 0x00, 0xa4, 0x04, 0x00, 0x06, 0xd2, 0x80, 0x00, 0x00, 0x01, 0x01 };

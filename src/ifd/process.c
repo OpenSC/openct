@@ -77,6 +77,8 @@ static int do_memory_write(ifd_reader_t *, int,
 			ct_tlv_parser_t *, ct_tlv_builder_t *);
 static int do_transact_old(ifd_reader_t *, int,
 			ct_buf_t *, ct_buf_t *);
+static int do_set_protocol(ifd_reader_t *, int,
+			ct_tlv_parser_t *, ct_tlv_builder_t *);
 
 int
 ifdhandler_process(ct_socket_t *sock, ifd_reader_t *reader,
