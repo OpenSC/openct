@@ -14,9 +14,6 @@
 typedef struct ifd_device	ifd_device_t;
 typedef union ifd_device_params	ifd_device_params_t;
 
-/* Various implementation limits */
-#define IFD_MAX_READERS		8
-#define IFD_MAX_SLOTS		8
 
 enum {
 	IFD_PROTOCOL_DEFAULT = -1,
@@ -58,11 +55,11 @@ typedef struct ifd_reader {
 	const char *		name;
 	unsigned int		flags;
 	unsigned int		nslots;
-	ifd_slot_t		slot[IFD_MAX_SLOTS];
+	ifd_slot_t		slot[OPENCT_MAX_SLOTS];
 
 	const ifd_driver_t *	driver;
 	ifd_device_t *		device;
-	pid_t			pid; /* used by resource manager */
+	ct_info_t *		status;
 
 	/* In case the IFD needs to keep state */
 	void *			driver_data;

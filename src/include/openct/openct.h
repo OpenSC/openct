@@ -7,16 +7,24 @@
 #ifndef OPENCT_H
 #define OPENCT_H
 
-typedef struct ct_socket		ct_handle;
+#include <sys/types.h>
 
-#define IFD_MAX_READER		16
+/* Various implementation limits */
+#define OPENCT_MAX_READERS	16
+#define OPENCT_MAX_SLOTS	8
 
 typedef struct ct_info {
 	char		ct_name[64];
 	unsigned int	ct_slots;
+	unsigned int	ct_card[OPENCT_MAX_SLOTS];
 	unsigned char	ct_display : 1,
 			ct_keypad  : 1;
+	pid_t		ct_pid;
 } ct_info_t;
+
+
+typedef struct ct_handle	ct_handle;
+
 
 #define IFD_CARD_PRESENT        0x0001
 #define IFD_CARD_STATUS_CHANGED 0x0002
@@ -38,7 +46,11 @@ enum {
 	IFD_LOCK_EXCLUSIVE,
 };
 
+extern int		ct_status(const ct_info_t **);
+
+extern int		ct_reader_info(unsigned int, ct_info_t *);
 extern ct_handle *	ct_reader_connect(unsigned int);
+extern void		ct_reader_disconnect(ct_handle *);
 extern int		ct_reader_status(ct_handle *, ct_info_t *);
 extern int		ct_card_status(ct_handle *h, unsigned int slot, int *status);
 extern int		ct_card_reset(ct_handle *h, unsigned int slot,
@@ -56,6 +68,9 @@ extern int		ct_card_transact(ct_handle *h, unsigned int slot,
 
 extern int		ct_master_control(const char *command,
 				char *replybuf, size_t replysize);
+extern int		ct_status_clear(unsigned int);
+extern ct_info_t *	ct_status_alloc_slot(unsigned int *);
+extern int		ct_status_update(ct_info_t *);
 
 #endif /* OPENCT_H */
 
