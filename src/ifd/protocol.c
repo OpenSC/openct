@@ -126,6 +126,17 @@ ifd_protocol_new(int id, ifd_reader_t *reader, unsigned int dad)
 }
 
 /*
+ * Set a protocol specific parameter
+ */
+int
+ifd_protocol_set_parameter(ifd_protocol_t *p, int type, long value)
+{
+	if (!p || !p->ops || !p->ops->set_param)
+		return -1;
+	return p->ops->set_param(p, type, value);
+}
+
+/*
  * Free protocol object
  */
 void
