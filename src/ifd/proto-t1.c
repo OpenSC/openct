@@ -72,13 +72,14 @@ enum {
 	SENDING, RECEIVING
 };
 
+static void		t1_set_checksum(t1_data_t *, int);
 static unsigned	int	t1_block_type(unsigned char);
 static unsigned int	t1_seq(unsigned char);
 static unsigned	int	t1_build(ifd_apdu_t *, t1_data_t *,
 				unsigned char, ifd_buf_t *);
 static void		t1_compute_checksum(t1_data_t *, ifd_apdu_t *);
 static int		t1_verify_checksum(t1_data_t *, unsigned char *, unsigned int);
-static int		t1_xcv(ifd_protocol_t *, ifd_apdu_t *);
+static int		t1_xcv(ifd_protocol_t *, ifd_apdu_t *, size_t *);
 
 /*
  * Set default T=1 protocol parameters
@@ -86,12 +87,27 @@ static int		t1_xcv(ifd_protocol_t *, ifd_apdu_t *);
 static void
 t1_set_defaults(t1_data_t *t1)
 {
-	t1->retries = 3;
-	t1->timeout = 3000;
-	t1->ifsc    = 32;
-	t1->ifsd    = 32;
-	t1->nr	    = 0;
-	t1->ns	    = 0;
+	t1->retries  = 3;
+	t1->timeout  = 3000;
+	t1->ifsc     = 32;
+	t1->ifsd     = 32;
+	t1->nr	     = 0;
+	t1->ns	     = 0;
+}
+
+void
+t1_set_checksum(t1_data_t *t1, int csum)
+{
+	switch (csum) {
+	case IFD_PROTOCOL_T1_CHECKSUM_LRC:
+		t1->rc_bytes = 1;
+		t1->checksum = csum_lrc_compute;
+		break;
+	case IFD_PROTOCOL_T1_CHECKSUM_CRC:
+		t1->rc_bytes = 2;
+		t1->checksum = csum_crc_compute;
+		break;
+	}
 }
 
 /*
@@ -103,10 +119,7 @@ t1_init(ifd_protocol_t *prot)
 	t1_data_t	*t1 = (t1_data_t *) prot;
 
 	t1_set_defaults(t1);
-
-	t1->rc_bytes = 2;
-	t1->checksum = csum_crc_compute;
-
+	t1_set_checksum(t1, IFD_PROTOCOL_T1_CHECKSUM_LRC);
 	return 0;
 }
 
@@ -130,6 +143,10 @@ t1_set_param(ifd_protocol_t *prot, int type, long value)
 	switch (type) {
 	case IFD_PROTOCOL_RECV_TIMEOUT:
 		t1->timeout = value;
+		break;
+	case IFD_PROTOCOL_T1_CHECKSUM_LRC:
+	case IFD_PROTOCOL_T1_CHECKSUM_CRC:
+		t1_set_checksum(t1, type);
 		break;
 	default:
 		ifd_error("Unsupported parameter %d", type);
@@ -194,11 +211,13 @@ t1_transceive(ifd_protocol_t *prot, ifd_apdu_t *apdu)
 
 	while (1) {
 		unsigned char	pcb;
+		size_t		count;
 		int		n;
 
 		retries--;
 
-		if ((n = t1_xcv(prot, &block)) < 0) {
+		block.rcv_len = t1->ifsc + 5;
+		if ((n = t1_xcv(prot, &block, &count)) < 0) {
 			DEBUG("transmit/receive failed");
 			if (retries == 0)
 				return -1;
@@ -271,7 +290,7 @@ t1_transceive(ifd_protocol_t *prot, ifd_apdu_t *apdu)
 
 			t1->nr ^= 1;
 
-			if (ifd_buf_put(&rbuf, rdata + 3, n) < 0)
+			if (ifd_buf_put(&rbuf, rdata + 3, count) < 0)
 				return -1;
 
 			if ((pcb & T1_MORE_BLOCKS) == 0)
@@ -322,7 +341,8 @@ t1_transceive(ifd_protocol_t *prot, ifd_apdu_t *apdu)
 		retries = t1->retries;
 	}
 
-done:	return 0;
+done:	apdu->rcv_len = ifd_buf_avail(&rbuf);
+	return 0;
 }
 
 static unsigned
@@ -437,7 +457,7 @@ t1_verify_checksum(t1_data_t *t1, unsigned char *rbuf, size_t len)
  * Send/receive block
  */
 int
-t1_xcv(ifd_protocol_t *prot, ifd_apdu_t *apdu)
+t1_xcv(ifd_protocol_t *prot, ifd_apdu_t *apdu, size_t *countp)
 {
 	t1_data_t	*t1 = (t1_data_t *) prot;
 	int		n, m;
@@ -451,9 +471,9 @@ t1_xcv(ifd_protocol_t *prot, ifd_apdu_t *apdu)
 		n = ifd_recv_response(prot, apdu->rcv_buf,
 				apdu->rcv_len, t1->timeout);
 		if (n >= 0) {
-			 m = apdu->rcv_buf[2] + 3 + t1->rc_bytes;
-			 if (m < n)
-				 n = m;
+			m = apdu->rcv_buf[2] + 3 + t1->rc_bytes;
+			if (m < n)
+				n = m;
 		}
 	} else {
 		/* Get the header */
@@ -473,8 +493,10 @@ t1_xcv(ifd_protocol_t *prot, ifd_apdu_t *apdu)
 		n += 3;
 	}
 
-	if (n >= 0)
+	if (n >= 0) {
 		DEBUG("received %s", ifd_hexdump(apdu->rcv_buf, n));
+		*countp = apdu->rcv_buf[2];
+	}
 
 	return n;
 }
