@@ -91,6 +91,15 @@ ifd_sysdep_usb_control(int fd,
 	struct usbdevfs_ctrltransfer ctrl;
 	int		rc;
 
+#ifdef LINUX_NEWUSB
+	ctrl.bRequestType = requesttype;
+	ctrl.bRequest = request;
+	ctrl.wValue = value;
+	ctrl.wIndex = index;
+	ctrl.wLength = len;
+	ctrl.data = data;
+	ctrl.timeout = timeout;
+#else
 	ctrl.requesttype = requesttype;
 	ctrl.request = request;
 	ctrl.value = value;
@@ -98,6 +107,7 @@ ifd_sysdep_usb_control(int fd,
 	ctrl.length = len;
 	ctrl.data = data;
 	ctrl.timeout = timeout;
+#endif
 
 	if ((rc = ioctl(fd, USBDEVFS_CONTROL, &ctrl)) < 0) {
 		ct_error("usb_control failed: %m");

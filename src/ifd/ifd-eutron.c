@@ -91,6 +91,7 @@ eutron_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 
 		if (lr > IFD_MAX_ATR_LEN) 
 			goto failed;
+		usleep(100000);
 	}
 	if (c >= 20)
 		goto failed;
@@ -114,6 +115,7 @@ eutron_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 
 		if (lr > IFD_MAX_ATR_LEN) 
 			goto failed;
+		usleep(100000);
 	}
 	if (c >= 20)
 		goto failed;
@@ -158,6 +160,7 @@ eutron_recv(ifd_reader_t *reader, unsigned int dad, unsigned char *buffer, size_
 
 		if (lr >= 4 && lr>=buffer[2]+4)
 			break;
+		usleep(100000);
 	}
 	if (c >= 200)
 		goto failed;
