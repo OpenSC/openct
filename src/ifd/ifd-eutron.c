@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "internal.h"
 
 /*
@@ -137,7 +138,7 @@ static int
 eutron_send(ifd_reader_t *reader, unsigned int dad, const unsigned char *buffer, size_t len)
 {
 	return ifd_usb_control(reader->device, 0x42, 0x01, 0, 0,
-				buffer, len, 1000);
+				(void *) buffer, len, 1000);
 }
 
 static int
