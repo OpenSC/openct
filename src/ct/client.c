@@ -52,8 +52,8 @@ ct_reader_status(ct_handle *h, ct_info_t *info)
 
 	memset(info, 0, sizeof(*info));
 
-	ct_buf_init(&resp, buffer, sizeof(buffer));
 	ct_buf_init(&args, buffer, sizeof(buffer));
+	ct_buf_init(&resp, buffer, sizeof(buffer));
 
 	ct_buf_putc(&args, CT_CMD_STATUS);
 	ct_buf_putc(&args, CT_UNIT_READER);
@@ -99,8 +99,8 @@ ct_card_status(ct_handle *h, unsigned int slot, int *status)
 	ct_buf_t	args, resp;
 	int		rc;
 
-	ct_buf_init(&resp, buffer, sizeof(buffer));
 	ct_buf_init(&args, buffer, sizeof(buffer));
+	ct_buf_init(&resp, buffer, sizeof(buffer));
 
 	ct_buf_putc(&args, CT_CMD_STATUS);
 	ct_buf_putc(&args, slot);
@@ -135,8 +135,8 @@ ct_card_request(ct_handle *h, unsigned int slot,
 	ct_buf_t	args, resp;
 	int		rc;
 
-	ct_buf_init(&resp, buffer, sizeof(buffer));
 	ct_buf_init(&args, buffer, sizeof(buffer));
+	ct_buf_init(&resp, buffer, sizeof(buffer));
 
 	ct_buf_putc(&args, CT_CMD_RESET);
 	ct_buf_putc(&args, slot);
@@ -170,8 +170,8 @@ ct_card_transact(ct_handle *h, unsigned int slot,
 	ct_buf_t	args, resp;
 	int		rc;
 
-	ct_buf_init(&resp, buffer, sizeof(buffer));
-	ct_buf_init(&args, recv_buf, recv_size);
+	ct_buf_init(&args, buffer, sizeof(buffer));
+	ct_buf_init(&resp, recv_buf, recv_size);
 
 	ct_buf_putc(&args, CT_CMD_TRANSACT);
 	ct_buf_putc(&args, slot);
@@ -196,8 +196,8 @@ ct_card_lock(ct_handle *h, unsigned int slot, int type, ct_lock_handle *res)
 	ct_buf_t	args, resp;
 	int		rc;
 
-	ct_buf_init(&resp, buffer, sizeof(buffer));
 	ct_buf_init(&args, buffer, sizeof(buffer));
+	ct_buf_init(&resp, buffer, sizeof(buffer));
 
 	ct_buf_putc(&args, CT_CMD_LOCK);
 	ct_buf_putc(&args, slot);
@@ -223,8 +223,8 @@ ct_card_unlock(ct_handle *h, unsigned int slot, ct_lock_handle lock)
 	unsigned char	buffer[256];
 	ct_buf_t	args, resp;
 
-	ct_buf_init(&resp, buffer, sizeof(buffer));
 	ct_buf_init(&args, buffer, sizeof(buffer));
+	ct_buf_init(&resp, buffer, sizeof(buffer));
 
 	ct_buf_putc(&args, CT_CMD_UNLOCK);
 	ct_buf_putc(&args, slot);
