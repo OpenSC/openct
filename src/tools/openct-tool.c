@@ -206,10 +206,10 @@ do_reset(ct_handle *h, unsigned char *atr, size_t atr_len)
 			(status & IFD_CARD_STATUS_CHANGED)? ", status changed" : "");
 
 	if (status & IFD_CARD_PRESENT) {
-		n = ct_card_reset(h, 0, atr, sizeof(atr));
+		n = ct_card_reset(h, 0, atr, atr_len);
 	} else {
 		n = ct_card_request(h, 0, 5, "Please insert card",
-				atr, sizeof(atr));
+				atr, atr_len);
 	}
 
 	if (n < 0) {
