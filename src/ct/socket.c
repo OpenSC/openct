@@ -19,7 +19,7 @@
 
 #include <openct/logging.h>
 #include <openct/socket.h>
-#include "config.h"
+#include <openct/pathnames.h>
 
 #define SOCK_BUFSIZ	512
 

@@ -7,11 +7,10 @@
 #ifndef IFD_INTERNAL_H
 #define IFD_INTERNAL_H
 
-#include "ifd.h"
-#include "device.h"
-#include "driver.h"
+#include <openct/ifd.h>
+#include <openct/device.h>
+#include <openct/driver.h>
 #include <openct/conf.h>
-#include <openct/config.h>
 #include <openct/logging.h>
 #include <openct/error.h>
 #include <openct/buffer.h>

@@ -16,7 +16,7 @@
 
 
 #include <openct/conf.h>
-#include <openct/config.h>
+#include <openct/pathnames.h>
 #include <openct/buffer.h>
 
 struct ct_config	ct_config = {

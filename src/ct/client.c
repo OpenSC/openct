@@ -10,8 +10,8 @@
 #include <openct/socket.h>
 #include <openct/tlv.h>
 #include <openct/error.h>
-#include "protocol.h"
-#include "config.h"
+#include <openct/protocol.h>
+#include <openct/pathnames.h>
 
 static void	ct_args_int(ct_buf_t *, ifd_tag_t, unsigned int);
 static void	ct_args_string(ct_buf_t *, ifd_tag_t, const char *);
