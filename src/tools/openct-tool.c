@@ -239,10 +239,19 @@ select_mf(ct_handle *h)
 		exit(1);
 	}
 
+again:
 	rc = ct_card_transact(h, 0, cmd, sizeof(cmd), res, sizeof(res));
 	if (rc < 0) {
 		fprintf(stderr, "card communication failure, err=%d\n", rc);
 		return;
+	}
+
+	if (rc == 2 && res[0] == 0x6A && res[1] == 0x86) {
+		/* FIXME - Cryptoflex needs class byte 0xC0 :-( */
+		if (cmd[0] == 0x00) {
+			cmd[0] = 0xC0;
+			goto again;
+		}
 	}
 
 	printf("Selected MF, response:\n");
