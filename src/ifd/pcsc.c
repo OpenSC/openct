@@ -11,4 +11,4 @@
 
 RESPONSECODE IFDHCreateChannel(DWORD Lun, DWORD Channel)
 {
-
+}
