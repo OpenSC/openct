@@ -111,6 +111,18 @@ AC_PATH_PROG(TEST_MINUS_S_SH, bash)
 AC_PATH_PROG(TEST_MINUS_S_SH, ksh)
 AC_PATH_PROG(TEST_MINUS_S_SH, sh)
 
+dnl Special check for pthread support.
+ACX_PTHREAD(
+[
+ AC_DEFINE(HAVE_PTHREAD,1,
+  [Define if you have POSIX threads libraries and header files.])
+], [
+ AC_MSG_ERROR([POSIX thread support required])
+])
+LIBS="$PTHREAD_LIBS $LIBS"
+CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+CC="$PTHREAD_CC"
+
 dnl Add libtool support.
 AM_PROG_LIBTOOL
 dnl Automatically update the libtool script if it becomes out-of-date.
@@ -217,9 +229,9 @@ if test "x$pcsc_path" != "xno" -a "x$PCSC_MSG" != "xyes"; then
 		LIBS="$saved_LIBS"
 	fi
 fi
-AM_CONDITIONAL(HAVE_PCSCLITE, test "x$PCSC_MSG" = "xyes")
+AM_CONDITIONAL(HAVE_PCSC, test "x$PCSC_MSG" = "xyes")
 if test "x$PCSC_MSG" = "xyes"; then
-	AC_DEFINE(HAVE_PCSCLITE, 1, [Have PC/SC Lite])
+	AC_DEFINE(HAVE_PCSC, 1, [Have PC/SC implementation])
 else
 	LIBPCSC=""
 	CFLAGS_PCSC=""

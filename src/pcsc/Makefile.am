@@ -4,7 +4,7 @@ MAINTAINERCLEANFILES = Makefile.in
 
 INCLUDES = @CPPFLAGS@ @CFLAGS_PCSC@
 
-if HAVE_PCSCLITE
+if HAVE_PCSC
 lib_LTLIBRARIES = openct-ifd.la
 endif
 
