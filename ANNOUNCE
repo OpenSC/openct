@@ -1,7 +1,7 @@
-OpenCT Release 0.6.2
+OpenCT Release 0.6.3
 ====================
 
-We are pleased to announce the availability of OpenCT 0.6.2.
+We are pleased to announce the availability of OpenCT 0.6.3.
 
 OpenCT is a library for accessing smart card terminals.  It provides a
 rich set of functions for driver writers, protocol drivers for T=0 and
@@ -11,7 +11,6 @@ Currently, the main user of OpenCT is the OpenSC smart card framework,
 but OpenCT can of course be used by other applications as well. OpenCT
 provides a native OpenCT, CT-API and PC/SC Lite IFD interface with
 an OpenCT ifdhandler resource manager.
-
 
 Supported Hardware
 ==================
@@ -40,4 +39,4 @@ Mailing List
 ============
 
 For questions regarding OpenCT, please contact the OpenSC mailing list
-(opensc-devel). For subscription information, see http://www.opensc.org.
+(opensc-devel). For subscription information, see http://www.opensc.org/.

@@ -1,5 +1,15 @@
 NEWS for OpenCT -- History of user visible changes
 
+New in 0.6.4; not yet released
+* ?
+
+New in 0.6.3; 2005-01-11; Andreas Jellinghaus
+* silence "unable to open" and "Debug: connect() failed:" error messages,
+  as they can happen in normal operation (e.g. opensc compiled with openct
+  support (but openct not used), or probing for readers to see if there is
+  one).
+* add version option to all command line tools.
+
 New in 0.6.2; 2004-10-31; Andreas Jellinghaus
 * Small fix in hotplug script.
 * Increased transfer buffer to 258 bytes for e-gate.

@@ -3,11 +3,12 @@
   reach the destination. can be proproduced with egate driver,
   cryptoflex card and opensc regression test init0004,6,
   but is not specific to these drivers and cards
+- get rid of debug message in libct or silence it somehow
+- improve pc/sc detection
 - error handling: use error codes everywhere
 - pin verification via keypad
 - ifdhandler should clear status file slot on exit
 - openct-control init: debug messages to syslog
 - rewrite USB layer, add native support for *BSD
   and MacOS X. Remove optional libusb dependency
-- modify configuration parser and file syntax to be
-  compatible against opensc / scconf
+- CCID driver

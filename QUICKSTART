@@ -2,9 +2,9 @@ A quick installation guide to openct
 ====================================
 
 To install openct, please do as user,
-$ wget http://www.opensc.org/files/openct-x.y.z.tar.gz
-$ tar xfvz openct-x.y.z.tar.gz
-$ cd openct-x.y.z
+$ wget http://www.opensc.org/files/openct-0.6.2.tar.gz
+$ tar xfvz openct-0.6.2.tar.gz
+$ cd openct-0.6.2.tar.gz
 
 $ ./configure --prefix=/usr --sysconfdir=/etc
 
