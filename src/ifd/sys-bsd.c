@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  * Copyright (C) 2003 Andreas Jellinghaus <aj@suse.de>
+ * Copyright (C) 2003 Markus Friedl <aj@suse.de>
  *
  * These functions need to be re-implemented for every
  * new platform.
@@ -30,7 +31,7 @@ ifd_sysdep_device_type(const char *name)
 	if (!name || name[0] != '/')
 		return -1;
 
-	if (!strncmp(name, "/proc/bus/usb", 13))
+	if (!strncmp(name, "/dev/ugen", 7))
 		return IFD_DEVICE_TYPE_USB;
 
 	if (stat(name, &stb) < 0)
@@ -66,9 +67,7 @@ ifd_sysdep_channel_to_name(unsigned int num)
 #ifdef __FreeBSD__
 		sprintf(namebuf, "/dev/ugen%d", num);
 #else
-		sprintf(namebuf, "/dev/ugen%d.%02d",
-				(num >> 8) & 0xff,
-				num & 0xff);
+		sprintf(namebuf, "/dev/ugen%d.00", num);
 #endif
 		break;
 	default:
@@ -91,25 +90,31 @@ ifd_sysdep_usb_control(int fd,
 		void *data, size_t len, long timeout)
 {
 	struct usb_ctl_request ctrl;
-	int		rc;
+	int		rc,val;
 
 	memset(&ctrl, 0, sizeof(ctrl));
 	
-	ctrl.ucr_addr = 2;
+	ctrl.ucr_addr = 0;
 	ctrl.ucr_request.bmRequestType = requesttype;
 	ctrl.ucr_request.bRequest = request;
-	ctrl.ucr_request.wValue[0] = value;
-	ctrl.ucr_request.wIndex[0] = index;
-	ctrl.ucr_request.wLength[0] = len;
+	USETW(ctrl.ucr_request.wValue, value);
+	USETW(ctrl.ucr_request.wIndex, index);
+	USETW(ctrl.ucr_request.wLength, len);
 	ctrl.ucr_actlen = 0;
 	ctrl.ucr_data = data;
 	ctrl.ucr_flags = USBD_SHORT_XFER_OK;
+
+	val = timeout;
+	rc = ioctl(fd, USB_SET_TIMEOUT, &val);
+	if (rc < 0) {
+		ct_error("usb_set_timeout failed: %m");
+                return IFD_ERROR_COMM_ERROR;
+	}
  
 	if ((rc = ioctl(fd, USB_DO_REQUEST, &ctrl)) < 0) {
                 ct_error("usb_control failed: %m");
                 return IFD_ERROR_COMM_ERROR;
         }
-	printf("usb returned %d, actlen %d\n",rc,ctrl.ucr_actlen);
 
 	return rc;
 }

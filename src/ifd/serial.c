@@ -4,6 +4,7 @@
  * Copyright (C) 2003 Olaf Kirch <okir@lst.de>
  */
 
+#include <sys/types.h>
 #include <sys/select.h>
 #include <sys/time.h>
 #include <sys/poll.h>

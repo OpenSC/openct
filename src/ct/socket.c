@@ -4,6 +4,7 @@
  * Copyright (C) 2003, Olaf Kirch <okir@caldera.de>
  */
 
+#include <sys/types.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/stat.h>

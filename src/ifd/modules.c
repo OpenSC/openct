@@ -53,7 +53,11 @@ ifd_load_module(const char *type, const char *name)
 
 	snprintf(path, sizeof(path), "%s/%s.so", dirname, name);
 
+#ifdef RTLD_NOW
 	handle = dlopen(path, RTLD_NOW);
+#else
+	handle = dlopen(path, 0);
+#endif
 	if (!handle) {
 		ct_error("Failed to load %s: %s", path, dlerror());
 		return -1;
