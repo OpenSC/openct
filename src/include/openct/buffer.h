@@ -4,8 +4,8 @@
  * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
-#ifndef IFD_BUFFER_H
-#define IFD_BUFFER_H
+#ifndef OPENCT_BUFFER_H
+#define OPENCT_BUFFER_H
 
 #include <sys/types.h>
 
@@ -33,4 +33,4 @@ extern void		ct_buf_compact(ct_buf_t *);
 extern int		ct_buf_overrun(ct_buf_t *);
 
 
-#endif /* IFD_BUFFER_H */
+#endif /* OPENCT_BUFFER_H */

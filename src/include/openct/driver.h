@@ -4,8 +4,8 @@
  * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
-#ifndef IFD_DRIVER_H
-#define IFD_DRIVER_H
+#ifndef OPENCT_DRIVER_H
+#define OPENCT_DRIVER_H
 
 #include <openct/device.h>
 
@@ -68,4 +68,4 @@ extern int		ifd_protocol_transceive(ifd_protocol_t *proto,
 				void *, size_t);
 
 
-#endif /* IFD_DRIVER_H */
+#endif /* OPENCT_DRIVER_H */

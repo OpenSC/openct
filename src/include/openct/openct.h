@@ -4,8 +4,8 @@
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
-#ifndef OPENCT_H
-#define OPENCT_H
+#ifndef OPENCT_OPENCT_H
+#define OPENCT_OPENCT_H
 
 #include <sys/types.h>
 
@@ -88,5 +88,4 @@ extern int		ct_status_clear(unsigned int);
 extern ct_info_t *	ct_status_alloc_slot(unsigned int *);
 extern int		ct_status_update(ct_info_t *);
 
-#endif /* OPENCT_H */
-
+#endif /* OPENCT_OPENCT_H */

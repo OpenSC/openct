@@ -4,8 +4,8 @@
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
-#ifndef IFD_TLV_H
-#define IFD_TLV_H
+#ifndef OPENCT_TLV_H
+#define OPENCT_TLV_H
 
 #include <openct/protocol.h>
 #include <openct/buffer.h>
@@ -42,4 +42,4 @@ extern void	ct_tlv_add_byte(ct_tlv_builder_t *, unsigned char);
 extern void	ct_tlv_add_bytes(ct_tlv_builder_t *,
 				const unsigned char *, size_t);
 
-#endif /* IFD_TLV_H */
+#endif /* OPENCT_TLV_H */

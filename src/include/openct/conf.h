@@ -4,8 +4,8 @@
  * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
-#ifndef IFD_CONFIG_H
-#define IFD_CONFIG_H
+#ifndef OPENCT_CONF_H
+#define OPENCT_CONF_H
 
 #define IFD_DEFAULT_MODULES_DIR		"/usr/lib/ifd"
 
@@ -45,4 +45,4 @@ extern int	ifd_conf_node_get_string_list(ifd_conf_node_t *,
 extern int	ifd_conf_node_get_nodes(ifd_conf_node_t *,
 				const char *, ifd_conf_node_t **, size_t);
 
-#endif /* IFD_CONFIG_H */
+#endif /* OPENCT_CONF_H */

@@ -4,8 +4,8 @@
  * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
-#ifndef IFD_CORE_H
-#define IFD_CORE_H
+#ifndef OPENCT_IFD_H
+#define OPENCT_IFD_H
 
 #include <sys/types.h>
 #include <openct/openct.h>
@@ -62,7 +62,7 @@ typedef struct ifd_reader {
 
 	const ifd_driver_t *	driver;
 	ifd_device_t *		device;
-	ct_info_t *		status;
+	ct_info_t *		info;
 
 	/* In case the IFD needs to keep state */
 	void *			driver_data;
@@ -165,4 +165,4 @@ extern void			ifd_protocol_free(ifd_protocol_t *);
 	} while (0)
 
 
-#endif /* IFD_CORE_H */
+#endif /* OPENCT_IFD_H */
