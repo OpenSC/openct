@@ -1,4 +1,4 @@
-/* 
+/*
  * driver for some CCID-compliant devices
  *
  * Copyright 2003, Chaskiel Grundman <cg2v@andrew.cmu.edu>
@@ -10,53 +10,59 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CCID_ERR_ABORTED     0xFF   /* CMD ABORTED */
-#define CCID_ERR_ICC_MUTE    0xFE   
-#define CCID_ERR_XFR_PARITY  0xFD   /* XFR PARITY ERROR */
-#define CCID_ERR_OVERRUN     0xFC   /* XFR OVERRUN */
-#define CCID_ERR_HW_ERROR    0xFB  
-#define CCID_ERR_BAD_ATR_TS  0xF8
-#define CCID_ERR_BAD_ATR_TCK 0xF7
-#define CCID_ERR_PROT_NOSUP  0xF6   /* ICC PROTOCOL NOT SUPPORTED */
-#define CCID_ERR_CLASS_NOSUP 0xF5   /* ICC CLASS NOT SUPPORTED */
-#define CCID_ERR_BAD_PROC_BYTE 0xF4 /* PROCEDURE BYTE CONFLICT */
-#define CCID_ERR_XXX         0xF3   /* DEACTIVATED PROTOCOL (?) */
-#define CCID_ERR_BUSY_AUTO_SEQ 0xF2 /* BUSY WITH AUTO SEQUENCE */
-#define CCID_ERR_PIN_TIMEOUT 0xF0
-#define CCID_ERR_PIN_CANCELED 0xEF
-#define CCID_ERR_SLOT_BUSY   0xE0   /* CMD SLOT BUSY */
+#define CCID_ERR_ABORTED	0xFF /* CMD ABORTED */
+#define CCID_ERR_ICC_MUTE	0xFE
+#define CCID_ERR_XFR_PARITY	0xFD /* XFR PARITY ERROR */
+#define CCID_ERR_OVERRUN	0xFC /* XFR OVERRUN */
+#define CCID_ERR_HW_ERROR	0xFB
+#define CCID_ERR_BAD_ATR_TS	0xF8
+#define CCID_ERR_BAD_ATR_TCK	0xF7
+#define CCID_ERR_PROT_NOSUP	0xF6 /* ICC PROTOCOL NOT SUPPORTED */
+#define CCID_ERR_CLASS_NOSUP	0xF5 /* ICC CLASS NOT SUPPORTED */
+#define CCID_ERR_BAD_PROC_BYTE	0xF4 /* PROCEDURE BYTE CONFLICT */
+#define CCID_ERR_XXX		0xF3 /* DEACTIVATED PROTOCOL (?) */
+#define CCID_ERR_BUSY_AUTO_SEQ	0xF2 /* BUSY WITH AUTO SEQUENCE */
+#define CCID_ERR_PIN_TIMEOUT	0xF0
+#define CCID_ERR_PIN_CANCELED	0xEF
+#define CCID_ERR_SLOT_BUSY	0xE0 /* CMD SLOT BUSY */
 
-#define CCID_OFFSET_MSGTYPE 0
-#define CCID_OFFSET_LENGTH  1
-#define CCID_OFFSET_SLOT    5
-#define CCID_OFFSET_SEQ     6
+#define CCID_OFFSET_MSGTYPE	0
+#define CCID_OFFSET_LENGTH	1
+#define CCID_OFFSET_SLOT	5
+#define CCID_OFFSET_SEQ		6
 
-#define CCID_REQ_ABORT 1
-#define CCID_REQ_GETCLOCKRATE 2
-#define CCID_REQ_GETDATARATE 3
+#define CCID_REQ_ABORT		1
+#define CCID_REQ_GETCLOCKRATE	2
+#define CCID_REQ_GETDATARATE	3
 
-#define CCID_CMD_FIRST        0x60
+#define CCID_CMD_FIRST		0x60
 
-#define CCID_CMD_ICCPOWERON   0x62
-#define CCID_CMD_ICCPOWEROFF  0x63
-#define CCID_CMD_GETSLOTSTAT  0x65
-#define CCID_CMD_XFRBLOCK     0x6F
-#define CCID_CMD_GETPARAMS    0x6C
-#define CCID_CMD_RESETPARAMS  0x6D
-#define CCID_CMD_SETPARAMS    0x61
-#define CCID_CMD_ESCAPE       0x6B
-#define CCID_CMD_ICCCLOCK     0x6E
-#define CCID_CMD_T0APDU       0x6A
-#define CCID_CMD_SECURE       0x69
-#define CCID_CMD_MECHANICAL   0x71
-#define CCID_CMD_ABORT        0x72
-#define CCID_CMD_SET_DR_FREQ  0x73
+#define CCID_CMD_ICCPOWERON	0x62
+#define CCID_CMD_ICCPOWEROFF	0x63
+#define CCID_CMD_GETSLOTSTAT	0x65
+#define CCID_CMD_XFRBLOCK	0x6F
+#define CCID_CMD_GETPARAMS	0x6C
+#define CCID_CMD_RESETPARAMS	0x6D
+#define CCID_CMD_SETPARAMS	0x61
+#define CCID_CMD_ESCAPE		0x6B
+#define CCID_CMD_ICCCLOCK	0x6E
+#define CCID_CMD_T0APDU		0x6A
+#define CCID_CMD_SECURE		0x69
+#define CCID_CMD_MECHANICAL	0x71
+#define CCID_CMD_ABORT		0x72
+#define CCID_CMD_SET_DR_FREQ	0x73
 
-#define CCID_RESP_DATA        0x80
-#define CCID_RESP_SLOTSTAT    0x81
-#define CCID_RESP_PARAMS      0x82
-#define CCID_RESP_ESCAPE      0x83
-#define CCID_RESP_DR_FREQ     0x84
+#define CCID_RESP_DATA		0x80
+#define CCID_RESP_SLOTSTAT	0x81
+#define CCID_RESP_PARAMS	0x82
+#define CCID_RESP_ESCAPE	0x83
+#define CCID_RESP_DR_FREQ	0x84
+
+/* maximum sensical size:
+ *  10 bytes ccid header + 4 bytes command header +
+ *  1 byte Lc + 255 bytes data + 1 byte Le = 271
+ */
+#define CCID_MAX_MSG_LEN	271
 
 static int msg_expected[] = {
      0,
@@ -85,16 +91,22 @@ enum {
      TYPE_CHAR
 };
 
-#define SUPPORT_T0 0x1
-#define SUPPORT_T1 0x2
-#define SUPPORT_50V 1
-#define SUPPORT_33V 2
-#define SUPPORT_18V 4
-#define AUTO_VOLTAGE 0x80
+#define SUPPORT_T0	0x1
+#define SUPPORT_T1	0x2
+
+#define SUPPORT_50V	1
+#define SUPPORT_33V	2
+#define SUPPORT_18V	4
+#define AUTO_VOLTAGE	0x80
+
+#define FLAG_NO_PTS		1
+#define FLAG_NO_SETPARAM	2
+#define FLAG_AUTO_ACTIVATE	4
+#define FLAG_AUTO_ATRPARSE	8
 
 struct usb_ccid_descriptor {
-     uint8_t  bLength;
-     uint8_t  bDescriptorType;
+     uint8_t bLength;
+     uint8_t bDescriptorType;
      uint16_t bcdCCID;
      uint8_t bMaxSlotIndex;
      uint8_t bVoltageSupport;
@@ -139,13 +151,11 @@ static int ccid_parse_descriptor(struct usb_ccid_descriptor *ret,
      ret->dwSynchProtocols = in[35] << 24 | in[34] << 16 | in[33] << 8 | in[32];
      ret->dwMechanical = in[39] << 24 | in[38] << 16 | in[37] << 8 | in[36];
      ret->dwFeatures = in[43] << 24 | in[42] << 16 | in[41] << 8 | in[40];
-     ret->dwMaxCCIDMessageLength = in[47] << 24 | in[46] << 16 | 
+     ret->dwMaxCCIDMessageLength = in[47] << 24 | in[46] << 16 |
 	  in[45] << 8 | in[44];
      ret->wLcdLayout = in[51] << 8 | in[50];
      return 0;
 }
-
-     
 
 /*
  * CT status
@@ -155,8 +165,9 @@ typedef struct ccid_status {
      int usb_interface;
      int proto_support;
      int voltage_support;
-     int auto_params;
      int ifsd;
+     int maxmsg;
+     int flags;
      unsigned char icc_present[OPENCT_MAX_SLOTS];
      unsigned char icc_proto[OPENCT_MAX_SLOTS];
      unsigned char *sbuf[OPENCT_MAX_SLOTS];
@@ -164,15 +175,15 @@ typedef struct ccid_status {
      unsigned char seq;
 } ccid_status_t;
 
-
-static int ccid_checkresponse(void *status, int r) {
+static int ccid_checkresponse(void *status, int r)
+{
      unsigned char *p=(unsigned char *) status;
-     
+
      if (r < 9) {
 	  ct_error("short response from reader?!");
 	  return IFD_ERROR_GENERIC;
      }
-     
+
      if ((p[7]>>6 & 3) == 0)
 	  return 0;
 
@@ -181,7 +192,7 @@ static int ccid_checkresponse(void *status, int r) {
 	  /*ct_error("card requests more time");*/
 	  return -300;
      }
-     
+
      switch (p[8]) {
      case CCID_ERR_ICC_MUTE:
 	  return IFD_ERROR_NO_CARD;
@@ -211,11 +222,9 @@ static int ccid_checkresponse(void *status, int r) {
      return IFD_ERROR_GENERIC;
 }
 
-
-
-static int ccid_prepare_cmd(ifd_reader_t *reader, unsigned char *out, size_t outsz, 
+static int ccid_prepare_cmd(ifd_reader_t *reader, unsigned char *out, size_t outsz,
 			    int slot, unsigned char cmd,
-			    const void *ctl, 
+			    const void *ctl,
 			    const void *snd, size_t sendlen)
 {
      ccid_status_t *st=(ccid_status_t *) reader->driver_data;
@@ -223,8 +232,9 @@ static int ccid_prepare_cmd(ifd_reader_t *reader, unsigned char *out, size_t out
 
      if (slot >= reader->nslots)
 	  return IFD_ERROR_INVALID_SLOT;
-     if (sendlen + 10 > outsz) 
-	  return IFD_ERROR_BUFFER_TOO_SMALL;
+     if (sendlen + 10 > outsz) /* this probably means the apdu is larger
+				  than the supported MaxMessageSize - 10  */
+	  return IFD_ERROR_NOT_SUPPORTED;
      *p++ = cmd;
      *p++ = sendlen & 0xFF;
      *p++ = (sendlen >> 8) & 0xFF;
@@ -236,7 +246,7 @@ static int ccid_prepare_cmd(ifd_reader_t *reader, unsigned char *out, size_t out
 	  memcpy(p, (unsigned char *) ctl, 3);
      else
 	  memset(p, 0, 3);
-     
+
      if (sendlen)
 	  memcpy(&p[3], (unsigned char *) snd, sendlen);
      return sendlen+10;
@@ -250,7 +260,7 @@ static int ccid_extract_data(const void *in, size_t inlen, void *out, size_t out
 	  ct_error("short response from reader?!");
 	  return IFD_ERROR_BUFFER_TOO_SMALL;
      }
-     
+
      memcpy(dlen, ((char *)in)+1, 4);
      len=dlen[0] | dlen[1] << 8 | dlen[2] << 16 | dlen[3] << 24;
      if (len == 0)
@@ -267,12 +277,12 @@ static int ccid_extract_data(const void *in, size_t inlen, void *out, size_t out
      return len;
 }
 
-     
-static int ccid_command(ifd_reader_t *reader, const unsigned char *cmd, 
-			  size_t cmd_len, unsigned char *res, size_t res_len) {
+static int ccid_command(ifd_reader_t *reader, const unsigned char *cmd,
+			  size_t cmd_len, unsigned char *res, size_t res_len)
+{
      int rc;
      size_t req_len;
-     
+
      if (!cmd_len || !res_len) {
 	     ct_error("missing parameters to ccid_command");
 	     return IFD_ERROR_INVALID_ARG;
@@ -280,13 +290,13 @@ static int ccid_command(ifd_reader_t *reader, const unsigned char *cmd,
      req_len=res_len;
      if (ct_config.debug >= 3)
 	  ifd_debug(3, "sending:%s", ct_hexdump(cmd, cmd_len));
-     
+
      rc=ifd_device_send(reader->device, cmd, cmd_len);
-     if (rc < 0) 
+     if (rc < 0)
 	  return rc;
      do {
 	  rc=ifd_device_recv(reader->device, res, req_len, 10000);
-	  if (rc < 0) 
+	  if (rc < 0)
 	       return rc;
 	  if (rc == 0) {
 	       ct_error("zero length response from reader?!");
@@ -294,7 +304,7 @@ static int ccid_command(ifd_reader_t *reader, const unsigned char *cmd,
 	  }
 	  if (ct_config.debug >= 3)
 	       ifd_debug(3, "received:%s", ct_hexdump(res, rc));
-	  
+
 	  if (rc < 9) {
 	       return IFD_ERROR_GENERIC;
 	  }
@@ -303,25 +313,27 @@ static int ccid_command(ifd_reader_t *reader, const unsigned char *cmd,
 	  if (rc == -300) {
 	       continue;
 	  }
-	  if (rc < 0) 
+	  if (rc < 0)
 	       return rc;
      } while (rc < 0 || cmd[CCID_OFFSET_SLOT] != res[CCID_OFFSET_SLOT] ||
 	      cmd[CCID_OFFSET_SEQ] != res[CCID_OFFSET_SEQ]);
-     
+
      return res_len;
 }
 
 static int ccid_simple_rcommand(ifd_reader_t *reader, int slot, int cmd,
-			       void *ctl, void *res, size_t res_len) {
+			       void *ctl, void *res, size_t res_len)
+{
+     ccid_status_t *st = reader->driver_data;
      unsigned char cmdbuf[10];
-     unsigned char resbuf[272];
+     unsigned char resbuf[CCID_MAX_MSG_LEN + 1];
      int r;
-     
+
      r=ccid_prepare_cmd(reader, cmdbuf, 10, slot, cmd, ctl, NULL, 0);
      if (r < 0)
 	  return r;
-     
-     r=ccid_command(reader, cmdbuf, 10, resbuf, 271);
+
+     r=ccid_command(reader, cmdbuf, 10, resbuf, st->maxmsg);
      if (r < 0)
 	  return r;
      if (resbuf[0] != msg_expected[cmd - CCID_CMD_FIRST]) {
@@ -329,23 +341,25 @@ static int ccid_simple_rcommand(ifd_reader_t *reader, int slot, int cmd,
 		   resbuf[0], msg_expected[cmd - CCID_CMD_FIRST]);
 	  return -1;
      }
-     
+
      if (res_len)
 	  r=ccid_extract_data(&resbuf, r, res, res_len);
      return r;
 }
 
 static int ccid_simple_wcommand(ifd_reader_t *reader, int slot, int cmd,
-			       void *ctl, void *data, size_t data_len) {
-     unsigned char cmdbuf[272];
-     unsigned char resbuf[272];
+			       void *ctl, void *data, size_t data_len)
+{
+     ccid_status_t *st = reader->driver_data;
+     unsigned char cmdbuf[CCID_MAX_MSG_LEN + 1];
+     unsigned char resbuf[CCID_MAX_MSG_LEN + 1];
      int r;
-     
-     r=ccid_prepare_cmd(reader, cmdbuf, 271, slot, cmd, ctl, data, data_len);
+
+     r=ccid_prepare_cmd(reader, cmdbuf, st->maxmsg, slot, cmd, ctl, data, data_len);
      if (r < 0)
 	  return r;
-     
-     r=ccid_command(reader, cmdbuf, r, resbuf, 271);
+
+     r=ccid_command(reader, cmdbuf, r, resbuf, st->maxmsg);
      if (r < 0)
 	  return r;
      if (resbuf[0] != msg_expected[cmd - CCID_CMD_FIRST]) {
@@ -353,46 +367,48 @@ static int ccid_simple_wcommand(ifd_reader_t *reader, int slot, int cmd,
 		   resbuf[0], msg_expected[cmd - CCID_CMD_FIRST]);
 	  return -1;
      }
-     
+
      return r;
 }
 
 #ifdef notyet
-static int ccid_abort(ifd_reader_t *reader, int slot) {
+static int ccid_abort(ifd_reader_t *reader, int slot)
+{
      ccid_status_t *st=(ccid_status_t *)reader->driver_data;
-     
+
      int r;
-     
-     r=ifd_usb_control(reader->device, 
+
+     r=ifd_usb_control(reader->device,
 		       0x21 /*USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_INTERFACE*/,
-		       CCID_REQ_ABORT, st->seq << 8 | slot, 
+		       CCID_REQ_ABORT, st->seq << 8 | slot,
 		       st->usb_interface, NULL, 0,
 		       10000);
      if (r < 0)
 	  return r;
      r=ccid_simple_wcommand(reader, slot, CCID_CMD_ABORT, NULL, NULL, 0);
-     return r;     
+     return r;
 }
 #endif
 
 static int ccid_exchange(ifd_reader_t *reader, int slot,
 			 const void *sbuf, size_t slen,
-			 void *rbuf, size_t rlen){
-     unsigned char sendbuf[271];
-     unsigned char recvbuf[271];
+			 void *rbuf, size_t rlen)
+{
+     ccid_status_t *st = reader->driver_data;
+     unsigned char sendbuf[CCID_MAX_MSG_LEN + 1];
+     unsigned char recvbuf[CCID_MAX_MSG_LEN + 1];
      int r;
-     
-     r=ccid_prepare_cmd(reader, sendbuf, sizeof(sendbuf),
+
+     r=ccid_prepare_cmd(reader, sendbuf, st->maxmsg,
 			slot, CCID_CMD_XFRBLOCK, NULL, sbuf, slen);
      if (r < 0)
 	  return r;
-     
-     r=ccid_command(reader, &sendbuf[0], r, recvbuf, sizeof(recvbuf));
+
+     r=ccid_command(reader, &sendbuf[0], r, recvbuf, st->maxmsg);
      if (r < 0)
 	  return r;
      return ccid_extract_data(&recvbuf, r, rbuf, rlen);
 }
-
 
 /*
  * Initialize the device
@@ -411,7 +427,6 @@ ccid_open(ifd_reader_t *reader, const char *device_name)
      unsigned char *_class;
      unsigned char *p;
 
-
      reader->name = "CCID Compatible";
      if (!(dev = ifd_device_open(device_name)))
 	  return -1;
@@ -425,8 +440,8 @@ ccid_open(ifd_reader_t *reader, const char *device_name)
 	  ct_error("ccid: device descriptor not found");
 	  ifd_device_close(dev);
 	  return -1;
-     }    
-	  
+     }
+
      intf=NULL;
      p=NULL;
      r=i=0;
@@ -435,7 +450,7 @@ ccid_open(ifd_reader_t *reader, const char *device_name)
 	  if (ifd_usb_get_config(dev, c, &conf)) {
 	       ct_error("ccid: config descriptor %d not found", c);
 	       continue;
-	  }  
+	  }
 	  if (!conf.interface)
 	       continue;
 
@@ -443,35 +458,35 @@ ccid_open(ifd_reader_t *reader, const char *device_name)
 	       for (alt=0;alt < conf.interface[ifc].num_altsetting;alt++) {
 		    int ok=0;
 		    intf=&conf.interface[ifc].altsetting[alt];
-		    if (intf->bInterfaceClass != 0xb || 
-			intf->bInterfaceSubClass != 0 || 
+		    if (intf->bInterfaceClass != 0xb ||
+			intf->bInterfaceSubClass != 0 ||
 			intf->bInterfaceProtocol != 0)
 			 continue;
 		    if (intf->bNumEndpoints != 3)
 			 continue;
 		    for (i=0;i<3;i++) {
-			 if (((intf->endpoint[i].bmAttributes & 
-			       IFD_USB_ENDPOINT_TYPE_MASK) == 
+			 if (((intf->endpoint[i].bmAttributes &
+			       IFD_USB_ENDPOINT_TYPE_MASK) ==
 			      IFD_USB_ENDPOINT_TYPE_BULK) &&
 			     (intf->endpoint[i].bEndpointAddress &
 			      IFD_USB_ENDPOINT_DIR_MASK) ==
 			     IFD_USB_ENDPOINT_OUT) {
 			      ok|=1;
-			      params.usb.ep_o = 
+			      params.usb.ep_o =
 				   intf->endpoint[i].bEndpointAddress;
 			 }
-			 if (((intf->endpoint[i].bmAttributes & 
-			       IFD_USB_ENDPOINT_TYPE_MASK) == 
+			 if (((intf->endpoint[i].bmAttributes &
+			       IFD_USB_ENDPOINT_TYPE_MASK) ==
 			      IFD_USB_ENDPOINT_TYPE_BULK) &&
 			     (intf->endpoint[i].bEndpointAddress &
 			      IFD_USB_ENDPOINT_DIR_MASK) ==
 			     IFD_USB_ENDPOINT_IN) {
 			      ok|=2;
-			      params.usb.ep_i = 
+			      params.usb.ep_i =
 				   intf->endpoint[i].bEndpointAddress;
 			 }
-			 if (((intf->endpoint[i].bmAttributes & 
-			       IFD_USB_ENDPOINT_TYPE_MASK) == 
+			 if (((intf->endpoint[i].bmAttributes &
+			       IFD_USB_ENDPOINT_TYPE_MASK) ==
 			      IFD_USB_ENDPOINT_TYPE_INTERRUPT) &&
 			     (intf->endpoint[i].bEndpointAddress &
 			      IFD_USB_ENDPOINT_DIR_MASK) ==
@@ -480,7 +495,7 @@ ccid_open(ifd_reader_t *reader, const char *device_name)
 			      intr_endp=intf->endpoint[i].bEndpointAddress;
 			 }
 		    }
-		    if (ok == 7) 
+		    if (ok == 7)
 			 break;
 		    intf=NULL;
 	       }
@@ -490,7 +505,7 @@ ccid_open(ifd_reader_t *reader, const char *device_name)
 		    intf=NULL;
 		    continue;
 	       }
-	       
+	
 	       r=intf->extralen;
 	       _class=intf->extra;
 	       i=0;
@@ -502,7 +517,7 @@ ccid_open(ifd_reader_t *reader, const char *device_name)
 	       }
 	       if (i >= r || p[0] < 2 || p[1] != 0x21) {
 		    intf=NULL;
-	       }     
+	       }
 	       if (intf)
 		    break;
 	  }
@@ -510,28 +525,28 @@ ccid_open(ifd_reader_t *reader, const char *device_name)
 	       break;
 	  ifd_usb_free_configuration(&conf);
      }
-     
+
      if (!intf) {
 	  ct_error("ccid: matching descriptor not found");
 	  ifd_device_close(dev);
 	  ifd_usb_free_configuration(&conf);
 	  return -1;
-     }  
+     }
      params.usb.configuration=conf.bConfigurationValue;
      params.usb.interface = intf->bInterfaceNumber;
      params.usb.altsetting = intf->bAlternateSetting;
-     
-     
+
      r=ccid_parse_descriptor(&ccid, p, r-i);
-    ifd_usb_free_configuration(&conf);
+     ifd_usb_free_configuration(&conf);
      if (r) {
 	  ct_error("ccid: descriptor truncated or too short");
 	  ifd_device_close(dev);
 	  return -1;
-     }  
+     }
 
      if (ccid.bcdCCID != 0x100) {
-	  ct_error("ccid: wrong ccid version");
+	  ct_error("ccid: unknown ccid version %d.%d", ccid.bcdCCID >> 8,
+			  ccid.bcdCCID & 0xf);
 	  ifd_device_close(dev);
 	  return -1;
      }
@@ -548,8 +563,12 @@ ccid_open(ifd_reader_t *reader, const char *device_name)
 	  free(st);
 	  ifd_device_close(dev);
 	  return -1;
-     }  
+     }
 
+/* "When a CCID doesn't declare the values 00000010h and 00000020h, the
+ * frequency or the baud rate must be made via manufacturer proprietary
+ * PC_to_RDR_Escape command." - ccid class specification v1.00
+ */
      if (~ccid.dwFeatures & (0x10|0x20)) {
 	  ct_error("ccid: required card initialization features missing");
 	  free(st);
@@ -558,16 +577,22 @@ ccid_open(ifd_reader_t *reader, const char *device_name)
      }
 
      st->reader_type=TYPE_CHAR;
-     
+
      if (ccid.dwFeatures & 0x10000) {
 	  st->reader_type=TYPE_TPDU;
      } else if (ccid.dwFeatures & 0x60000) {
 	  st->reader_type=TYPE_APDU;
      }
-     if (ccid.dwFeatures & 0x2) 
-	  st->auto_params=1;
+     if (ccid.dwFeatures & 0x2)
+	  st->flags |= FLAG_AUTO_ATRPARSE;
+     if (ccid.dwFeatures & 0x4)
+	  st->flags |= FLAG_AUTO_ACTIVATE;
      if (ccid.dwFeatures & 0x8)
 	  st->voltage_support |= AUTO_VOLTAGE;
+     if (ccid.dwFeatures & 0x40)
+	  st->flags |= FLAG_NO_PTS|FLAG_NO_SETPARAM;
+     if (ccid.dwFeatures & 0x80)
+	  st->flags |= FLAG_NO_PTS;
      st->ifsd=ccid.dwMaxIFSD;
 
      if (st->reader_type == TYPE_CHAR) {
@@ -576,21 +601,20 @@ ccid_open(ifd_reader_t *reader, const char *device_name)
 	  ifd_device_close(dev);
 	  return -1;
      }
-     
+
      /* must provide AUTO or at least one of 5/3.3/1.8 */
      if (st->voltage_support == 0) {
 	  ct_error("ccid: device does not provide any supported voltages");
 	  free(st);
 	  ifd_device_close(dev);
 	  return -1;
-     }  
+     }
 
-     if (ccid.dwMaxCCIDMessageLength < 271) {
-	  ct_error("ccid: max message size is only %d", r);
-	  free(st);
-	  ifd_device_close(dev);
-	  return -1;
-     }     
+     if (ccid.dwMaxCCIDMessageLength > CCID_MAX_MSG_LEN) {
+	  st->maxmsg = CCID_MAX_MSG_LEN;
+     } else {
+	  st->maxmsg = ccid.dwMaxCCIDMessageLength;
+     }
 
      reader->driver_data=st;
      reader->device = dev;
@@ -608,25 +632,27 @@ ccid_open(ifd_reader_t *reader, const char *device_name)
 	       ct_error("ccid: cannot set GemPlus TPDU mode");
 	       ifd_device_close(dev);
 	       return -1;
-	  }	  
+	  }
 	  r=ccid_simple_wcommand(reader, 0, CCID_CMD_ESCAPE, NULL, setiso, 2);
 	  if (r < 0) {
 	       ct_error("ccid: cannot set GemPlus ISO APDU mode");
 	       ifd_device_close(dev);
 	       return -1;
-	  }	  
+	  }
 	  st->reader_type = TYPE_TPDU;
      }
-     
+
      return 0;
 }
 
-static int ccid_activate(ifd_reader_t *reader) {
+static int ccid_activate(ifd_reader_t *reader)
+{
      ifd_debug(1, "called.");
      return 0;
 }
 
-static int ccid_deactivate(ifd_reader_t *reader) {
+static int ccid_deactivate(ifd_reader_t *reader)
+{
      ifd_debug(1, "called.");
      return 0;
 }
@@ -637,21 +663,21 @@ static int ccid_card_status(ifd_reader_t *reader, int slot, int *status)
      int r;
      unsigned char ret[20];
      unsigned char cmdbuf[10];
-     ifd_usb_capture_t       *cap;
+     ifd_usb_capture_t *cap;
      int any=0;
      int i,j, bits, stat;
 
      i=1 + (slot / 4);
      j=2 * (slot % 4);
      stat=0;
-     
+
      r = ifd_usb_begin_capture(reader->device,
 			       IFD_USB_URB_TYPE_INTERRUPT,
 			       0x81, 8, &cap);
      if (r < 0) {
 	  ct_error("ccid: begin capture: %d", r);
 	  return r;
-     }  
+     }
      /* read any bufferred interrupt pipe messages */
      while (1) {
 	  r=ifd_usb_capture(reader->device, cap, ret, 8, 100);
@@ -681,7 +707,7 @@ static int ccid_card_status(ifd_reader_t *reader, int slot, int *status)
 	  *status=st->icc_present[slot];
 	  return 0;
      }
-     r=ccid_prepare_cmd(reader, cmdbuf, 10, 0, CCID_CMD_GETSLOTSTAT, 
+     r=ccid_prepare_cmd(reader, cmdbuf, 10, 0, CCID_CMD_GETSLOTSTAT,
 			NULL, NULL, 0);
      if (r < 0)
 	  return r;
@@ -696,7 +722,7 @@ static int ccid_card_status(ifd_reader_t *reader, int slot, int *status)
 	  stat=IFD_CARD_PRESENT;
      }
      ifd_debug(1, "probed result: %d", IFD_CARD_STATUS_CHANGED | stat );
-     
+
      *status=IFD_CARD_STATUS_CHANGED | stat;
      st->icc_present[slot] = stat;
      return 0;
@@ -709,34 +735,33 @@ static int
 ccid_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 {
      ccid_status_t *st=(ccid_status_t *)reader->driver_data;
-     unsigned char   buffer[IFD_MAX_ATR_LEN];
-     int             n;
+     unsigned char buffer[IFD_MAX_ATR_LEN];
      char ctlbuf[3];
-     int r,i;
+     int n,r,i;
      int status;
-     
 
      r=ccid_card_status(reader, slot, &status);
      if (r<0)
 	  return r;
      if (!(status & IFD_CARD_PRESENT))
 	  return IFD_ERROR_NO_CARD;
-     
+
      memset(ctlbuf, 0, 3);
-     
-     if (st->voltage_support & AUTO_VOLTAGE) {
+
+     n=-1;
+     if (st->voltage_support & AUTO_VOLTAGE || st->flags & FLAG_AUTO_ACTIVATE) {
 	  ifd_debug(1, "called. powering on with auto voltage selection");
-	  n=ccid_simple_rcommand(reader, slot, CCID_CMD_ICCPOWERON, 
+	  n=ccid_simple_rcommand(reader, slot, CCID_CMD_ICCPOWERON,
 				ctlbuf, buffer, IFD_MAX_ATR_LEN);
-     } else {
+     }
+     if (n < 0 && (st->voltage_support & AUTO_VOLTAGE) == 0) {
 	  ifd_debug(1, "called. powering on with manual voltage selection");
-	  n=-1;
 	  for (i=1;i<=3;i++) {
 	       if ((st->voltage_support & (1<<(i-1))) == 0)
 		    continue;
 	       ifd_debug(3, "Trying voltage parameter %d", i);
 	       ctlbuf[0]=i;
-	       n=ccid_simple_rcommand(reader, slot, CCID_CMD_ICCPOWERON, 
+	       n=ccid_simple_rcommand(reader, slot, CCID_CMD_ICCPOWERON,
 				     ctlbuf, buffer, IFD_MAX_ATR_LEN);
 	       if (n > 0)
 		    break;
@@ -752,10 +777,11 @@ ccid_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 }
 
 static int
-ccid_set_protocol(ifd_reader_t *reader, int s, int proto) {
+ccid_set_protocol(ifd_reader_t *reader, int s, int proto)
+{
      ccid_status_t *st=(ccid_status_t *)reader->driver_data;
      unsigned char parambuf[17], ctl[3];
-     ifd_slot_t      *slot;
+     ifd_slot_t *slot;
      ifd_protocol_t *p;
      ifd_atr_info_t atr_info;
      int r;
@@ -777,10 +803,8 @@ ccid_set_protocol(ifd_reader_t *reader, int s, int proto) {
           ct_error("protocol unknown");
 	  return IFD_ERROR_NOT_SUPPORTED;
      }
-     
-	      
-     slot = &reader->slot[s];
 
+     slot = &reader->slot[s];
 
      if (st->reader_type == TYPE_APDU) {
 	  p = ifd_protocol_new(IFD_PROTOCOL_TRANSPARENT,
@@ -797,13 +821,14 @@ ccid_set_protocol(ifd_reader_t *reader, int s, int proto) {
 	  st->icc_proto[s]=proto;
 	  return 0;
      }
- 
+
      r=ifd_atr_parse(&atr_info, slot->atr, slot->atr_len);
      if (r < 0) {
 	  ct_error("%s: Bad ATR", reader->name);
 	  return r;
      }
-     
+
+     /* does FLAG_AUTO_PARAMS select the protocol??? */
      memset(parambuf, 0, sizeof(parambuf) );
      memset(ctl, 0, 3);
      if (proto == IFD_PROTOCOL_T0) {
@@ -856,17 +881,20 @@ ccid_set_protocol(ifd_reader_t *reader, int s, int proto) {
 	   * T=1 ATR does not define a clock-stop byte.
 	   */
      }
-     r=ccid_simple_wcommand(reader, s, CCID_CMD_SETPARAMS, ctl, parambuf, r);
-     if (r < 0)
-	  return r;
+     if ((st->flags & FLAG_NO_SETPARAM) == 0) {
+     	r=ccid_simple_wcommand(reader, s, CCID_CMD_SETPARAMS, ctl, parambuf, r);
+     	if (r < 0)
+	  	return r;
+     }
 
      /* is PTS available? N (guard time) must be changed before PTS
       * is performed. What about F and D? */
-     if (proto == IFD_PROTOCOL_T1 || atr_info.TA[0] != -1 
-	 || atr_info.TC[0] != -1)
+     if ((st->flags & FLAG_NO_PTS) == 0 &&
+		     (proto == IFD_PROTOCOL_T1 || atr_info.TA[0] != -1
+		      || atr_info.TC[0] != -1))
      {
 	  unsigned char pts[7], ptsret[7];
-	  int ptslen; 
+	  int ptslen;
 
 	  ptslen=ifd_build_pts(&atr_info, proto, pts, sizeof(pts));
 	  if (ptslen < 0) {
@@ -874,7 +902,7 @@ ccid_set_protocol(ifd_reader_t *reader, int s, int proto) {
 			ct_strerror(r));
 	       return ptslen;
 	  }
-	  r=ccid_exchange(reader, s, pts, ptslen, ptsret, 
+	  r=ccid_exchange(reader, s, pts, ptslen, ptsret,
 			  sizeof(ptsret));
 	  if (r<0)
 	       return r;
@@ -890,14 +918,15 @@ ccid_set_protocol(ifd_reader_t *reader, int s, int proto) {
 			       reader, slot->dad);
      } else {
 	  p = ifd_protocol_new(proto, reader, slot->dad);
-	  if (p) { 
+	  if (p) {
+		  /* guessing that ifsc is limited by ifsd */
 	       if (atr_info.TA[2] != -1)
-		       ifd_protocol_set_parameter(p, IFD_PROTOCOL_T1_IFSC, 
-						  atr_info.TA[2]); 
-	       ifd_protocol_set_parameter(p, IFD_PROTOCOL_T1_IFSD, st->ifsd); 
+		       ifd_protocol_set_parameter(p, IFD_PROTOCOL_T1_IFSC,
+			  atr_info.TA[2] > st->ifsd ? st->ifsd : atr_info.TA[2]);
+	       ifd_protocol_set_parameter(p, IFD_PROTOCOL_T1_IFSD, st->ifsd);
 	       if (atr_info.TC[2] == 1)
 		       ifd_protocol_set_parameter(p,
-		       IFD_PROTOCOL_T1_CHECKSUM_CRC, 0); 
+		       IFD_PROTOCOL_T1_CHECKSUM_CRC, 0);
 	  }
      }
      if (p == NULL) {
@@ -916,11 +945,12 @@ ccid_set_protocol(ifd_reader_t *reader, int s, int proto) {
 static int
 ccid_transparent(ifd_reader_t *reader, int slot,
 		 const void *sbuf, size_t slen,
-		 void *rbuf, size_t rlen) {
+		 void *rbuf, size_t rlen)
+{
      ccid_status_t *st=(ccid_status_t *)reader->driver_data;
 
      ifd_debug(1, "called.");
-     if (st->reader_type == TYPE_APDU || 
+     if (st->reader_type == TYPE_APDU ||
 	 (st->reader_type == TYPE_TPDU &&
 	  st->icc_proto[slot] == IFD_PROTOCOL_T0))
 	  return ccid_exchange(reader, slot, sbuf, slen, rbuf, rlen);
@@ -928,10 +958,11 @@ ccid_transparent(ifd_reader_t *reader, int slot,
 }
 
 static int ccid_send(ifd_reader_t *reader, unsigned int dad,
-		     const unsigned char *buffer, size_t len) {
+		     const unsigned char *buffer, size_t len)
+{
      ccid_status_t *st=(ccid_status_t *)reader->driver_data;
      unsigned char *apdu;
-     
+
      ifd_debug(1, "called.");
      if (st->sbuf[dad]) {
 	  free(st->sbuf[dad]);
@@ -948,12 +979,12 @@ static int ccid_send(ifd_reader_t *reader, unsigned int dad,
      return 0;
 }
 
-
 static int ccid_recv(ifd_reader_t *reader, unsigned int dad,
-		     unsigned char *buffer, size_t len, long timeout) {
+		     unsigned char *buffer, size_t len, long timeout)
+{
      ccid_status_t *st=(ccid_status_t *)reader->driver_data;
      int r;
-     
+
      ifd_debug(1, "called.");
 
      r=ccid_exchange(reader, dad, st->sbuf[dad], st->slen[dad], buffer, len);
@@ -963,9 +994,7 @@ static int ccid_recv(ifd_reader_t *reader, unsigned int dad,
      st->slen[dad]=0;
      return r;
 }
-     
 
-     
 /*
  * Driver operations
  */
@@ -986,6 +1015,6 @@ ifd_ccid_register(void)
      ccid_driver.transparent = ccid_transparent;
      ccid_driver.send = ccid_send;
      ccid_driver.recv = ccid_recv;
-     
+
      ifd_driver_register("ccid", &ccid_driver);
 }
