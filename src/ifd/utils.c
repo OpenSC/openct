@@ -6,7 +6,6 @@
 
 #include "internal.h"
 #include <stdio.h>
-#include <sys/time.h>
 
 
 unsigned int

@@ -13,7 +13,6 @@
 #include "internal.h"
 #include <stdlib.h>
 #include <string.h>
-#include <sys/time.h>
 
 typedef struct cm_priv {
 	int		icc_proto;

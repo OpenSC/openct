@@ -5,7 +5,6 @@
  */
 
 #include "internal.h"
-#include <sys/time.h>
 #include <sys/poll.h>
 #include <unistd.h>
 #include <stdlib.h>
