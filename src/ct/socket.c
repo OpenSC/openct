@@ -32,8 +32,9 @@ min(unsigned int a, unsigned int b)
 	return (a < b)? a : b;
 }
 
-static void		ifd_socket_link(ifd_socket_t *, ifd_socket_t *);
-static void		ifd_socket_unlink(ifd_socket_t *);
+static void	ifd_socket_link(ifd_socket_t *, ifd_socket_t *);
+static void	ifd_socket_unlink(ifd_socket_t *);
+static int	ifd_socket_getcreds(ifd_socket_t *);
 
 /*
  * Create a socket object
@@ -139,12 +140,33 @@ ifd_socket_accept(ifd_socket_t *sock)
 	svc->events = POLLIN;
 	svc->fd = fd;
 
-	/* XXX - obtain client credentials */
+	/* obtain client credentials */
+	svc->client_uid = -2;
+	ifd_socket_getcreds(svc);
 
 	/* Add socket to list */
 	ifd_socket_link(sock, svc);
 
 	return svc;
+}
+
+/*
+ * Get client credentials
+ * Should move this to a platform specific file
+ */
+int
+ifd_socket_getcreds(ifd_socket_t *sock)
+{
+#ifdef SO_PEERCRED
+	struct ucred	creds;
+	socklen_t	len;
+
+	len = sizeof(creds);
+	if (getsockopt(sock->fd, SOL_SOCKET, SO_PEERCRED, &creds, &len) < 0)
+		return -1;
+	sock->client_uid = creds.uid;
+#endif
+	return 0;
 }
 
 /*
