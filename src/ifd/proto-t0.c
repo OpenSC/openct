@@ -38,8 +38,8 @@ static void
 t0_set_defaults(t0_state_t *t0)
 {
 	t0->state = IDLE;
-	t0->timeout = 1000;
-	t0->max_nulls = 50;
+	t0->timeout = 2000;
+	t0->max_nulls = 120;
 }
 
 /*
