@@ -138,7 +138,7 @@ __ct_socket_make(ct_socket_t *sock, int op,
 			sock->fd = fd;
 			return fd;
 		}
-		ct_debug("connect() failed: %m");
+		/* no error message - reader does not exist. */
 		break;
 	default:
 		errno = EINVAL;
