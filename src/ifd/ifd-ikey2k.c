@@ -1,5 +1,5 @@
 /*
- * driver for Rainbow iKey 3000 devices
+ * driver for Rainbow iKey 2032 devices
  *
  * Copyright (C) 2003, Andreas Jellinghaus <aj@dungeon.inka.de>
  * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
