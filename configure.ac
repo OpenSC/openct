@@ -70,7 +70,11 @@ AC_CHECK_LIB(dl, dlopen,
 	     ac_cv_func_dlopen_ldl=no)
 
 AC_SUBST(LIBUSB)
-AC_CHECK_LIB(usb, usb_init, [LIBUSB="$LIBUSB -lusb"])
+AC_CHECK_LIB(usb, usb_init,
+	[
+	      	LIBUSB="$LIBUSB -lusb"
+		AC_DEFINE(HAVE_LIBUSB,1, [Libusb is available]
+	])
 
 AC_OUTPUT([
 Makefile
