@@ -64,6 +64,12 @@ ifd_buf_tailroom(ifd_buf_t *bp)
 	return bp->size - bp->tail;
 }
 
+unsigned int
+ifd_buf_size(ifd_buf_t *bp)
+{
+	return bp->size;
+}
+
 void *
 ifd_buf_head(ifd_buf_t *bp)
 {
@@ -82,14 +88,25 @@ ifd_buf_read(ifd_buf_t *bp, int fd)
 	unsigned int	count;
 	int		n;
 
-	count = bp->tail - bp->head;
-	memmove(bp->base, bp->base + bp->head, count);
-	bp->tail -= bp->head;
-	bp->head  = 0;
+	ifd_buf_compact(bp);
 
 	count = bp->size - bp->tail;
 	if ((n = read(fd, bp->base + bp->tail, count)) < 0)
 		return -1;
 	bp->tail += n;
 	return 0;
+}
+
+void
+ifd_buf_compact(ifd_buf_t *bp)
+{
+	unsigned int	count;
+
+	if (bp->head == 0)
+		return;
+
+	count = bp->tail - bp->head;
+	memmove(bp->base, bp->base + bp->head, count);
+	bp->tail -= bp->head;
+	bp->head  = 0;
 }
