@@ -110,6 +110,7 @@ struct ifd_protocol {
 
 extern struct ifd_protocol_ops	ifd_protocol_t1;
 extern struct ifd_protocol_ops	ifd_protocol_t0;
+extern struct ifd_protocol_ops	ifd_protocol_gbp;
 extern struct ifd_protocol_ops	ifd_protocol_trans;
 extern struct ifd_protocol_ops	ifd_protocol_i2c_short;
 extern struct ifd_protocol_ops	ifd_protocol_i2c_long;

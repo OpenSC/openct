@@ -13,7 +13,7 @@ DRIVERS	= cardman.c egate.c etoken.c eutron.c ikey3k.c kaan.c smartboard.c towit
 libifd_la_SOURCES = \
 	apdu.c checksum.c conf.c device.c driver.c \
 	init.c locks.c manager.c modules.c process.c \
-	proto-t0.c proto-t1.c proto-trans.c proto-sync.c \
+	proto-t0.c proto-t1.c proto-trans.c proto-sync.c proto-gbp.c \
 	protocol.c ctbcs.c reader.c serial.c usb.c utils.c \
 	$(DRIVERS) \
 	sys-null.c sys-linux.c sys-bsd.c

@@ -33,6 +33,7 @@ ifd_init(void)
 	/* Register all builtin protocols */
 	ifd_protocol_register(&ifd_protocol_t0);
 	ifd_protocol_register(&ifd_protocol_t1);
+	ifd_protocol_register(&ifd_protocol_gbp);
 	ifd_protocol_register(&ifd_protocol_trans);
 	ifd_protocol_register(&ifd_protocol_i2c_short);
 	ifd_protocol_register(&ifd_protocol_i2c_long);
