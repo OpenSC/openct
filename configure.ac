@@ -59,8 +59,10 @@ if test "$pcsc_path" != "no"; then
 fi
 AM_CONDITIONAL(HAVE_PCSCLITE, test "x$ac_cv_lib_pcsclite_SCardEstablishContext" = "xyes")
 
+
 AC_OUTPUT([
 Makefile
+doc/Makefile
 etc/Makefile
 include/Makefile
 include/openct/Makefile

@@ -1,4 +1,4 @@
-MAINTAINERCLEANFILES=Makefile.in ifdhandler.la
+MAINTAINERCLEANFILES=Makefile.in openct-ifd.la
 
 INCLUDES=-I$(top_srcdir)/src/ifd -I$(top_builddir)/include
 
