@@ -18,7 +18,7 @@ ifd_atr_parse(ifd_atr_info_t *info, const unsigned char *atr, size_t len)
 	/* Initialize the atr_info struct */
 	memset(info, 0, sizeof(*info));
 	info->default_protocol = -1;
-	for (n = 0; n < 2; n++) {
+	for (n = 0; n < 3; n++) {
 		info->TA[n] = -1;
 		info->TB[n] = -1;
 		info->TC[n] = -1;
@@ -57,6 +57,14 @@ ifd_atr_parse(ifd_atr_info_t *info, const unsigned char *atr, size_t len)
 		if (TDi & 0x40)
 			info->TC[m] = atr[n++];
 		if (!(TDi & 0x80)) {
+			/* If the ATR indicates we support anything
+			 * in addition to T=0, there'll be a TCK byte
+			 * at the end of the string.
+			 * For now, simply chop it off. Later we may
+			 * want to verify it.
+			 */
+		        if (info->supported_protocols & ~ 0x1) 
+				len--;
 			if (n < len)
 				return IFD_ERROR_INVALID_ATR;
 			break;

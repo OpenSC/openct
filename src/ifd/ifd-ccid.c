@@ -6,6 +6,7 @@
 
 #include "internal.h"
 #include "usb-descriptors.h"
+#include "atr.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -753,14 +754,11 @@ ccid_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 static int
 ccid_set_protocol(ifd_reader_t *reader, int s, int proto) {
      ccid_status_t *st=(ccid_status_t *)reader->driver_data;
-     unsigned char cmdbuf[24];
-     unsigned char parambuf[17], ctl[3], paramtype;
-     unsigned char *atr;
-     size_t len;
-     int TA[3], TB[3], TC[3], TD;
+     unsigned char parambuf[17], ctl[3];
      ifd_slot_t      *slot;
      ifd_protocol_t *p;
-     int n,x,r;
+     ifd_atr_info_t atr_info;
+     int r;
 
      switch (proto) {
      case IFD_PROTOCOL_T0:
@@ -799,111 +797,61 @@ ccid_set_protocol(ifd_reader_t *reader, int s, int proto) {
 	  st->icc_proto[s]=proto;
 	  return 0;
      }
-     
-     atr = slot->atr;
-     len = slot->atr_len;
-     if (len < 2)
-	  return IFD_ERROR_NOT_SUPPORTED;
-     
-     /* Ignore hysterical bytes */
-     len -= atr[1] & 0x0f;
-     
-     n = 2;
-     x=0;
-     memset(TA, 255, 12);
-     memset(TB, 255, 12);
-     memset(TC, 255, 12);
-     
-     do {
-	  TD = atr[n - 1];
-	  if (TD & 0x10)
-	       TA[x]=atr[n++];
-	  if (TD & 0x20)
-	       TB[x]=atr[n++];
-	  if (TD & 0x40)
-	       TC[x]=atr[n++];
-	  if (TD & 0x80)
-	       n++;
-	  x++;
-     } while (n < len && (TD & 0x80));
-
-     /* is PTS available? if so, do it before updating parameters*/
-     if (proto == IFD_PROTOCOL_T1 || TA[0] != -1 || TC[0] != -1)
-     {
-	  unsigned char pts[7] = { 0xFF };
-	  unsigned char ptsret[7];
-	  int i,ptslen,pck; 
-
-	  pck=0;
-	  if (proto == IFD_PROTOCOL_T1)
-		  pts[1]=1;
-	  ptslen=2;
-	  if (TA[0] != -1) {
-		  pts[ptslen++]=TA[0];
-		  pts[1] |= 0x10;
-	  }
-	  if (TC[0] != -1) {
-		  pts[ptslen++]=TC[0];
-		  pts[1] |= 0x20;
-	  }
-	  for (i=0;i<ptslen;i++)
-		  pck ^= pts[i];
-	  pts[ptslen++]=pck;
-	  r=ccid_exchange(reader, s, pts, ptslen, ptsret, 
-			  sizeof(ptsret));
-	  if (r<0)
-	       return r;
-	  if (r < ptslen || memcmp(pts,ptsret,ptslen))
-	       return IFD_ERROR_INCOMPATIBLE_DEVICE;
+ 
+     r=ifd_atr_parse(&atr_info, slot->atr, slot->atr_len);
+     if (r < 0) {
+	  ct_error("%s: Bad ATR", reader->name);
+	  return r;
      }
+     
      memset(parambuf, 0, sizeof(parambuf) );
      memset(ctl, 0, 3);
      if (proto == IFD_PROTOCOL_T0) {
 	  r=5;
 	  ctl[0]=0;
 	  /* TA1 -> Fi | Di */
-	  if (TA[0] != -1)
-	       parambuf[0]=TA[0];
+	  if (atr_info.TA[0] != -1)
+	       parambuf[0] = atr_info.TA[0];
 	  else
-		  parambuf[0]=0x11;
-	  parambuf[1]=0;
+	       parambuf[0] = 0x11; /* default is Fi = Di = 1 */
+	  parambuf[1] = 0;
 	  /* TC1 -> N */
-	  if (TC[0] != -1)
-	       parambuf[2]=TC[0];
-	  else
-		  parambuf[2]=0x0a;
+	  if (atr_info.TC[0] != -1)
+	       parambuf[2] = atr_info.TC[0];
 	  /* TC2 -> WI */
-	  if (TC[1] != -1)
-	       parambuf[3]=TC[1];
+	  if (atr_info.TC[1] != -1)
+	       parambuf[3] = atr_info.TC[1];
+	  else
+	       parambuf[3] = 0x0a; /* default WI=10 */
 	  /* TA3 -> clock stop parameter */
 	  /* XXX check for IFD clock stop support */
-	  if (TA[2] != -1)
-	       parambuf[4]=TA[2] >> 6;
-     } else {
+	  if (atr_info.TA[2] != -1)
+	       parambuf[4] = atr_info.TA[2] >> 6;
+     } else if (proto == IFD_PROTOCOL_T1) {
 	  r=7;
 	  ctl[0]=1;
-	  if (TA[0] != -1)
-	       parambuf[0]=TA[0];
+	  if (atr_info.TA[0] != -1)
+	       parambuf[0] = atr_info.TA[0];
 	  else
-		  parambuf[0]=0x11;
+	       parambuf[0] = 0x11;
 	  parambuf[1]=0x10;
 	  /* TC3 -> LRC/CRC selection */
-	  if (TC[2] == 1)
+	  if (atr_info.TC[2] == 1)
 	       parambuf[1] |= 0x1;
 	  /* TC1 -> N */
-	  if (TC[0] != -1)
-	       parambuf[2]=TC[0];
+	  if (atr_info.TC[0] != -1)
+	       parambuf[2] = atr_info.TC[0];
+	  /* atr_info->TB3 -> BWI/CWI */
+	  if (atr_info.TB[2] != -1)
+	       parambuf[3] = atr_info.TB[2];
 	  else
-		  parambuf[2]=0x0a;
-	  /* TB3 -> BWI/CWI */
-	  if (TB[2] != -1)
-	       parambuf[3]=TB[2];
+	       parambuf[3] = 0xD4;
 	  parambuf[4]=0;
 	  /* TA3 -> IFSC */
-	  if (TA[2] != -1)
-	       parambuf[5]=TA[2];
+	  if (atr_info.TA[2] != -1)
+	       parambuf[5]=atr_info.TA[2];
 	  else
-		  parambuf[5]=0x20;
+	       parambuf[5]=0x20;
 	  /* XXX CCID supports setting up clock stop for T=1, but the
 	   * T=1 ATR does not define a clock-stop byte.
 	   */
@@ -911,18 +859,31 @@ ccid_set_protocol(ifd_reader_t *reader, int s, int proto) {
      r=ccid_simple_wcommand(reader, s, CCID_CMD_SETPARAMS, ctl, parambuf, r);
      if (r < 0)
 	  return r;
-     
-     r=ccid_prepare_cmd(reader, cmdbuf, sizeof(cmdbuf), s, CCID_CMD_GETPARAMS,
-			NULL, NULL, 0);
-     if (r < 0)
-	  return r;
-     r=ccid_command(reader, cmdbuf, r, &parambuf[0], sizeof(parambuf));
-     if (r < 0)
-	  return r;
-     paramtype=parambuf[9];
-     r=ccid_extract_data(&parambuf, r, &parambuf[0], sizeof(parambuf));
-     if (r < 0)
-	  return r;
+
+     /* is PTS available? N (guard time) must be changed before PTS
+      * is performed. What about F and D? */
+     if (proto == IFD_PROTOCOL_T1 || atr_info.TA[0] != -1 
+	 || atr_info.TC[0] != -1)
+     {
+	  unsigned char pts[7], ptsret[7];
+	  int ptslen; 
+
+	  ptslen=ifd_build_pts(&atr_info, proto, pts, sizeof(pts));
+	  if (ptslen < 0) {
+	       ct_error("%s: Could not perform PTS: %s", reader->name,
+			ct_strerror(r));
+	       return ptslen;
+	  }
+	  r=ccid_exchange(reader, s, pts, ptslen, ptsret, 
+			  sizeof(ptsret));
+	  if (r<0)
+	       return r;
+	  if (r < ptslen || memcmp(pts,ptsret,ptslen)) {
+	       ct_error("%s: Bad PTS response", reader->name);
+	       return IFD_ERROR_INCOMPATIBLE_DEVICE;
+	  }
+     }
+
      memset(&parambuf[r], 0, sizeof(parambuf) - r);
      if (proto == IFD_PROTOCOL_T0) {
 	  p = ifd_protocol_new(IFD_PROTOCOL_TRANSPARENT,
@@ -930,10 +891,11 @@ ccid_set_protocol(ifd_reader_t *reader, int s, int proto) {
      } else {
 	  p = ifd_protocol_new(proto, reader, slot->dad);
 	  if (p) { 
-	       if (TA[2] != -1)
-		       ifd_protocol_set_parameter(p, IFD_PROTOCOL_T1_IFSC, TA[2]); 
+	       if (atr_info.TA[2] != -1)
+		       ifd_protocol_set_parameter(p, IFD_PROTOCOL_T1_IFSC, 
+						  atr_info.TA[2]); 
 	       ifd_protocol_set_parameter(p, IFD_PROTOCOL_T1_IFSD, st->ifsd); 
-	       if (TC[2] == 1)
+	       if (atr_info.TC[2] == 1)
 		       ifd_protocol_set_parameter(p,
 		       IFD_PROTOCOL_T1_CHECKSUM_CRC, 0); 
 	  }
@@ -956,31 +918,12 @@ ccid_transparent(ifd_reader_t *reader, int slot,
 		 const void *sbuf, size_t slen,
 		 void *rbuf, size_t rlen) {
      ccid_status_t *st=(ccid_status_t *)reader->driver_data;
-     int r;
-     unsigned char *p;
 
      ifd_debug(1, "called.");
-     if (st->reader_type == TYPE_APDU)
+     if (st->reader_type == TYPE_APDU || 
+	 (st->reader_type == TYPE_TPDU &&
+	  st->icc_proto[slot] == IFD_PROTOCOL_T0))
 	  return ccid_exchange(reader, slot, sbuf, slen, rbuf, rlen);
-     if (st->reader_type == TYPE_TPDU &&
-	  st->icc_proto[slot] == IFD_PROTOCOL_T0) {
-	  r=ccid_exchange(reader, slot, sbuf, slen, rbuf, rlen);
-	  /* Check for automatic GET RESPONSE that leaves multiple SW's */
-	  p=(unsigned char *) rbuf;
-	  ifd_debug(1, "T=0 cmd: %d bytes reply: %d bytes (x%02x x%02x) (%sx%02x x%02x)", slen, r, p[0], p[1], r > 2 ? "" : "(ignore) ", p[r-2], p[r-1]);
-	  
-	  if (slen > 5 && r > 2) {
-	       ifd_debug(2, "Possible munged Case 4 GET RESPONSE.");
-	       p=(unsigned char *) rbuf;
-	       if (p[0] == 0x90 && p[1] == 0x0 &&
-		   p[r-2] == 0x90 && p[r-1] == 0x0) {
-		    ifd_debug(2, "removing extra SW bytes from Case 4 response");
-		    memmove(rbuf, &p[2], r-2);
-		    return r-2;
-	       }
-	  }
-	  return r;
-     }
      return IFD_ERROR_NOT_SUPPORTED;
 }
 
