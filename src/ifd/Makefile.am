@@ -7,7 +7,7 @@ lib_LTLIBRARIES = libifd.la
 
 sbin_PROGRAMS = ifdhandler
 
-DRIVERS	= egate.c etoken.c ikey3k.c kaan.c towitoko.c cardman.c
+DRIVERS	= cardman.c egate.c etoken.c eutron.c ikey3k.c kaan.c towitoko.c
 libifd_la_SOURCES= apdu.c checksum.c conf.c confparse.c device.c driver.c \
 		   init.c internal.h linux.c locks.c manager.c modules.c \
 		   process.c proto-t0.c proto-t1.c proto-trans.c protocol.c \

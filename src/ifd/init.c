@@ -9,6 +9,7 @@
 
 extern void	ifd_egate_register(void);
 extern void	ifd_etoken_register(void);
+extern void	ifd_eutron_register(void);
 extern void	ifd_ikey3k_register(void);
 extern void	ifd_kaan_register(void);
 extern void	ifd_towitoko_register(void);
@@ -27,6 +28,7 @@ ifd_init(void)
 	/* Register built-in drivers */
 	ifd_egate_register();
 	ifd_etoken_register();
+	ifd_eutron_register();
 	ifd_ikey3k_register();
 	ifd_kaan_register();
 	ifd_towitoko_register();
