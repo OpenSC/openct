@@ -187,7 +187,7 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 	t1_state_t	*t1 = (t1_state_t *) prot;
 	ct_buf_t	sbuf, rbuf, tbuf;
 	unsigned char	sdata[T1_BUFFER_SIZE], sblk[5];
-	unsigned int	slen, retries, last_send = 0;
+	unsigned int	slen, retries, last_send = 0, sent_length = 0;
 
 	if (snd_len == 0)
 		return -1;
@@ -214,7 +214,7 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 
 		if ((n = t1_xcv(t1, sdata, slen, sizeof(sdata))) < 0) {
 			ifd_debug(1, "transmit/receive failed");
-			if (retries == 0 || last_send)
+			if (retries == 0 || sent_length)
 				goto error;
 			slen = t1_build(t1, sdata, dad,
 					T1_R_BLOCK | T1_OTHER_ERROR,
@@ -224,7 +224,7 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 
 		if (!t1_verify_checksum(t1, sdata, n)) {
 			ifd_debug(1, "checksum failed");
-			if (retries == 0 || last_send)
+			if (retries == 0 || sent_length)
 				goto error;
 			slen = t1_build(t1, sdata,
 					dad, T1_R_BLOCK | T1_EDC_ERROR,
@@ -259,6 +259,7 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 			 * block successfully */
 			if (t1_seq(pcb) != t1->ns) {
 				ct_buf_get(&sbuf, NULL, last_send);
+				sent_length += last_send;
 				last_send = 0;
 				t1->ns ^= 1;
 			}
