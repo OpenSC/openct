@@ -18,7 +18,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <signal.h>
-#include <usb.h>
 #include <errno.h>
 #include "internal.h"
 
