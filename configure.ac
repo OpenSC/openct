@@ -5,6 +5,16 @@ AM_CONFIG_HEADER(include/config.h)
 
 AM_PROG_LIBTOOL
 
+AC_CANONICAL_HOST
+case "$host" in
+	*linux*)
+		AC_CHECK_MEMBER(struct usbdevfs_ctrltransfer.bRequestType,
+				[AC_DEFINE(LINUX_NEWUSB,1,[new usb structure])],
+				[],
+				[#include <linux/usbdevice_fs.h>])
+	;;
+esac
+
 PCSC_MSG=no
 pcsc_path=/usr
 AC_SUBST(CFLAGS_PCSC)
