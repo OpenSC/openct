@@ -4,7 +4,7 @@ MAINTAINERCLEANFILES = Makefile.in
 
 INCLUDES = -I$(top_srcdir)/src/scdl @CPPFLAGS@ @CFLAGS_PCSC@
 
-lib_LTLIBRARIES = libifd.la
+noinst_LTLIBRARIES = libifd.la
 
 sbin_PROGRAMS = ifdhandler ifdproxy
 
