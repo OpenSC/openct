@@ -10,14 +10,20 @@
 #include <sys/signal.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <stdio.h>
 #include <errno.h>
 
 #include <openct/openct.h>
 #include <openct/pathnames.h>
 #include <openct/logging.h>
 
+#define OPENCT_STATUS_LOCK	OPENCT_STATUS_PATH ".lock"
+
 static const ct_info_t *ct_reader_info;
 static unsigned int	ct_num_info;
+
+static int		ct_status_lock(void);
+static void		ct_status_unlock(void);
 
 static void *
 ct_map_status(int flags, size_t *size)
@@ -96,14 +102,29 @@ ct_status_alloc_slot(unsigned int *num)
 
 	max = size / sizeof(ct_info_t);
 	if (*num == (unsigned int) -1) {
+		sigset_t	sigset;
+
+		/* Block all signals while holding the lock */
+		sigfillset(&sigset);
+		sigprocmask(SIG_SETMASK, &sigset, &sigset);
+
+		/* Lock the status file against concurrent access */
+		ct_status_lock();
+
 		/* find a free slot */
-		for (n = 0; n < max; n++, info++) {
+		for (n = 0; n < max; n++, info) {
 			if (info[n].ct_pid == 0
 			 || (kill(info[n].ct_pid, 0) < 0 && errno == ESRCH)) {
 				*num = n;
 				break;
 			}
 		}
+
+		/* Done, unlock the file again */
+		ct_status_unlock();
+
+		/* unblock signals */
+		sigprocmask(SIG_SETMASK, &sigset, NULL);
 	} else if (*num >= max) {
 		munmap(info, size);
 		return NULL;
@@ -111,16 +132,63 @@ ct_status_alloc_slot(unsigned int *num)
 
 	memset(&info[*num], 0, sizeof(ct_info_t));
 	info[*num].ct_pid = getpid();
+	
+	msync(info, size, MS_SYNC);
 	return info + *num;
 }
 
+
+#define ALIGN(x, size)	(((caddr_t) (x)) - ((unsigned long) (x) % (size)))
 int
 ct_status_update(ct_info_t *status)
 {
-	if (msync(status, sizeof(*status), MS_SYNC) < 0) {
+	size_t	size;
+	caddr_t	page;
+
+	/* get the page this piece of data is sitting on */
+	size = getpagesize();
+	page = ALIGN(status, size);
+
+	/* flush two pages if data spans two pages */
+	if (page != ALIGN(status + 1, size))
+		size <<= 1;
+
+	if (msync(page, size, MS_SYNC) < 0) {
 		ct_error("msync: %m");
 		return -1;
 	}
 
 	return 0;
+}
+
+/*
+ * Lock file handling
+ */
+int
+ct_status_lock(void)
+{
+	char	locktemp[sizeof(OPENCT_STATUS_PATH) + 32];
+	int	fd, retries = 10;
+
+	snprintf(locktemp, sizeof(locktemp),
+			OPENCT_STATUS_PATH ".%u", getpid());
+
+	if ((fd = open(locktemp, O_CREAT|O_RDWR, 0600)) < 0)
+		return -1;
+
+	while (retries--) {
+		if (link(locktemp, OPENCT_STATUS_LOCK) >= 0) {
+			unlink(locktemp);
+			return 0;
+		}
+	}
+
+	unlink(locktemp);
+	return -1;
+}
+
+void
+ct_status_unlock(void)
+{
+	unlink(OPENCT_STATUS_LOCK);
 }
