@@ -7,15 +7,6 @@
 #include "internal.h"
 #include <stdlib.h>
 
-extern void	ifd_egate_register(void);
-extern void	ifd_etoken_register(void);
-extern void	ifd_eutron_register(void);
-extern void	ifd_ikey3k_register(void);
-extern void	ifd_kaan_register(void);
-extern void	ifd_towitoko_register(void);
-extern void	ifd_cardman_register(void);
-extern void	ifd_smartboard_register(void);
-
 static void	configure_driver(ifd_conf_node_t *cf);
 
 int
@@ -61,10 +52,6 @@ ifd_init(void)
 			configure_driver(nodes[i]);
 		free(nodes);
 	}
-
-	/* Initialize hotplugging */
-	//ifd_hotplug_init();
-
 	return 0;
 }
 

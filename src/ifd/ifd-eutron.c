@@ -174,21 +174,21 @@ failed:	ct_error("eutron: failed to receive t=1 frame");
 /*
  * Driver operations
  */
-static struct ifd_driver_ops	eutron_driver = {
-	open:		eutron_open,
-//	close:		eutron_close,
-	activate:	eutron_activate,
-	deactivate:	eutron_deactivate,
-	card_status:	eutron_card_status,
-	card_reset:	eutron_card_reset,
-	send:		eutron_send,
-	recv:		eutron_recv,
-};
+static struct ifd_driver_ops	eutron_driver;
+
 /*
  * Initialize this module
  */
 void
 ifd_eutron_register(void)
 {
+	eutron_driver.open = eutron_open;
+	eutron_driver.activate = eutron_activate;
+	eutron_driver.deactivate = eutron_deactivate;
+	eutron_driver.card_status = eutron_card_status;
+	eutron_driver.card_reset = eutron_card_reset;
+	eutron_driver.send = eutron_send;
+	eutron_driver.recv = eutron_recv;
+
 	ifd_driver_register("eutron", &eutron_driver);
 }

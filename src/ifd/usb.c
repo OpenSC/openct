@@ -116,9 +116,7 @@ usb_poll_presence(ifd_device_t *dev, struct pollfd *p)
 	return 1;
 }
 
-static struct ifd_device_ops	ifd_usb_ops = {
-	.poll_presence	= usb_poll_presence,
-};
+static struct ifd_device_ops	ifd_usb_ops;
 
 /*
  * Open USB device - used by CTAPI
@@ -133,6 +131,8 @@ ifd_open_usb(const char *device)
 		ct_error("Unable to open USB device %s: %m", device);
 		return NULL;
 	}
+
+	ifd_usb_ops.poll_presence = usb_poll_presence;
 
 	dev = ifd_device_new(device, &ifd_usb_ops, sizeof(*dev));
 	dev->type = IFD_DEVICE_TYPE_USB;

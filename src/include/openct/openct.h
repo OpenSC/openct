@@ -17,7 +17,7 @@ typedef struct ct_info {
 	char		ct_name[64];
 	unsigned int	ct_slots;
 	unsigned int	ct_card[OPENCT_MAX_SLOTS];
-	unsigned char	ct_display : 1,
+	unsigned 	ct_display : 1,
 			ct_keypad  : 1;
 	pid_t		ct_pid;
 } ct_info_t;

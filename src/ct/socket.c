@@ -473,6 +473,7 @@ ct_socket_write(ct_socket_t *sock, void *ptr, size_t len)
 	struct sigaction act;
 	unsigned int	count = 0;
 	int		rc;
+	caddr_t		p;
 
 	if (sock->fd < 0)
 		return -1;
@@ -488,7 +489,8 @@ ct_socket_write(ct_socket_t *sock, void *ptr, size_t len)
 			ct_error("send error: %m");
 			goto done;
 		}
-		(caddr_t) ptr += rc;
+		p = ptr;
+		p += rc;
 		count += rc;
 	}
 	rc = count;
@@ -503,6 +505,7 @@ ct_socket_read(ct_socket_t *sock, void *ptr, size_t size)
 {
 	unsigned int	count = 0;
 	int		rc;
+	caddr_t		p;
 
 	if (sock->fd < 0)
 		return -1;
@@ -518,7 +521,8 @@ ct_socket_read(ct_socket_t *sock, void *ptr, size_t size)
 			rc = -1;
 			goto done;
 		}
-		(caddr_t) ptr += rc;
+		p = ptr;
+		p += rc;
 		count += rc;
 	}
 	rc = count;

@@ -70,13 +70,16 @@ trans_transceive(ifd_protocol_t *prot, int dad,
  * Protocol struct
  */
 struct ifd_protocol_ops	ifd_protocol_trans = {
-	IFD_PROTOCOL_TRANSPARENT,
-	"transparent",
-	sizeof(ifd_protocol_t),
-	.init		= trans_init,
-	.release	= trans_release,
-	.set_param	= trans_set_param,
-	.get_param	= trans_get_param,
-	.transceive	= trans_transceive,
+	IFD_PROTOCOL_TRANSPARENT,	/* id */
+	"transparent",			/* name */
+	sizeof(ifd_protocol_t),		/* size */
+	trans_init,			/* init */
+	trans_release,			/* release */
+	trans_set_param,		/* set_param */
+	trans_get_param,		/* get_param */
+	NULL,				/* resynchronize */
+	trans_transceive,		/* transceive */
+	NULL,				/* sync_read */
+	NULL,				/* sync_write */
 };
 

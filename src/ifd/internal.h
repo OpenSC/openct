@@ -116,6 +116,15 @@ extern struct ifd_protocol_ops	ifd_protocol_i2c_long;
 extern struct ifd_protocol_ops	ifd_protocol_2wire;
 extern struct ifd_protocol_ops	ifd_protocol_3wire;
 
+extern void	ifd_egate_register(void);
+extern void	ifd_etoken_register(void);
+extern void	ifd_eutron_register(void);
+extern void	ifd_ikey3k_register(void);
+extern void	ifd_kaan_register(void);
+extern void	ifd_towitoko_register(void);
+extern void	ifd_cardman_register(void);
+extern void	ifd_smartboard_register(void);
+
 /* reader.c */
 extern int		ifd_send_command(ifd_protocol_t *,
 				const void *, size_t);

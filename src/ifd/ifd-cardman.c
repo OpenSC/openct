@@ -406,18 +406,7 @@ cm_anyreply(const void *ptr, size_t len)
 /*
  * Driver operations
  */
-static struct ifd_driver_ops	cardman_driver = {
-	open:		cm_open,
-//	close:		cm_close,
-	activate:	cm_activate,
-	deactivate:	cm_deactivate,
-	card_status:	cm_card_status,
-	card_reset:	cm_card_reset,
-	send:		cm_send,
-	recv:		cm_recv,
-	set_protocol:	cm_set_protocol,
-	transparent:	cm_transparent,
-};
+static struct ifd_driver_ops	cardman_driver;
 
 /*
  * Initialize this module
@@ -425,5 +414,15 @@ static struct ifd_driver_ops	cardman_driver = {
 void
 ifd_cardman_register(void)
 {
+	cardman_driver.open = cm_open;
+	cardman_driver.activate = cm_activate;
+	cardman_driver.deactivate = cm_deactivate;
+	cardman_driver.card_status = cm_card_status;
+	cardman_driver.card_reset = cm_card_reset;
+	cardman_driver.send = cm_send;
+	cardman_driver.recv = cm_recv;
+	cardman_driver.set_protocol = cm_set_protocol;
+	cardman_driver.transparent = cm_transparent;
+
 	ifd_driver_register("cardman", &cardman_driver);
 }

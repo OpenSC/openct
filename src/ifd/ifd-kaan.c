@@ -879,22 +879,7 @@ kaan_get_tlv(unsigned char *buf, size_t len,
 /*
  * Driver operations
  */
-static struct ifd_driver_ops	kaan_driver = {
-	.open		= kaan_open,
-	.activate	= kaan_activate,
-	.deactivate	= kaan_deactivate,
-	.card_status	= kaan_card_status,
-	.card_reset	= kaan_card_reset,
-	.card_request	= kaan_card_request,
-	.output		= kaan_display,
-	.perform_verify = kaan_perform_verify,
-	.send		= kaan_send,
-	.recv		= kaan_recv,
-	.set_protocol	= kaan_set_protocol,
-	.transparent	= kaan_transparent,
-	.sync_read	= kaan_sync_read,
-	.sync_write	= kaan_sync_write,
-};
+static struct ifd_driver_ops	kaan_driver;
 
 /*
  * Initialize this module
@@ -902,5 +887,20 @@ static struct ifd_driver_ops	kaan_driver = {
 void
 ifd_kaan_register(void)
 {
+	kaan_driver.open= kaan_open;
+	kaan_driver.activate = kaan_activate;
+	kaan_driver.deactivate = kaan_deactivate;
+	kaan_driver.card_status = kaan_card_status;
+	kaan_driver.card_reset = kaan_card_reset;
+	kaan_driver.card_request = kaan_card_request;
+	kaan_driver.output= kaan_display;
+	kaan_driver.perform_verify = kaan_perform_verify;
+	kaan_driver.send= kaan_send;
+	kaan_driver.recv= kaan_recv;
+	kaan_driver.set_protocol = kaan_set_protocol;
+	kaan_driver.transparent = kaan_transparent;
+	kaan_driver.sync_read = kaan_sync_read;
+	kaan_driver.sync_write = kaan_sync_write;
+
 	ifd_driver_register("kaan", &kaan_driver);
 }

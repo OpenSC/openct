@@ -323,13 +323,15 @@ t0_resynch(t0_state_t *t0)
  * Protocol struct
  */
 struct ifd_protocol_ops	ifd_protocol_t0 = {
-	IFD_PROTOCOL_T0,
-	"T=0",
-	sizeof(t0_state_t),
-	.init		= t0_init,
-	.release	= t0_release,
-	.set_param	= t0_set_param,
-	.get_param	= t0_get_param,
-	.transceive	= t0_transceive,
+	IFD_PROTOCOL_T0,	/* id */
+	"T=0",			/* name */
+	sizeof(t0_state_t),	/* size */
+	t0_init,		/* init */
+	t0_release,		/* release */
+	t0_set_param,		/* set_param */
+	t0_get_param,		/* get_param */
+	NULL,			/* resynchronize */
+	t0_transceive,		/* transceive */
+	NULL,			/* sync_read */
+	NULL,			/* sync_write */
 };
-

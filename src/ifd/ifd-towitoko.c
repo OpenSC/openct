@@ -369,7 +369,7 @@ twt_send(ifd_reader_t *reader, unsigned int dad,
 		 || ifd_device_send(dev, buffer, count) < 0)
 			return -1;
 
-		(caddr_t) buffer += count;
+		buffer += count;
 		len -= count;
 	}
 
@@ -681,23 +681,23 @@ twt_send_checksum(unsigned char *data, size_t len)
 /*
  * Driver operations
  */
-static struct ifd_driver_ops	towitoko_driver = {
-	open:		twt_open,
-	close:		twt_close,
-	change_parity:	twt_change_parity,
-	change_speed:	twt_change_speed,
-	activate:	twt_activate,
-	deactivate:	twt_deactivate,
-	card_status:	twt_card_status,
-	card_reset:	twt_card_reset,
-	send:		twt_send,
-	recv:		twt_recv,
-	sync_read:	twt_sync_read,
-	sync_write:	twt_sync_write,
-};
+static struct ifd_driver_ops	towitoko_driver;
 
 void
 ifd_towitoko_register(void)
 {
+	towitoko_driver.open = twt_open;
+	towitoko_driver.close = twt_close;
+	towitoko_driver.change_parity = twt_change_parity;
+	towitoko_driver.change_speed = twt_change_speed;
+	towitoko_driver.activate = twt_activate;
+	towitoko_driver.deactivate = twt_deactivate;
+	towitoko_driver.card_status = twt_card_status;
+	towitoko_driver.card_reset = twt_card_reset;
+	towitoko_driver.send = twt_send;
+	towitoko_driver.recv = twt_recv;
+	towitoko_driver.sync_read = twt_sync_read;
+	towitoko_driver.sync_write = twt_sync_write;
+
 	ifd_driver_register("towitoko", &towitoko_driver);
 }

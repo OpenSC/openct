@@ -269,42 +269,57 @@ failed:	if (p != NULL)
  * Protocol structs
  */
 struct ifd_protocol_ops	ifd_protocol_i2c_short = {
-	IFD_PROTOCOL_I2C_SHORT,
-	"I2C short",
-	sizeof(sync_state_t),
-	.init = sync_init,
-	.release = sync_release,
-	.sync_read = sync_read,
-	.sync_write = sync_write,
+	IFD_PROTOCOL_I2C_SHORT,		/* id */
+	"I2C short",			/* name */
+	sizeof(sync_state_t),		/* size */
+	sync_init,			/* init */
+	sync_release,			/* release */
+	NULL,				/* set_param */
+	NULL,				/* get_param */
+	NULL,				/* resynchronize */
+	NULL,				/* transceive */
+	sync_read,			/* sync_read */
+	sync_write,			/* sync_write */
 };
 
 struct ifd_protocol_ops	ifd_protocol_i2c_long = {
-	IFD_PROTOCOL_I2C_LONG,
-	"I2C long",
-	sizeof(sync_state_t),
-	.init = sync_init,
-	.release = sync_release,
-	.sync_read = sync_read,
-	.sync_write = sync_write,
+	IFD_PROTOCOL_I2C_LONG,		/* id */
+	"I2C long",			/* name */
+	sizeof(sync_state_t),		/* size */
+	sync_init,			/* init */
+	sync_release,			/* release */
+	NULL,				/* set_param */
+	NULL,				/* get_param */
+	NULL,				/* resynchronize */
+	NULL,				/* transceive */
+	sync_read,			/* sync_read */
+	sync_write,			/* sync_write */
 };
 
 struct ifd_protocol_ops	ifd_protocol_2wire = {
-	IFD_PROTOCOL_2WIRE,
-	"2Wire",
-	sizeof(sync_state_t),
-	.init = sync_init,
-	.release = sync_release,
-	.sync_read = sync_read,
-	.sync_write = sync_write,
+	IFD_PROTOCOL_2WIRE,		/* id */
+	"2Wire",			/* name */
+	sizeof(sync_state_t),		/* size */
+	sync_init,			/* init */
+	sync_release,			/* release */
+	NULL,				/* set_param */
+	NULL,				/* get_param */
+	NULL,				/* resynchronize */
+	NULL,				/* transceive */
+	sync_read,			/* sync_read */
+	sync_write,			/* sync_write */
 };
 
 struct ifd_protocol_ops	ifd_protocol_3wire = {
-	IFD_PROTOCOL_3WIRE,
-	"3Wire",
-	sizeof(sync_state_t),
-	.init = sync_init,
-	.release = sync_release,
-	.sync_read = sync_read,
-	.sync_write = sync_write,
+	IFD_PROTOCOL_3WIRE,		/* id */
+	"3Wire",			/* name */
+	sizeof(sync_state_t),		/* size */
+	sync_init,			/* init */
+	sync_release,			/* release */
+	NULL,				/* set_param */
+	NULL,				/* get_param */
+	NULL,				/* resynchronize */
+	NULL,				/* transceive */
+	sync_read,			/* sync_read */
+	sync_write,			/* sync_write */
 };
-

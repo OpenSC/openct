@@ -156,22 +156,22 @@ ikey3k_recv(ifd_reader_t *reader, unsigned int dad, unsigned char *buffer, size_
 /*
  * Driver operations
  */
-static struct ifd_driver_ops	ikey3k_driver = {
-	open:		ikey3k_open,
-//	close:		ikey3k_close,
-	activate:	ikey3k_activate,
-	deactivate:	ikey3k_deactivate,
-	card_status:	ikey3k_card_status,
-	card_reset:	ikey3k_card_reset,
-	set_protocol:	ikey3k_set_protocol,
-	send:		ikey3k_send,
-	recv:		ikey3k_recv,
-};
+static struct ifd_driver_ops	ikey3k_driver;
+
 /*
  * Initialize this module
  */
 void
 ifd_ikey3k_register(void)
 {
+	ikey3k_driver.open = ikey3k_open;
+	ikey3k_driver.activate = ikey3k_activate;
+	ikey3k_driver.deactivate = ikey3k_deactivate;
+	ikey3k_driver.card_status = ikey3k_card_status;
+	ikey3k_driver.card_reset = ikey3k_card_reset;
+	ikey3k_driver.set_protocol = ikey3k_set_protocol;
+	ikey3k_driver.send = ikey3k_send;
+	ikey3k_driver.recv = ikey3k_recv;
+
 	ifd_driver_register("ikey3k", &ikey3k_driver);
 }

@@ -17,12 +17,15 @@
 #include <openct/buffer.h>
 
 struct ct_config	ct_config = {
-	.debug		= 0,
-	.autoload	= 1,
-	.hotplug	= 1,
-	.ifdhandler	= OPENCT_IFDHANDLER_PATH,
-	.modules_dir	= OPENCT_MODULES_PATH,
-	.socket_dir	= OPENCT_SOCKET_PATH,
+	0,			/* debug */
+	1,			/* autoload */
+	1,			/* hotplug */
+	0,			/* hush_errors */
+	OPENCT_IFDHANDLER_PATH,	/* ifdhandler */
+	OPENCT_MODULES_PATH,	/* modules_dir */
+	NULL,			/* driver_modules_dir */
+	NULL,			/* protocol_modules_dir */
+	OPENCT_SOCKET_PATH,	/* socket_dir */
 };
 
 #define issepa(c)	(strchr("=;,{}", (c)) != NULL)

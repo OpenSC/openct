@@ -176,7 +176,7 @@ ifd_serial_send(ifd_device_t *dev, const unsigned char *buffer, size_t len)
 					dev->name);
 			return -1;
 		}
-		(caddr_t) buffer += n;
+		buffer += n;
 		len -= n;
 	}
 
@@ -217,7 +217,7 @@ ifd_serial_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeo
 		}
 		if (ct_config.debug >= 9)
 			ifd_debug(9, "serial recv:%s", ct_hexdump(buffer, n));
-		(caddr_t) buffer += n;
+		buffer += n;
 		len -= n;
 	}
 
@@ -292,15 +292,7 @@ ifd_serial_close(ifd_device_t *dev)
 	dev->fd = -1;
 }
 
-static struct ifd_device_ops ifd_serial_ops = {
-	identify:	ifd_serial_identify,
-	flush:		ifd_serial_flush,
-	get_params:	ifd_serial_get_params,
-	set_params:	ifd_serial_set_params,
-	send:		ifd_serial_send,
-	recv:		ifd_serial_recv,
-	close:		ifd_serial_close
-};
+static struct ifd_device_ops ifd_serial_ops;
 
 /*
  * Open serial device
@@ -319,6 +311,14 @@ ifd_open_serial(const char *name)
 
 	/* Clear the NDELAY flag */
 	fcntl(fd, F_SETFL, 0);
+
+	ifd_serial_ops.identify = ifd_serial_identify;
+	ifd_serial_ops.set_params = ifd_serial_set_params;
+	ifd_serial_ops.get_params = ifd_serial_get_params;
+	ifd_serial_ops.flush = ifd_serial_flush;
+	ifd_serial_ops.send = ifd_serial_send;
+	ifd_serial_ops.recv = ifd_serial_recv;
+	ifd_serial_ops.close = ifd_serial_close;
 
 	dev = ifd_device_new(name, &ifd_serial_ops, sizeof(*dev));
 	dev->timeout = 1000; /* acceptable? */

@@ -469,15 +469,17 @@ t1_build(t1_state_t *t1, unsigned char *block,
  * Protocol struct
  */
 struct ifd_protocol_ops	ifd_protocol_t1 = {
-	IFD_PROTOCOL_T1,
-	"T=1",
-	sizeof(t1_state_t),
-	.init		= t1_init,
-	.release	= t1_release,
-	.set_param	= t1_set_param,
-	.get_param	= t1_get_param,
-	.resynchronize	= t1_resynchronize,
-	.transceive	= t1_transceive,
+	IFD_PROTOCOL_T1,	/* id */
+	"T=1",			/* name */
+	sizeof(t1_state_t),	/* size */
+	t1_init,		/* init */
+	t1_release,		/* release */
+	t1_set_param,		/* set_param */
+	t1_get_param,		/* get_param */
+	t1_resynchronize,	/* resynchronize */
+	t1_transceive,		/* transceive */
+	NULL,			/* sync_read */
+	NULL,			/* sync_write */
 };
 
 /*

@@ -196,21 +196,21 @@ eg_transparent(ifd_reader_t *reader, int dad, const void *inbuffer, size_t inlen
 /*
  * Driver operations
  */
-static struct ifd_driver_ops	egate_driver = {
-	open:		eg_open,
-//	close:		eg_close,
-	activate:	eg_activate,
-	deactivate:	eg_deactivate,
-	card_status:	eg_card_status,
-	card_reset:	eg_card_reset,
-	set_protocol:	eg_set_protocol,
-	transparent:	eg_transparent,
-};
+static struct ifd_driver_ops	egate_driver;
+
 /*
  * Initialize this module
  */
 void
 ifd_egate_register(void)
 {
+	egate_driver.open = eg_open;
+	egate_driver.activate = eg_activate;
+	egate_driver.deactivate = eg_deactivate;
+	egate_driver.card_status = eg_card_status;
+	egate_driver.card_reset = eg_card_reset;
+	egate_driver.set_protocol = eg_set_protocol;
+	egate_driver.transparent = eg_transparent;
+
 	ifd_driver_register("egate", &egate_driver);
 }

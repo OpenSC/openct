@@ -143,21 +143,21 @@ et_recv(ifd_reader_t *reader, unsigned int dad, unsigned char *buffer, size_t le
 /*
  * Driver operations
  */
-static struct ifd_driver_ops	etoken_driver = {
-	open:		et_open,
-//	close:		et_close,
-	activate:	et_activate,
-	deactivate:	et_deactivate,
-	card_status:	et_card_status,
-	card_reset:	et_card_reset,
-	send:		et_send,
-	recv:		et_recv,
-};
+static struct ifd_driver_ops	etoken_driver;
+
 /*
  * Initialize this module
  */
 void
 ifd_etoken_register(void)
 {
+	etoken_driver.open = et_open;
+	etoken_driver.activate = et_activate;
+	etoken_driver.deactivate = et_deactivate;
+	etoken_driver.card_status = et_card_status;
+	etoken_driver.card_reset = et_card_reset;
+	etoken_driver.send = et_send;
+	etoken_driver.recv = et_recv;
+
 	ifd_driver_register("etoken", &etoken_driver);
 }
