@@ -1,5 +1,16 @@
 NEWS for OpenCT -- History of user visible changes
 
+New in 0.6.1; 2004-07-18; Andreas Jellinghaus
+* This is a test version of alpha code quality
+  There are several known problems with it, please
+  use the older 0.5.0 release in production environments
+* new driver for generic usb smart card readers (ccid)
+* new proxy mechanism for remote access
+* small fix in ct_buf_put function, new ct_buf_push function
+* improved ct-api interface code
+* support for solaris
+* improved t=1 protocol
+
 New in 0.5.0; 2003-11-24; Antti Tapaninen:
 * Initial support for synchronous ICCs
 * Improved support for egate, kaan and towitoko drivers
