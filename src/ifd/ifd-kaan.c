@@ -929,7 +929,9 @@ kaan_recv(ifd_reader_t *reader, unsigned int dad, unsigned char *buffer, size_t 
 }
 
 /*
- * Extract data from TLV encoded result
+ * Extract data from TLV encoded result.
+ * The length is encoded as a single byte in the range 0 to 254.
+ * A value of 255 means a big endian two byte length value follows.
  */
 int
 kaan_get_tlv(unsigned char *buf, size_t len,
