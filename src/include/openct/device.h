@@ -74,8 +74,8 @@ extern int		ifd_device_set_parameters(ifd_device_t *,
 extern int		ifd_device_transceive(ifd_device_t *,
 				const void *, size_t,
 				void *, size_t, long);
-extern int		ifd_device_send(ifd_device_t *, const void *, size_t);
-extern int		ifd_device_recv(ifd_device_t *, void *, size_t, long);
+extern int		ifd_device_send(ifd_device_t *, const unsigned char *, size_t);
+extern int		ifd_device_recv(ifd_device_t *, unsigned char *, size_t, long);
 extern int		ifd_device_control(ifd_device_t *, void *, size_t);
 extern int		ifd_device_poll_presence(ifd_device_t *,
 				struct pollfd *);

@@ -31,11 +31,11 @@ struct ifd_driver_ops {
 
 	int		(*send)(ifd_reader_t *reader,
 				unsigned int dad,
-				const void *buffer,
+				const unsigned char *buffer,
 				size_t len);
 	int		(*recv)(ifd_reader_t *reader,
 				unsigned int dad,
-				void *buffer,
+				unsigned char *buffer,
 				size_t len,
 				long timeout);
 
