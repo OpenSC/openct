@@ -80,7 +80,9 @@ static void
 t1_set_defaults(t1_state_t *t1)
 {
 	t1->retries  = 3;
-	t1->timeout  = 3000;
+	/* This timeout is rather insane, but we need this right now
+	 * to support cryptoflex keygen */
+	t1->timeout  = 20000;
 	t1->ifsc     = 32;
 	t1->ifsd     = 32;
 	t1->nr	     = 0;
