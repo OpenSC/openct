@@ -10,6 +10,7 @@
 #include <stdarg.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 
 #ifndef __GNUC__

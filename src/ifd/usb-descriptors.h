@@ -9,7 +9,7 @@
 #ifndef __USB_DESCRIPTORS_H__
 #define __USB_DESCRIPTORS_H__
 
-#include <sys/types.h>
+#include <openct/types.h>
 
 /*
  * Descriptor types
@@ -31,28 +31,28 @@
 #define IFD_USB_DT_HUB_NONVAR_SIZE          7
 
 struct ifd_usb_descriptor_header {
-        u_int8_t  bLength;
-        u_int8_t  bDescriptorType;
+        uint8_t  bLength;
+        uint8_t  bDescriptorType;
 };
 
 /* String descriptor */
 struct ifd_usb_string_descriptor {
-	u_int8_t  bLength;
-	u_int8_t  bDescriptorType;
-        u_int16_t wData[1];
+	uint8_t  bLength;
+	uint8_t  bDescriptorType;
+        uint16_t wData[1];
 };
 
 /* Endpoint descriptor */
 #define IFD_USB_MAXENDPOINTS        32
 struct ifd_usb_endpoint_descriptor {
-        u_int8_t  bLength;
-        u_int8_t  bDescriptorType;
-        u_int8_t  bEndpointAddress;
-        u_int8_t  bmAttributes;
-        u_int16_t wMaxPacketSize;
-        u_int8_t  bInterval;
-        u_int8_t  bRefresh;
-        u_int8_t  bSynchAddress;
+        uint8_t  bLength;
+        uint8_t  bDescriptorType;
+        uint8_t  bEndpointAddress;
+        uint8_t  bmAttributes;
+        uint16_t wMaxPacketSize;
+        uint8_t  bInterval;
+        uint8_t  bRefresh;
+        uint8_t  bSynchAddress;
 
         unsigned char *extra;   /* Extra descriptors */
         int extralen;
@@ -69,15 +69,15 @@ struct ifd_usb_endpoint_descriptor {
 /* Interface descriptor */
 #define IFD_USB_MAXINTERFACES       32
 struct ifd_usb_interface_descriptor {
-        u_int8_t  bLength;
-        u_int8_t  bDescriptorType;
-        u_int8_t  bInterfaceNumber;
-        u_int8_t  bAlternateSetting;
-        u_int8_t  bNumEndpoints;
-        u_int8_t  bInterfaceClass;
-        u_int8_t  bInterfaceSubClass;
-        u_int8_t  bInterfaceProtocol;
-        u_int8_t  iInterface;
+        uint8_t  bLength;
+        uint8_t  bDescriptorType;
+        uint8_t  bInterfaceNumber;
+        uint8_t  bAlternateSetting;
+        uint8_t  bNumEndpoints;
+        uint8_t  bInterfaceClass;
+        uint8_t  bInterfaceSubClass;
+        uint8_t  bInterfaceProtocol;
+        uint8_t  iInterface;
 
         struct ifd_usb_endpoint_descriptor *endpoint;
 
@@ -95,14 +95,14 @@ struct ifd_usb_interface {
 /* Configuration descriptor information.. */
 #define IFD_USB_MAXCONFIG           8
 struct ifd_usb_config_descriptor {
-        u_int8_t  bLength;
-        u_int8_t  bDescriptorType;
-        u_int16_t wTotalLength;
-        u_int8_t  bNumInterfaces;
-        u_int8_t  bConfigurationValue;
-        u_int8_t  iConfiguration;
-        u_int8_t  bmAttributes;
-        u_int8_t  MaxPower;
+        uint8_t  bLength;
+        uint8_t  bDescriptorType;
+        uint16_t wTotalLength;
+        uint8_t  bNumInterfaces;
+        uint8_t  bConfigurationValue;
+        uint8_t  iConfiguration;
+        uint8_t  bmAttributes;
+        uint8_t  MaxPower;
 
         struct ifd_usb_interface *interface;
 
@@ -112,20 +112,20 @@ struct ifd_usb_config_descriptor {
 
 /* Device descriptor */
 struct ifd_usb_device_descriptor {
-        u_int8_t  bLength;
-        u_int8_t  bDescriptorType;
-        u_int16_t bcdUSB;
-        u_int8_t  bDeviceClass;
-        u_int8_t  bDeviceSubClass;
-        u_int8_t  bDeviceProtocol;
-        u_int8_t  bMaxPacketSize0;
-        u_int16_t idVendor;
-        u_int16_t idProduct;
-        u_int16_t bcdDevice;
-        u_int8_t  iManufacturer;
-        u_int8_t  iProduct;
-        u_int8_t  iSerialNumber;
-        u_int8_t  bNumConfigurations;
+        uint8_t  bLength;
+        uint8_t  bDescriptorType;
+        uint16_t bcdUSB;
+        uint8_t  bDeviceClass;
+        uint8_t  bDeviceSubClass;
+        uint8_t  bDeviceProtocol;
+        uint8_t  bMaxPacketSize0;
+        uint16_t idVendor;
+        uint16_t idProduct;
+        uint16_t bcdDevice;
+        uint8_t  iManufacturer;
+        uint8_t  iProduct;
+        uint8_t  iSerialNumber;
+        uint8_t  bNumConfigurations;
 };
 #define IFD_USB_REQ_GET_DESCRIPTOR          0x06
 

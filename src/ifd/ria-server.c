@@ -153,14 +153,14 @@ ria_svc_app_handler(ct_socket_t *sock, header_t *hdr,
 		return 0;
 
 	case RIA_MGR_INFO:
-		peer = ria_find_device(ct_buf_head(args), ct_buf_avail(args));
+		peer = ria_find_device((const char *) ct_buf_head(args), ct_buf_avail(args));
 		if (peer == NULL)
 			return IFD_ERROR_UNKNOWN_DEVICE;
 		ct_buf_put(resp, &peer->device, sizeof(peer->device));
 		return 0;
 
 	case RIA_MGR_CLAIM:
-		peer = ria_find_device(ct_buf_head(args), ct_buf_avail(args));
+		peer = ria_find_device((const char *) ct_buf_head(args), ct_buf_avail(args));
 		if (peer == NULL)
 			return IFD_ERROR_UNKNOWN_DEVICE;
 		if (peer->peer)

@@ -8,11 +8,10 @@
  * kernel. It's not a coincidence :)
  */
 
-#include <string.h>
-#include <sys/ioctl.h>
-#include <linux/usbdevice_fs.h>
-#include <malloc.h>
 #include "internal.h"
+#include <sys/ioctl.h>
+#include <stdlib.h>
+#include <string.h>
 #include "usb-descriptors.h"
 
 static int
@@ -87,7 +86,7 @@ ifd_usb_parse_endpoint(struct ifd_usb_endpoint_descriptor *endpoint,
     return parsed;
   }
 
-  endpoint->extra = malloc(len);
+  endpoint->extra = (unsigned char *) malloc(len);
   if (!endpoint->extra) {
        ct_debug("couldn't allocate memory for endpoint extra descriptors");
     endpoint->extralen = 0;
@@ -110,7 +109,8 @@ static int ifd_usb_parse_interface(struct ifd_usb_interface *interface, unsigned
   interface->num_altsetting = 0;
 
   while (size > 0) {
-    interface->altsetting = realloc(interface->altsetting, sizeof(struct ifd_usb_interface_descriptor) * (interface->num_altsetting + 1));
+    interface->altsetting = (struct ifd_usb_interface_descriptor *) realloc(interface->altsetting,
+    			sizeof(struct ifd_usb_interface_descriptor) * (interface->num_altsetting + 1));
     if (!interface->altsetting) {
 	 ct_debug("couldn't malloc interface->altsetting");
       return -1;
@@ -161,7 +161,7 @@ static int ifd_usb_parse_interface(struct ifd_usb_interface *interface, unsigned
       ifp->extra = NULL;
       ifp->extralen = 0;
     } else {
-      ifp->extra = malloc(len);
+      ifp->extra = (unsigned char *) malloc(len);
       if (!ifp->extra) {
 	   ct_debug("couldn't allocate memory for interface extra descriptors");
         ifp->extralen = 0;
@@ -222,7 +222,7 @@ static int ifd_usb_parse_interface(struct ifd_usb_interface *interface, unsigned
   return parsed;
 }
 
-int ifd_usb_parse_configuration(struct ifd_usb_config_descriptor *config, char *buffer)
+int ifd_usb_parse_configuration(struct ifd_usb_config_descriptor *config, unsigned char *buffer)
 {
   int i, retval, size;
   struct ifd_usb_descriptor_header *header;
@@ -253,7 +253,7 @@ int ifd_usb_parse_configuration(struct ifd_usb_config_descriptor *config, char *
 
   for (i = 0; i < config->bNumInterfaces; i++) {
     int numskipped, len;
-    char *begin;
+    unsigned char *begin;
 
     /* Skip over the rest of the Class Specific or Vendor */
     /*  Specific descriptors */
@@ -290,7 +290,7 @@ int ifd_usb_parse_configuration(struct ifd_usb_config_descriptor *config, char *
     if (len) {
       /* FIXME: We should realloc and append here */
       if (!config->extralen) {
-        config->extra = malloc(len);
+        config->extra = (unsigned char *) malloc(len);
         if (!config->extra) {
 	     ct_debug("couldn't allocate memory for config extra descriptors");
           config->extralen = 0;
@@ -337,7 +337,7 @@ int ifd_usb_get_device(ifd_device_t *dev,  struct ifd_usb_device_descriptor *d) 
 int
 ifd_usb_get_config(ifd_device_t *dev, int n, 
 		   struct ifd_usb_config_descriptor *ret) {
-     char *b;
+     unsigned char *b;
      unsigned short len;
      int r;
      memset(ret,0,sizeof(struct ifd_usb_config_descriptor));
@@ -353,7 +353,7 @@ ifd_usb_get_config(ifd_device_t *dev, int n,
      
      IFD_USB_LE16_TO_CPU(ret->wTotalLength);
      len=ret->wTotalLength;
-     b=malloc(len);
+     b=(unsigned char *) malloc(len);
      if (!b) {
 	  ct_error("cannot malloc descriptor buffer");
 	  return 1;
