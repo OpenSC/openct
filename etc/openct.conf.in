@@ -7,6 +7,13 @@ hotplug	= yes;
 # Path to ifdhandler
 ifdhandler = SBINDIR/ifdhandler;
 
+#
+# Configuration for ifdproxy (if you use it)
+ifdproxy {
+#	server-port     = /var/run/openct/.ifdproxy,
+#	device-port     = :6666;
+};
+
 # Configure static, non-hotplug aware readers here
 #
 # For a list of drivers try command 'ifdhandler -i', please
