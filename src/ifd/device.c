@@ -25,22 +25,10 @@ ifd_device_open(const char *name)
 	case IFD_DEVICE_TYPE_USB:
 		return ifd_open_usb(name);
 	/* Other types to be added */
+	case -1:
+		ct_error("Unknown device type \"%s\"", name);
 	}
 	return NULL;
-}
-
-/*
- * Open a device given a numeric "channel" as used in
- * the CTAPI and PCSC interface
- */
-ifd_device_t *
-ifd_device_open_channel(unsigned int num)
-{
-	const char	*name;
-
-	if (!(name = ifd_sysdep_channel_to_name(num)))
-		return NULL;
-	return ifd_device_open(name);
 }
 
 /*

@@ -60,7 +60,6 @@ enum {
 typedef struct ifd_usb_capture ifd_usb_capture_t;
 
 extern ifd_device_t *	ifd_device_open(const char *);
-extern ifd_device_t *	ifd_device_open_channel(unsigned int num);
 extern void		ifd_device_close(ifd_device_t *);
 extern int		ifd_device_type(ifd_device_t *);
 extern void		ifd_device_flush(ifd_device_t *);

@@ -1,5 +1,5 @@
 /*
- * Generic functions
+ * A void implementation for any platform
  *
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  *
@@ -19,17 +19,11 @@ ifd_sysdep_device_type(const char *name)
 	return -1;
 }
 
-const char *
-ifd_sysdep_channel_to_name(unsigned int num)
-{
-	return NULL;
-}
-
 /*
  * USB control command
  */
 int
-ifd_sysdep_usb_control(int fd,
+ifd_sysdep_usb_control(ifd_device_t *dev,
 		unsigned int requesttype,
 		unsigned int request,
 		unsigned int value,
@@ -50,7 +44,7 @@ struct ifd_usb_capture {
 };
 
 int
-ifd_sysdep_usb_begin_capture(int fd,
+ifd_sysdep_usb_begin_capture(ifd_device_t *dev,
 		int type, int endpoint, size_t maxpacket,
 	       	ifd_usb_capture_t **capret)
 {
@@ -58,7 +52,7 @@ ifd_sysdep_usb_begin_capture(int fd,
 }
 
 int
-ifd_sysdep_usb_capture(int fd,
+ifd_sysdep_usb_capture(ifd_device_t *dev,
 		ifd_usb_capture_t *cap,
 		void *buffer, size_t len,
 		long timeout)
@@ -67,16 +61,13 @@ ifd_sysdep_usb_capture(int fd,
 }
 
 int
-ifd_sysdep_usb_end_capture(int fd, ifd_usb_capture_t *cap)
+ifd_sysdep_usb_end_capture(ifd_device_t *dev, ifd_usb_capture_t *cap)
 {
 	return -1;
 }
 
 /*
  * Scan all usb devices to see if there is one we support
- * This function is called at start-up because we can't be
- * sure the hotplug system notifies us of devices that were
- * attached at startup time already.
  */
 int
 ifd_scan_usb(void)

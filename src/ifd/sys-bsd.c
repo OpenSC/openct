@@ -53,35 +53,11 @@ ifd_sysdep_device_type(const char *name)
 	return -1;
 }
 
-const char *
-ifd_sysdep_channel_to_name(unsigned int num)
-{
-	static char	namebuf[256];
-
-	switch (num >> 24) {
-	case 0:
-		sprintf(namebuf, "/dev/ttyS%u", num);
-		break;
-	case 1:
-#ifdef __FreeBSD__
-		sprintf(namebuf, "/dev/ugen%d", num);
-#else
-		sprintf(namebuf, "/dev/ugen%d.00", num);
-#endif
-		break;
-	default:
-		ct_error("Unknown device channel 0x%x\n", num);
-		return NULL;
-	}
-
-	return namebuf;
-}
-
 /*
  * USB control command
  */
 int
-ifd_sysdep_usb_control(int fd,
+ifd_sysdep_usb_control(ifd_device_t *dev,
 		unsigned int requesttype,
 		unsigned int request,
 		unsigned int value,
@@ -104,13 +80,13 @@ ifd_sysdep_usb_control(int fd,
 	ctrl.ucr_flags = USBD_SHORT_XFER_OK;
 
 	val = timeout;
-	rc = ioctl(fd, USB_SET_TIMEOUT, &val);
+	rc = ioctl(dev->fd, USB_SET_TIMEOUT, &val);
 	if (rc < 0) {
 		ct_error("usb_set_timeout failed: %m");
                 return IFD_ERROR_COMM_ERROR;
 	}
  
-	if ((rc = ioctl(fd, USB_DO_REQUEST, &ctrl)) < 0) {
+	if ((rc = ioctl(dev->fd, USB_DO_REQUEST, &ctrl)) < 0) {
                 ct_error("usb_control failed: %m");
                 return IFD_ERROR_COMM_ERROR;
         }
@@ -143,7 +119,7 @@ usb_submit_urb(int fd, struct ifd_usb_capture *cap)
 }
 
 int
-ifd_sysdep_usb_begin_capture(int fd,
+ifd_sysdep_usb_begin_capture(ifd_device_t *dev,
 		int type, int endpoint, size_t maxpacket,
 	       	ifd_usb_capture_t **capret)
 {
@@ -154,7 +130,7 @@ ifd_sysdep_usb_begin_capture(int fd,
 
 	/* Assume the interface # is 0 */
 	cap->interface = 0;
-	rc = ioctl(fd, USBDEVFS_CLAIMINTERFACE, &cap->interface);
+	rc = ioctl(dev->fd, USBDEVFS_CLAIMINTERFACE, &cap->interface);
 	if (rc < 0) {
 		ct_error("usb_claiminterface failed: %m");
 		free(cap);
@@ -165,9 +141,9 @@ ifd_sysdep_usb_begin_capture(int fd,
 	cap->endpoint = endpoint;
 	cap->maxpacket = maxpacket;
 
-	if (usb_submit_urb(fd, cap) < 0) {
+	if (usb_submit_urb(dev->fd, cap) < 0) {
 		ct_error("usb_submiturb failed: %m");
-		ifd_sysdep_usb_end_capture(fd, cap);
+		ifd_sysdep_usb_end_capture(dev, cap);
 		return IFD_ERROR_COMM_ERROR;
 	}
 
@@ -176,7 +152,7 @@ ifd_sysdep_usb_begin_capture(int fd,
 }
 
 int
-ifd_sysdep_usb_capture(int fd,
+ifd_sysdep_usb_capture(ifd_device_t *dev,
 		ifd_usb_capture_t *cap,
 		void *buffer, size_t len,
 		long timeout)
@@ -197,13 +173,13 @@ ifd_sysdep_usb_capture(int fd,
 		if ((wait = timeout - ifd_time_elapsed(&begin)) <= 0)
 			return IFD_ERROR_TIMEOUT;
 
-		pfd.fd = fd;
+		pfd.fd = dev->fd;
 		pfd.events = POLLOUT;
 		if (poll(&pfd, 1, wait) != 1)
 			continue;
 
 		purb = NULL;
-		rc = ioctl(fd, USBDEVFS_REAPURBNDELAY, &purb);
+		rc = ioctl(dev->fd, USBDEVFS_REAPURBNDELAY, &purb);
 		if (rc < 0) {
 			if (errno == EAGAIN)
 				continue;
@@ -234,11 +210,11 @@ ifd_sysdep_usb_capture(int fd,
 }
 
 int
-ifd_sysdep_usb_end_capture(int fd, ifd_usb_capture_t *cap)
+ifd_sysdep_usb_end_capture(ifd_device_t *dev, ifd_usb_capture_t *cap)
 {
 	int	rc = 0;
 
-	if (ioctl(fd, USBDEVFS_DISCARDURB, &cap->urb) < 0 && errno != EINVAL) {
+	if (ioctl(dev->fd, USBDEVFS_DISCARDURB, &cap->urb) < 0 && errno != EINVAL) {
 		ct_error("usb_discardurb failed: %m");
 		rc = IFD_ERROR_COMM_ERROR;
 	}
@@ -247,8 +223,8 @@ ifd_sysdep_usb_end_capture(int fd, ifd_usb_capture_t *cap)
 	 * URB now, the next call to REAPURB will return this one,
 	 * clobbering random memory.
 	 */
-	(void) ioctl(fd, USBDEVFS_REAPURBNDELAY, &cap->urb);
-	if (ioctl(fd, USBDEVFS_RELEASEINTERFACE, &cap->interface) < 0) {
+	(void) ioctl(dev->fd, USBDEVFS_REAPURBNDELAY, &cap->urb);
+	if (ioctl(dev->fd, USBDEVFS_RELEASEINTERFACE, &cap->interface) < 0) {
 		ct_error("usb_releaseinterface failed: %m");
 		rc = IFD_ERROR_COMM_ERROR;
 	}
@@ -258,15 +234,10 @@ ifd_sysdep_usb_end_capture(int fd, ifd_usb_capture_t *cap)
 
 /*
  * Scan all usb devices to see if there is one we support
- * This function is called at start-up because we can't be
- * sure the hotplug system notifies us of devices that were
- * attached at startup time already.
  */
 int
 ifd_scan_usb(void)
 {
-	/* do some cold plugging here */ 
-
 	return 0;
 }
 

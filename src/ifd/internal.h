@@ -151,16 +151,15 @@ extern unsigned int	csum_crc_compute(const unsigned char *, size_t, unsigned cha
 
 /* Internal system dependent device functions */
 extern int		ifd_sysdep_device_type(const char *);
-extern const char *	ifd_sysdep_channel_to_name(unsigned int num);
-extern int		ifd_sysdep_usb_control(int,
-				unsigned int requesttype,
-				unsigned int request,
-		               	unsigned int value,
-				unsigned int index,
-					void *data, size_t len, long timeout);
-extern int		ifd_sysdep_usb_begin_capture(int, int, int, size_t, ifd_usb_capture_t **);
-extern int		ifd_sysdep_usb_capture(int, ifd_usb_capture_t *, void *, size_t, long);
-extern int		ifd_sysdep_usb_end_capture(int fd, ifd_usb_capture_t *cap);
+extern int		ifd_sysdep_usb_control(ifd_device_t *,
+				unsigned int,
+				unsigned int,
+		               	unsigned int,
+				unsigned int,
+				void *, size_t, long);
+extern int		ifd_sysdep_usb_begin_capture(ifd_device_t *, int, int, size_t, ifd_usb_capture_t **);
+extern int		ifd_sysdep_usb_capture(ifd_device_t *, ifd_usb_capture_t *, void *, size_t, long);
+extern int		ifd_sysdep_usb_end_capture(ifd_device_t *, ifd_usb_capture_t *cap);
 
 /* module.c */
 extern int		ifd_load_module(const char *, const char *);

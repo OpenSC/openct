@@ -40,7 +40,7 @@ ifd_usb_control(ifd_device_t *dev,
 			ifd_debug(4, "send %s", ct_hexdump(buffer, len));
 	}
 
-	n = ifd_sysdep_usb_control(dev->fd, requesttype, request, value, index,
+	n = ifd_sysdep_usb_control(dev, requesttype, request, value, index,
 				buffer, len, timeout);
 
 	if ((ct_config.debug >= 3) && (requesttype & 0x80)) {
@@ -70,7 +70,7 @@ ifd_usb_begin_capture(ifd_device_t *dev, int type, int endpoint,
 	if (ct_config.debug >= 5)
 		ifd_debug(5, "usb capture type=%d ep=x%x maxpacket=%u",
 				type, endpoint, maxpacket);
-	return ifd_sysdep_usb_begin_capture(dev->fd, type, endpoint, maxpacket, capret);
+	return ifd_sysdep_usb_begin_capture(dev, type, endpoint, maxpacket, capret);
 }
 
 int
@@ -83,7 +83,7 @@ ifd_usb_capture(ifd_device_t *dev, ifd_usb_capture_t *cap,
 		return -1;
 
 	ifd_debug(5, "called, timeout=%ld ms.", timeout);
-	rc = ifd_sysdep_usb_capture(dev->fd, cap, buffer, len, timeout);
+	rc = ifd_sysdep_usb_capture(dev, cap, buffer, len, timeout);
 	if (ct_config.debug >= 3) {
 		if (rc < 0)
 			ifd_debug(1, "usb capture: %s", ct_strerror(rc));
@@ -98,7 +98,7 @@ ifd_usb_end_capture(ifd_device_t *dev, ifd_usb_capture_t *cap)
 {
 	if (dev->type != IFD_DEVICE_TYPE_USB)
 		return -1;
-	return ifd_sysdep_usb_end_capture(dev->fd, cap);
+	return ifd_sysdep_usb_end_capture(dev, cap);
 }
 
 /*
@@ -119,7 +119,7 @@ usb_poll_presence(ifd_device_t *dev, struct pollfd *p)
 static struct ifd_device_ops	ifd_usb_ops;
 
 /*
- * Open USB device - used by CTAPI
+ * Open USB device
  */
 ifd_device_t *
 ifd_open_usb(const char *device)
@@ -141,4 +141,3 @@ ifd_open_usb(const char *device)
 
 	return dev;
 }
-
