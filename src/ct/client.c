@@ -25,6 +25,8 @@ struct ct_handle {
 
 static void	ct_args_int(ct_buf_t *, ifd_tag_t, unsigned int);
 static void	ct_args_string(ct_buf_t *, ifd_tag_t, const char *);
+static void	ct_args_opaque(ct_buf_t *, ifd_tag_t,
+				const unsigned char *, size_t);
 
 /*
  * Get reader info
@@ -66,7 +68,7 @@ ct_reader_connect(unsigned int reader)
 	if (!(h = (ct_handle *) calloc(1, sizeof(*h))))
 		return NULL;
 
-	if (!(h->sock = ct_socket_new(512))) {
+	if (!(h->sock = ct_socket_new(CT_SOCKET_BUFSIZ))) {
 		free(h);
 		return NULL;
 	}
@@ -189,8 +191,12 @@ ct_card_request(ct_handle *h, unsigned int slot,
 	if ((rc = ct_tlv_parse(&tlv, &resp)) < 0)
 		return rc;
 
-	/* Get the ATR */
-	return ct_tlv_get_bytes(&tlv, CT_TAG_ATR, atr, atr_len);
+	/* Get the ATR. There may be no ATR if the card is synchronous */
+	rc = ct_tlv_get_bytes(&tlv, CT_TAG_ATR, atr, atr_len);
+	if (rc < 0)
+		rc = 0;
+
+	return rc;
 }
 
 int
@@ -224,23 +230,87 @@ ct_card_transact(ct_handle *h, unsigned int slot,
 			const void *send_data, size_t send_len,
 			void *recv_buf, size_t recv_size)
 {
-	unsigned char	buffer[512];
+	ct_tlv_parser_t tlv;
+	unsigned char	buffer[CT_SOCKET_BUFSIZ];
 	ct_buf_t	args, resp;
 	int		rc;
 
 	ct_buf_init(&args, buffer, sizeof(buffer));
-	ct_buf_init(&resp, recv_buf, recv_size);
+	ct_buf_init(&resp, buffer, sizeof(buffer));
 
 	ct_buf_putc(&args, CT_CMD_TRANSACT);
 	ct_buf_putc(&args, slot);
-	if ((rc = ct_buf_put(&args, send_data, send_len)) < 0)
-		return rc;
+
+	ct_args_opaque(&args, CT_TAG_CARD_REQUEST, send_data, send_len);
 
 	rc = ct_socket_call(h->sock, &args, &resp);
 	if (rc < 0)
 		return rc;
 
-	return ct_buf_avail(&resp);
+	if ((rc = ct_tlv_parse(&tlv, &resp)) < 0)
+		return rc;
+
+	/* Get the ATR */
+	return ct_tlv_get_bytes(&tlv, CT_TAG_CARD_RESPONSE,
+			recv_buf, recv_size);
+}
+
+/*
+ * Read from a synchronous card
+ */
+int
+ct_card_read_memory(ct_handle *h, unsigned int slot,
+			unsigned short address,
+			void *recv_buf, size_t recv_len)
+{
+	ct_tlv_parser_t tlv;
+	unsigned char	buffer[CT_SOCKET_BUFSIZ];
+	ct_buf_t	args, resp;
+	int		rc;
+
+	ct_buf_init(&args, buffer, sizeof(buffer));
+	ct_buf_init(&resp, buffer, sizeof(buffer));
+
+	ct_buf_putc(&args, CT_CMD_MEMORY_READ);
+	ct_buf_putc(&args, slot);
+
+	ct_args_int(&args, CT_TAG_ADDRESS, address);
+	ct_args_int(&args, CT_TAG_COUNT, recv_len);
+
+	rc = ct_socket_call(h->sock, &args, &resp);
+	if (rc < 0)
+		return rc;
+
+	if ((rc = ct_tlv_parse(&tlv, &resp)) < 0)
+		return rc;
+
+	return ct_tlv_get_bytes(&tlv, CT_TAG_DATA, recv_buf, recv_len);
+}
+
+int
+ct_card_write_memory(ct_handle *h, unsigned int slot,
+			unsigned short address,
+			const void *send_buf, size_t send_len)
+{
+	ct_tlv_parser_t tlv;
+	unsigned char	buffer[CT_SOCKET_BUFSIZ];
+	ct_buf_t	args, resp;
+	int		rc;
+
+	ct_buf_init(&args, buffer, sizeof(buffer));
+	ct_buf_init(&resp, buffer, sizeof(buffer));
+
+	ct_buf_putc(&args, CT_CMD_MEMORY_WRITE);
+	ct_buf_putc(&args, slot);
+
+	ct_args_int(&args, CT_TAG_ADDRESS, address);
+	ct_args_opaque(&args, CT_TAG_DATA, send_buf, send_len);
+
+	rc = ct_socket_call(h->sock, &args, &resp);
+	if (rc < 0)
+		return rc;
+
+	return 0;
 }
 
 /*
@@ -273,7 +343,7 @@ ct_card_verify(ct_handle *h, unsigned int slot,
 	if (prompt)
 		ct_args_string(&args, CT_TAG_MESSAGE, prompt);
 
-	ct_tlv_builder_init(&builder, &args);
+	ct_tlv_builder_init(&builder, &args, 1);
 	ct_tlv_put_tag(&builder, CT_TAG_PIN_DATA);
 
 	/* Build the control byte */
@@ -358,7 +428,7 @@ ct_args_int(ct_buf_t *bp, ifd_tag_t tag, unsigned int value)
 {
 	ct_tlv_builder_t builder;
 
-	ct_tlv_builder_init(&builder, bp);
+	ct_tlv_builder_init(&builder, bp, 1);
 	ct_tlv_put_int(&builder, tag, value);
 }
 
@@ -367,6 +437,16 @@ ct_args_string(ct_buf_t *bp, ifd_tag_t tag, const char *value)
 {
 	ct_tlv_builder_t builder;
 
-	ct_tlv_builder_init(&builder, bp);
+	ct_tlv_builder_init(&builder, bp, 1);
 	ct_tlv_put_string(&builder, tag, value);
+}
+
+void
+ct_args_opaque(ct_buf_t *bp, ifd_tag_t tag,
+		const unsigned char *value, size_t len)
+{
+	ct_tlv_builder_t builder;
+
+	ct_tlv_builder_init(&builder, bp, 1);
+	ct_tlv_put_opaque(&builder, tag, value, len);
 }

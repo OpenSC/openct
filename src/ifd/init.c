@@ -14,6 +14,7 @@ extern void	ifd_ikey3k_register(void);
 extern void	ifd_kaan_register(void);
 extern void	ifd_towitoko_register(void);
 extern void	ifd_cardman_register(void);
+extern void	ifd_smartboard_register(void);
 
 static void	configure_driver(ifd_conf_node_t *cf);
 
@@ -33,11 +34,16 @@ ifd_init(void)
 	ifd_kaan_register();
 	ifd_towitoko_register();
 	ifd_cardman_register();
+	/* ifd_smartboard_register(); not yet */
 
 	/* Register all builtin protocols */
 	ifd_protocol_register(&ifd_protocol_t0);
 	ifd_protocol_register(&ifd_protocol_t1);
 	ifd_protocol_register(&ifd_protocol_trans);
+	ifd_protocol_register(&ifd_protocol_i2c_short);
+	ifd_protocol_register(&ifd_protocol_i2c_long);
+	ifd_protocol_register(&ifd_protocol_2wire);
+	ifd_protocol_register(&ifd_protocol_3wire);
 
 	if (ifd_conf_get_integer("debug", &ival) >= 0
 	 && ival > ct_config.debug)

@@ -23,9 +23,13 @@
 #define CT_CMD_REQUEST_ICC	0x11
 #define CT_CMD_EJECT_ICC	0x12
 #define CT_CMD_OUTPUT		0x13
-#define CT_CMD_INPUT		0x13
 #define CT_CMD_PERFORM_VERIFY	0x14
-#define CT_CMD_TRANSACT		0x20	/* transceive APDU */
+#define CT_CMD_CHANGE_PIN	0x15
+#define CT_CMD_MEMORY_READ	0x16
+#define CT_CMD_MEMORY_WRITE	0x17
+#define CT_CMD_INPUT		0x18
+#define CT_CMD_TRANSACT_OLD	0x20	/* transceive APDU */
+#define CT_CMD_TRANSACT		0x21	/* transceive APDU */
 
 #define CT_UNIT_ICC1		0x00
 #define CT_UNIT_ICC2		0x01
@@ -48,6 +52,11 @@
 #define CT_TAG_MESSAGE		0x81
 #define CT_TAG_LOCKTYPE		0x82
 #define CT_TAG_PIN_DATA		0x83	/* CTBCS verify APDU */
+#define CT_TAG_CARD_REQUEST	0x84
+#define CT_TAG_ADDRESS		0x85
+#define CT_TAG_DATA		0x86
+#define CT_TAG_COUNT		0x87
 
+#define __CT_TAG_LARGE		0x40
 
 #endif /* OPENCT_PROTOCOL_H */

@@ -18,6 +18,23 @@
 #include "internal.h"
 #include "ifdhandler.h"
 
+static const char *	cmd_name[256] = {
+	[CT_CMD_STATUS]		= "CT_CMD_STATUS",
+	[CT_CMD_LOCK]		= "CT_CMD_LOCK",
+	[CT_CMD_UNLOCK]		= "CT_CMD_UNLOCK",
+	[CT_CMD_RESET]		= "CT_CMD_RESET",
+	[CT_CMD_REQUEST_ICC]	= "CT_CMD_REQUEST_ICC",
+	[CT_CMD_EJECT_ICC]	= "CT_CMD_EJECT_ICC",
+	[CT_CMD_OUTPUT]		= "CT_CMD_OUTPUT",
+	[CT_CMD_INPUT]		= "CT_CMD_INPUT",
+	[CT_CMD_PERFORM_VERIFY]	= "CT_CMD_PERFORM_VERIFY",
+	[CT_CMD_CHANGE_PIN]	= "CT_CMD_CHANGE_PIN",
+	[CT_CMD_MEMORY_READ]	= "CT_CMD_MEMORY_READ",
+	[CT_CMD_MEMORY_WRITE]	= "CT_CMD_MEMORY_WRITE",
+	[CT_CMD_TRANSACT_OLD]	= "CT_CMD_TRANSACT_OLD",
+	[CT_CMD_TRANSACT]	= "CT_CMD_TRANSACT",
+};
+
 static int do_status(ifd_reader_t *, int,
 			ct_tlv_parser_t *, ct_tlv_builder_t *);
 static int do_output(ifd_reader_t *, int,
@@ -33,6 +50,12 @@ static int do_eject(ifd_reader_t *, int,
 static int do_verify(ifd_reader_t *, int,
 			ct_tlv_parser_t *, ct_tlv_builder_t *);
 static int do_transact(ifd_reader_t *, int,
+			ct_tlv_parser_t *, ct_tlv_builder_t *);
+static int do_memory_read(ifd_reader_t *, int,
+			ct_tlv_parser_t *, ct_tlv_builder_t *);
+static int do_memory_write(ifd_reader_t *, int,
+			ct_tlv_parser_t *, ct_tlv_builder_t *);
+static int do_transact_old(ifd_reader_t *, int,
 			ct_buf_t *, ct_buf_t *);
 
 int
@@ -40,7 +63,7 @@ ifdhandler_process(ct_socket_t *sock, ifd_reader_t *reader,
 		ct_buf_t *argbuf, ct_buf_t *resbuf)
 {
 	unsigned char		cmd, unit;
-	ct_tlv_parser_t	args;
+	ct_tlv_parser_t		args;
 	ct_tlv_builder_t	resp;
 	int			rc;
 
@@ -49,21 +72,27 @@ ifdhandler_process(ct_socket_t *sock, ifd_reader_t *reader,
 	 || ct_buf_get(argbuf, &unit, 1) < 0)
 		return IFD_ERROR_INVALID_MSG;
 
+	ifd_debug(1, "ifdhandler_process(cmd=%s, unit=%u)",
+			cmd_name[cmd]? cmd_name[cmd] : "<unknown>",
+			unit);
+
 	/* First, handle commands that don't do TLV encoded
 	 * arguments - currently this is only CT_CMD_TRANSACT. */
-	if (cmd == CT_CMD_TRANSACT) {
+	if (cmd == CT_CMD_TRANSACT_OLD) {
 		/* Security - deny any APDUs if there's an
 		 * exclusive lock held by some other client. */
 		if ((rc = ifdhandler_check_lock(sock, unit, IFD_LOCK_EXCLUSIVE)) < 0)
 			return rc;
-		return do_transact(reader, unit, argbuf, resbuf);
+		return do_transact_old(reader, unit, argbuf, resbuf);
 	}
 
 	memset(&args, 0, sizeof(args));
-	ct_tlv_builder_init(&resp, resbuf);
-
 	if (ct_tlv_parse(&args, argbuf) < 0)
 		return IFD_ERROR_INVALID_MSG;
+	if (args.use_large_tags)
+		sock->use_large_tags = 1;
+
+	ct_tlv_builder_init(&resp, resbuf, sock->use_large_tags);
 
 	switch (cmd) {
 	case CT_CMD_STATUS:
@@ -93,6 +122,18 @@ ifdhandler_process(ct_socket_t *sock, ifd_reader_t *reader,
 
 	case CT_CMD_UNLOCK:
 		rc = do_unlock(sock, reader, unit, &args, &resp);
+		break;
+
+	case CT_CMD_MEMORY_READ:
+		rc = do_memory_read(reader, unit, &args, &resp);
+		break;
+
+	case CT_CMD_MEMORY_WRITE:
+		rc = do_memory_write(reader, unit, &args, &resp);
+		break;
+
+	case CT_CMD_TRANSACT:
+		rc = do_transact(reader, unit, &args, &resp);
 		break;
 
 	default:
@@ -231,8 +272,10 @@ do_reset(ifd_reader_t *reader, int unit,
 		return rc;
 
 	/* Add the ATR to the response */
-	ct_tlv_put_tag(resp, CT_TAG_ATR);
-	ct_tlv_add_bytes(resp, atr, rc);
+	if (rc != 0) {
+		ct_tlv_put_tag(resp, CT_TAG_ATR);
+		ct_tlv_add_bytes(resp, atr, rc);
+	}
 
 	return 0;
 }
@@ -305,7 +348,34 @@ do_verify(ifd_reader_t *reader, int unit,
  * Transceive APDU
  */
 int
-do_transact(ifd_reader_t *reader, int unit, ct_buf_t *args, ct_buf_t *resp)
+do_transact(ifd_reader_t *reader, int unit,
+		ct_tlv_parser_t *args, ct_tlv_builder_t *resp)
+{
+	unsigned char	replybuf[256];
+	unsigned char	*data;
+	size_t		data_len;
+	unsigned int	timeout = 0;
+	int		rc;
+
+	if (unit > reader->nslots)
+		return IFD_ERROR_INVALID_SLOT;
+
+	ct_tlv_get_int(args, CT_TAG_TIMEOUT, &timeout);
+	if (!ct_tlv_get_opaque(args, CT_TAG_CARD_REQUEST, &data, &data_len))
+		return IFD_ERROR_MISSING_ARG;
+
+	rc = ifd_card_command(reader, unit, data, data_len,
+			replybuf, sizeof(replybuf));
+	if (rc < 0)
+		return rc;
+
+	ct_tlv_put_tag(resp, CT_TAG_CARD_RESPONSE);
+	ct_tlv_add_bytes(resp, replybuf, rc);
+	return 0;
+}
+
+int
+do_transact_old(ifd_reader_t *reader, int unit, ct_buf_t *args, ct_buf_t *resp)
 {
 	int	rc;
 
@@ -316,5 +386,58 @@ do_transact(ifd_reader_t *reader, int unit, ct_buf_t *args, ct_buf_t *resp)
 		return rc;
 
 	ct_buf_put(resp, NULL, rc);
+	return 0;
+}
+
+/*
+ * Synchronous ICC read/write
+ */
+int
+do_memory_write(ifd_reader_t *reader, int unit,
+		ct_tlv_parser_t *args, ct_tlv_builder_t *resp)
+{
+	unsigned char	*data;
+	size_t		data_len;
+	unsigned int	address;
+	int		rc;
+
+	if (unit > reader->nslots)
+		return IFD_ERROR_INVALID_SLOT;
+
+	if (!ct_tlv_get_int(args, CT_TAG_ADDRESS, &address)
+	 || !ct_tlv_get_opaque(args, CT_TAG_DATA, &data, &data_len))
+		return IFD_ERROR_MISSING_ARG;
+
+	rc = ifd_card_write_memory(reader, address, unit, data, data_len);
+	if (rc < 0)
+		return rc;
+
+	return 0;
+}
+
+int
+do_memory_read(ifd_reader_t *reader, int unit,
+		ct_tlv_parser_t *args, ct_tlv_builder_t *resp)
+{
+	unsigned char	data[CT_SOCKET_BUFSIZ];
+	size_t		data_len;
+	unsigned int	address;
+	int		rc;
+
+	if (unit > reader->nslots)
+		return IFD_ERROR_INVALID_SLOT;
+
+	if (!ct_tlv_get_int(args, CT_TAG_ADDRESS, &address)
+	 || !ct_tlv_get_int(args, CT_TAG_COUNT, &data_len))
+		return IFD_ERROR_MISSING_ARG;
+
+	if (data_len > sizeof(data))
+		data_len = sizeof(data);
+
+	rc = ifd_card_read_memory(reader, address, unit, data, data_len);
+	if (rc < 0)
+		return rc;
+
+	ct_tlv_put_opaque(resp, CT_TAG_DATA, data, rc);
 	return 0;
 }

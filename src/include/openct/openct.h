@@ -80,6 +80,12 @@ extern int		ct_card_verify(ct_handle *h, unsigned int slot,
 				unsigned int pin_offset,
 				const void *send_buf, size_t send_len,
 				void *recv_buf, size_t recv_len);
+extern int		ct_card_read_memory(ct_handle *, unsigned int slot,
+				unsigned short address,
+				void *recv_buf, size_t recv_len);
+extern int		ct_card_write_memory(ct_handle *, unsigned int slot,
+				unsigned short address,
+				const void *send_buf, size_t send_len);
 
 
 extern int		ct_master_control(const char *command,

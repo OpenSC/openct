@@ -111,6 +111,23 @@ ifd_set_protocol(ifd_reader_t *reader, unsigned int idx, int prot)
 }
 
 /*
+ * Set the serial speed at which we communicate with the
+ * reader
+ */
+int
+ifd_set_speed(ifd_reader_t *reader, unsigned int speed)
+{
+	const ifd_driver_t *drv = reader->driver;
+	int		rc = 0;
+
+	if (drv && drv->ops && drv->ops->change_speed)
+		rc = drv->ops->change_speed(reader, speed);
+	else
+		rc = IFD_ERROR_NOT_SUPPORTED;
+	return rc;
+}
+
+/*
  * Activate/Deactivate the reader
  */
 int
@@ -218,7 +235,32 @@ ifd_card_request(ifd_reader_t *reader, unsigned int idx,
 
 	/* Do the reset thing - if the driver supports
 	 * request ICC, call the function if needed.
-	 * Otherwise fall back to ordinary reset */
+	 * Otherwise fall back to ordinary reset.
+	 *
+	 * For asynchronous cards, the driver's card_reset
+	 * function should perform the reset, and start to
+	 * read the ATR. It should either read the first byte
+	 * of the ATR, and leave it to the caller to read
+	 * the remaining bytes of it, or it should read the
+	 * whole ATR (as done by the B1 driver, for instance).
+	 *
+	 * When receiving the complete ATR, we will select
+	 * the default protocol as specified by the card.
+	 * 
+	 * If the driver was unable to receive the ATR
+	 * (e.g. because the command timed out) it should
+	 * return IFD_ERROR_NO_ATR. This will allow us
+	 * to retry with different parity.
+	 *
+	 * For synchronous cards, the driver can call
+	 * ifd_sync_detect_icc to detect whether the card
+	 * is synchronous. This will also set the slot's
+	 * protocol.
+	 *
+	 * If the card driver does it's own handling of sync
+	 * ICCs, it should call ifd_set_protocol to signal
+	 * that card detection was successful.
+	 */
 	if (drv->ops->card_request && (timeout || message)) {
 		n = drv->ops->card_request(reader, idx,
 				timeout, message, atr, size);
@@ -243,7 +285,7 @@ ifd_card_request(ifd_reader_t *reader, unsigned int idx,
 					 slot->atr, sizeof(slot->atr));
 
 		/* If there was no ATR, try again with odd parity */
-		if (n == 0) {
+		if (n == IFD_ERROR_NO_ATR) {
 			parity = IFD_SERIAL_PARITY_TOGGLE(parity);
 			if (drv->ops->change_parity(reader, parity) < 0)
 				return -1;
@@ -257,8 +299,8 @@ ifd_card_request(ifd_reader_t *reader, unsigned int idx,
 
 		count = n;
 
-		/* If we got just the first byte of the ATR, get the
-		 * rest now */
+		/* If we got just the first byte of the (async) ATR,
+		 * get the rest now */
 		if (count == 1) {
 			ct_buf_t	rbuf;
 			unsigned char	c;
@@ -316,8 +358,12 @@ ifd_card_request(ifd_reader_t *reader, unsigned int idx,
 	if (atr)
 		memcpy(atr, slot->atr, count);
 
-	if (!ifd_protocol_select(reader, idx, IFD_PROTOCOL_DEFAULT))
-		ct_error("Protocol selection failed");
+	/* For synchronous cards, the slot's protocol will already
+	 * be set when we get here. */
+	if (slot->proto == NULL) {
+		if (!ifd_protocol_select(reader, idx, IFD_PROTOCOL_DEFAULT))
+			ct_error("Protocol selection failed");
+	}
 
 	return count;
 }
@@ -456,6 +502,59 @@ ifd_card_command(ifd_reader_t *reader, unsigned int idx,
 
 	return ifd_protocol_transceive(slot->proto, slot->dad,
 				sbuf, slen, rbuf, rlen);
+}
+
+/*
+ * Read/write synchronous ICCs
+ */
+int
+ifd_card_read_memory(ifd_reader_t *reader, unsigned int idx,
+		     unsigned short addr,
+		     unsigned char *rbuf, size_t rlen)
+{
+	ifd_slot_t	*slot;
+
+	if (idx > reader->nslots)
+		return -1;
+
+	slot = &reader->slot[idx];
+	if (slot->proto == NULL) {
+		ct_error("No communication protocol selected");
+		return -1;
+	}
+
+	/* An application is talking to the card. Prevent
+	 * automatic card status updates from slowing down
+	 * things */
+	slot->next_update = time(NULL) + 1;
+
+	return ifd_protocol_read_memory(slot->proto,
+				idx, addr, rbuf, rlen);
+}
+
+int
+ifd_card_write_memory(ifd_reader_t *reader, unsigned int idx,
+		      unsigned short addr,
+		      const unsigned char *sbuf, size_t slen)
+{
+	ifd_slot_t	*slot;
+
+	if (idx > reader->nslots)
+		return -1;
+
+	slot = &reader->slot[idx];
+	if (slot->proto == NULL) {
+		ct_error("No communication protocol selected");
+		return -1;
+	}
+
+	/* An application is talking to the card. Prevent
+	 * automatic card status updates from slowing down
+	 * things */
+	slot->next_update = time(NULL) + 1;
+
+	return ifd_protocol_write_memory(slot->proto,
+				idx, addr, sbuf, slen);
 }
 
 /*

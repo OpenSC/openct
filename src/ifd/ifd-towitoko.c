@@ -27,6 +27,8 @@ enum {
 	TWT_LED_YELLOW,
 };
 
+#define TWT_PAGESIZE	15
+
 /*
  * Initialize the reader
  */
@@ -46,22 +48,25 @@ twt_open(ifd_reader_t *reader, const char *device_name)
 		return -1;
 	reader->device = dev;
 
-	if (ifd_device_get_parameters(dev, &params) < 0)
-		return -1;
+	if (dev->type == IFD_DEVICE_TYPE_SERIAL) {
+		if (ifd_device_get_parameters(dev, &params) < 0)
+			return -1;
 
-	params.serial.speed = 9600;
-	params.serial.bits  = 8;
-	params.serial.stopbits = 2;
-	params.serial.parity = IFD_SERIAL_PARITY_EVEN;
+		params.serial.speed = 9600;
+		params.serial.bits  = 8;
+		params.serial.stopbits = 2;
+		params.serial.parity = IFD_SERIAL_PARITY_EVEN;
+		params.serial.dtr = 1;
+		params.serial.rts = 1;
 
-	if (ifd_device_set_parameters(dev, &params) < 0)
-		return -1;
+		if (ifd_device_set_parameters(dev, &params) < 0)
+			return -1;
+	}
 
 	sleep(1);
 	ifd_device_flush(dev);
 
-	if (ifd_device_transceive(dev, "\x00\x01", 2, buffer, 3, -1) < 0
-	 || !twt_recv_checksum(buffer, 3))
+	if (twt_command(reader, "\x00", 1, buffer, 2) < 0)
 		goto failed;
 
 	ifd_debug(1, "towotoko reader type 0x%02x", buffer[0]);
@@ -70,7 +75,6 @@ twt_open(ifd_reader_t *reader, const char *device_name)
 	 * (according to SCEZ) */
 	switch (buffer[0]) {
 	case 0x61:
-	case 0x64:
 		reader->name = "Towitoko Chipdrive Micro";
 		break;
 	case 0x80: /* Kartenzwerg */
@@ -80,16 +84,24 @@ twt_open(ifd_reader_t *reader, const char *device_name)
 		/* XXX - Kartenzwerg is for synchronous cards
 		 * only. Should we have a flag for this? */
 		break;
+	case 0x64:
+		reader->name = "Towitoko Kartenzwerg II";
+		params.serial.stopbits = 1;
+		params.serial.parity = IFD_SERIAL_PARITY_NONE;
+		break;
 	case 0x84:
 		reader->name = "Towitoko Chipdrive External";
 		break;
 	case 0x88: /* Twin */
 		reader->name = "Towitoko Chipdrive Twin";
+		reader->nslots = 2;
 		params.serial.rts = 0;
 		break;
 	case 0x90:
 		reader->name = "Towitoko Chipdrive Internal";
 		break;
+	default:
+		reader->name = "Towitoko";
 	}
 
 	if (ifd_device_set_parameters(dev, &params) < 0)
@@ -107,9 +119,10 @@ failed: ct_error("towitoko: failed to initialize device");
 static int
 twt_activate(ifd_reader_t *reader)
 {
-	ifd_debug(1, "called.");
+	unsigned char	cmd[2] = { 0x60, 0x0F };
 
-	if (twt_command(reader, "\x60\x0F", 2, NULL, 0) < 0)
+	ifd_debug(1, "called.");
+	if (twt_command(reader, cmd, sizeof(cmd), NULL, 0) < 0)
 		return -1;
 
 	return 0;
@@ -118,9 +131,10 @@ twt_activate(ifd_reader_t *reader)
 static int
 twt_deactivate(ifd_reader_t *reader)
 {
-	ifd_debug(1, "called.");
+	unsigned char	cmd[2] = { 0x61, 0x0F };
 
-	if (twt_command(reader, "\x61\x0F", 2, NULL, 0) < 0)
+	ifd_debug(1, "called.");
+	if (twt_command(reader, cmd, sizeof(cmd), NULL, 0) < 0)
 		return -1;
 	return 0;
 }
@@ -139,14 +153,15 @@ static int
 twt_card_status(ifd_reader_t *reader, int slot, int *status)
 {
 	unsigned char	byte;
+	int		r;
 
 	if (slot != 0) {
 		ct_error("towitoko: bad slot index %u", slot);
-		return -1;
+		return IFD_ERROR_INVALID_SLOT;
 	}
 
-	if (twt_command(reader, "\x03", 1, &byte, 1) < 0)
-		return -1;
+	if ((r = twt_command(reader, "\x03", 1, &byte, 1)) < 0)
+		return r;
 
 	*status = 0;
 	if (byte & 0x40)
@@ -154,7 +169,7 @@ twt_card_status(ifd_reader_t *reader, int slot, int *status)
 	if (byte & 0x80)
 		*status |= IFD_CARD_STATUS_CHANGED;
 
-	twt_led(reader, (byte & 0x40)? TWT_LED_GREEN : TWT_LED_OFF);
+	twt_led(reader, (byte & 0x40)? TWT_LED_RED : TWT_LED_OFF);
 
 	return 0;
 }
@@ -167,30 +182,38 @@ twt_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 {
 	static unsigned char reset1[] = { 0x80, 0x6F, 0x00, 0x05, 0x76 };
 	static unsigned char reset2[] = { 0xA0, 0x6F, 0x00, 0x05, 0x74 };
-	int	i, n;
+	int	r, i, n = 0, status;
 
 	ifd_debug(1, "called.");
 
 	if (slot != 0) {
 		ct_error("towitoko: bad slot index %u", slot);
-		return -1;
+		return IFD_ERROR_INVALID_SLOT;
 	}
 
 	/* Activate the reader */
-	if (twt_activate(reader) < 0)
-		return -1;
+	if ((r = twt_activate(reader)) < 0)
+		return r;
+
+	/* Get the card status */
+	if ((r = twt_card_status(reader, slot, &status)) < 0)
+		return r;
+
+	if (!(status & IFD_CARD_PRESENT))
+		return IFD_ERROR_NO_CARD;
 
 	/* SCEZ does this tree times - I have no clue why */
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < 1; i++) {
 		n = twt_try_reset(reader, reset1, sizeof(reset1), atr, size);
 		if (n != 0)
-			break;
+			return n;
 		n = twt_try_reset(reader, reset2, sizeof(reset2), atr, size);
 		if (n != 0)
-			break;
+			return n;
 	}
 
-	return n;
+	/* See if this is a synchronous card */
+	return ifd_sync_detect_icc(reader, slot, atr, size);
 }
 
 int
@@ -220,6 +243,7 @@ twt_try_reset(ifd_reader_t *reader,
 	if (rc == 1) {
 		unsigned char c = *(unsigned char *) atr;
 
+		ifd_debug(1, "received first ATR byte: 0x%02x", c);
 		if (c != 0x3f && c != 0x3b && c != 0x03)
 			return 0;
 	}
@@ -236,11 +260,13 @@ twt_change_parity(ifd_reader_t *reader, int parity)
 	unsigned char	cmd[] = { 0x6F, 0x00, 0x6A, 0x0F };
 	ifd_device_t	*dev = reader->device;
 	ifd_device_params_t params;
+	int		r;
+
+	if (dev->type != IFD_DEVICE_TYPE_SERIAL)
+		return IFD_ERROR_NOT_SUPPORTED;
 
 	if (ifd_device_get_parameters(dev, &params) < 0)
 		return -1;
-	if (params.serial.parity == parity)
-		return 0;
 
 	switch (parity) {
 	case IFD_SERIAL_PARITY_EVEN:
@@ -251,15 +277,69 @@ twt_change_parity(ifd_reader_t *reader, int parity)
 		break;
 	default:
 		ct_error("towitoko: parity NONE not supported");
-		return -1;
+		return IFD_ERROR_NOT_SUPPORTED;
 	}
 
-	if (twt_command(reader, cmd, 4, NULL, 0) < 0) {
+	if ((r = twt_command(reader, cmd, 4, NULL, 0)) < 0) {
 		ct_error("towitoko: failed to change parity");
-		return -1;
+		return r;
 	}
 
 	params.serial.parity = parity;
+	return ifd_device_set_parameters(dev, &params);
+}
+
+/*
+ * Change the serial speed
+ */
+static struct twt_speed {
+	unsigned int	value;
+	unsigned char	c1, c2;
+} twt_speed[] = {
+	{   1200,	0x60, 0x07	},
+	{   2400,	0x2E, 0x03	},
+	{   4800,	0x17, 0x05	},
+	{   9600,	0x0B, 0x02	},
+	{  14400,	0x07, 0x01	},
+	{  19200,	0x05, 0x02	},
+	{  28800,	0x03, 0x00	},
+	{  38400,	0x02, 0x00	},
+	{  57600,	0x01, 0x00	},
+	{ 115200,	0x80, 0x00	},
+	{ 0 }
+};
+
+static int
+twt_change_speed(ifd_reader_t *reader, unsigned int speed)
+{
+	unsigned char	cmd[] = { 0x6E, 0x00, 0x00, 0x00, 0x08 };
+	ifd_device_t	*dev = reader->device;
+	struct twt_speed *spd;
+	ifd_device_params_t params;
+	int		r;
+
+	if (dev->type != IFD_DEVICE_TYPE_SERIAL)
+		return IFD_ERROR_NOT_SUPPORTED;
+
+	if ((r = ifd_device_get_parameters(dev, &params)) < 0)
+		return r;
+
+	for (spd = twt_speed; spd->value; spd++) {
+		if (speed <= spd->value)
+			break;
+	}
+	if (spd->value == 0)
+		return IFD_ERROR_NOT_SUPPORTED;
+
+	params.serial.speed = spd->value;
+	cmd[1] = spd->c1;
+	cmd[3] = spd->c2;
+
+	if ((r = twt_command(reader, cmd, sizeof(cmd), NULL, 0)) < 0) {
+		ct_error("towitoko: failed to change speed");
+		return r;
+	}
+
 	return ifd_device_set_parameters(dev, &params);
 }
 
@@ -313,6 +393,209 @@ twt_recv(ifd_reader_t *reader, unsigned int dad,
 }
 
 /*
+ * Read synchronous card
+ */
+static int
+twt_sync_read_buffer(ifd_reader_t *reader, int slot, int proto,
+		unsigned char *buffer, size_t len)
+{
+	size_t	total = 0;
+	int	r;
+
+	while (total < len) {
+		unsigned char	cmd;
+		size_t		cnt;
+
+		if ((cnt = len - total) > TWT_PAGESIZE)
+			cnt = TWT_PAGESIZE;
+		cmd = (cnt - 1) | 0x10;
+
+		r = twt_command(reader, &cmd, 1, buffer+total, cnt);
+		if (r < 0) {
+			if (total)
+				return total;
+			return r;
+		}
+
+		total += cnt;
+	}
+
+	return total;
+}
+
+static int
+twt_sync_set_read_address(ifd_reader_t *reader, int slot, int proto, unsigned short addr)
+{
+	unsigned char	cmd_i2c_short[] = { 0x7C, 0x64, 0x41, 0x00, 0x00, 0x64, 0x40, 0x00, 0x0F };
+	unsigned char	cmd_i2c_long[] = { 0x7C, 0x64, 0x42, 0xA0, 0x00, 0x00, 0x64, 0x40, 0xA1, 0x0F };
+	unsigned char	cmd_2wire[] = { 0x70, 0x64, 0x42, 0x30, 0x00, 0x00, 0x65, 0x0F };
+	unsigned char	cmd_3wire[] = { 0x70, 0xA0, 0x42, 0x00, 0x00, 0x00, 0x80, 0x50, 0x0F };
+	unsigned char	hi, lo, *cmd;
+	size_t		len;
+
+	hi = addr >> 8;
+	lo = addr & 0xFF;
+
+	switch (proto) {
+	case IFD_PROTOCOL_I2C_SHORT:
+		cmd = cmd_i2c_short;
+		len = sizeof(cmd_i2c_short);
+		cmd[3] = (hi << 1) | 0xA0;
+		cmd[4] = lo;
+		cmd[7] = (hi << 1) | 0xA1;
+		break;
+
+	case IFD_PROTOCOL_I2C_LONG:
+		cmd = cmd_i2c_long;
+		len = sizeof(cmd_i2c_long);
+		cmd[4] = hi;
+		cmd[5] = lo;
+		break;
+
+	case IFD_PROTOCOL_2WIRE:
+		cmd = cmd_2wire;
+		len = sizeof(cmd_2wire);
+		cmd[4] = lo;
+		break;
+
+	case IFD_PROTOCOL_3WIRE:
+		cmd = cmd_3wire;
+		len = sizeof(cmd_3wire);
+		cmd[3] = (hi << 6) | 0x0e;
+		cmd[4] = lo;
+		break;
+
+	default:
+		return IFD_ERROR_NOT_SUPPORTED;
+	}
+
+	return twt_command(reader, cmd, len, NULL, 0);
+}
+
+int
+twt_sync_read(ifd_reader_t *reader, int slot, int proto,
+		unsigned short addr,
+		unsigned char *buffer, size_t len)
+{
+	int	r;
+
+	if ((r = twt_sync_set_read_address(reader, slot, proto, addr)) < 0)
+		return r;
+
+	return twt_sync_read_buffer(reader, slot, proto, buffer, len);
+}
+
+/*
+ * Write synchronous card
+ */
+static int
+twt_sync_write_buffer(ifd_reader_t *reader, int slot, int proto,
+		const unsigned char *buffer, size_t len)
+{
+	size_t	total = 0;
+	int	r;
+
+	while (total < len) {
+		unsigned char	cmd[TWT_PAGESIZE+1];
+		size_t		cnt;
+
+		if ((cnt = len - total) > TWT_PAGESIZE)
+			cnt = TWT_PAGESIZE;
+		cmd[0] = (cnt - 1) | 0x40;
+		memcpy(cmd + 1, buffer + total, cnt);
+		cmd[cnt + 1] = 0x0F;
+
+		r = twt_command(reader, cmd, cnt + 2, NULL, 0);
+		if (r < 0) {
+			if (total)
+				return total;
+			return r;
+		}
+
+		total += cnt;
+	}
+
+	return total;
+}
+
+static int
+twt_sync_set_write_address(ifd_reader_t *reader, int slot, int proto, unsigned short addr)
+{
+	unsigned char	cmd_i2c_short1[] = { 0x7C, 0x64, 0x41, 0xA0, 0x00, 0x64, 0x40, 0xA1, 0x0F };
+	unsigned char	cmd_i2c_short2[] = { 0x7E, 0x10 };
+	unsigned char	cmd_i2c_short3[] = { 0x7E, 0x66, 0x6E, 0x00, 0x00, 0x10, 0x0F };
+	unsigned char	cmd_i2c_long1[] = { 0x7C, 0x64, 0x42, 0xA0, 0x00, 0x00, 0x64, 0x40, 0xA1, 0x0F };
+	unsigned char	cmd_i2c_long2[] = { 0x7E, 0x10 };
+	unsigned char	cmd_i2c_long3[] = { 0x7F, 0x66, 0x6E, 0x00, 0x00, 0xA0, 0x0F };
+	unsigned char	cmd_2wire[] = { 0x72, 0x6E, 0x00, 0x38, 0x03, 0x0F };
+	unsigned char	cmd_3wire[] = { 0x73, 0x67, 0x6E, 0x00, 0x00, 0x02, 0x0F };
+	unsigned char	hi, lo, *cmd, status;
+	size_t		len;
+	int		r;
+
+	hi = addr >> 8;
+	lo = addr & 0xFF;
+
+	switch (proto) {
+	case IFD_PROTOCOL_I2C_SHORT:
+		if ((r = twt_command(reader, cmd_i2c_short1, sizeof(cmd_i2c_short1), NULL, 0)) < 0)
+			return r;
+		if ((r = twt_command(reader, cmd_i2c_short2, sizeof(cmd_i2c_short2), &status, 1)) < 0)
+			return r;
+
+		cmd = cmd_i2c_short3;
+		len = sizeof(cmd_i2c_short3);
+		cmd[3] = lo;
+		cmd[4] = (hi << 1) | 0xA0;
+		cmd[5] = 0x00 /* pagemode */;
+		break;
+
+	case IFD_PROTOCOL_I2C_LONG:
+		if ((r = twt_command(reader, cmd_i2c_long1, sizeof(cmd_i2c_long1), NULL, 0)) < 0)
+			return r;
+		if ((r = twt_command(reader, cmd_i2c_long2, sizeof(cmd_i2c_long2), &status, 1)) < 0)
+			return r;
+
+		cmd = cmd_i2c_long3;
+		len = sizeof(cmd_i2c_long3);
+		cmd[3] = lo;
+		cmd[4] = hi;
+		break;
+
+	case IFD_PROTOCOL_2WIRE:
+		cmd = cmd_2wire;
+		len = sizeof(cmd_2wire);
+		cmd[2] = lo;
+		break;
+
+	case IFD_PROTOCOL_3WIRE:
+		cmd = cmd_3wire;
+		len = sizeof(cmd_3wire);
+		cmd[3] = lo;
+		cmd[4] = (hi << 6) | 0x33;
+		break;
+
+	default:
+		return IFD_ERROR_NOT_SUPPORTED;
+	}
+
+	return twt_command(reader, cmd, len, NULL, 0);
+}
+
+int
+twt_sync_write(ifd_reader_t *reader, int slot, int proto,
+		unsigned short addr,
+		const unsigned char *buffer, size_t len)
+{
+	int	r;
+
+	if ((r = twt_sync_set_write_address(reader, slot, proto, addr)) < 0)
+		return r;
+
+	return twt_sync_write_buffer(reader, slot, proto, buffer, len);
+}
+
+/*
  * Turn LED on/off
  */
 int
@@ -334,15 +617,15 @@ twt_command(ifd_reader_t *reader, const char *cmd, size_t cmd_len,
 	unsigned char	buffer[254];
 	int		rc;
 
-	if (ct_config.debug > 1)
-		ifd_debug(3, "sending:%s", ct_hexdump(cmd, cmd_len));
-
 	if (res_len > sizeof(buffer)-1
 	 || cmd_len > sizeof(buffer)-1)
 		return -1;
 
 	memcpy(buffer, cmd, cmd_len);
 	cmd_len = twt_send_checksum(buffer, cmd_len);
+
+	if (ct_config.debug > 1)
+		ifd_debug(3, "sending:%s", ct_hexdump(buffer, cmd_len));
 
 	rc = ifd_device_transceive(reader->device,
 					buffer, cmd_len,
@@ -373,7 +656,7 @@ twt_checksum(unsigned char cs, const unsigned char *data, size_t len)
 
 	while (len--) {
 		b = cs ^ *data++;
-		/* rotate left one bit an toggle LSB */
+		/* rotate left one bit and toggle LSB */
 		cs = ((b << 1) | (b >> 7)) ^ 0x01;
 	}
 	return cs;
@@ -402,12 +685,15 @@ static struct ifd_driver_ops	towitoko_driver = {
 	open:		twt_open,
 	close:		twt_close,
 	change_parity:	twt_change_parity,
+	change_speed:	twt_change_speed,
 	activate:	twt_activate,
 	deactivate:	twt_deactivate,
 	card_status:	twt_card_status,
 	card_reset:	twt_card_reset,
 	send:		twt_send,
 	recv:		twt_recv,
+	sync_read:	twt_sync_read,
+	sync_write:	twt_sync_write,
 };
 
 void

@@ -15,6 +15,7 @@ struct ifd_driver_ops {
 	int		(*open)(ifd_reader_t *, const char *);
 	int		(*close)(ifd_reader_t *);
 	int		(*change_parity)(ifd_reader_t *, int);
+	int		(*change_speed)(ifd_reader_t *, unsigned int);
 
 	int		(*activate)(ifd_reader_t *);
 	int		(*deactivate)(ifd_reader_t *);
@@ -50,6 +51,14 @@ struct ifd_driver_ops {
 	int		(*transparent)(ifd_reader_t *, int,
 				const void *sbuf, size_t slen,
 				void *rbuf, size_t rlen);
+
+	/* Support for synchronous ICCs */
+	int		(*sync_read)(ifd_reader_t *, int, int,
+				unsigned short addr,
+				unsigned char *, size_t);
+	int		(*sync_write)(ifd_reader_t *, int, int,
+				unsigned short addr,
+				const unsigned char *, size_t);
 };
 
 extern void		ifd_driver_register(const char *,

@@ -318,11 +318,12 @@ kaan_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 	ifd_debug(1, "proto=%d", proto);
 
 	switch (proto) {
-	case IFD_PROTOCOL_T0: cmd[7]    = 0x01; break;
-	case IFD_PROTOCOL_T1: cmd[7]    = 0x02; break;
-	case IFD_PROTOCOL_I2C: cmd[7]   = 0x80; break;
-	case IFD_PROTOCOL_3WIRE: cmd[7] = 0x81; break;
-	case IFD_PROTOCOL_2WIRE: cmd[7] = 0x82; break;
+	case IFD_PROTOCOL_T0:        cmd[7] = 0x01; break;
+	case IFD_PROTOCOL_T1:        cmd[7] = 0x02; break;
+	case IFD_PROTOCOL_I2C_SHORT: cmd[7] = 0x80; break;
+	case IFD_PROTOCOL_I2C_LONG:  cmd[7] = 0x80; break;
+	case IFD_PROTOCOL_3WIRE:     cmd[7] = 0x81; break;
+	case IFD_PROTOCOL_2WIRE:     cmd[7] = 0x82; break;
 	default:
 		ifd_debug(1, "kaan_set_protocol: protocol %d not supported", proto);
 		return -1;

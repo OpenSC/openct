@@ -61,7 +61,7 @@ struct ifd_device_ops {
 	void		(*close)(ifd_device_t *);
 
 	/* Poll for device presence. This function is called
-	 * prior to the poll call (with revents == 0), int this
+	 * prior to the poll call (with revents == 0), in this
 	 * case poll_presence is supposed to set up the poll
 	 * structure.
 	 * Then, it is called after poll() returns - in this case
@@ -86,6 +86,12 @@ struct ifd_protocol_ops {
 	int		(*transceive)(ifd_protocol_t *, int dad,
 					const void *, size_t,
 					void *, size_t);
+	int		(*sync_read)(ifd_protocol_t *, int,
+					unsigned short,
+					unsigned char *, size_t);
+	int		(*sync_write)(ifd_protocol_t *, int,
+					unsigned short,
+					const unsigned char *, size_t);
 };
 
 struct ifd_protocol {
@@ -97,6 +103,10 @@ struct ifd_protocol {
 extern struct ifd_protocol_ops	ifd_protocol_t1;
 extern struct ifd_protocol_ops	ifd_protocol_t0;
 extern struct ifd_protocol_ops	ifd_protocol_trans;
+extern struct ifd_protocol_ops	ifd_protocol_i2c_short;
+extern struct ifd_protocol_ops	ifd_protocol_i2c_long;
+extern struct ifd_protocol_ops	ifd_protocol_2wire;
+extern struct ifd_protocol_ops	ifd_protocol_3wire;
 
 /* reader.c */
 extern int		ifd_send_command(ifd_protocol_t *,
@@ -145,5 +155,7 @@ extern long		ifd_time_elapsed(struct timeval *);
 
 /* protocol.c */
 extern void		ifd_protocol_register(struct ifd_protocol_ops *);
+extern int		ifd_sync_detect_icc(ifd_reader_t *, int,
+					void *, size_t);
 
 #endif /* IFD_INTERNAL_H */

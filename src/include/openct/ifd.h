@@ -21,10 +21,11 @@ enum {
 	IFD_PROTOCOL_T1,
 	IFD_PROTOCOL_2WIRE = 16,
 	IFD_PROTOCOL_3WIRE,
-	IFD_PROTOCOL_I2C,
+	IFD_PROTOCOL_I2C_SHORT,
+	IFD_PROTOCOL_I2C_LONG,
 	IFD_PROTOCOL_TLP,		/* older Gemplus protocool */
 	IFD_PROTOCOL_GBP,		/* Gemplus block protocol */
-	IFD_PROTOCOL_TRANSPARENT,
+	IFD_PROTOCOL_TRANSPARENT = 128,
 
 };
 
@@ -144,6 +145,12 @@ extern int			ifd_card_perform_verify(ifd_reader_t *reader,
 					const char *message,
 					const unsigned char *data, size_t data_len,
 					unsigned char *resp, size_t resp_len);
+extern int			ifd_card_read_memory(ifd_reader_t *,
+					unsigned int, unsigned short,
+					unsigned char *, size_t);
+extern int			ifd_card_write_memory(ifd_reader_t *,
+					unsigned int, unsigned short,
+					const unsigned char *, size_t);
 
 extern ifd_protocol_t *		ifd_protocol_new(int id,
 					ifd_reader_t *reader,
@@ -154,6 +161,12 @@ extern int			ifd_protocol_set_parameter(ifd_protocol_t *p,
 extern int			ifd_protocol_get_parameter(ifd_protocol_t *p,
 					int type,
 					long *value);
+extern int			ifd_protocol_read_memory(ifd_protocol_t *,
+					int, unsigned short,
+					unsigned char *, size_t);
+extern int			ifd_protocol_write_memory(ifd_protocol_t *,
+					int, unsigned short,
+					const unsigned char *, size_t);
 extern void			ifd_protocol_free(ifd_protocol_t *);
 
 

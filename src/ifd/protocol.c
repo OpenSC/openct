@@ -134,6 +134,48 @@ ifd_protocol_transceive(ifd_protocol_t *p, int dad,
 }
 
 /*
+ * Read/write synchronous ICCs
+ */
+int
+ifd_protocol_read_memory(ifd_protocol_t *p, int slot,
+			 unsigned short addr,
+			 unsigned char *rbuf, size_t rlen)
+{
+	int	rc;
+
+	if (!p || !p->ops || !p->ops->sync_read)
+		return IFD_ERROR_NOT_SUPPORTED;
+
+	ifd_debug(1, "read %u@%04x (%s)", (unsigned int) rlen, addr, p->ops->name);
+	rc = p->ops->sync_read(p, slot, addr, rbuf, rlen);
+
+	if (rc >= 0)
+		ifd_debug(1, "resp:%s", ct_hexdump(rbuf, rc));
+
+	return rc;
+}
+
+int
+ifd_protocol_write_memory(ifd_protocol_t *p, int slot,
+			  unsigned short addr,
+			  const unsigned char *sbuf, size_t slen)
+{
+	int	rc;
+
+	if (!p || !p->ops || !p->ops->sync_write)
+		return IFD_ERROR_NOT_SUPPORTED;
+
+	ifd_debug(1, "write %u@%04x (%s):%s",
+			(unsigned int) slen, addr,
+			p->ops->name,
+			ct_hexdump(sbuf, slen));
+	rc = p->ops->sync_write(p, slot, addr, sbuf, slen);
+
+	ifd_debug(1, "resp = %d", rc);
+	return rc;
+}
+
+/*
  * Create new protocol object
  */
 ifd_protocol_t *
