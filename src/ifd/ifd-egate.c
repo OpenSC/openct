@@ -65,12 +65,17 @@ eg_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 {
 	ifd_device_t *dev = reader->device;
 	unsigned char	buffer[256];
-	int		rc, atrlen;
+	int		rc, atrlen, stat;
 
 	/* Reset the device*/
 	rc = ifd_usb_control(dev, 0x40, 0x90, 0, 0, NULL, 0, EG_TIMEOUT);
 	if (rc < 0)
 		goto failed;
+
+	rc = ifd_usb_control(reader->device, 0xc0, 0xa0, 0, 0, &stat, 1, EG_TIMEOUT);
+	if (rc != 1)
+		return -1;
+
 
 	/* Fetch the ATR */
 	rc = ifd_usb_control(dev, 0xc0, 0x83, 0, 0, buffer, 0x23, EG_TIMEOUT);
