@@ -150,7 +150,7 @@ ifd_serial_flush(ifd_device_t *dev)
  * Input/output routines
  */
 static int
-ifd_serial_send(ifd_device_t *dev, const void *buffer, size_t len)
+ifd_serial_send(ifd_device_t *dev, const unsigned char *buffer, size_t len)
 {
 	size_t		total = len;
 	int		n;
@@ -180,7 +180,7 @@ since(struct timeval *then)
 }
 
 static int
-ifd_serial_recv(ifd_device_t *dev, void *buffer, size_t len, long timeout)
+ifd_serial_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeout)
 {
 	size_t		total = len;
 	struct timeval	begin;

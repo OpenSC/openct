@@ -23,19 +23,27 @@ usb_control(ifd_device_t *dev, void *data, size_t len)
 	if (len < sizeof(*cmsg) || cmsg->guard != IFD_DEVICE_TYPE_USB)
 		return -1;
 
-	if (ct_config.debug >= 3) {
-		ifd_debug(4, "usb req type=x%02x req=x%02x len=%u",
+	if ((ct_config.debug >= 3) && !(cmsg->requesttype & 0x80)) {
+		ifd_debug(4, "usb req type=x%02x req=x%02x val=x%04x ind=x%04x len=%u",
 				cmsg->requesttype,
 				cmsg->request,
+				cmsg->value,
+				cmsg->index,
 				cmsg->len);
-		if (!(cmsg->requesttype & 0x80) && cmsg->len)
+		if (cmsg->len)
 			ifd_debug(4, "send %s", ct_hexdump(cmsg->data, cmsg->len));
 	}
 
 	n = ifd_sysdep_usb_control(dev->fd, cmsg, 10000);
 
-	if (ct_config.debug >= 3) {
-		if ((cmsg->requesttype & 0x80) && n >= 0)
+	if ((ct_config.debug >= 3) && (cmsg->requesttype & 0x80)) {
+		ifd_debug(4, "usb req type=x%02x req=x%02x val=x%04x ind=x%04x len=%u",
+				cmsg->requesttype,
+				cmsg->request,
+				cmsg->value,
+				cmsg->index,
+				n);
+		if (n >= 0)
 			ifd_debug(4, "recv %s", ct_hexdump(cmsg->data, n));
 	}
 

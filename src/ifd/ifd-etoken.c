@@ -130,14 +130,14 @@ failed:	ct_error("etoken: failed to activate token");
  * Send/receive routines
  */
 static int
-et_send(ifd_reader_t *reader, unsigned int dad, const void *buffer, size_t len)
+et_send(ifd_reader_t *reader, unsigned int dad, const unsigned char *buffer, size_t len)
 {
 	return et_control(reader->device, 0x40, 0x06, 0, 0,
 				(void *) buffer, len, -1);
 }
 
 static int
-et_recv(ifd_reader_t *reader, unsigned int dad, void *buffer, size_t len, long timeout)
+et_recv(ifd_reader_t *reader, unsigned int dad, unsigned char *buffer, size_t len, long timeout)
 {
 	return et_control(reader->device, 0xc0, 0x86, 0, 0,
 				buffer, len, timeout);

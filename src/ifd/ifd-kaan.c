@@ -478,13 +478,13 @@ kaan_get_sw(unsigned char *buf, unsigned int n, unsigned short *sw)
  * This is just for the communication with the card reader.
  */
 static int
-kaan_send(ifd_reader_t *reader, unsigned int dad, const void *buffer, size_t len)
+kaan_send(ifd_reader_t *reader, unsigned int dad, const unsigned char *buffer, size_t len)
 {
 	return ifd_device_send(reader->device, buffer, len);
 }
 
 static int
-kaan_recv(ifd_reader_t *reader, unsigned int dad, void *buffer, size_t len, long timeout)
+kaan_recv(ifd_reader_t *reader, unsigned int dad, unsigned char *buffer, size_t len, long timeout)
 {
 	return ifd_device_recv(reader->device, buffer, len, timeout);
 }

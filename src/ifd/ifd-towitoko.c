@@ -268,7 +268,7 @@ twt_change_parity(ifd_reader_t *reader, int parity)
  */
 static int
 twt_send(ifd_reader_t *reader, unsigned int dad,
-		const void *buffer, size_t len)
+		const unsigned char *buffer, size_t len)
 {
 	unsigned char	cmd[] = { 0x6F, 0x00, 0x05, 0x00 };
 	unsigned int	count;
@@ -301,7 +301,7 @@ twt_send(ifd_reader_t *reader, unsigned int dad,
  */
 static int
 twt_recv(ifd_reader_t *reader, unsigned int dad,
-		void *buffer, size_t len, long timeout)
+		unsigned char *buffer, size_t len, long timeout)
 {
 	int	n;
 

@@ -39,7 +39,7 @@ ifd_revert_bits(unsigned char *data, size_t len)
 const char *
 ct_hexdump(const unsigned char *data, size_t len)
 {
-	static char	string[256];
+	static char	string[1024];
 	unsigned int	i, left;
 
 	string[0] = '\0';
