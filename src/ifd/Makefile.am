@@ -9,7 +9,7 @@ sbin_PROGRAMS = ifdhandler
 DRIVERS	= cardman.c egate.c etoken.c eutron.c ikey3k.c kaan.c smartboard.c towitoko.c
 
 libifd_la_SOURCES = \
-	apdu.c checksum.c conf.c confparse.c device.c driver.c \
+	apdu.c checksum.c conf.c device.c driver.c \
 	init.c locks.c manager.c modules.c process.c \
 	proto-t0.c proto-t1.c proto-trans.c proto-sync.c \
 	protocol.c ctbcs.c reader.c serial.c usb.c utils.c \
