@@ -9,7 +9,7 @@
 #include <openct/ifd.h>
 #include <pcsclite.h>
 #include <wintypes.h>
-#include <ifdhandler.h>
+#include "ifdhandler.h"
 
 #define lun_reader(x)	((x) >> 16)
 #define lun_slot(x)	((x) & 0xffff)
