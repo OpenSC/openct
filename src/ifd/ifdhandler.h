@@ -4,8 +4,8 @@
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
-#ifndef OPENCT_IFDHANDLER_H
-#define OPENCT_IFDHANDLER_H
+#ifndef IFD_IFDHANDLER_H
+#define IFD_IFDHANDLER_H
 
 #include <openct/buffer.h>
 #include <openct/socket.h>
@@ -18,4 +18,4 @@ extern int	ifdhandler_check_lock(ct_socket_t *, int, int);
 extern int	ifdhandler_unlock(ct_socket_t *, int, ct_lock_handle);
 extern void	ifdhandler_unlock_all(ct_socket_t *);
 
-#endif /* OPENCT_IFDHANDLER_H */
+#endif /* IFD_IFDHANDLER_H */
