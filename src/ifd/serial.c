@@ -115,7 +115,7 @@ ifd_serial_set_params(ifd_device_t *dp, const ifd_device_params_t *params)
 	if (params->serial.stopbits > 1)
 		t.c_cflag |= CSTOPB;
 
-	t.c_iflag = IGNBRK | INPCK;
+	t.c_iflag = IGNBRK | IGNPAR;
 	t.c_oflag = 0;
 	t.c_cflag |= HUPCL | CREAD | CLOCAL;
 	t.c_lflag = 0;
