@@ -69,7 +69,8 @@ static unsigned	int	t1_build(t1_state_t *, unsigned char *,
 				ct_buf_t *, size_t *);
 static unsigned int	t1_compute_checksum(t1_state_t *,
 				unsigned char *, size_t);
-static int		t1_verify_checksum(t1_state_t *, unsigned char *, unsigned int);
+static int		t1_verify_checksum(t1_state_t *, unsigned char *,
+				size_t);
 static int		t1_xcv(t1_state_t *, unsigned char *, size_t, size_t);
 
 /*
@@ -189,7 +190,8 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 	t1_state_t	*t1 = (t1_state_t *) prot;
 	ct_buf_t	sbuf, rbuf, tbuf;
 	unsigned char	sdata[T1_BUFFER_SIZE], sblk[5];
-	unsigned int	slen, retries, resyncs, last_send = 0, sent_length = 0;
+	unsigned int	slen, retries, resyncs, sent_length = 0;
+	size_t		last_send = 0;
 
 	if (snd_len == 0)
 		return -1;
