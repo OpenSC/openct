@@ -176,6 +176,9 @@ extern int		ifd_load_module(const char *, const char *);
 extern void		ifd_revert_bits(unsigned char *, size_t);
 extern unsigned int	ifd_count_bits(unsigned int);
 extern long		ifd_time_elapsed(struct timeval *);
+#ifndef HAVE_DAEMON
+extern int		daemon(int, int);
+#endif
 
 /* protocol.c */
 extern void		ifd_protocol_register(struct ifd_protocol_ops *);

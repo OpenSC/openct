@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <sys/wait.h>
 
@@ -137,3 +138,53 @@ ifd_spawn_handler(const char *driver, const char *device, int idx)
 	ct_error("failed to execute %s: %m", ct_config.ifdhandler);
 	exit(1);
 }
+
+/*
+ * Replacement for the BSD daemon() function
+ */
+#ifndef HAVE_DAEMON
+int
+daemon(int nochdir, int noclose)
+{
+	pid_t pid;
+
+	pid = fork();
+
+	/* In case of fork is error. */
+	if (pid < 0)
+		return -1;
+
+	/* In case of this is parent process. */
+	if (pid != 0)
+		exit(0);
+
+	/* Become session leader and get pid. */
+	pid = setsid();
+
+	if (pid < -1) {
+		perror("setsid");
+		return -1;
+	}
+
+	/* Change directory to root. */
+	if (!nochdir)
+		chdir("/");
+
+	/* File descriptor close. */
+	if (!noclose) {
+		int fd;
+
+		fd = open("/dev/null", O_RDWR, 0);
+		if (fd != -1) {
+			dup2(fd, STDIN_FILENO);
+			dup2(fd, STDOUT_FILENO);
+			dup2(fd, STDERR_FILENO);
+			if (fd > 2)
+				close(fd);
+		}
+	}
+	umask(0027);
+	return 0;
+}
+#endif
+
