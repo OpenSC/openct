@@ -2,7 +2,7 @@
  * Protocol for communication between application and
  * resource manager
  *
- * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
+ * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
 #ifndef OPENCT_PROTOCOL_H

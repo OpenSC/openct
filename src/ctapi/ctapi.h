@@ -1,12 +1,8 @@
-/*****************************************************************
-/
-/ File   :   ctapi.h
-/ Author :   David Corcoran
-/ Date   :   September 2, 1998
-/ Purpose:   Defines CT-API functions and returns
-/ License:   See file LICENSE
-/
-******************************************************************/
+/*
+ * Defines CT-API functions and returns
+ *
+ * Copyright (C) 1998, David Corcoran
+ */
 
 #ifndef OPENCT_CTAPI_H
 #define OPENCT_CTAPI_H

@@ -1,7 +1,7 @@
 /*
  * Server side functionality
  *
- * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
+ * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
 #ifndef OPENCT_SERVER_H
