@@ -5,7 +5,7 @@ LIBS	= libifd.a
 APPS	= print-atr
 OBJS	= manager.o device.o reader.o driver.o \
           modules.o \
-	  protocol.o proto-t0.o proto-t1.o \
+	  protocol.o proto-t0.o proto-t1.o proto-trans.o \
 	  serial.o usb.o \
 	  apdu.o checksum.o buffer.o error.o utils.o \
 	  config.o $(SYSDEP)
