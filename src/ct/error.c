@@ -64,12 +64,43 @@ ct_debug(const char *fmt, ...)
 	va_end(ap);
 }
 
+#define MAX_ERROR	256
+static const char *	ct_errors[MAX_ERROR] = {
+  [IFD_SUCCESS]			= "Success"
+  [-IFD_ERROR_GENERIC]		= "Generic error",
+  [-IFD_ERROR_TIMEOUT]		= "Command timed out",
+  [-IFD_ERROR_INVALID_SLOT]	= "Invalid slot",
+  [-IFD_ERROR_NOT_SUPPORTED]	= "Operation not supported",
+  [-IFD_ERROR_COMM_ERROR]	= "Communication error",
+  [-IFD_ERROR_NO_CARD]		= "No card present",
+  [-IFD_ERROR_LOCKED]		= "Reader already locked",
+  [-IFD_ERROR_NOLOCK]		= "Reader not locked",
+  [-IFD_ERROR_INVALID_ARG]	= "Invalid argument",
+  [-IFD_ERROR_NO_MEMORY]	= "Out of memory",
+  [-IFD_ERROR_BUFFER_TOO_SMALL]	= "Buffer too small",
+  [-IFD_ERROR_USER_TIMEOUT]	= "Timeout on user input",
+  [-IFD_ERROR_USER_ABORT]	= "Operation aborted by user",
+  [-IFD_ERROR_PIN_MISMATCH]	= "PIN mismatch",
+  [-IFD_ERROR_NO_ATR]		= "Unable to reset card",
+  [-IFD_ERROR_INVALID_MSG]	= "Invalid message",
+  [-IFD_ERROR_INVALID_CMD]	= "Invalid command",
+  [-IFD_ERROR_MISSING_ARG]	= "Missing argument",
+  [-IFD_ERROR_NOT_CONNECTED]	= "Not connected to IFD handler",
+};
+
 const char *
 ct_strerror(int rc)
 {
 	static char	message[64];
+	const char	*msg = NULL;
 
-	snprintf(message, sizeof(message),
-		"error code %d", -rc);
-	return message;
+	rc = -rc;
+	if (0 <= rc && rc < MAX_ERROR)
+		msg = ct_errors[rc];
+	if (msg == NULL) {
+		msg = message;
+		snprintf(message, sizeof(message),
+			"Unknown OpenCT error %d", -rc);
+	}
+	return msg;
 }
