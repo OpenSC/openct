@@ -4,7 +4,7 @@ bundledir = @BUNDLEDIR@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-INCLUDES = -I$(top_srcdir)/src/ctapi @CPPFLAGS@ @CFLAGS_PCSC@
+INCLUDES = -I$(top_srcdir)/src/ctapi @CPPFLAGS@ @PCSC_CFLAGS@
 
 if HAVE_PCSC
 lib_LTLIBRARIES = openct-ifd.la

@@ -16,7 +16,7 @@ AC_CONFIG_SRCDIR(src/ifd/ifdhandler.c)
 #   (Interfaces added:                  AGE++)
 #   (Interfaces removed:                AGE=0)
 OPENCT_LT_CURRENT=0
-OPENCT_LT_REVISION=1
+OPENCT_LT_REVISION=2
 OPENCT_LT_AGE=0
 
 AC_SUBST(OPENCT_LT_CURRENT)
@@ -198,14 +198,14 @@ AC_CHECK_LIB(poll, poll, [LIBS="$LIBS -lpoll" ac_cv_func_poll_lpoll=yes], ac_cv_
 
 PCSC_MSG=no
 pcsc_path=/usr
-AC_SUBST(CFLAGS_PCSC)
-AC_SUBST(LIBPCSC)
+AC_SUBST(PCSC_CFLAGS)
+AC_SUBST(PCSC_LIBS)
 
 case "$host" in
 *-*-darwin*)
 	PCSC_MSG=yes
-	CFLAGS_PCSC=""
-	LIBPCSC="-Wl,-framework,PCSC"
+	PCSC_CFLAGS=""
+	PCSC_LIBS="-Wl,-framework,PCSC"
 	;;
 esac
 
@@ -220,11 +220,15 @@ if test "x$pcsc_path" = "xno"; then
 fi
 if test "x$pcsc_path" != "xno" -a "x$PCSC_MSG" != "xyes"; then
 	AC_MSG_CHECKING(for PC/SC Lite support)
-	for pcscdir in /pcsc ""; do
+	PKG_CHECK_MODULES(PCSC, libpcsclite, [
+		PCSC_MSG="yes" 
+		AC_MSG_RESULT($PCSC_MSG)
+		], [
+	for pcscdir in "" /pcsc /PCSC; do
 		CPPFLAGS="$saved_CPPFLAGS"
 		LDFLAGS="$saved_LDFLAGS"
 		LIBS="-lpcsclite $saved_LIBS"
-		CFLAGS_PCSC=""
+		PCSC_CFLAGS=""
 
 		for pcsc_libdir in $pcsc_path/lib$pcscdir \
 			      $pcsc_path$pcscdir/lib \
@@ -241,12 +245,12 @@ if test "x$pcsc_path" != "xno" -a "x$PCSC_MSG" != "xyes"; then
 			      $pcsc_path$pcscdir/include \
 			      $pcsc_path$pcscdir; do
 		      if test -d $pcsc_incdir; then
-				CFLAGS_PCSC="-I${pcsc_incdir}"
+				PCSC_CFLAGS="-I${pcsc_incdir}"
 				break;
 		      fi
 		done
 
-		CPPFLAGS="${CFLAGS_PCSC} ${CPPFLAGS}"
+		CPPFLAGS="${PCSC_CFLAGS} ${CPPFLAGS}"
 		AC_TRY_LINK([#include <stdlib.h>
 #include <winscard.h>],[SCardEstablishContext(0, NULL, NULL, NULL);], ac_cv_lib_pcsclite_SCardEstablishContext=yes)
 		if test "x$ac_cv_lib_pcsclite_SCardEstablishContext" = "xyes"; then
@@ -256,21 +260,22 @@ if test "x$pcsc_path" != "xno" -a "x$PCSC_MSG" != "xyes"; then
 		CPPFLAGS="$saved_CPPFLAGS"
 		LDFLAGS="$saved_LDFLAGS"
 		LIBS="$saved_LIBS"
-		CFLAGS_PCSC=""
+		PCSC_CFLAGS=""
 	done
 	AC_MSG_RESULT($PCSC_MSG)
 	if test "x$PCSC_MSG" = "xyes" ; then
-		LIBPCSC="-lpcsclite"
+		PCSC_LIBS="-lpcsclite"
 		CPPFLAGS="$saved_CPPFLAGS"
 		LIBS="$saved_LIBS"
 	fi
+	])
 fi
 AM_CONDITIONAL(HAVE_PCSC, test "x$PCSC_MSG" = "xyes")
 if test "x$PCSC_MSG" = "xyes"; then
 	AC_DEFINE(HAVE_PCSC, 1, [Have PC/SC implementation])
 else
-	LIBPCSC=""
-	CFLAGS_PCSC=""
+	PCSC_LIBS=""
+	PCSC_CFLAGS=""
 fi
 
 USB_MSG=no
