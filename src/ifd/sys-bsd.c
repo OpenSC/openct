@@ -12,13 +12,14 @@
 #include "internal.h"
 #if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 #include <sys/types.h>
-#include </usr/src/sys/dev/usb/usb.h>
+#include <dev/usb/usb.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/poll.h>
 #include <string.h>
 #include <stdio.h>
 #include <signal.h>
+#include <fcntl.h>
 #include <errno.h>
 #include <openct/driver.h>
 
@@ -27,11 +28,14 @@ ifd_sysdep_device_type(const char *name)
 {
 	struct stat stb;
 
+	ifd_debug(1, "BSD: ifd_sysdep_device_type(%s)", name);
 	if (!name || name[0] != '/')
 		return -1;
 
-	if (!strncmp(name, "/dev/ugen", 7))
+	if (!strncmp(name, "/dev/ugen", 9)) {
+		ifd_debug(1, "BSD: returning IFD_DEVICE_TYPE_USB");
 		return IFD_DEVICE_TYPE_USB;
+	}
 
 	if (stat(name, &stb) < 0)
 		return -1;
@@ -67,55 +71,45 @@ ifd_sysdep_usb_control(ifd_device_t *dev,
 	struct usb_ctl_request ctrl;
 	int		rc,val;
 
+	ifd_debug(1, "BSD: ifd_sysdep_usb_control(0x%x)", request);
 	memset(&ctrl, 0, sizeof(ctrl));
 	
-	ctrl.ucr_addr = 0;
 	ctrl.ucr_request.bmRequestType = requesttype;
 	ctrl.ucr_request.bRequest = request;
 	USETW(ctrl.ucr_request.wValue, value);
 	USETW(ctrl.ucr_request.wIndex, index);
 	USETW(ctrl.ucr_request.wLength, len);
-	ctrl.ucr_actlen = 0;
+
 	ctrl.ucr_data = data;
 	ctrl.ucr_flags = USBD_SHORT_XFER_OK;
 
+	ifd_debug(1, "BSD: CTRL bmRequestType 0x%x bRequest 0x%x "
+		     "wValue 0x%x wIndex 0x%x wLength 0x%x",
+		     requesttype, request, value, index, len);
+	if(len)
+		ifd_debug(5, "BSD: CTRL SEND data %s", ct_hexdump(data,len));
+
 	val = timeout;
-	rc = ioctl(dev->fd, USB_SET_TIMEOUT, &val);
-	if (rc < 0) {
-		ct_error("usb_set_timeout failed: %m");
-                return IFD_ERROR_COMM_ERROR;
+	if ((rc = ioctl(dev->fd, USB_SET_TIMEOUT, &val)) < 0) {
+		ifd_debug(1,"USB_SET_TIMEOUT failed: %d", rc);
+		ct_error("usb_set_timeout failed: %s(%d)",
+				strerror(errno), errno);
+        	return IFD_ERROR_COMM_ERROR;
 	}
  
 	if ((rc = ioctl(dev->fd, USB_DO_REQUEST, &ctrl)) < 0) {
-                ct_error("usb_control failed: %m");
-                return IFD_ERROR_COMM_ERROR;
+		ifd_debug(1, "USB_DO_REQUEST failed: %d", rc);
+		ct_error("usb_do_request failed: %s (%d)",
+				strerror(errno), errno);
+		return IFD_ERROR_COMM_ERROR;
         }
 
-	return rc;
-}
-
-/*
- * USB URB capture
- */
-struct ifd_usb_capture {
-	struct usbdevfs_urb urb;
-	int		type;
-	int		endpoint;
-	size_t		maxpacket;
-	unsigned int	interface;
-};
-
-static int
-usb_submit_urb(int fd, struct ifd_usb_capture *cap)
-{
-	/* Fill in the URB details */
-	ifd_debug(6, "submit urb %p", &cap->urb);
-	memset(&cap->urb, 0, sizeof(cap->urb));
-	cap->urb.type = cap->type;
-	cap->urb.endpoint = cap->endpoint;
-	cap->urb.buffer = (caddr_t) (cap + 1);
-	cap->urb.buffer_length = cap->maxpacket;
-	return ioctl(fd, USBDEVFS_SUBMITURB, &cap->urb);
+	if(ctrl.ucr_data==NULL)
+		ifd_debug(1, "BSD: ctrl.ucr_data == NULL ");
+	if(ctrl.ucr_data && ctrl.ucr_actlen)
+		ifd_debug(1, "BSD: CTRL RECV data %s",
+			ct_hexdump(ctrl.ucr_data,ctrl.ucr_actlen));
+	return ctrl.ucr_actlen;
 }
 
 int
@@ -123,31 +117,7 @@ ifd_sysdep_usb_begin_capture(ifd_device_t *dev,
 		int type, int endpoint, size_t maxpacket,
 	       	ifd_usb_capture_t **capret)
 {
-	ifd_usb_capture_t	*cap;
-	int			rc = 0;
-
-	cap = calloc(1, sizeof(*cap) + maxpacket);
-
-	/* Assume the interface # is 0 */
-	cap->interface = 0;
-	rc = ioctl(dev->fd, USBDEVFS_CLAIMINTERFACE, &cap->interface);
-	if (rc < 0) {
-		ct_error("usb_claiminterface failed: %m");
-		free(cap);
-		return IFD_ERROR_COMM_ERROR;
-	}
-
-	cap->type = type;
-	cap->endpoint = endpoint;
-	cap->maxpacket = maxpacket;
-
-	if (usb_submit_urb(dev->fd, cap) < 0) {
-		ct_error("usb_submiturb failed: %m");
-		ifd_sysdep_usb_end_capture(dev, cap);
-		return IFD_ERROR_COMM_ERROR;
-	}
-
-	*capret = cap;
+	ifd_debug(1, "BSD: ifd_sysdep_begin_capture");
 	return 0;
 }
 
@@ -157,79 +127,15 @@ ifd_sysdep_usb_capture(ifd_device_t *dev,
 		void *buffer, size_t len,
 		long timeout)
 {
-	struct usbdevfs_urb	*purb;
-	struct timeval		begin;
-	size_t			copied;
-	int			rc = 0;
-
-	/* Loop until we've reaped the response to the
-	 * URB we sent */
-	copied = 0;
-	gettimeofday(&begin, NULL);
-	do {
-		struct pollfd	pfd;
-		long		wait;
-
-		if ((wait = timeout - ifd_time_elapsed(&begin)) <= 0)
-			return IFD_ERROR_TIMEOUT;
-
-		pfd.fd = dev->fd;
-		pfd.events = POLLOUT;
-		if (poll(&pfd, 1, wait) != 1)
-			continue;
-
-		purb = NULL;
-		rc = ioctl(dev->fd, USBDEVFS_REAPURBNDELAY, &purb);
-		if (rc < 0) {
-			if (errno == EAGAIN)
-				continue;
-			ct_error("usb_reapurb failed: %m");
-			return IFD_ERROR_COMM_ERROR;
-		}
-
-		if (purb != &cap->urb) {
-			ifd_debug(2, "reaped usb urb %p", purb);
-			continue;
-		}
-
-		if (purb->actual_length) {
-			ifd_debug(6, "usb reapurb: len=%u", purb->actual_length);
-			if ((copied = purb->actual_length) > len)
-				copied = len;
-			if (copied && buffer)
-				memcpy(buffer, purb->buffer, copied);
-		} else {
-			usleep(10000);
-		}
-
-		/* Re-submit URB */
-		usb_submit_urb(fd, cap);
-	} while (!copied);
-
-	return copied;
+	ifd_debug(1, "BSD: ifd_sysdep_capture");
+	return 0;
 }
 
 int
 ifd_sysdep_usb_end_capture(ifd_device_t *dev, ifd_usb_capture_t *cap)
 {
-	int	rc = 0;
-
-	if (ioctl(dev->fd, USBDEVFS_DISCARDURB, &cap->urb) < 0 && errno != EINVAL) {
-		ct_error("usb_discardurb failed: %m");
-		rc = IFD_ERROR_COMM_ERROR;
-	}
-	/* Discarding an URB will place it in the queue of completed
-	 * request, with urb->status == -1. So if we don't reap this
-	 * URB now, the next call to REAPURB will return this one,
-	 * clobbering random memory.
-	 */
-	(void) ioctl(dev->fd, USBDEVFS_REAPURBNDELAY, &cap->urb);
-	if (ioctl(dev->fd, USBDEVFS_RELEASEINTERFACE, &cap->interface) < 0) {
-		ct_error("usb_releaseinterface failed: %m");
-		rc = IFD_ERROR_COMM_ERROR;
-	}
-	free(cap);
-	return rc;
+	ifd_debug(1, "BSD: ifd_sysdep_end_capture");
+	return 0;
 }
 
 /*
@@ -238,7 +144,63 @@ ifd_sysdep_usb_end_capture(ifd_device_t *dev, ifd_usb_capture_t *cap)
 int
 ifd_scan_usb(void)
 {
-	return 0;
-}
+    int i, controller_fd;
+    char controller_devname[10];
 
+    ifd_debug(1, "BSD: ifd_scan_usb");
+    for (i = 0; i < 10; i++) {
+	snprintf(controller_devname, 10, "/dev/usb%d", i);
+	if((controller_fd = open(controller_devname, O_RDONLY))<0)
+	    continue;
+
+	if (controller_fd >= 0) {
+	    int address;
+	    for (address = 1; address < USB_MAX_DEVICES; address++) {
+		struct usb_device_info	 device_info;
+		ifd_devid_t		 id;
+		const char		*driver;
+		char			*device[256];
+
+		device_info.udi_addr = address;
+
+		if(ioctl(controller_fd, USB_DEVICEINFO, &device_info)) {
+		    if (errno != ENXIO)
+			fprintf(stderr, "addr %d: I/O error\n", address);
+		    continue;
+		}
+
+		if(strncmp(device_info.udi_devnames[0],"ugen",4)!=0)
+		    continue;
+
+
+		id.type = IFD_DEVICE_TYPE_USB;
+		id.num  = 2;
+
+		id.val[0] = device_info.udi_vendorNo;
+		id.val[1] = device_info.udi_productNo;
+
+		ifd_debug(1, "BSD: ifd_scan_usb: "
+			     "ifd_driver_for(%s[0x%04x].%s[0x%04x)",
+			     device_info.udi_vendor,
+			     device_info.udi_vendorNo,
+			     device_info.udi_product,
+			     device_info.udi_productNo);
+
+		if (!(driver = ifd_driver_for_id(&id)))
+		    continue;
+
+		snprintf(device, sizeof(device),
+			"/dev/%s", device_info.udi_devnames[0]);
+
+		ifd_spawn_handler(driver, device, -1);
+	    }
+	    close(controller_fd);
+	} else {
+	    if (errno == ENOENT || errno == ENXIO)
+		continue;
+	    /* a more suitable error recovery should be done here */
+	}
+    }
+    return 0;
+}
 #endif /* __Net/Free/OpenBSD__ */
