@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<book ns="http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<book ns="http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" id="openct">
 	<title>OpenCT Manual</title>
 	<bookinfo>
 		<author>
@@ -519,7 +519,7 @@ command: can be one of the following
 			</para>
 		</section>
 
-		<section files="openct.files.openctconf">
+		<section id="openct.files.openctconf">
 			<title>etc/openct.conf</title>
 
 			<para>
