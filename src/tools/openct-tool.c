@@ -123,7 +123,7 @@ void
 usage(int exval)
 {
 	fprintf(stderr,
-"usage: print-atr [-d] [-f configfile] [-r reader] command ...\n"
+"usage: openct-tool [-d] [-f configfile] [-r reader] command ...\n"
 "  -d   enable debugging; repeat to increase verbosity\n"
 "  -f   specify config file (default /etc/ifd.conf\n"
 "  -r   specify index of reader to use\n"
