@@ -5,7 +5,7 @@ debug	= 0;
 hotplug	= yes;
 #
 # Path to ifdhandler
-ifdhandler = /usr/sbin/ifdhandler;
+ifdhandler = SBINDIR/ifdhandler;
 #
 # Statically configure non-hotplug aware readers here
 reader towitoko {
@@ -24,6 +24,11 @@ driver	etoken {
 	ids = {
 		usb:0529/050c,
 		usb:0529/0514,
+	};
+};
+driver	eutron {
+	ids = {
+		usb:073d/0005,
 	};
 };
 driver	ikey3k {
