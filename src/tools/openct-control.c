@@ -31,6 +31,7 @@ static void		usage(int exval);
 
 static const char *	opt_config = NULL;
 static int		opt_debug = 0;
+static int		opt_coldplug = 1;
 
 static void		configure_reader(ifd_conf_node_t *);
 
@@ -46,6 +47,9 @@ main(int argc, char **argv)
 		switch (c) {
 		case 'd':
 			opt_debug++;
+			break;
+		case 'n':
+			opt_coldplug=0;
 			break;
 		case 'f':
 			opt_config = optarg;
@@ -115,7 +119,8 @@ mgr_init(int argc, char **argv)
 	}
 
 	/* Create an ifdhandler process for every hotplug reader found */
-	mgr_scan_usb();
+	if (opt_coldplug)
+		mgr_scan_usb();
 	return 0;
 }
 
@@ -329,6 +334,7 @@ usage(int exval)
 	fprintf(stderr,
 "usage: openct-control [-d] [-f configfile] command\n"
 "  -d   enable debugging; repeat to increase verbosity\n"
+"  -n   disable coldplugging\n"
 "  -f   specify config file (default /etc/openct.conf\n"
 "  -h   display this message\n"
 "\nWhere command is one of:\n"
