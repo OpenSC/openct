@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <time.h>
 #include "internal.h"
 
 static int		ifd_recv_atr(ifd_device_t *, ct_buf_t *,
@@ -356,7 +357,7 @@ ifd_recv_atr(ifd_device_t *dev, ct_buf_t *bp,
 int
 ifd_atr_complete(const unsigned char *atr, size_t len)
 {
-	unsigned int	j = 2, num, c;
+	unsigned int	j = 2, c;
 	int		proto = 0;
 
 	do {

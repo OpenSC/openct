@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/poll.h>
+#include <sys/time.h>
 #include <string.h>
 #include <stdio.h>
 #include <signal.h>

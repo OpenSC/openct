@@ -138,7 +138,7 @@ static int
 eg_transparent(ifd_reader_t *reader, int dad, const void *inbuffer, size_t inlen,
               void *outbuffer, size_t outlen)
 {
-     int rc,cmdlen;
+     int rc;
      unsigned char stat;
      ifd_iso_apdu_t iso;
      char cmdbuf[5];

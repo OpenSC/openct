@@ -12,8 +12,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-/* XXX Linux specific */
-#include <linux/usbdevice_fs.h>
+#include <sys/time.h>
 #include "internal.h"
 
 typedef struct cm_priv {
@@ -31,7 +30,7 @@ static int	cm_transceive_t0(ifd_reader_t *reader,
 				void *rbuf, size_t rlen);
 static int	cm_usb_int(ifd_device_t *dev, int requesttype, int request,
 			       	int value, int index,
-			       	void *sbuf, size_t slen,
+			       	const void *sbuf, size_t slen,
 			       	void *rbuf, size_t rlen,
 			       	complete_fn_t check,
 			       	long timeout);
@@ -344,7 +343,7 @@ cm_set_card_parameters(ifd_device_t *dev, unsigned int baudrate)
 int
 cm_usb_int(ifd_device_t *dev, int requesttype, int request,
 	       int value, int index,
-	       void *sbuf, size_t slen,
+	       const void *sbuf, size_t slen,
 	       void *rbuf, size_t rlen,
 	       complete_fn_t complete,
 	       long timeout)
@@ -365,7 +364,7 @@ cm_usb_int(ifd_device_t *dev, int requesttype, int request,
 
 	gettimeofday(&begin, NULL);
 	rc = ifd_usb_control(dev, requesttype, request,
-			value, index, sbuf, slen, timeout);
+			value, index, (void *) sbuf, slen, timeout);
 	if (rc < 0)
 		goto out;
 

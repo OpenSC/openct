@@ -6,6 +6,8 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <unistd.h>
 #include "internal.h"
 
 /* Freeze after that many seconds of inactivity */
