@@ -89,6 +89,9 @@ mgr_spawn_handler(unsigned int idx, ifd_reader_t *reader)
 
 	sock->user_data = reader;
 	sock->recv = mgr_accept;
+
+	/* Call the server loop */
+	ifd_socket_server_loop(sock);
 }
 
 /*
