@@ -173,10 +173,6 @@ gbp_transceive(ifd_protocol_t *prot, int dad,
 		return -1;
 	}
 
-	/* we can't talk to a dead card / reader. Reset it! */
-	if (gp->state == DEAD)
-		return -1;
-
 	retries = gp->retries;
 	resyncs = 3;
 
@@ -188,6 +184,12 @@ gbp_transceive(ifd_protocol_t *prot, int dad,
 	slen = gbp_build(gp, sdata, GBP_I_BLOCK, &sbuf);
 
 	send_seq = gp->ns;
+	if (gp->state == DEAD) {
+		gp->ns = 0;
+		slen = gbp_build(gp, sdata, GBP_S_BLOCK|GBP_S_RESYNC, NULL);
+		gp->state = RESYNCH;
+	}
+
 	while (1) {
 		unsigned char	pcb;
 		int		n;
@@ -416,13 +418,14 @@ int
 gbp_xcv(gbp_state_t *gp, unsigned char *block, size_t slen, size_t rmax)
 {
 	ifd_protocol_t	*prot = &gp->base;
+	ifd_device_t	*dev = prot->reader->device;
 	unsigned int	rlen, timeout;
 	int		n, m;
 
 	if (ct_config.debug >= 3)
 		ifd_debug(3, "sending %s", ct_hexdump(block, slen));
 
-	n = ifd_send_command(prot, block, slen);
+	n = ifd_device_send(dev, block, slen);
 	if (n < 0)
 		return n;
 
@@ -440,7 +443,7 @@ gbp_xcv(gbp_state_t *gp, unsigned char *block, size_t slen, size_t rmax)
 			rmax = rlen;
 
 		/* Get the response en bloc */
-		n = ifd_recv_response(prot, block, rmax, timeout);
+		n = ifd_device_recv(dev, block, rmax, timeout);
 		if (n >= 0) {
 			m = block[2] + 3 + 1;
 			if (m < n)
@@ -448,7 +451,7 @@ gbp_xcv(gbp_state_t *gp, unsigned char *block, size_t slen, size_t rmax)
 		}
 	} else {
 		/* Get the header */
-		if (ifd_recv_response(prot, block, 3, timeout) < 0)
+		if (ifd_device_recv(dev, block, 3, timeout) < 0)
 			return -1;
 
 		n = block[2] + 1;
@@ -458,7 +461,7 @@ gbp_xcv(gbp_state_t *gp, unsigned char *block, size_t slen, size_t rmax)
 		}
 
 		/* Now get the rest */
-		if (ifd_recv_response(prot, block + 3, n, gp->timeout) < 0)
+		if (ifd_device_recv(dev, block + 3, n, gp->timeout) < 0)
 			return -1;
 
 		n += 3;

@@ -109,9 +109,13 @@ gpc_open(ifd_reader_t *reader, const char *device_name)
 		gpc_set_serial(reader, 38400, 8, IFD_SERIAL_PARITY_NONE);
 		usleep(500000);
 		ifd_device_flush(dev);
+		params.serial.speed = 38400;
+		if ((r = ifd_device_set_parameters(dev, &params)) < 0)
+			return r;
 
 		/* The line should now operate at 38400 */
-		if ((r = gpc_set_mode(reader, GPC_MODE_ROS)) < 0)
+		r = gpc_set_mode(reader, GPC_MODE_ROS);
+		if (r < 0 && r != IFD_ERROR_NOT_SUPPORTED)
 			return r;
 	} else {
 		ct_error("USB devices not yet supported for GemPC readers\n");
@@ -130,7 +134,8 @@ gpc_open(ifd_reader_t *reader, const char *device_name)
 			reader->name = "GCR 410";
 		else if (!strcmp(buffer, "OROS-R2.99-R1.11"))
 			reader->name = "GCR 410P";
-		else if (!strcmp(buffer, "OROS-R2.99-R1.21"))
+		else if (!strcmp(buffer, "OROS-R2.99-R1.21") ||
+			 !strcmp(buffer, "GemCore-R1.21-GM"))
 			reader->name = "GemPC 410";
 		else if (!strcmp(buffer, "OROS-R2.99-R1.32"))
 			reader->name = "GemPC 413";
@@ -371,6 +376,17 @@ gpc_recv(ifd_reader_t *reader, unsigned int dad,
 	return rc;
 }
 
+static int
+gpc_transparent(ifd_reader_t *reader, int nad,
+		const void *cmd_buf, size_t cmd_len,
+		void *res_buf, size_t res_len)
+{
+	return gpc_transceive(reader, nad,
+			(const unsigned char *) cmd_buf, cmd_len,
+			(unsigned char *) res_buf, res_len, 0);
+}
+
+
 /*
  * Generic transceive function
  */
@@ -399,10 +415,12 @@ gpc_transceive(ifd_reader_t *reader, unsigned int dad,
 		rc = gpc_transceive_t0(reader, dad,
 				cmd_buf, cmd_len,
 				res_buf, res_len);
+		break;
 	case IFD_PROTOCOL_T1:
 		rc = gpc_transceive_t1(reader, dad,
 				cmd_buf, cmd_len,
 				res_buf, res_len);
+		break;
 	default:
 		ct_error("protocol not supported\n");
 		rc = IFD_ERROR_NOT_SUPPORTED;
@@ -444,7 +462,11 @@ gpc_transceive_t0(ifd_reader_t *reader, unsigned int dad,
 		 * for T=1 cards.
 		 * However, we shouldn't get here anyway for T=1, as the
 		 * T=0 protocol driver splits case 4 APDUs. */
+	         rc = gpc_iso_exchange_apdu(reader, cmd_buf, cmd_len,
+				                    res_buf, res_len);
+		 break;
 	default:
+		ifd_debug(1, "Bad APDU (case %d unknown or unsupported)\n", iso.cse);
 		return IFD_ERROR_INVALID_ARG;
 	}
 
@@ -515,11 +537,16 @@ gpc_iso_recv_frag(ifd_reader_t *reader, unsigned char cmd,
 	ct_buf_put(bp, buffer, rc);
 	if (status != 0x00	/* success */
 	 && status != 0xE7	/* not 9000 */
+	 && status != 0xE5	/* not 9000 */
 	 && status != 0x1B) {	/* more data */
 		ct_error("error 0x%02x in ISO OUPUT/EXCHANGE APDU (%s)",
 				status, gpc_strerror(status));
 		return IFD_ERROR_COMM_ERROR;
 	}
+
+	/* so exchange/send stop looping. is 1b right here? */
+	if (status != 0x00 && status != 0x1B)
+		return 0;
 
 	return rc;
 }
@@ -585,7 +612,11 @@ gpc_iso_input(ifd_reader_t *reader,
 
 	buffer[0] = 0x14;
 	memcpy(buffer+1, cmd_buf, cmd_len);
-	return gpc_command(reader, buffer, cmd_len+1, res_buf, res_len);
+
+	if (cmd_len == 4)
+		buffer[++cmd_len] = 0x00;
+		
+	return gpc_command(reader, buffer, cmd_len+1, res_buf, 2);
 }
 
 static int
@@ -622,6 +653,10 @@ gpc_iso_exchange_apdu(ifd_reader_t *reader,
 		if (rc <= 0 || ct_buf_avail(&res) >= expect)
 			break;
 
+		/* Added by Chaskiel - I don't understand why */
+		if (ct_buf_avail(&res) == 2 && expect == 258)
+			break;
+
 		cmd_buf = NULL;
 		cmd_len = 0;
 	}
@@ -640,7 +675,7 @@ gpc_get_os_version(ifd_reader_t *reader, char *buf, size_t len)
 	static unsigned char	cmd[] = { 0x22, 0x05, 0x3F, 0xE0, 0x10 };
 
 	/* Ensure NUL termination */
-	buf[len-1] = '\0';
+	memset(buf, 0, len);
 	return gpc_command(reader, cmd, sizeof(cmd), buf, len-1);
 }
 
@@ -685,9 +720,9 @@ __gpc_command(ifd_reader_t *reader,
 		ifd_debug(2, "reader reports status 0x%02x (%s)\n",
 				buffer[0],
 				gpc_strerror(buffer[0]));
-		if (gpc_status)
-			*gpc_status = buffer[0];
 	}
+	if (gpc_status)
+		*gpc_status = buffer[0];
 
 	if (len > res_len)
 		len = res_len;
@@ -703,7 +738,9 @@ gpc_command(ifd_reader_t *reader, const void *cmd, size_t cmd_len,
 	int		rc, status;
 
 	rc = __gpc_command(reader, cmd, cmd_len, res, res_len, &status);
-	if (rc >= 0 && status != 0x00 && status != 0xE7)
+	if (rc >= 0 && status == 0x01)
+		rc = IFD_ERROR_NOT_SUPPORTED;
+	if (rc >= 0 && status != 0x00 && status != 0xE5 && status != 0xE7)
 		rc = IFD_ERROR_COMM_ERROR;
 	return rc;
 }
@@ -774,8 +811,6 @@ ifd_gempc_register(void)
 	gempc_driver.set_protocol = gpc_set_protocol;
 	gempc_driver.card_status = gpc_card_status;
 	gempc_driver.card_reset = gpc_card_reset;
-	gempc_driver.send = gpc_send;
-	gempc_driver.recv = gpc_recv;
-
+	gempc_driver.transparent = gpc_transparent;
 	ifd_driver_register("gempc", &gempc_driver);
 }
