@@ -6,12 +6,15 @@ hotplug	= yes;
 #
 # Path to ifdhandler
 ifdhandler = SBINDIR/ifdhandler;
-#
+
 # Statically configure non-hotplug aware readers here
-reader towitoko {
-	driver = towitoko;
-	device = /dev/ttyS1;
-};
+# (remove comment character '#' and change device name and driver name
+#  as required. other driver names for serial devices are "kaan" and
+#  "chipcard").
+#reader towitoko {
+#	driver = towitoko;
+#	device = /dev/ttyS1;
+#};
 
 #
 # Hotplug IDs
