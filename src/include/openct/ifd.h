@@ -15,6 +15,18 @@ typedef struct ifd_apdu {
 	unsigned int		rcv_len;
 } ifd_apdu_t;
 
+enum {
+	IFD_APDU_CASE_1,
+	IFD_APDU_CASE_2S,
+	IFD_APDU_CASE_3S,
+	IFD_APDU_CASE_4S,
+	IFD_APDU_CASE_2E,
+	IFD_APDU_CASE_3E,
+	IFD_APDU_CASE_4E,
+
+	IFD_APDU_BAD = -1
+};
+
 typedef struct ifd_device	ifd_device_t;
 typedef union ifd_device_params	ifd_device_params_t;
 
@@ -102,6 +114,9 @@ extern int			ifd_card_status(ifd_reader_t *,
 extern int			ifd_card_reset(ifd_reader_t *,
 					unsigned int,
 					void *, size_t);
+
+extern int			ifd_apdu_case(const ifd_apdu_t *,
+					unsigned int *, unsigned int *);
 
 extern ifd_protocol_t *		ifd_protocol_by_id(int);
 extern ifd_protocol_t *		ifd_protocol_by_name(const char *);
