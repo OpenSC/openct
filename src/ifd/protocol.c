@@ -115,18 +115,20 @@ ifd_protocol_select(ifd_reader_t *reader, int nslot, int preferred)
  * Protocol transceive
  */
 int
-ifd_protocol_transceive(ifd_protocol_t *p, int dad, ifd_apdu_t *apdu)
+ifd_protocol_transceive(ifd_protocol_t *p, int dad,
+			const void *sbuf, size_t slen,
+			void *rbuf, size_t rlen)
 {
 	int	rc;
 
 	if (!p || !p->ops || !p->ops->transceive)
 		return -1;
 
-	ifd_debug(1, "cmd: %s", ct_hexdump(apdu->snd_buf, apdu->snd_len));
-	rc = p->ops->transceive(p, dad, apdu);
+	ifd_debug(1, "cmd: %s", ct_hexdump(sbuf, slen));
+	rc = p->ops->transceive(p, dad, sbuf, slen, rbuf, rlen);
 
 	if (rc >= 0)
-		ifd_debug(1, "resp:%s", ct_hexdump(apdu->rcv_buf, apdu->rcv_len));
+		ifd_debug(1, "resp:%s", ct_hexdump(rbuf, rc));
 
 	return rc;
 }

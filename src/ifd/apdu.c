@@ -71,7 +71,7 @@ ifd_apdu_case(const void *buf, size_t len)
  * Convert internal APDU type to an ISO-7816-4 APDU
  */
 int
-ifd_apdu_to_iso(const void *data, size_t len, ifd_iso_apdu_t *iso)
+ifd_iso_apdu_parse(const void *data, size_t len, ifd_iso_apdu_t *iso)
 {
 	unsigned char	*p;
 
@@ -89,48 +89,3 @@ ifd_apdu_to_iso(const void *data, size_t len, ifd_iso_apdu_t *iso)
 
 	return 0;
 }
-
-/*
- * Convert an ISO-7816-4 APDU to our internal APDU type
- */
-#if 0
-int
-ifd_iso_to_apdu(const ifd_iso_apdu_t *iso, ifd_apdu_t *apdu, void *buf, size_t size)
-{
-	unsigned int	slen = 4, rlen = 2;
-	unsigned char	*p;
-
-	memset(apdu, 0, sizeof(*apdu));
-
-	if (IFD_APDU_CASE_LC(iso->cse)) {
-		slen += iso->lc + 1;
-	}
-	if (IFD_APDU_CASE_LE(iso->cse)) {
-		rlen += iso->le;
-		slen++;
-	}
-
-	if (slen > size || rlen > size)
-		return -1;
-
-	apdu->snd_buf = apdu->rcv_buf = buf;
-	apdu->snd_len = slen;
-	apdu->rcv_len = size;
-
-	p = (unsigned char *) buf;
-	*p++ = iso->cla;
-	*p++ = iso->ins;
-	*p++ = iso->p1;
-	*p++ = iso->p2;
-	if (IFD_APDU_CASE_LC(iso->cse)) {
-		*p++ = iso->lc;
-		memcpy(p, iso->snd_buf, iso->lc);
-		p += iso->lc;
-	}
-	if (IFD_APDU_CASE_LE(iso->cse)) {
-		*p++ = iso->le;
-	}
-
-	return 0;
-}
-#endif

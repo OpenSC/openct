@@ -25,7 +25,7 @@ enum {
 };
 
 static int	t0_xcv(ifd_protocol_t *,
-			void *, size_t,
+			const void *, size_t,
 			void *, size_t);
 static int	t0_send(ifd_protocol_t *, ct_buf_t *, int);
 static int	t0_recv(ifd_protocol_t *, ct_buf_t *, int, long);
@@ -106,14 +106,14 @@ t0_get_param(ifd_protocol_t *prot, int type, long *result)
  * Send an APDU through T=0
  */
 static int
-t0_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
+t0_transceive(ifd_protocol_t *prot, int dad,
+			const void *sbuf, size_t slen,
+			void *rbuf, size_t rlen)
 {
 	t0_state_t	*t0 = (t0_state_t *) prot;
 	ifd_iso_apdu_t	iso;
 	unsigned char	sdata[5];
 	unsigned int	cla, cse, lc, le;
-	void		*sbuf, *rbuf;
-	size_t		slen, rlen;
 	int		rc;
 
 	if (t0->state != IDLE) {
@@ -122,17 +122,11 @@ t0_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 		t0->state = IDLE;
 	}
 
-	if (apdu->snd_len < 4 || apdu->rcv_len < 2)
+	if (slen < 4 || rlen < 2)
 		return -1;
 
-	/* XXX */
-	sbuf = apdu->snd_buf;
-	rbuf = apdu->rcv_buf;
-	slen = apdu->snd_len;
-	rlen = apdu->rcv_len;
-
 	/* Check the APDU case etc */
-	if ((rc = ifd_apdu_to_iso(sbuf, slen, &iso)) < 0)
+	if ((rc = ifd_iso_apdu_parse(sbuf, slen, &iso)) < 0)
 		return rc;
 
 	cse = iso.cse;
@@ -210,13 +204,12 @@ t0_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 	}
 
 done:	t0->state = IDLE;
-	if (rc >= 0)
-		apdu->rcv_len = rc;
 	return rc;
 }
 
 static int
-t0_xcv(ifd_protocol_t *prot, void *sdata, size_t slen,
+t0_xcv(ifd_protocol_t *prot,
+			const void *sdata, size_t slen,
 			void *rdata, size_t rlen)
 {
 	t0_state_t	*t0 = (t0_state_t *) prot;
@@ -225,7 +218,7 @@ t0_xcv(ifd_protocol_t *prot, void *sdata, size_t slen,
 	unsigned int	ins;
 
 	/* Set up the send buffer */
-	ct_buf_set(&sbuf, sdata, slen);
+	ct_buf_set(&sbuf, (void *) sdata, slen);
 	ct_buf_init(&rbuf, rdata, rlen);
 
 	/* Get the INS */

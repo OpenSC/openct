@@ -201,15 +201,12 @@ do_reset(ifd_reader_t *reader, int unit, ct_tlv_parser_t *args, ct_tlv_builder_t
 int
 do_transact(ifd_reader_t *reader, int unit, ct_buf_t *args, ct_buf_t *resp)
 {
-	ifd_apdu_t	apdu;
-	int		rc;
+	int	rc;
 
-	apdu.snd_buf = ct_buf_head(args);
-	apdu.snd_len = ct_buf_avail(args);
-	apdu.rcv_buf = ct_buf_tail(resp);
-	apdu.rcv_len = ct_buf_tailroom(resp);
-
-	if ((rc = ifd_card_command(reader, unit, &apdu)) < 0)
+	rc = ifd_card_command(reader, unit,
+			ct_buf_head(args), ct_buf_avail(args),
+			ct_buf_tail(resp), ct_buf_tailroom(resp));
+	if (rc < 0)
 		return rc;
 
 	ct_buf_put(resp, NULL, rc);

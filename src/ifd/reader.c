@@ -331,7 +331,9 @@ ifd_recv_atr(ifd_device_t *dev, ct_buf_t *bp,
  * Send/receive APDU to the ICC
  */
 int
-ifd_card_command(ifd_reader_t *reader, unsigned int idx, ifd_apdu_t *apdu)
+ifd_card_command(ifd_reader_t *reader, unsigned int idx,
+		 const void *sbuf, size_t slen,
+		 void *rbuf, size_t rlen)
 {
 	ifd_slot_t	*slot;
 
@@ -347,7 +349,8 @@ ifd_card_command(ifd_reader_t *reader, unsigned int idx, ifd_apdu_t *apdu)
 		return -1;
 	}
 
-	return ifd_protocol_transceive(slot->proto, slot->dad, apdu);
+	return ifd_protocol_transceive(slot->proto, slot->dad,
+				sbuf, slen, rbuf, rlen);
 }
 
 /*

@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <openct/ifd.h>
 #include <openct/conf.h>
+#include <openct/logging.h>
 
 static void	usage(int exval);
 static void	print_atr(ifd_reader_t *);
@@ -176,20 +177,19 @@ select_mf(ifd_reader_t *reader)
 {
 	unsigned char	cmd[] = { 0x00, 0xA4, 0x00, 0x00, 0x02, 0x3f, 0x00, 0x00 };
 	unsigned char	res[256];
-	ifd_apdu_t	apdu;
+	int		rc;
 
-	apdu.snd_buf = cmd;
-	apdu.snd_len = sizeof(cmd);
-	apdu.rcv_buf = res;
-	apdu.rcv_len = sizeof(res);
-
-	if (ifd_card_command(reader, 0, &apdu) < 0) {
-		fprintf(stderr, "card communication failure\n");
+	rc = ifd_card_command(reader, 0, cmd, sizeof(cmd),
+				res, sizeof(res));
+	if (rc < 0) {
+		fprintf(stderr,
+			"Failed to select MF: %s\n",
+			ct_strerror(rc));
 		return;
 	}
 
 	printf("Selected MF, response:\n");
-	dump(res, apdu.rcv_len);
+	dump(res, rc);
 }
 
 void

@@ -156,25 +156,23 @@ IFDHTransmitToICC(DWORD lun, SCARD_IO_HEADER sendPci,
 {
 	ifd_reader_t	*reader;
 	unsigned int	nslot;
-	ifd_apdu_t	apdu;
+	int		rc;
 
 	if (!(reader = IFDH_lun_to_reader(lun, NULL))) {
 		*rxLength = 0;
 		return IFD_ICC_NOT_PRESENT;
 	}
 
-	apdu.snd_buf = txBuffer;
-	apdu.snd_len = txLength;
-	apdu.rcv_buf = rxBuffer;
-	apdu.rcv_len = *rxLength;
-
 	nslot = lun_slot(lun);
-	if (ifd_card_command(reader, nslot, &apdu) < 0) {
+	rc = ifd_card_command(reader, nslot, 
+			txBuffer, txLength,
+			rxBuffer, *rxLength);
+	if (rc < 0) {
 		*rxLength = 0;
 		return IFD_COMMUNICATION_ERROR;
 	}
 
-	*rxLength = apdu.rcv_len;
+	*rxLength = rc;
 	return IFD_SUCCESS;
 }
 

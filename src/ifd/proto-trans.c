@@ -57,12 +57,15 @@ trans_get_param(ifd_protocol_t *prot, int type, long *result)
  * Transceive an APDU
  */
 static int
-trans_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
+trans_transceive(ifd_protocol_t *prot, int dad,
+		const void *sbuf, size_t slen,
+		void *rbuf, size_t rlen)
 {
 	ifd_reader_t	*reader = prot->reader;
 	const ifd_driver_t *drv = reader->driver;
 
-	return drv->ops->transparent(reader, dad, apdu);
+	return drv->ops->transparent(reader, dad,
+				sbuf, slen, rbuf, rlen);
 }
 
 /*

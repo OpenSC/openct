@@ -180,14 +180,16 @@ t1_get_param(ifd_protocol_t *prot, int type, long *result)
  * Send an APDU through T=1
  */
 static int
-t1_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
+t1_transceive(ifd_protocol_t *prot, int dad,
+		const void *snd_buf, size_t snd_len,
+		void *rcv_buf, size_t rcv_len)
 {
 	t1_state_t	*t1 = (t1_state_t *) prot;
 	ct_buf_t	sbuf, rbuf, tbuf;
 	unsigned char	sdata[T1_BUFFER_SIZE];
 	unsigned int	slen, retries, last_send = 0;
 
-	if (apdu->snd_len == 0)
+	if (snd_len == 0)
 		return -1;
 
 	/* Perform resynch if required */
@@ -198,8 +200,8 @@ t1_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 	retries = t1->retries;
 
 	/* Initialize send/recv buffer */
-	ct_buf_set(&sbuf, apdu->snd_buf, apdu->snd_len);
-	ct_buf_init(&rbuf, apdu->rcv_buf, apdu->rcv_len);
+	ct_buf_set(&sbuf, (void *) snd_buf, snd_len);
+	ct_buf_init(&rbuf, rcv_buf, rcv_len);
 
 	/* Send the first block */
 	slen = t1_build(t1, sdata, dad, T1_I_BLOCK, &sbuf, &last_send);
@@ -347,8 +349,7 @@ t1_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 		retries = t1->retries;
 	}
 
-done:	apdu->rcv_len = ct_buf_avail(&rbuf);
-	return apdu->rcv_len;
+done:	return ct_buf_avail(&rbuf);
 }
 
 static unsigned

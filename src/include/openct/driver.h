@@ -23,6 +23,8 @@ struct ifd_driver_ops {
 				time_t, const char *,
 				void *, size_t);
 
+	int		(*output)(ifd_reader_t *, const char *);
+
 	int		(*send)(ifd_reader_t *reader,
 				unsigned int dad,
 				const void *buffer,
@@ -37,7 +39,9 @@ struct ifd_driver_ops {
 	 * transmit all APDUs to the device, and let the device
 	 * deal with T=0/T=1 etc */
 	int		(*set_protocol)(ifd_reader_t *, int, int);
-	int		(*transparent)(ifd_reader_t *, int, ifd_apdu_t *);
+	int		(*transparent)(ifd_reader_t *, int,
+				const void *sbuf, size_t slen,
+				void *rbuf, size_t rlen);
 };
 
 extern void		ifd_driver_register(const char *,
@@ -51,7 +55,9 @@ extern const char *	ifd_driver_for_id(const char *);
  */
 extern ifd_protocol_t *	ifd_protocol_select(ifd_reader_t *, int, int);
 extern int		ifd_protocol_transceive(ifd_protocol_t *proto,
-				int dad, ifd_apdu_t *apdu);
+				int dad,
+				const void *, size_t,
+				void *, size_t);
 
 
 #endif /* IFD_DRIVER_H */

@@ -88,9 +88,11 @@ kaan_open(ifd_reader_t *reader, const char *device_name)
 	if (kaan_get_units(reader) < 0)
 		return -1;
 
+#if 0
 	/* Clear the display */
 	if (kaan_display(reader, "Kublai Kaan 0.1\nWelcome!") < 0)
 		return -1;
+#endif
 
 	return 0;
 }
@@ -156,6 +158,8 @@ kaan_display(ifd_reader_t *reader, const char *string)
 
 	if (!(reader->flags & IFD_READER_DISPLAY))
 		return 0;
+	if (string == NULL)
+		return IFD_ERROR_INVALID_ARG;
 
 	n = kaan_build_display_args(buffer, sizeof(buffer), 0, string);
 	if (n < 0)
@@ -354,34 +358,32 @@ kaan_set_protocol(ifd_reader_t *reader, int nslot, int proto)
  * APDU exchange with ICC
  */
 static int
-kaan_transparent(ifd_reader_t *reader, int dad, ifd_apdu_t *apdu)
+kaan_transparent(ifd_reader_t *reader, int dad,
+		const void *sbuf, size_t slen,
+		void *rbuf, size_t rlen)
 {
 	kaan_status_t	*st = (kaan_status_t *) reader->driver_data;
 	ifd_iso_apdu_t	iso;
-	ifd_apdu_t	tpdu = *apdu;
 	int		rc, nslot, n, prot;
 
 	nslot = (dad == 0x02)? 0 : 1;
 	prot = st->icc_proto[nslot];
 
 	/* Parse the APDU; extract class byte, case, etc */
-	if ((rc = ifd_apdu_to_iso(apdu->snd_buf, apdu->snd_len, &iso)) < 0)
+	if ((rc = ifd_iso_apdu_parse(sbuf, slen, &iso)) < 0)
 		return rc;
 
 	if (prot == IFD_PROTOCOL_T0) {
 		if (iso.cse == IFD_APDU_CASE_4S)
-			tpdu.snd_len--;
+			slen--;
 	}
 
-	if ((n = ifd_protocol_transceive(st->p, dad, &tpdu)) < 2) {
-		ct_error("kaan: T=1 protocol failure, rc=%d", n);
-		return -1;
-	}
+	n = ifd_protocol_transceive(st->p, dad, sbuf, slen, rbuf, rlen);
 
 	if (iso.cse == IFD_APDU_CASE_4S && n == 2) {
-		unsigned char	*sw = tpdu.rcv_buf;
-		unsigned char	cmd[5];
+		unsigned char	cmd[5], *sw;
 
+		sw = (unsigned char *) rbuf;
 		if (sw[0] == 0x61) {
 			cmd[0] = iso.cla;
 			cmd[1] = 0xC0;
@@ -389,19 +391,19 @@ kaan_transparent(ifd_reader_t *reader, int dad, ifd_apdu_t *apdu)
 			cmd[3] = 0x00;
 			cmd[4] = sw[1];
 
-			tpdu.snd_buf = cmd;
-			tpdu.snd_len = 5;
-			tpdu.rcv_len = sw[1] + 2;
-
-			if ((n = ifd_protocol_transceive(st->p, dad, &tpdu)) < 2) {
-				ct_error("kaan: T=1 protocol failure, rc=%d", n);
-				return -1;
-			}
+			n = ifd_protocol_transceive(st->p, dad,
+						cmd, 5, rbuf, rlen);
 		}
 	}
 
-	apdu->rcv_len = tpdu.rcv_len;
-	return tpdu.rcv_len;
+	if (n < 0)
+		return n;
+	if (n < 2) {
+		ct_error("kaan: T=1 protocol failure, not enough bytes for SW");
+		return IFD_ERROR_COMM_ERROR;
+	}
+
+	return n;
 }
 
 /*
@@ -415,13 +417,7 @@ kaan_apdu_xcv(ifd_reader_t *reader,
 {
 	kaan_status_t	*st = (kaan_status_t *) reader->driver_data;
 	long		orig_timeout = 0;
-	ifd_apdu_t	tpdu;
 	int		rc;
-
-	tpdu.snd_buf = (unsigned char *) sbuf;
-	tpdu.snd_len = slen;
-	tpdu.rcv_buf = rbuf;
-	tpdu.rcv_len = rlen;
 
 	/* Override timeout if needed */
 	if (timeout) {
@@ -433,8 +429,10 @@ kaan_apdu_xcv(ifd_reader_t *reader,
 				timeout * 1000);
 	}
 
-	if ((rc = ifd_protocol_transceive(st->p, 0x12, &tpdu)) < 0
-	 || rc < 2) {
+	rc = ifd_protocol_transceive(st->p, 0x12, sbuf, slen, rbuf, rlen);
+	if (rc < 0)
+		return rc;
+	if (rc < 2) {
 		ct_error("kaan: T=1 protocol failure, rc=%d", rc);
 		rc = IFD_ERROR_COMM_ERROR;
 	}
@@ -532,6 +530,7 @@ static struct ifd_driver_ops	kaan_driver = {
 	.card_status	= kaan_card_status,
 	.card_reset	= kaan_card_reset,
 	.card_request	= kaan_card_request,
+	.output		= kaan_display,
 	.send		= kaan_send,
 	.recv		= kaan_recv,
 	.set_protocol	= kaan_set_protocol,

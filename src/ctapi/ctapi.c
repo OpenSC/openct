@@ -12,7 +12,9 @@
 #include <openct/error.h>
 #include "ctapi.h"
 
-static int	ifd_ctapi_control(ifd_reader_t *, ifd_apdu_t *);
+static int	ifd_ctapi_control(ifd_reader_t *,
+			const void *, size_t,
+			void *, size_t);
 static int	ifd_ctapi_reset(ifd_reader_t *, ifd_iso_apdu_t *,
 			ct_buf_t *, time_t, const char *);
 static int	ifd_ctapi_request_icc(ifd_reader_t *, ifd_iso_apdu_t *,
@@ -73,17 +75,11 @@ CT_data(unsigned short ctn,
 	unsigned char  *rsp)
 {
 	ifd_reader_t	*reader;
-	ifd_apdu_t	apdu;
 	int		rc;
 
 	if (!(reader = ifd_reader_by_index(ctn))
 	 || !sad || !dad)
 		return ERR_INVALID;
-
-	apdu.snd_len = lc;
-	apdu.snd_buf = cmd;
-	apdu.rcv_len = *lr;
-	apdu.rcv_buf = rsp;
 
 	if (ct_config.debug > 1) {
 		ct_debug("CT_data(dad=%d lc=%u lr=%u cmd=%s",
@@ -91,17 +87,20 @@ CT_data(unsigned short ctn,
 	}
 	switch (*dad) {
 	case 0:
-		rc = ifd_card_command(reader, 0, &apdu);
+		rc = ifd_card_command(reader, 0,
+				cmd, lc, rsp, *lr);
 		break;
 	case 1:
-		rc = ifd_ctapi_control(reader, &apdu);
+		rc = ifd_ctapi_control(reader,
+				cmd, lc, rsp, *lr);
 		break;
 	case 2:
 		ct_error("CT-API: host talking to itself - "
 			  "needs professional help?");
 		return ERR_INVALID;
 	case 3:
-		rc = ifd_card_command(reader, 1, &apdu);
+		rc = ifd_card_command(reader, 1,
+				cmd, lc, rsp, *lr);
 		break;
 	default:
 		ct_error("CT-API: unknown DAD %u", *dad);
@@ -120,22 +119,24 @@ CT_data(unsigned short ctn,
  * Handle CTBCS messages
  */
 int
-ifd_ctapi_control(ifd_reader_t *reader, ifd_apdu_t *apdu)
+ifd_ctapi_control(ifd_reader_t *reader,
+		const void *cmd, size_t cmd_len,
+		void *rsp, size_t rsp_len)
 {
 	ifd_iso_apdu_t	iso;
 	ct_buf_t	sbuf, rbuf;
 	int		rc;
 
-	if (apdu->rcv_len < 2)
+	if (rsp_len < 2)
 		return ERR_INVALID;
 
-	if (ifd_apdu_to_iso(apdu->rcv_buf, apdu->rcv_len, &iso) < 0) {
+	if (ifd_iso_apdu_parse(cmd, cmd_len, &iso) < 0) {
 		ct_error("Unable to parse CTBCS APDU");
 		return ERR_INVALID;
 	}
 
-	ct_buf_set(&sbuf, apdu->snd_buf, apdu->snd_len);
-	ct_buf_init(&rbuf, apdu->rcv_buf, apdu->rcv_len);
+	ct_buf_set(&sbuf, (void *) cmd, cmd_len);
+	ct_buf_init(&rbuf, rsp, rsp_len);
 
 	if (iso.cla != CTBCS_CLA) {
 		ct_error("Bad CTBCS APDU, cla=0x%02x", iso.cla);
@@ -164,8 +165,7 @@ ifd_ctapi_control(ifd_reader_t *reader, ifd_apdu_t *apdu)
 	if (ct_buf_avail(&rbuf) > iso.le + 2)
 		ifd_ctapi_error(&rbuf, CTBCS_SW_BAD_LENGTH);
 
-out:	apdu->rcv_len = ct_buf_avail(&rbuf);
-	return apdu->rcv_len;
+out:	return ct_buf_avail(&rbuf);
 }
 
 /*

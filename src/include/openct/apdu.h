@@ -7,13 +7,6 @@
 #ifndef IFD_APDU_H
 #define IFD_APDU_H
 
-typedef struct ifd_apdu {
-	unsigned char *		snd_buf;
-	unsigned int		snd_len;
-	unsigned char *		rcv_buf;
-	unsigned int		rcv_len;
-} ifd_apdu_t;
-
 typedef struct ifd_iso_apdu {
 	unsigned char		cse, cla, ins, p1, p2;
 	unsigned int		lc, le;
@@ -40,7 +33,7 @@ enum {
 #define IFD_APDU_CASE_LC(c)	((c) & 0x02)
 #define IFD_APDU_CASE_LE(c)	((c) & 0x01)
 
-extern int	ifd_apdu_to_iso(const void *, size_t, ifd_iso_apdu_t *);
+extern int	ifd_iso_apdu_parse(const void *, size_t, ifd_iso_apdu_t *);
 extern int	ifd_apdu_case(const void *, size_t);
 
 #endif /* IFD_APDU_H */
