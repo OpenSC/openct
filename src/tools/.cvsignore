@@ -23,4 +23,5 @@ Makefile
 Makefile.in
 core
 gmon.out
+openct-control
 openct-tool
