@@ -55,14 +55,15 @@ typedef struct {
 
 #define T1_BUFFER_SIZE		(3 + 254 + 2)
 
+/* internal state, do not mess with it. */
+/* should be != DEAD after reset/init */
 enum {
-	SENDING, RECEIVING, RESYNCH, CONFUSED
+	SENDING, RECEIVING, RESYNCH, DEAD
 };
 
 static void		t1_set_checksum(t1_state_t *, int);
 static unsigned	int	t1_block_type(unsigned char);
 static unsigned int	t1_seq(unsigned char);
-static int		t1_resynch(t1_state_t *t1);
 static unsigned	int	t1_build(t1_state_t *, unsigned char *,
 				unsigned char, unsigned char,
 				ct_buf_t *, size_t *);
@@ -181,28 +182,25 @@ t1_get_param(ifd_protocol_t *prot, int type, long *result)
  * Send an APDU through T=1
  */
 static int
-do_transceive(ifd_protocol_t *prot, int dad,
+t1_transceive(ifd_protocol_t *prot, int dad,
 		const void *snd_buf, size_t snd_len,
 		void *rcv_buf, size_t rcv_len)
 {
 	t1_state_t	*t1 = (t1_state_t *) prot;
 	ct_buf_t	sbuf, rbuf, tbuf;
 	unsigned char	sdata[T1_BUFFER_SIZE], sblk[5];
-	unsigned int	slen, retries, last_send = 0, sent_length = 0;
+	unsigned int	slen, retries, resyncs, last_send = 0, sent_length = 0;
 
 	if (snd_len == 0)
 		return -1;
 
-	/* A confused card or reader needs a reset first */
-	if (t1->state == CONFUSED)
-		return -1;
-
-	/* Perform resynch if required */
-	if (t1->state == RESYNCH && t1_resynch(t1) < 0)
+	/* we can't talk to a dead card / reader. Reset it! */
+	if (t1->state == DEAD)
 		return -1;
 
 	t1->state = SENDING;
 	retries = t1->retries;
+	resyncs = 3;
 
 	/* Initialize send/recv buffer */
 	ct_buf_set(&sbuf, (void *) snd_buf, snd_len);
@@ -218,19 +216,15 @@ do_transceive(ifd_protocol_t *prot, int dad,
 		retries--;
 
 		if ((n = t1_xcv(t1, sdata, slen, sizeof(sdata))) < 0) {
-			ifd_debug(1, "transmit/receive failed");
-			if (retries == 0 || sent_length)
-				goto error;
-			slen = t1_build(t1, sdata, dad,
-					T1_R_BLOCK | T1_OTHER_ERROR,
-					NULL, NULL);
-			continue;
+			ifd_debug(1, "fatal: transmit/receive failed");
+			t1->state = DEAD;
+			goto error;
 		}
 
 		if (!t1_verify_checksum(t1, sdata, n)) {
 			ifd_debug(1, "checksum failed");
 			if (retries == 0 || sent_length)
-				goto error;
+				goto resync;
 			slen = t1_build(t1, sdata,
 					dad, T1_R_BLOCK | T1_EDC_ERROR,
 					NULL, NULL);
@@ -318,6 +312,7 @@ do_transceive(ifd_protocol_t *prot, int dad,
 				t1->state = SENDING;
 				sent_length =0;
 				last_send = 0;
+				resyncs = 3;
 				ct_buf_init(&rbuf, rcv_buf, rcv_len);
 				slen = t1_build(t1, sdata, dad, T1_I_BLOCK,
 						&sbuf, &last_send);
@@ -325,24 +320,22 @@ do_transceive(ifd_protocol_t *prot, int dad,
 			}
 
 			if (T1_S_IS_RESPONSE(pcb))
-				goto error;
+				goto resync;
 
 			ct_buf_init(&tbuf, sblk, sizeof(sblk));
 
 			switch (T1_S_TYPE(pcb)) {
 			case T1_S_RESYNC:
-				ifd_debug(1, "resynch requested");
-				if (retries == 0)
-					goto error;
-				t1_set_defaults(t1);
+				/* the card is not allowed to send a resync. */
+				goto resync;
 				break;
 			case T1_S_ABORT:
 				ifd_debug(1, "abort requested");
-				goto error;
+				goto resync;
 			case T1_S_IFS:
 				ifd_debug(1, "CT sent S-block with ifs=%u", sdata[3]);
-				if (sdata[3] == 0)
-					goto error;
+				if (sdata[3] == 0) 
+					goto resync;
 				t1->ifsc = sdata[3];
 				ct_buf_putc(&tbuf, sdata[3]);
 				break;
@@ -355,7 +348,7 @@ do_transceive(ifd_protocol_t *prot, int dad,
 				break;
 			default:
 				ct_error("T=1: Unknown S block type 0x%02x", T1_S_TYPE(pcb));
-				goto error;
+				goto resync;
 			}
 
 			slen = t1_build(t1, sdata, dad,
@@ -365,35 +358,25 @@ do_transceive(ifd_protocol_t *prot, int dad,
 
 		/* Everything went just splendid */
 		retries = t1->retries;
+		continue;
+
+resync:
+		/* the number or resyncs is limited, too */
+		if (resyncs == 0)
+			goto error;
+		resyncs--;
+		t1->ns = 0;
+		t1->nr = 0;
+		slen = t1_build(t1, sdata, dad, T1_S_BLOCK|T1_S_RESYNC, NULL,
+				NULL);
+		t1->state = RESYNCH;
+		continue;
 	}
 
 done:	return ct_buf_avail(&rbuf);
 
-error:	t1->state = RESYNCH;
+error:	t1->state = DEAD;
 	return -1;
-}
-
-static int
-t1_transceive(ifd_protocol_t *prot, int dad,
-		const void *snd_buf, size_t snd_len,
-		void *rcv_buf, size_t rcv_len)
-{
-	t1_state_t	*t1 = (t1_state_t *) prot;
-	int		rc;
-
-	rc = do_transceive(prot, dad, snd_buf, snd_len, rcv_buf, rcv_len);
-	if (rc < 0 && t1->state == RESYNCH) {
-		/* Some sort of T1 error. Try again,
-		 * if the problem persists, mark the
-		 * device as terminally confused.
-		 */
-		rc = do_transceive(prot, dad,
-					snd_buf, snd_len,
-					rcv_buf, rcv_len);
-		if (rc < 0 && t1->state == RESYNCH)
-			t1->state = CONFUSED;
-	}
-	return rc;
 }
 
 static unsigned
@@ -458,21 +441,6 @@ t1_build(t1_state_t *t1, unsigned char *block,
 }
 
 /*
- * Resynchronize
- */
-int
-t1_resynch(t1_state_t *t1)
-{
-	unsigned char	block[T1_BUFFER_SIZE];
-	unsigned int	n;
-
-	t1_set_defaults(t1);
-
-	n = t1_build(t1, block, 0x21, T1_S_BLOCK | T1_S_RESYNC, NULL, NULL);
-	return t1_xcv(t1, block, n, sizeof(block));
-}
-
-/*
  * Protocol struct
  */
 struct ifd_protocol_ops	ifd_protocol_t1 = {
@@ -510,12 +478,6 @@ t1_verify_checksum(t1_state_t *t1, unsigned char *rbuf, size_t len)
 	t1->checksum(rbuf, m, csum);
 	if (!memcmp(rbuf + m, csum, n))
 		return 1;
-
-#if 0
-	/* Some (e.g. eToken) will send a 0 checksum */
-	if (rbuf[m] == 0 && (n == 1 || rbuf[m+1] == 0))
-		return 1;
-#endif
 
 	return 0;
 }
