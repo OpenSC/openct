@@ -1,8 +1,9 @@
-
-
 TODO list
 
  -	error handling: use error codes everywhere, add ct_strerror
  -	pin verification via keypad
  -	ifdhandler should clear status file slot on exit
  
+openct-control init:
+	debug messages to syslog
+
