@@ -1,10 +1,10 @@
 
 SUBDIRS	= \
-	libcardreader \
-	libifd \
+	ct \
+	ifd \
 	ctapi \
 	pcsc \
-	ifdd \
+	daemon \
 	tools
 
 all clean distclean:
