@@ -195,7 +195,9 @@ usage(int exval)
 " atr   print ATR of card in selected reader\n"
 " wait  wait for card to be inserted\n"
 " rwait wait for reader to attached\n"
-" mf    try to select main folder of card\n", OPENCT_CONF_PATH
+" mf    try to select main folder of card\n"
+" read  dump memory of synchronous card\n",
+OPENCT_CONF_PATH
 );
 	exit(exval);
 }
@@ -345,8 +347,12 @@ dump(unsigned char *data, size_t len)
 		unsigned int i;
 
 		printf("%04x:", offset);
-		for (i = 0; i < 16 && offset + i < len; i++)
-			printf(" %02x", data[offset+i]);
+		for (i = 0; i < 16; i++) {
+			if (offset + i < len)
+				printf(" %02x", data[offset+i]);
+			else
+				printf("   ");
+		}
 		printf("   ");
 		for (i = 0; i < 16 && offset + i < len; i++) {
 			int	c = data[offset+i];
