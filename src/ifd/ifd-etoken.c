@@ -137,13 +137,15 @@ failed:	ifd_error("etoken: failed to activate token");
 static int
 et_send(ifd_reader_t *reader, unsigned int dad, const void *buffer, size_t len)
 {
-	return et_control(reader->device, 0x40, 0x06, 0, 0, buffer, len, -1);
+	return et_control(reader->device, 0x40, 0x06, 0, 0,
+				(void *) buffer, len, -1);
 }
 
 static int
 et_recv(ifd_reader_t *reader, unsigned int dad, void *buffer, size_t len, long timeout)
 {
-	return et_control(reader->device, 0xc0, 0x86, 0, 0, buffer, len, timeout);
+	return et_control(reader->device, 0xc0, 0x86, 0, 0,
+				buffer, len, timeout);
 }
 
 /*
