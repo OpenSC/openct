@@ -79,13 +79,11 @@ main(int argc, char **argv)
 	ifd_init();
 
 	/* Parse IFD config file */
-	if (ct_config_parse(opt_config) < 0)
+	if (ifd_config_parse(opt_config) < 0)
 		exit(1);
 
 	if (opt_debug > ct_config.debug)
 		ct_config.debug = opt_debug;
-
-	ifd_hotplug_init();
 
 	if (opt_command == CMD_LIST) {
 		int	i = 0, num = ifd_reader_count();

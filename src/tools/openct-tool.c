@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <openct/conf.h>
 #include <openct/openct.h>
 
 static void	usage(int exval);
@@ -74,15 +73,6 @@ main(int argc, char **argv)
 		if (optind != argc)
 			usage(1);
 	}
-
-#if 0
-	/* Parse IFD config file */
-	if (ct_config_parse(opt_config) < 0)
-		exit(1);
-#endif
-
-	if (opt_debug > ct_config.debug)
-		ct_config.debug = opt_debug;
 
 	if (opt_command == CMD_LIST) {
 		int	i = 0, num = IFD_MAX_READER;

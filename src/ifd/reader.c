@@ -20,6 +20,7 @@ ifd_open(const char *driver_name, const char *device_name)
 	const ifd_driver_t *driver;
 	ifd_reader_t	*reader;
 
+	ifd_debug(1, "trying to open %s@%s", driver_name, device_name);
 	if (!driver_name || !strcmp(driver_name, "auto")) {
 		char	pnp_id[64];
 

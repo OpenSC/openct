@@ -5,8 +5,8 @@
  * A hotplug event includes an ID and a device file name
  * 
  * The format of the ID is
- * 	usb:id=vendor,product
- * 	pcmcia:id=vendor,product
+ * 	usb:id=vendor/product
+ * 	pcmcia:id=vendor/product
  */
 
 #include "internal.h"
@@ -14,9 +14,14 @@
 int
 ifd_hotplug_init(void)
 {
-	if (ct_config.hotplug_scan_on_startup) {
+	unsigned int	enable;
+
+	ifd_debug(1, "called");
+	if (ifd_conf_get_bool("hotplug", &enable) >= 0)
+		ct_config.hotplug = enable;
+
+	if (ct_config.hotplug)
 		ifd_sysdep_usb_scan();
-	}
 	return 0;
 }
 

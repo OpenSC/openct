@@ -53,17 +53,14 @@ main(int argc, char **argv)
 	if (optind != argc)
 		usage(1);
 
-	/* Initialize IFD library */
-	ifd_init();
+	ct_config.debug = opt_debug;
 
 	/* Parse IFD config file */
-	if (ct_config_parse(opt_config) < 0)
+	if (ifd_config_parse(opt_config) < 0)
 		exit(1);
 
-	if (opt_debug > ct_config.debug)
-		ct_config.debug = opt_debug;
-
-	ifd_hotplug_init();
+	/* Initialize IFD library */
+	ifd_init();
 
 	/* Test code: just listen on the socket for reader #0 */
 	mgr_spawn_handler(0, ifd_reader_by_index(0));

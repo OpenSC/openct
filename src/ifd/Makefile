@@ -5,7 +5,7 @@ LIBS	= libifd.a libifd.so
 APPS	= print-atr
 DRIVERS	= etoken.c kaan.c towitoko.c
 OBJS	= init.o manager.o device.o reader.o driver.o hotplug.o \
-          modules.o confparse.o \
+          modules.o conf.o \
 	  protocol.o proto-t0.o proto-t1.o proto-trans.o \
 	  serial.o usb.o \
 	  $(DRIVERS:.c=.o) \

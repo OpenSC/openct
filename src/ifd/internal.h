@@ -116,6 +116,7 @@ extern unsigned int	csum_lrc_compute(const unsigned char *, size_t, unsigned cha
 extern unsigned int	csum_crc_compute(const unsigned char *, size_t, unsigned char *);
 
 /* hotplug.c */
+extern int		ifd_hotplug_init(void);
 extern int		ifd_hotplug_attach(const char *, const char *);
 extern int		ifd_hotplug_detach(const char *, const char *);
 

@@ -116,7 +116,7 @@ ifd_sysdep_usb_scan(void)
 			char	idstring[64], device[PATH_MAX];
 
 			snprintf(idstring, sizeof(idstring),
-				"usb:%04x,%04x",
+				"usb:%04x/%04x",
 				dev->descriptor.idVendor,
 				dev->descriptor.idProduct);
 
