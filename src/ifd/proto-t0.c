@@ -15,6 +15,7 @@ typedef struct {
 
 	int		state;
 	long		timeout;
+	unsigned int	block_oriented;
 	unsigned int	max_nulls;
 } t0_state_t;
 
@@ -71,6 +72,9 @@ t0_set_param(ifd_protocol_t *prot, int type, long value)
 	case IFD_PROTOCOL_RECV_TIMEOUT:
 		t0->timeout = value;
 		break;
+	case IFD_PROTOCOL_BLOCK_ORIENTED:
+		t0->block_oriented = value;
+		break;
 	default:
 		ct_error("Unsupported parameter %d", type);
 		return -1;
@@ -88,6 +92,9 @@ t0_get_param(ifd_protocol_t *prot, int type, long *result)
 	switch (type) {
 	case IFD_PROTOCOL_RECV_TIMEOUT:
 		value = t0->timeout;
+		break;
+	case IFD_PROTOCOL_BLOCK_ORIENTED:
+		value = t0->block_oriented;
 		break;
 	default:
 		ct_error("Unsupported parameter %d", type);
@@ -214,6 +221,15 @@ t0_xcv(ifd_protocol_t *prot,
 	ct_buf_t	sbuf, rbuf;
 	unsigned int	null_count = 0;
 	unsigned int	ins;
+
+	/* Let the driver handle any chunking etc */
+	if (t0->block_oriented) {
+		int	rc;
+
+		if ((rc = ifd_send_command(prot, sdata, slen)) >= 0)
+			rc = ifd_recv_response(prot, rdata, rlen, t0->timeout);
+		return rc;
+	}
 
 	/* Set up the send buffer */
 	ct_buf_set(&sbuf, (void *) sdata, slen);

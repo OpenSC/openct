@@ -74,6 +74,7 @@ typedef struct ifd_reader {
 
 enum {
 	IFD_PROTOCOL_RECV_TIMEOUT = 0x0000,
+	IFD_PROTOCOL_BLOCK_ORIENTED,
 
 	/* T=0 specific parameters */
 	__IFD_PROTOCOL_T0_PARAM_BASE = IFD_PROTOCOL_T0 << 16,

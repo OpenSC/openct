@@ -13,6 +13,7 @@
 typedef struct {
 	ifd_protocol_t	base;
 	int		state;
+	int		block_oriented;
 
 	unsigned char	ns;
 	unsigned char	nr;
@@ -113,6 +114,11 @@ t1_init(ifd_protocol_t *prot)
 
 	t1_set_defaults(t1);
 	t1_set_checksum(t1, IFD_PROTOCOL_T1_CHECKSUM_LRC);
+
+	/* If the device is attached through USB etc, assume the
+	 * device will do the framing for us */
+	if (prot->reader->device->type != IFD_DEVICE_TYPE_SERIAL)
+		t1->block_oriented = 1;
 	return 0;
 }
 
@@ -136,6 +142,9 @@ t1_set_param(ifd_protocol_t *prot, int type, long value)
 	switch (type) {
 	case IFD_PROTOCOL_RECV_TIMEOUT:
 		t1->timeout = value;
+		break;
+	case IFD_PROTOCOL_BLOCK_ORIENTED:
+		t1->block_oriented = value;
 		break;
 	case IFD_PROTOCOL_T1_CHECKSUM_LRC:
 	case IFD_PROTOCOL_T1_CHECKSUM_CRC:
@@ -164,6 +173,9 @@ t1_get_param(ifd_protocol_t *prot, int type, long *result)
 	switch (type) {
 	case IFD_PROTOCOL_RECV_TIMEOUT:
 		value = t1->timeout;
+		break;
+	case IFD_PROTOCOL_BLOCK_ORIENTED:
+		value = t1->block_oriented;
 		break;
 	default:
 		ct_error("Unsupported parameter %d", type);
@@ -536,7 +548,7 @@ t1_xcv(t1_state_t *t1, unsigned char *block, size_t slen, size_t rmax)
 	timeout = t1->timeout + 1000 * t1->wtx;
 	t1->wtx = 0;
 
-	if (prot->reader->device->type != IFD_DEVICE_TYPE_SERIAL) {
+	if (t1->block_oriented) {
 		/* Note - Linux USB seems to have an off by one error, you
 		 * actually need the + 1 to get the RC byte */
 		rlen++;
