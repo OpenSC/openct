@@ -38,7 +38,10 @@ typedef struct ifd_driver {
 #define IFD_MAX_ATR_LEN		64
 typedef struct ifd_slot {
 	unsigned int		handle;
+
 	int			status;
+	time_t			next_update;
+
 	unsigned char		dad;	/* address when using T=1 */
 	unsigned int		atr_len;
 	unsigned char		atr[IFD_MAX_ATR_LEN];

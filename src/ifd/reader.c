@@ -392,6 +392,11 @@ ifd_card_command(ifd_reader_t *reader, unsigned int idx,
 		return -1;
 	}
 
+	/* An application is talking to the card. Prevent
+	 * automatic card status updates from slowing down
+	 * things */
+	slot->next_update = time(NULL) + 1;
+
 	return ifd_protocol_transceive(slot->proto, slot->dad,
 				sbuf, slen, rbuf, rlen);
 }

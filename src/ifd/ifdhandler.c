@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <time.h>
 
 #include <openct/ifd.h>
 #include <openct/conf.h>
@@ -187,7 +188,16 @@ ifdhandler_poll_presence(struct pollfd *pfd, unsigned int max, void *ptr)
 		static unsigned int	card_seq = 1;
 		unsigned int		prev_seq, new_seq;
 		ct_info_t		*info;
+		time_t			now;
 		int			status;
+
+		time(&now);
+		if (now < reader->slot[n].next_update)
+			continue;
+
+		/* Poll card status at most once a second
+		 * XXX: make this configurable */
+		reader->slot[n].next_update = now + 1;
 
 		if (ifd_card_status(reader, n, &status) < 0)
 			continue;
