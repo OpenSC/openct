@@ -185,8 +185,7 @@ extern void			ifd_protocol_free(ifd_protocol_t *);
 			ct_debug("%s: " fmt, __FUNCTION__ , ##args); \
 	} while (0)
 #else
-/* XXX: rewrite ifd_debug */
-#define ifd_debug(level, fmt, args, ...) {}
+extern void			ifd_debug(int level, const char *fmt, ...);
 #endif
 
 #ifdef __cplusplus

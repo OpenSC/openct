@@ -7,8 +7,23 @@
 #include "internal.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <unistd.h>
 #include <sys/wait.h>
+
+#ifndef __GNUC__
+void ifd_debug(int level, const char *fmt, ...)
+{
+	va_list ap;
+	char str[2048];
+
+	va_start(ap, fmt);
+	vsnprintf(str, sizeof(str), fmt, ap);
+	if (level <= ct_config.debug)
+		ct_debug(str);
+	va_end(ap);
+}
+#endif
 
 unsigned int
 ifd_count_bits(unsigned int word)
