@@ -5,7 +5,7 @@ dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.52)
 
 AC_INIT(LICENSE)
-AM_INIT_AUTOMAKE(openct, CVS)
+AM_INIT_AUTOMAKE(openct, 0.6.0-alpha)
 AM_CONFIG_HEADER(config.h)
 
 AC_CONFIG_SRCDIR(src/ifd/ifdhandler.c)
