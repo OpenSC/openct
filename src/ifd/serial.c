@@ -53,6 +53,9 @@ ifd_serial_get_params(ifd_device_t *dev, ifd_device_params_t *params)
 	else
 		params->serial.parity = IFD_SERIAL_PARITY_EVEN;
 
+	if ((t.c_iflag & (INPCK | PARMRK)) == (INPCK | PARMRK))
+		params->serial.check_parity = 1;
+
 	if (ioctl(dev->fd, TIOCMGET, &control) < 0) {
 		ct_error("%s: TIOCMGET: %m", dev->name);
 		return -1;
@@ -71,7 +74,7 @@ static int
 ifd_serial_set_params(ifd_device_t *dev, const ifd_device_params_t *params)
 {
 	unsigned int	speed;
-	int		control;
+	int		control, ocontrol;
 	struct termios	t;
 
 	if (tcgetattr(dev->fd, &t) < 0) {
@@ -122,9 +125,15 @@ ifd_serial_set_params(ifd_device_t *dev, const ifd_device_params_t *params)
 	if (params->serial.stopbits > 1)
 		t.c_cflag |= CSTOPB;
 
-	t.c_iflag = IGNBRK | IGNPAR;
-	t.c_oflag = 0;
+	t.c_iflag = IGNBRK;
+	if (params->serial.check_parity)
+		t.c_iflag = INPCK | PARMRK;
+	else
+		t.c_iflag |= IGNPAR;
+
+	t.c_cflag &= ~CRTSCTS;
 	t.c_cflag |= HUPCL | CREAD | CLOCAL;
+	t.c_oflag = 0;
 	t.c_lflag = 0;
 
 	if (tcsetattr(dev->fd, TCSANOW, &t) < 0) {
@@ -135,19 +144,20 @@ ifd_serial_set_params(ifd_device_t *dev, const ifd_device_params_t *params)
 	if ((speed = termios_to_speed(cfgetospeed(&t))) != 0)
 		dev->etu = 1000000 / speed;
 
-
-	if (ioctl(dev->fd, TIOCMGET, &control) < 0) {
+	if (ioctl(dev->fd, TIOCMGET, &ocontrol) < 0) {
 		ct_error("%s: TIOCMGET: %m", dev->name);
 		return -1;
 	}
-	control &= ~(TIOCM_DTR | TIOCM_RTS);
+	control = ocontrol & ~(TIOCM_DTR | TIOCM_RTS);
 	if (params->serial.rts) control |= TIOCM_RTS;
 	if (params->serial.dtr) control |= TIOCM_DTR;
-	if (ioctl(dev->fd, TIOCMSET, &control) < 0) {
+	if (((control ^ ocontrol) & (TIOCM_DTR | TIOCM_RTS))
+	 && ioctl(dev->fd, TIOCMSET, &control) < 0) {
 		ct_error("%s: TIOCMGET: %m", dev->name);
 		return -1;
 	}
 
+	dev->settings = *params;
 	return 0;
 }
 
@@ -158,6 +168,17 @@ static void
 ifd_serial_flush(ifd_device_t *dev)
 {
 	tcflush(dev->fd, TCIFLUSH);
+}
+
+/*
+ * Send a BREAK command
+ */
+void
+ifd_serial_send_break(ifd_device_t *dev)
+{
+	ioctl(dev->fd, TIOCSBRK);
+	usleep(500000);
+	ioctl(dev->fd, TIOCCBRK);
 }
 
 /*
@@ -186,9 +207,9 @@ ifd_serial_send(ifd_device_t *dev, const unsigned char *buffer, size_t len)
 static int
 ifd_serial_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeout)
 {
-	size_t		total = len;
+	size_t		total = len, to_read;
 	struct timeval	begin;
-	int		n;
+	int		n, last_ff = 0;
 
 	gettimeofday(&begin, NULL);
 
@@ -209,7 +230,12 @@ ifd_serial_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeo
 		}
 		if (n == 0)
 			continue;
-		n = read(dev->fd, buffer, len);
+
+		to_read = len;
+		if (dev->settings.serial.check_parity)
+			to_read = 1;
+
+		n = read(dev->fd, buffer, to_read);
 		if (n < 0) {
 			ct_error("%s: failed to read from device: %m",
 					dev->name);
@@ -217,6 +243,24 @@ ifd_serial_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeo
 		}
 		if (ct_config.debug >= 9)
 			ifd_debug(9, "serial recv:%s", ct_hexdump(buffer, n));
+		/* Check for parity errors and 0xFF */
+		if (dev->settings.serial.check_parity) {
+			if (last_ff) {
+				if (buffer[0] == 0x00) {
+					ct_error("%s: parity error on input", dev->name);
+					return -1;
+				}
+				if (buffer[0] != 0xFF) {
+					ifd_debug(1,
+						"%s: unexpected character pair FF %02x",
+						dev->name, buffer[0]);
+				}
+				last_ff = 0;
+			} else if (buffer[0] == 0xFF) {
+				last_ff = 1;
+				continue;
+			}
+		}
 		buffer += n;
 		len -= n;
 	}
@@ -325,6 +369,7 @@ ifd_open_serial(const char *name)
 	dev->type = IFD_DEVICE_TYPE_SERIAL;
 	dev->fd = fd;
 
+	memset(&params, 0, sizeof(params));
 	params.serial.speed = 9600;
 	params.serial.bits = 8;
 	params.serial.parity = IFD_SERIAL_PARITY_NONE;
@@ -341,7 +386,7 @@ ifd_open_serial(const char *name)
  * Map termios speed flags to speed
  */
 static struct {
-	int	bits, speed;
+	unsigned int	bits, speed;
 } termios_speed[] = {
 #ifdef B0
       {	B0,		0 },
