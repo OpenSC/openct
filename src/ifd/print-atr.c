@@ -19,6 +19,13 @@ static void	dump(unsigned char *data, size_t len);
 static unsigned int	opt_reader = 0;
 static const char *	opt_config = NULL;
 static int		opt_debug = 0;
+static int		opt_command = -1;
+
+enum {
+	CMD_ATR = 0,
+	CMD_MF,
+	CMD_LIST,
+};
 
 int
 main(int argc, char **argv)
@@ -43,8 +50,28 @@ main(int argc, char **argv)
 			usage(1);
 		}
 	}
-	if (optind != argc)
-		usage(1);
+
+	if (optind + 1 == argc) {
+		const char	*cmd = argv[optind];
+
+		if (!strcmp(cmd, "list"))
+			opt_command = CMD_LIST;
+		else
+		if (!strcmp(cmd, "atr"))
+			opt_command = CMD_ATR;
+		else
+		if (!strcmp(cmd, "mf"))
+			opt_command = CMD_MF;
+		else {
+			fprintf(stderr,
+				"Unknown command \"%s\"\n", cmd);
+			usage(1);
+		}
+	} else {
+		opt_command = CMD_LIST;
+		if (optind != argc)
+			usage(1);
+	}
 
 	/* Initialize IFD library */
 	ifd_init();
@@ -58,6 +85,22 @@ main(int argc, char **argv)
 
 	ifd_hotplug_init();
 
+	if (opt_command == CMD_LIST) {
+		int	i = 0, num = ifd_reader_count();
+
+		printf("Available reader positions: %d\n", num);
+		for (i = 0; i < num; i++) {
+			ifd_reader_t	*reader;
+
+			if (!(reader = ifd_reader_by_index(i)))
+				continue;
+			printf(" %2d %s\n", i, reader->name);
+		}
+
+		printf("Try option \"-h\" for help\n");
+		exit(0);
+	}
+
 	if (!(reader = ifd_reader_by_index(opt_reader))) {
 		fprintf(stderr, "Unknown reader #%u\n", opt_reader);
 		return 1;
@@ -70,7 +113,18 @@ main(int argc, char **argv)
 void
 usage(int exval)
 {
-	fprintf(stderr, "usage: print-atr [-d] [-f configfile] [-r reader]\n");
+	fprintf(stderr,
+"usage: print-atr [-d] [-f configfile] [-r reader] [command]\n"
+"  -d   enable debugging; repeat to increase verbosity\n"
+"  -f   specify config file (default /etc/ifd.conf\n"
+"  -r   specify index of reader to use\n"
+"  -h   display this message\n"
+"\n"
+"command: can be one of the following\n"
+" list  list all readers found\n"
+" atr   print ATR of card in selected reader\n"
+" mf    try to select ATR of card\n"
+);
 	exit(exval);
 }
 
@@ -101,12 +155,16 @@ print_atr(ifd_reader_t *reader)
 			fprintf(stderr, "failed to get ATR\n");
 			exit(1);
 		}
-		printf("ATR:");
-		for (m = 0; m < n; m++)
-			printf(" %02x", atr[m]);
-		printf("\n");
-
-		select_mf(reader);
+		switch (opt_command) {
+		case CMD_ATR:
+			printf("ATR:");
+			for (m = 0; m < n; m++)
+				printf(" %02x", atr[m]);
+			printf("\n");
+			break;
+		case CMD_MF:
+			select_mf(reader);
+		}
 	}
 
 	sleep(1);
