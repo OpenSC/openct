@@ -313,10 +313,12 @@ void
 usage(int exval)
 {
 	fprintf(stderr,
-"usage: ifdhandler [-Hds] driver device socket\n"
-"  -d   enable debugging; repeat to increase verbosity\n"
+"usage: ifdhandler [-Hds] [-r reader] driver [device]\n"
+"  -r   specify index of reader\n"
+"  -F   stay in foreground\n"
 "  -H   hotplug device, monitor for detach\n"
 "  -s   send error and debug messages to syslog\n"
+"  -d   enable debugging; repeat to increase verbosity\n"
 "  -h   display this message\n"
 );
 	exit(exval);
