@@ -13,7 +13,7 @@
  */
 typedef struct kaan_status {
 	ifd_protocol_t *	p;
-	int			icc_proto[IFD_MAX_SLOTS];
+	int			icc_proto[OPENCT_MAX_SLOTS];
 } kaan_status_t;
 
 static int		kaan_reset_ct(ifd_reader_t *reader);
