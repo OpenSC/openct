@@ -65,6 +65,11 @@
 			</listitem>
 
 			<listitem>
+				Support for Solaris was contributed by
+				William Wanders.
+			</listitem>
+
+			<listitem>
 				Thanks to Ville Skyttä for help with
 				the documentation.
 			</listitem>
