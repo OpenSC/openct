@@ -1,6 +1,6 @@
 #!/bin/sh
 
-test "$ACTION" == "add" || exit 0
+test "$ACTION" = "add" || exit 0
 
 if [ -e /var/run/openct/status ]
 then
