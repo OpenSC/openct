@@ -11,7 +11,6 @@
 
 #include <config.h>
 #include <sys/types.h>
-#include <linux/version.h>
 #include <linux/major.h>
 #include <linux/usbdevice_fs.h>
 #include <sys/sysmacros.h>
@@ -92,7 +91,7 @@ ifd_sysdep_usb_control(int fd,
 	struct usbdevfs_ctrltransfer ctrl;
 	int		rc;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,2)
+#ifdef LINUX_NEWUSB
 	ctrl.bRequestType = requesttype;
 	ctrl.bRequest = request;
 	ctrl.wValue = value;
