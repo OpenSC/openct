@@ -54,5 +54,8 @@ extern int		ct_card_transact(ct_handle *h, unsigned int slot,
 				const void *apdu, size_t apdu_len,
 				void *recv_buf, size_t recv_len);
 
+extern int		ct_master_control(const char *command,
+				char *replybuf, size_t replysize);
+
 #endif /* OPENCT_H */
 

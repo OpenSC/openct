@@ -17,6 +17,40 @@ static void	ct_args_int(ct_buf_t *, ifd_tag_t, unsigned int);
 static void	ct_args_string(ct_buf_t *, ifd_tag_t, const char *);
 
 /*
+ * Send a control command to the master socket
+ */
+int
+ct_master_control(const char *cmd, char *buf, size_t size)
+{
+	ct_socket_t	*sock;
+	char		path[128];
+	int		rc;
+
+	snprintf(path, sizeof(path), "%s/master", OPENCT_SOCKET_PATH);
+	if (!(sock = ct_socket_new(512)))
+		return IFD_ERROR_NO_MEMORY;
+
+	if ((rc = ct_socket_connect(sock, path)) < 0)
+		goto out;
+
+	/* Put command into send buffer and transmit */
+	if ((rc = ct_socket_puts(sock, cmd)) < 0
+	 || (rc = ct_socket_flsbuf(sock, 2)) < 0)
+		goto out;
+
+	/* Get complete response from server */
+	while (!sock->eof) {
+		if ((rc = ct_socket_filbuf(sock)) < 0)
+			goto out;
+	}
+
+	rc = ct_socket_gets(sock, buf, size);
+
+out:	ct_socket_close(sock);
+	return rc;
+}
+
+/*
  * Connect to a reader manager
  */
 ct_handle *
