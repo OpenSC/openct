@@ -10,15 +10,75 @@ AM_CONFIG_HEADER(config.h)
 
 AC_CONFIG_SRCDIR(src/ifd/ifdhandler.c)
 
+# LT Version numbers, remember to change them just *before* a release.
+#   (Code changed:                      REVISION++)
+#   (Interfaces added/removed/changed:  CURRENT++, REVISION=0)
+#   (Interfaces added:                  AGE++)
+#   (Interfaces removed:                AGE=0)
+OPENCT_LT_CURRENT=0
+OPENCT_LT_REVISION=1
+OPENCT_LT_AGE=0
+
+AC_SUBST(OPENCT_LT_CURRENT)
+AC_SUBST(OPENCT_LT_REVISION)
+AC_SUBST(OPENCT_LT_AGE)
+
 AC_CANONICAL_HOST
+AC_PROG_CC
+AC_C_BIGENDIAN
+
+dnl Check for some target-specific stuff
 case "$host" in
-	*linux*)
-		AC_CHECK_MEMBER(struct usbdevfs_ctrltransfer.bRequestType,
-				[AC_DEFINE(LINUX_NEWUSB,1,[new usb structure])],
-				[],
-				[#include <linux/usbdevice_fs.h>])
+*-*-linux*)
+	AC_CHECK_MEMBER(struct usbdevfs_ctrltransfer.bRequestType,
+		[AC_DEFINE(LINUX_NEWUSB,1,[new usb structure])],
+		[],
+		[#include <linux/usbdevice_fs.h>])
+	;;
+*-*-darwin*)
+	LIBS="$LIBS -lobjc"
+	if test "$GCC" = "yes"; then
+		CFLAGS="$CFLAGS -no-cpp-precomp"
+	fi
+	with_bundles=yes
 	;;
 esac
+
+AC_ARG_WITH(common-dir,
+	[  --with-common-dir=PATH  Specify path for common installation libraries],
+	[
+		if test "x$withval" != "xno" ; then
+			trycommondir=$withval
+		fi
+	]
+)
+
+saved_LDFLAGS="$LDFLAGS"
+saved_CPPFLAGS="$CPPFLAGS"
+AC_CACHE_CHECK([for common directory], ac_cv_commondir, [
+	for commondir in $trycommondir "" /usr/local /usr/pkg /opt ; do
+		# Skip directories if they don't exist
+		if test ! -z "$commondir" -a ! -d "$commondir/" ; then
+			continue;
+		fi
+		CPPFLAGS="$saved_CPPFLAGS"
+		LDFLAGS="$saved_LDFLAGS"
+
+		if test ! -z "$commondir" -a "x$commondir" != "x/usr"; then
+			LDFLAGS="-L$commondir/lib $saved_LDFLAGS"
+			if test ! -z "$need_dash_r" ; then
+				LDFLAGS="-R$commondir/lib $LDFLAGS"
+			fi
+			CPPFLAGS="-I$commondir/include $saved_CPPFLAGS"
+		fi
+		break;
+	done
+
+	if test -z "$commondir" ; then
+		commondir="(system)"
+	fi
+	ac_cv_commondir=$commondir
+])
 
 dnl Checks for programs.
 AC_PROG_CPP
@@ -34,6 +94,26 @@ dnl Add libtool support.
 AM_PROG_LIBTOOL
 dnl Automatically update the libtool script if it becomes out-of-date.
 #AC_SUBST(LIBTOOL_DEPS)
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_HEADER_SYS_WAIT
+AC_CHECK_HEADERS([errno.h fcntl.h malloc.h stdlib.h string.h strings.h sys/time.h unistd.h getopt.h dlfcn.h])
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_UID_T
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+
+dnl C Compiler features
+AC_C_INLINE
+if test "$GCC" = "yes"; then
+	CFLAGS="-Wall $CFLAGS"
+fi
+
+AC_SUBST(LIBDL)
+AC_CHECK_LIB(dl, dlopen, [LIBDL="$LIBDL -ldl" ac_cv_func_dlopen_ldl=yes], ac_cv_func_dlopen_ldl=no)
 
 PCSC_MSG=no
 pcsc_path=/usr
@@ -112,11 +192,6 @@ else
 	CFLAGS_PCSC=""
 fi
 
-AC_SUBST(LIBDL)
-AC_CHECK_LIB(dl, dlopen,
-	     [LIBDL="$LIBDL -ldl" ac_cv_func_dlopen_ldl=yes],
-	     ac_cv_func_dlopen_ldl=no)
-
 USB_MSG=no
 AC_SUBST(LIBUSB)
 AC_CHECK_LIB(usb, usb_init,
@@ -125,6 +200,8 @@ AC_CHECK_LIB(usb, usb_init,
 		AC_DEFINE(HAVE_LIBUSB,1, [Libusb is available])
 		USB_MSG=yes
 	])
+
+AM_CONDITIONAL(HAVE_BUNDLES, test "x$with_bundles" = "xyes")
 
 AC_OUTPUT([
 Makefile
