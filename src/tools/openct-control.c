@@ -118,9 +118,11 @@ mgr_init(int argc, char **argv)
 		free(nodes);
 	}
 
+#ifdef HAVE_LIBUSB
 	/* Create an ifdhandler process for every hotplug reader found */
 	if (opt_coldplug)
 		mgr_scan_usb();
+#endif 
 	return 0;
 }
 
