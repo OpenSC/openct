@@ -25,7 +25,7 @@ ifd_init(void)
 	ifd_kaan_register();
 	ifd_towitoko_register();
 	ifd_cardman_register();
-	/* ifd_smartboard_register(); not yet */
+	ifd_smartboard_register();
 
 	/* Register all builtin protocols */
 	ifd_protocol_register(&ifd_protocol_t0);
