@@ -32,7 +32,7 @@ ifd_protocol_by_id(int id)
 ifd_protocol_t *
 ifd_protocol_select(ifd_slot_t *slot, ifd_reader_t *reader, int preferred)
 {
-	unsigned char	*atr;
+	unsigned char	*atr, TDi;
 	unsigned int	supported = 0;
 	int		def_proto = -1, n, len;
 
@@ -46,8 +46,8 @@ ifd_protocol_select(ifd_slot_t *slot, ifd_reader_t *reader, int preferred)
 	/* Ignore hysterical bytes */
 	len -= atr[1] & 0x0f;
 
-	for (n = 2; n < len; ) {
-		unsigned char TDi;
+	n = 2;
+	do {
 		int	prot;
 
 		TDi = atr[n - 1];
@@ -59,7 +59,7 @@ ifd_protocol_select(ifd_slot_t *slot, ifd_reader_t *reader, int preferred)
 		}
 
 		n += ifd_count_bits(TDi & 0xF0);
-	}
+	} while (n < len && (TDi & 0x80));
 
 	if (supported == 0)
 		supported |= 0x01;
