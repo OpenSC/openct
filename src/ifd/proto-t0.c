@@ -213,9 +213,8 @@ t0_xcv(ifd_protocol_t *prot, ifd_apdu_t *apdu)
 {
 	t0_data_t	*t0 = (t0_data_t *) prot;
 	ifd_buf_t	sbuf, rbuf;
-	unsigned char	sdata[5];
-	unsigned int	ins, lc, le;
 	unsigned int	null_count = 0;
+	unsigned int	ins;
 
 	/* Set up the send buffer */
 	ifd_buf_set(&sbuf, apdu->snd_buf, apdu->snd_len);
