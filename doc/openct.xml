@@ -238,7 +238,35 @@ none	/proc/bus/usb	usbfs		defaults	0	0
 		<title>Installation</title>
 
 		<para>
-			First create the directory
+			First, you need to build the OpenCT libraries
+			and utilities. You do this by first invoking
+			the configure script, for instance
+			<screen>
+$ ./configure --prefix=/usr --sysconfdir=/etc
+			</screen>
+		</para>
+
+		<para>
+			This will try configure OpenCT so it is
+			installed below <filename>/usr</filename>,
+			and so that it expects its configuration
+			file <filename>/etc</filename>. If you omit
+			the "--sysconfdir" option, OpenCT will
+			look for the configuration file in
+			<filename>$PREFIX/etc</filename>.
+		</para>
+
+		<para>
+			Next, you need to compile and install
+			all libraries and utilities using
+			<screen>
+$ make
+$ make install
+			</screen>
+		</para>
+
+		<para>
+			Once that has completed, create the directory
 			<filename>/var/run/openct</filename> and set the
 			permissions. Do this with the commands:
 			<screen>
@@ -257,10 +285,13 @@ $ chmod 755 /var/run/openct
 		</para>
 
 		<para>
-			Second you need a config file
-			<filename>/etc/openct.conf</filename>.
-			Copy the file from the source code to 
-			<filename>/etc</filename>:
+			Next, you need the configuration file
+			<filename>openct.conf</filename>.
+			The exact location of the file depends
+			on how you invoked the
+			<filename>configure</filename> script, but
+			using the options shown above, the file
+			should go to <filename>/etc</filename>:
 			<screen>
 $ cp etc/openct.conf /etc/
 			</screen>
