@@ -75,7 +75,7 @@ main(int argc, char **argv)
 	}
 
 	if (opt_command == CMD_LIST) {
-		int	i = 0, num = IFD_MAX_READER;
+		int	i = 0, num = OPENCT_MAX_READERS;
 
 		printf("Available reader positions: %d\n", num);
 		for (i = 0; i < num; i++) {
