@@ -1,5 +1,5 @@
 
-SUBDIRS	= libifd ctapi
+SUBDIRS	= libifd ctapi pcsc
 
 all clean distclean:
 	for dir in $(SUBDIRS); do \
