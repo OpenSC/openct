@@ -360,11 +360,12 @@ ifd_atr_complete(const unsigned char *atr, size_t len)
 	int		proto = 0;
 
 	do {
+		if (j > len)
+			return 0;
 		c = atr[j-1];
 		if (j > 2)
 			proto = c & 0xF;
-		if ((j += ifd_count_bits(c & 0xF0)) > len)
-			return 0;
+		j += ifd_count_bits(c & 0xF0);
 	} while (c & 0x80);
 
 	/* Historical bytes */
