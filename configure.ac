@@ -60,7 +60,7 @@ case "$host" in
 		])
 	;;
 *-*-darwin*)
-	LIBS="$LIBS -lobjc"
+	LIBS="$LIBS -Wl,-framework,CoreFoundation"
 	if test "$GCC" = "yes"; then
 		CFLAGS="$CFLAGS -no-cpp-precomp"
 	fi
