@@ -12,7 +12,7 @@ libifd_la_SOURCES= apdu.c checksum.c conf.c confparse.c device.c driver.c \
 		   init.c internal.h linux.c locks.c manager.c modules.c \
 		   process.c proto-t0.c proto-t1.c proto-trans.c protocol.c \
 	           ctbcs.c ctbcs.h reader.c serial.c usb.c utils.c ${DRIVERS}
-libifd_la_LIBADD= -L$(top_builddir)/src/ct -lopenct -ldl -lusb
+libifd_la_LIBADD= -L$(top_builddir)/src/ct -lopenct -ldl 
 libifd_la_LDFLAGS= -versioninfo 0:0
 
 ifdhandler_SOURCES = ifdhandler.c ifdhandler.h
