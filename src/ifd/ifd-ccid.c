@@ -104,6 +104,10 @@ enum {
 #define FLAG_AUTO_ACTIVATE	4
 #define FLAG_AUTO_ATRPARSE	8
 
+#ifndef __GNUC__
+#pragma pack(push,1)
+#pragma pack(1)
+#endif
 struct usb_ccid_descriptor {
      uint8_t bLength;
      uint8_t bDescriptorType;
@@ -131,6 +135,8 @@ struct usb_ccid_descriptor {
 } __attribute__((packed));
 #else
 };
+#pragma pack()
+#pragma pack(pop,1)
 #endif
 
 static int ccid_parse_descriptor(struct usb_ccid_descriptor *ret,
