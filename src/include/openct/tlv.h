@@ -7,6 +7,10 @@
 #ifndef OPENCT_TLV_H
 #define OPENCT_TLV_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <openct/protocol.h>
 #include <openct/buffer.h>
 
@@ -47,5 +51,9 @@ extern void	ct_tlv_put_tag(ct_tlv_builder_t *, ifd_tag_t);
 extern void	ct_tlv_add_byte(ct_tlv_builder_t *, unsigned char);
 extern void	ct_tlv_add_bytes(ct_tlv_builder_t *,
 				const unsigned char *, size_t);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OPENCT_TLV_H */

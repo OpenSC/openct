@@ -415,7 +415,7 @@ kaan_card_reset(ifd_reader_t *reader, int nslot, void *result, size_t size)
 	unsigned char	cmd[5] = { 0x20, 0x10, nslot+1, 0x01, 0x00 };
 
 	ifd_debug(1, "called.");
-	return kaan_do_reset(reader, nslot, cmd, 5, result, size, 0);
+	return kaan_do_reset(reader, nslot, cmd, 5, (unsigned char *) result, size, 0);
 }
 
 /*
@@ -439,7 +439,7 @@ kaan_card_request(ifd_reader_t *reader, int slot,
 		return n;
 	buffer[n++] = 0x00;
 
-	return kaan_do_reset(reader, slot, buffer, n, atr, atr_len, timeout);
+	return kaan_do_reset(reader, slot, buffer, n, (unsigned char *) atr, atr_len, timeout);
 }
 
 /*

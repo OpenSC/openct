@@ -7,6 +7,10 @@
 #ifndef OPENCT_DRIVER_H
 #define OPENCT_DRIVER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <openct/device.h>
 
 struct ifd_driver_ops {
@@ -77,5 +81,8 @@ extern int		ifd_protocol_transceive(ifd_protocol_t *proto,
 				void *, size_t);
 extern int		ifd_protocol_resynchronize(ifd_protocol_t *, int);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OPENCT_DRIVER_H */

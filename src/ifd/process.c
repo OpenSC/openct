@@ -351,12 +351,12 @@ do_verify(ifd_reader_t *reader, int unit,
 
 	rc = ifd_card_perform_verify(reader, unit, timeout, message,
 					data, data_len,
-					msgbuf, sizeof(msgbuf));
+					(unsigned char *) msgbuf, sizeof(msgbuf));
 	if (rc < 0)
 		return rc;
 
 	ct_tlv_put_tag(resp, CT_TAG_CARD_RESPONSE);
-	ct_tlv_add_bytes(resp, msgbuf, rc);
+	ct_tlv_add_bytes(resp, (const unsigned char *) msgbuf, rc);
 	return 0;
 }
 

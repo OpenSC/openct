@@ -32,7 +32,7 @@
 static int	opt_debug = 0;
 static int	opt_hotplug = 0;
 static int	opt_foreground = 0;
-static int	opt_reader = -1;
+static unsigned int	opt_reader = -1;
 
 static void	usage(int exval);
 static void	ifdhandler_run(ifd_reader_t *);

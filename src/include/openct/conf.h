@@ -7,6 +7,10 @@
 #ifndef OPENCT_CONF_H
 #define OPENCT_CONF_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern struct ct_config {
 	int			debug;
 	int			autoload;
@@ -42,5 +46,9 @@ extern int	ifd_conf_node_get_string_list(ifd_conf_node_t *,
 				const char *, char **, size_t);
 extern int	ifd_conf_node_get_nodes(ifd_conf_node_t *,
 				const char *, ifd_conf_node_t **, size_t);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OPENCT_CONF_H */

@@ -48,7 +48,7 @@ int
 ct_buf_gets(ct_buf_t *bp, char *buffer, size_t size)
 {
 	unsigned int	n, avail;
-	char		*s;
+	unsigned char	*s;
 
 	size -= 1; /* room for NUL byte */
 

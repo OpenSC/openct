@@ -240,7 +240,7 @@ ifd_sync_detect_icc(ifd_reader_t *reader, int slot, void *atr, size_t size)
 		if (ifd_deactivate(reader) < 0
 		 || ifd_activate(reader) < 0)
 			goto failed;
-		n = ifd_protocol_read_memory(p, slot, 0, atr, size);
+		n = ifd_protocol_read_memory(p, slot, 0, (unsigned char *) atr, size);
 		if (n < 0)
 			goto failed;
 	} else {

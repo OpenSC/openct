@@ -38,22 +38,6 @@ ifd_revert_bits(unsigned char *data, size_t len)
 	}
 }
 
-const char *
-ct_hexdump(const unsigned char *data, size_t len)
-{
-	static char	string[1024];
-	unsigned int	i, left;
-
-	string[0] = '\0';
-	left = sizeof(string);
-	for (i = 0; len--; i += 3) {
-		if (i >= sizeof(string) - 4)
-			break;
-		snprintf(string + i, 4, " %02x", *data++);
-	}
-	return string;
-}
-
 #ifndef timersub
 # define timersub(a, b, result)						      \
   do {									      \

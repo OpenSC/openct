@@ -243,7 +243,7 @@ ct_card_transact(ct_handle *h, unsigned int slot,
 	ct_buf_putc(&args, CT_CMD_TRANSACT);
 	ct_buf_putc(&args, slot);
 
-	ct_args_opaque(&args, CT_TAG_CARD_REQUEST, send_data, send_len);
+	ct_args_opaque(&args, CT_TAG_CARD_REQUEST, (const unsigned char *) send_data, send_len);
 
 	rc = ct_socket_call(h->sock, &args, &resp);
 	if (rc < 0)
@@ -305,7 +305,7 @@ ct_card_write_memory(ct_handle *h, unsigned int slot,
 	ct_buf_putc(&args, slot);
 
 	ct_args_int(&args, CT_TAG_ADDRESS, address);
-	ct_args_opaque(&args, CT_TAG_DATA, send_buf, send_len);
+	ct_args_opaque(&args, CT_TAG_DATA, (const unsigned char *) send_buf, send_len);
 
 	rc = ct_socket_call(h->sock, &args, &resp);
 	if (rc < 0)
@@ -358,7 +358,7 @@ ct_card_verify(ct_handle *h, unsigned int slot,
 
 	/* Offset is 1 based */
 	ct_tlv_add_byte(&builder, pin_offset + 1);
-	ct_tlv_add_bytes(&builder, send_buf, send_len);
+	ct_tlv_add_bytes(&builder, (const unsigned char *) send_buf, send_len);
 
 	rc = ct_socket_call(h->sock, &args, &resp);
 	if (rc < 0)

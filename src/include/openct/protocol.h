@@ -8,6 +8,10 @@
 #ifndef OPENCT_PROTOCOL_H
 #define OPENCT_PROTOCOL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * A protocol message from client to server
  * consists of
@@ -58,5 +62,9 @@
 #define CT_TAG_COUNT		0x87
 
 #define __CT_TAG_LARGE		0x40
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OPENCT_PROTOCOL_H */

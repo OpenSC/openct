@@ -130,7 +130,7 @@ ifd_sysdep_usb_begin_capture(ifd_device_t *dev,
 	ifd_usb_capture_t	*cap;
 	int			rc = 0;
 
-	cap = calloc(1, sizeof(*cap) + maxpacket);
+	cap = (ifd_usb_capture_t *) calloc(1, sizeof(*cap) + maxpacket);
 
 	/* Assume the interface # is 0 */
 	cap->interface = 0;

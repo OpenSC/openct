@@ -7,11 +7,19 @@
 #ifndef OPENCT_SERVER_H
 #define OPENCT_SERVER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <sys/poll.h>
 
 typedef int	ct_poll_fn_t(struct pollfd *, unsigned int, void *);
 
 extern void	ct_mainloop(ct_socket_t *, ct_poll_fn_t *, void *);
 extern void	ct_mainloop_leave();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OPENCT_SERVER_H */

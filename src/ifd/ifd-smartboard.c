@@ -35,7 +35,7 @@
 
 static int	smartboard_reset_ct(ifd_reader_t *reader);
 static int	smartboard_command(ifd_reader_t *,
-				unsigned char, const char *, size_t,
+				unsigned char, const unsigned char *, size_t,
 				unsigned char *, void *, size_t);
 static int	__smartboard_cmd(ifd_reader_t *, unsigned char, const void *, size_t);
 static int	__smartboard_rsp(ifd_reader_t *, unsigned char *, void *, size_t);
@@ -338,7 +338,7 @@ bad_reply:
 
 int
 smartboard_command(ifd_reader_t *reader,
-			unsigned char cmd, const char *arg, size_t arg_len,
+			unsigned char cmd, const unsigned char *arg, size_t arg_len,
 			unsigned char *code, void *res, size_t res_len)
 {
 	int	n = 0, rc;

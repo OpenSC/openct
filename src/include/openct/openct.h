@@ -7,6 +7,10 @@
 #ifndef OPENCT_OPENCT_H
 #define OPENCT_OPENCT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <sys/types.h>
 
 /* Various implementation limits */
@@ -22,9 +26,7 @@ typedef struct ct_info {
 	pid_t		ct_pid;
 } ct_info_t;
 
-
 typedef struct ct_handle	ct_handle;
-
 
 #define IFD_CARD_PRESENT        0x0001
 #define IFD_CARD_STATUS_CHANGED 0x0002
@@ -87,11 +89,12 @@ extern int		ct_card_write_memory(ct_handle *, unsigned int slot,
 				unsigned short address,
 				const void *send_buf, size_t send_len);
 
-
-extern int		ct_master_control(const char *command,
-				char *replybuf, size_t replysize);
 extern int		ct_status_clear(unsigned int);
 extern ct_info_t *	ct_status_alloc_slot(unsigned int *);
 extern int		ct_status_update(ct_info_t *);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OPENCT_OPENCT_H */

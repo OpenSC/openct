@@ -7,6 +7,10 @@
 #ifndef OPENCT_DEVICE_H
 #define OPENCT_DEVICE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <openct/ifd.h>
 
 struct pollfd; /* for poll_presence */
@@ -103,5 +107,9 @@ extern void		ifd_serial_send_break(ifd_device_t *);
 extern int		ifd_serial_get_cts(ifd_device_t *);
 extern int		ifd_serial_get_dsr(ifd_device_t *);
 extern int		ifd_serial_get_dtr(ifd_device_t *);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OPENCT_DEVICE_H */

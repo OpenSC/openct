@@ -17,6 +17,7 @@
 #include <ctype.h>
 #include <openct/openct.h>
 #include <openct/logging.h>
+#include <openct/error.h>
 
 static void	usage(int exval);
 static int	do_reset(ct_handle *, unsigned char *, size_t);

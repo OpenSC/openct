@@ -183,7 +183,7 @@ bad_length:
  */
 static int
 ctapi_control(ct_handle *h,
-		const char *cmd, size_t cmd_len,
+		const unsigned char *cmd, size_t cmd_len,
 		void *rsp, size_t rsp_len)
 {
 	ct_buf_t	sbuf, rbuf;
@@ -256,7 +256,7 @@ CT_init(unsigned short ctn, unsigned short pn)
 	ct_handle *h;
 	ct_lock_handle lock;
 
-	if ((ct=malloc(sizeof(struct CardTerminal)))==(struct CardTerminal*)0)
+	if ((ct=(struct CardTerminal *) malloc(sizeof(struct CardTerminal)))==(struct CardTerminal*)0)
 		return ERR_MEMORY;
 	if (!(h = ct_reader_connect(pn))) {
 		free(ct);

@@ -7,6 +7,10 @@
 #ifndef OPENCT_IFD_H
 #define OPENCT_IFD_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <sys/types.h>
 #include <openct/openct.h>
 #include <openct/apdu.h>
@@ -29,7 +33,6 @@ enum {
 	IFD_PROTOCOL_4403,              /* Phonecard 4403 */
 	IFD_PROTOCOL_4433,              /* Phonecard 4433 */
 	IFD_PROTOCOL_TRANSPARENT = 128,
-
 };
 
 typedef struct ifd_protocol	ifd_protocol_t;
@@ -184,6 +187,10 @@ extern void			ifd_protocol_free(ifd_protocol_t *);
 #else
 /* XXX: rewrite ifd_debug */
 #define ifd_debug(level, fmt, args, ...) {}
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* OPENCT_IFD_H */

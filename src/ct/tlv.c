@@ -36,7 +36,7 @@ ct_tlv_parse(ct_tlv_parser_t *parser, ct_buf_t *bp)
 		if (avail < 2)
 			return -1;
 
-		p = ct_buf_head(bp);
+		p = (unsigned char *) ct_buf_head(bp);
 		tag = p[0];
 		len = p[1];
 
@@ -76,7 +76,7 @@ ct_tlv_get_string(ct_tlv_parser_t *parser, ifd_tag_t tag,
 	len = parser->len[tag];
 	if (len > size - 1)
 		len = size - 1;
-	strncpy(buf, p, len);
+	strncpy(buf, (const char *) p, len);
 	buf[len] = '\0';
 	return 1;
 }
@@ -174,7 +174,7 @@ ct_tlv_put_string(ct_tlv_builder_t *builder, ifd_tag_t tag,
 		return;
 
 	ct_tlv_put_tag(builder, tag);
-	ct_tlv_add_bytes(builder, string, strlen(string));
+	ct_tlv_add_bytes(builder, (const unsigned char *) string, strlen(string));
 
 	builder->lenp = NULL;
 }
@@ -204,7 +204,7 @@ ct_tlv_put_tag(ct_tlv_builder_t *builder, ifd_tag_t tag)
 	if (ct_buf_putc(bp, tag) < 0)
 		goto err;
 	builder->len = 0;
-	builder->lenp = ct_buf_tail(bp);
+	builder->lenp = (unsigned char *) ct_buf_tail(bp);
 	if (ct_buf_putc(bp, 0) < 0
 	 || (builder->use_large_tags && ct_buf_putc(bp, 0) < 0))
 		goto err;

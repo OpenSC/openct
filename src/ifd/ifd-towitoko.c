@@ -15,7 +15,7 @@ static int		twt_try_reset(ifd_reader_t *,
 				const void *, size_t,
 				void *, size_t);
 static int		twt_command(ifd_reader_t *,
-				const char *, size_t,
+				const void *, size_t,
 				void *, size_t);
 static int		twt_recv_checksum(const unsigned char *, size_t);
 static unsigned int	twt_send_checksum(unsigned char *, size_t);
@@ -231,9 +231,9 @@ twt_try_reset(ifd_reader_t *reader,
 		rc = ifd_device_transceive(dev, cmd, cmd_len,
 						atr, atr_len, 1000);
 	} else {
-		if (ifd_device_send(dev, cmd, cmd_len) < 0)
+		if (ifd_device_send(dev, (const unsigned char *) cmd, cmd_len) < 0)
 			return -1;
-		rc = ifd_device_recv(dev, atr, 1, 1000);
+		rc = ifd_device_recv(dev, (unsigned char *) atr, 1, 1000);
 	}
 	ct_config.hush_errors--;
 
@@ -611,7 +611,7 @@ twt_led(ifd_reader_t *reader, int what)
  * Helper functions
  */
 int
-twt_command(ifd_reader_t *reader, const char *cmd, size_t cmd_len,
+twt_command(ifd_reader_t *reader, const void *cmd, size_t cmd_len,
 		void *res, size_t res_len)
 {
 	unsigned char	buffer[254];

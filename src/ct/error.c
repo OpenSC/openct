@@ -67,6 +67,23 @@ ct_debug(const char *fmt, ...)
 	va_end(ap);
 }
 
+const char *
+ct_hexdump(const void *data, size_t len)
+{
+	static char	string[1024];
+	unsigned char	*d = (unsigned char *) data;
+	unsigned int	i, left;
+
+	string[0] = '\0';
+	left = sizeof(string);
+	for (i = 0; len--; i += 3) {
+		if (i >= sizeof(string) - 4)
+			break;
+		snprintf(string + i, 4, " %02x", *d++);
+	}
+	return string;
+}
+
 #define DIM(v)		(sizeof(v)/(sizeof((v)[0])))
 
 const char *ct_strerror(int rc)

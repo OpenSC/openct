@@ -7,6 +7,10 @@
 #ifndef OPENCT_SOCKET_H
 #define OPENCT_SOCKET_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <sys/types.h>
 #include <openct/types.h>
 #include <openct/buffer.h>
@@ -64,5 +68,9 @@ extern int		ct_socket_write(ct_socket_t *, void *, size_t);
 extern int		ct_socket_read(ct_socket_t *, void *, size_t);
 extern void		ct_socket_link(ct_socket_t *, ct_socket_t *);
 extern void		ct_socket_unlink(ct_socket_t *);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OPENCT_SOCKET_H */

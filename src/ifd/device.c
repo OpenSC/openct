@@ -154,9 +154,9 @@ ifd_device_transceive(ifd_device_t *dev,
 
 	/* Fall back to send/recv */
 	ifd_device_flush(dev);
-	if (ifd_device_send(dev, sbuf, slen) < 0)
+	if (ifd_device_send(dev, (const unsigned char *) sbuf, slen) < 0)
 		return -1;
-	return ifd_device_recv(dev, rbuf, rlen, timeout);
+	return ifd_device_recv(dev, (unsigned char *) rbuf, rlen, timeout);
 }
 
 int

@@ -7,6 +7,10 @@
 #ifndef OPENCT_APDU_H
 #define OPENCT_APDU_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct ifd_iso_apdu {
 	unsigned char		cse, cla, ins, p1, p2;
 	unsigned int		lc, le;
@@ -30,10 +34,15 @@ enum {
 
 	IFD_APDU_BAD = -1,
 };
+
 #define IFD_APDU_CASE_LC(c)	((c) & 0x02)
 #define IFD_APDU_CASE_LE(c)	((c) & 0x01)
 
 extern int	ifd_iso_apdu_parse(const void *, size_t, ifd_iso_apdu_t *);
 extern int	ifd_apdu_case(const void *, size_t);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OPENCT_APDU_H */

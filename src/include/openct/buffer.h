@@ -7,6 +7,10 @@
 #ifndef OPENCT_BUFFER_H
 #define OPENCT_BUFFER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <sys/types.h>
 
 typedef struct ct_buf {
@@ -32,5 +36,8 @@ extern int		ct_buf_read(ct_buf_t *, int);
 extern void		ct_buf_compact(ct_buf_t *);
 extern int		ct_buf_overrun(ct_buf_t *);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OPENCT_BUFFER_H */

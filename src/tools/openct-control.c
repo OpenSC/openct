@@ -19,10 +19,11 @@
 #include <unistd.h>
 #include <errno.h>
 #include <openct/openct.h>
-#include <openct/ifd.h>
-#include <openct/conf.h>
-#include <openct/driver.h>
 #include <openct/logging.h>
+#include <openct/error.h>
+#include <openct/ifd.h>
+#include <openct/driver.h>
+#include <openct/conf.h>
 
 static int		mgr_init(int argc, char **argv);
 static int		mgr_shutdown(int argc, char **argv);

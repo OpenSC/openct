@@ -381,7 +381,7 @@ ifd_recv_atr(ifd_device_t *dev, ct_buf_t *bp,
 		return -1;
 	}
 
-	buf = ct_buf_tail(bp);
+	buf = (unsigned char *) ct_buf_tail(bp);
 	for (n = 0; n < count; n++) {
 		if (ifd_device_recv(dev, buf + n, 1, 1000) < 0) {
 			ct_error("failed to receive ATR");
@@ -571,7 +571,7 @@ ifd_send_command(ifd_protocol_t *prot, const void *buffer, size_t len)
 	 || !drv->ops || !drv->ops->send)
 		return -1;
 
-	return drv->ops->send(prot->reader, prot->dad, buffer, len);
+	return drv->ops->send(prot->reader, prot->dad, (const unsigned char *) buffer, len);
 }
 
 int
@@ -584,7 +584,7 @@ ifd_recv_response(ifd_protocol_t *prot, void *buffer, size_t len, long timeout)
 	 || !drv->ops || !drv->ops->recv)
 		return -1;
 
-	return drv->ops->recv(prot->reader, prot->dad, buffer, len, timeout);
+	return drv->ops->recv(prot->reader, prot->dad, (unsigned char *) buffer, len, timeout);
 }
 
 /*
