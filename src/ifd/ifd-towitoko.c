@@ -202,7 +202,7 @@ twt_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 	if (!(status & IFD_CARD_PRESENT))
 		return IFD_ERROR_NO_CARD;
 
-	/* SCEZ does this tree times - I have no clue why */
+	/* SCEZ does this three times - I have no clue why */
 	for (i = 0; i < 1; i++) {
 		n = twt_try_reset(reader, reset1, sizeof(reset1), atr, size);
 		if (n != 0)
