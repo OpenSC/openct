@@ -28,6 +28,64 @@
 	</section>
 
 	<section>
+		<title>Requirements</title>
+
+		<para>
+			To use OpenCT with smart card readers attached to
+			the serial port, you only need a kernel with
+			a working serial port, nothing special is required.
+		</para>
+
+		<para>
+			To use OpenCT with smart card readers attached
+			via USB you need a bit more: your kernel needs
+			to support USB and your kernel needs to support
+			the usb controller you are using. On most computers
+			the usb controller is part of the mainboard. If
+			your mainboard uses intel chips you need most
+			likely the "uhci" usb controller support, for
+			other vendors most likely the "ohci" controller support.
+		</para>
+
+		<para>
+			FIXME: I'd like to link to some USB howto with all
+			the details and more help. Is there such a HOWTO?
+		</para>
+
+		<para>
+			You also need to compile your kernel with support for
+			the USB device filesystem and mount the filesystem
+			to <filename>/proc/bus/usb</filename>. The kernel
+			option is CONFIG_USB_DEVICEFS, please turn it on.
+			To mount the filesystem, please edit your
+			<filename>/etc/fstab</filename>. For a linux kernel
+			2.4.* system, it should have a line
+			<screen>
+none            /proc/bus/usb   usbdevfs   defaults                0       0
+			</screen>
+			and for a linux kernel 2.5.* or 2.6.* system, it should have a line:
+			<screen>
+none            /proc/bus/usb   usbfs   defaults                0       0
+			</screen>
+		</para>
+
+		<para>
+			Run <prompt>mount -a </prompt> after editing the
+			file <filename>/etc/fstab</filename> for the changes
+			to take effect. You can also reboot. If you are using
+			sometimes linux kernels 2.4.* and sometimes
+			2.5.*/2.6.*, use the line for kernel 2.4.*. You will
+			get a warning, but it will still work.
+		</para>
+
+		<para>
+			Your kernel also needs to be compiled with hotplugging
+			support. The relevant kernel option is CONFIG_HOTPLUG.
+			You don't need any of the hardware adaptors.
+		</para>
+	</section>
+
+	<section>
 		<title>OpenCT files and tools</title>
 
 		<para>
@@ -334,6 +392,105 @@ openct ifdhandeler.so
 
 		<para>
 			See the pkg-config man page for detailed information.
+		</para>
+	</section>
+
+	<section>
+		<title>Troubleshooting</title>
+
+		<para>
+			If something does not work, please join the OpenSC
+			mailing list and ask for help. For details on the
+			mailing list take a look at <ulink
+				url="http://www.opensc.org/" />
+		</para>
+
+		<para>
+			If you try to use a usb device, please try this:
+			Do you have a <filename>/proc</filename> filesystem?
+			This command should work:
+			<prompt>ls /proc/sys</prompt>
+		</para>
+
+		<para>
+			Is your kernel compiled with usb support? Does the
+			usb support work? This command should list all
+			usb devices:
+			<prompt>lsusb</prompt>
+		</para>
+
+		<para>
+			Is your kernel compiled with hotplugging support?
+			This command give the same output on your system:
+			<screen>
+$ cat /proc/sys/kernel/hotplug 
+/sbin/hotplug
+$ 
+			</screen>
+		</para>
+
+		<para>
+			Do you have a hotplug script?
+			This command should work:
+			<prompt>ls /sbin/hotplug</prompt>
+		</para>
+
+		<para>
+			Did you create the directory
+			<filename>/var/run/openct</filename>? What files are in
+			there? What are the file permissions?
+			Try this command, it should work and give you a
+			similiar output:
+			<screen>
+$ ls -la /var/run/openct/
+total 8
+drwxr-xr-x    2 root     root         4096 2003-07-02 08:13 ./
+drwxr-xr-x    8 root     root         4096 2003-07-02 08:13 ../
+-rw-r--r--    1 root     root         1728 2003-07-02 08:13 status
+$ 
+			</screen>
+			See the security section for details on file permissions
+			of this directory.
+		</para>
+	</section>
+
+	<section>
+		<title>Security</title>
+
+		<para>
+			The default setting is not very secure: all users
+			can access your smart card readers. Several processes
+			can use the same smart card reader at the same time,
+			but they always have to be owned by the same users.
+			(FIXME: is it necessary to issue a LOCK command for
+			this, or will it always work like this?)
+		</para>
+
+		<para>
+			You can restrict access to smart card readers using
+			OpenCT to one user with these
+			commands:
+			<screen>
+$ chown user /var/run/openct
+$ chmod 700 /var/run/openct
+			</screen>
+		</para>
+
+		<para>
+			You can also create a group, add users to that group
+			and restrict access to smart card users using OpenCT
+			to that group with these commands:
+			<screen>
+$ chgrp group /var/run/openct
+$ chmod 750 /var/run/openct
+			</screen>
+		</para>
+
+		<para>
+			In both cases root can still access the smart
+			card readers. Replace <replaceable>user</replaceable>
+			and <replaceable>group</replaceable> with the user
+			and group of your choice.
 		</para>
 	</section>
 </article>
