@@ -7,13 +7,14 @@ hotplug	= yes;
 # Path to ifdhandler
 ifdhandler = SBINDIR/ifdhandler;
 
-# Statically configure non-hotplug aware readers here
-# (remove comment character '#' and change device name and driver name
-#  as required. other driver names for serial devices are "kaan" and
-#  "chipcard").
+# Configure static, non-hotplug aware readers here
+#
+# For a list of drivers try command 'ifdhandler -i', please
+# notice that not all drivers have serial device capability.
+
 #reader towitoko {
 #	driver = towitoko;
-#	device = /dev/ttyS1;
+#	device = serial:/dev/ttyS0
 #};
 
 #
@@ -49,4 +50,3 @@ driver	cardman {
 		usb:076b/0596,
 	};
 };
-

@@ -1,12 +1,1 @@
-
-OpenCT was written by Olaf Kirch <okir@suse.de>, with contributions
-from the following people:
-
- -	The checksum code for T=1 (src/ifd/checksum.c) was taken from
-	Matthias Bruestle's excellent SCEZ library.
-
- -	The eGate driver was contributed, and is copyright by,
- 	Chaskiel Grundman <cg2v@andrew.cmu.edu>
-
- -	The eToken driver is loosely based on code written
- 	by Andreas Jellinghaus aj@dungeon.inka.de
+See doc/openct.html for more info.

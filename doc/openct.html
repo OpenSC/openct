@@ -96,22 +96,6 @@
             </a>
           </dt>
 
-          <dd>
-            <dl>
-              <dt>
-                <a href="#openct.install.withouthp">
-                  Installation without hotplug utils
-                </a>
-              </dt>
-
-              <dt>
-                <a href="#openct.install.withhp">
-                  Installation with hotplug utils
-                </a>
-              </dt>
-            </dl>
-          </dd>
-
           <dt>
             6. 
 
@@ -139,18 +123,6 @@
               <dt>
                 <a href="#openct.files.sbinopenctcontrol">
                   sbin/openct-control - OpenCT manager
-                </a>
-              </dt>
-
-              <dt>
-                <a href="#openct.files.init">
-                  Init script to start openct
-                </a>
-              </dt>
-
-              <dt>
-                <a href="#openct.files.linuxhp">
-                  Linux with hotplugging
                 </a>
               </dt>
 
@@ -294,8 +266,8 @@
             </li>
 
             <li>
-              The eToken driver is loosely based on code written by
-              Andreas Jellinghaus 
+              The eToken, Eutron and Rainbow iKey drivers are based
+              on code written by Andreas Jellinghaus 
 
               <tt class="email">
                 &lt;
@@ -485,7 +457,7 @@
             </dt>
 
             <dd>
-              A USB smart card reader? Not fully working as of yet.
+              A USB smart card reader. Not fully working as of yet.
             </dd>
           </dl>
         </div>
@@ -605,28 +577,6 @@
           </div>
 
           <div></div>
-        </div>
-
-        <div class="toc">
-          <p>
-            <b>
-              Table of Contents
-            </b>
-          </p>
-
-          <dl>
-            <dt>
-              <a href="#openct.install.withouthp">
-                Installation without hotplug utils
-              </a>
-            </dt>
-
-            <dt>
-              <a href="#openct.install.withhp">
-                Installation with hotplug utils
-              </a>
-            </dt>
-          </dl>
         </div>
 
         <p>
@@ -791,8 +741,17 @@
           <tr>
             <td>
               <pre class="screen">
-                # update-rc.d openct start 90 2 3 4 5 . stop 10 0 1
+                # update-rc.d openct start 99 2 3 4 5 . stop 01 0 1
                 6 .
+                 Adding system startup for /etc/init.d/openct ...
+                   /etc/rc0.d/K01openct -&gt; ../init.d/openct
+                   /etc/rc1.d/K01openct -&gt; ../init.d/openct
+                   /etc/rc6.d/K01openct -&gt; ../init.d/openct
+                   /etc/rc2.d/S99openct -&gt; ../init.d/openct
+                   /etc/rc3.d/S99openct -&gt; ../init.d/openct
+                   /etc/rc4.d/S99openct -&gt; ../init.d/openct
+                   /etc/rc5.d/S99openct -&gt; ../init.d/openct
+                #
                                         
               </pre>
             </td>
@@ -822,151 +781,17 @@
           And now the last task: if you want to use USB readers or
           USB crypto tokens, you need to configure the hotplug
           system to call openct every time there is a new smart
-          card reader or crypto token.
+          card reader or crypto token. The future releases will
+          work better without hotplug scripts because of multi-OS
+          support issues. For now, we recommend you to install
+          Linux hotplug package before installing OpenCT. After
+          that, the standard install mechanism should add all
+          required files correctly to directory 
+
+          <tt class="filename">
+            /etc/hotplug
+          </tt>.
         </p>
-
-        <div class="section" lang="en" xml:lang="en">
-          <div class="titlepage">
-            <div>
-              <div>
-                <h2 class="title" style="clear: both">
-                  <a id="openct.install.withouthp"></a>Installation
-                  without hotplug utils
-                </h2>
-              </div>
-            </div>
-
-            <div></div>
-          </div>
-
-          <p>
-            This section applies, if your system does not have
-            hotplug utils installed. If this command succeeds, go
-            to the other section:
-          </p>
-
-          <table border="0" bgcolor="#E0E0E0">
-            <tr>
-              <td>
-                <pre class="screen">
-                  % ls /sbin/hotplug
-                                          
-                </pre>
-              </td>
-            </tr>
-          </table>
-
-          <p></p>
-
-          <p>
-            If there is no such file, the installation is very
-            easy:
-          </p>
-
-          <table border="0" bgcolor="#E0E0E0">
-            <tr>
-              <td>
-                <pre class="screen">
-                  ln -s /path/to/openct/sbin/hotplug.openct
-                  /sbin/hotplug
-                                          
-                </pre>
-              </td>
-            </tr>
-          </table>
-
-          <p></p>
-
-          <p>
-            Now attach some USB smart card reader or USB crypto
-            token. The kernel will start 
-
-            <tt class="filename">
-              /sbin/hotplug
-            </tt>, and 
-
-            <tt class="prompt">
-              openct-tool list
-            </tt>should list the new reader.
-          </p>
-        </div>
-
-        <div class="section" lang="en" xml:lang="en">
-          <div class="titlepage">
-            <div>
-              <div>
-                <h2 class="title" style="clear: both">
-                  <a id="openct.install.withhp"></a>Installation
-                  with hotplug utils
-                </h2>
-              </div>
-            </div>
-
-            <div></div>
-          </div>
-
-          <p>
-            First the general instructions, then the Debian
-            specific instructions. As usual Debian does everything
-            a bit different. That doesn't mean it is necessarily
-            better or worse.
-          </p>
-
-          <p>
-            Edit 
-
-            <tt class="filename">
-              /etc/hotplug/usb.usermap
-            </tt>and add these lines:
-          </p>
-
-          <table border="0" bgcolor="#E0E0E0">
-            <tr>
-              <td>
-                <pre class="screen">
-                  openct 0x0003 0x0973 0x0001 0x0000 0x0001 0xff
-                  0x00 0x00 0xff 0x00 0x00 0x0000 0000
-                  openct 0x0003 0x0529 0x050c 0x0000 0x0001 0xff
-                  0x00 0x00 0xff 0x00 0x00 0x0000 0000
-                  openct 0x0003 0x0529 0x0514 0x0000 0x0001 0xff
-                  0x00 0x00 0xff 0x00 0x00 0x0000 0000
-                  openct 0x0003 0x073d 0x0005 0x0000 0x0001 0xff
-                  0x00 0x00 0xff 0x00 0x00 0x0000 0000
-                  openct 0x0003 0x04b9 0x1300 0x0000 0x0001 0xff
-                  0x00 0x00 0xff 0x00 0x00 0x0000 0000
-                  openct 0x0003 0x076b 0x0596 0x0000 0x0001 0xff
-                  0x00 0x00 0xff 0x00 0x00 0x0000 0000
-                                          
-                </pre>
-              </td>
-            </tr>
-          </table>
-
-          <p></p>
-
-          <p>
-            Create the directory 
-
-            <tt class="filename">
-              /etc/hotplug/usb
-            </tt>and add a symlink "openct" to hotplug.openct.
-          </p>
-
-          <table border="0" bgcolor="#E0E0E0">
-            <tr>
-              <td>
-                <pre class="screen">
-                  mkdir /etc/hotplug/usb
-                  ln -s /path/to/openct/sbin/hotplug.openct
-                  /etc/hotplug/usb/openct
-                                          
-                </pre>
-              </td>
-            </tr>
-          </table>
-
-          <p></p>
-        </div>
       </div>
 
       <div class="chapter" lang="en" xml:lang="en">
@@ -992,10 +817,9 @@
         </p>
 
         <p>
-          If the problem is with some USB crypto token (e.g.
-          Aladdin eToken PRO), please grep for usb_control - these
-          are the lines we need to see what is happening (or not
-          working).
+          If the problem is with some USB crypto token, please grep
+          for usb_control - these are the lines we need to see what
+          is happening.
         </p>
       </div>
 
@@ -1030,18 +854,6 @@
             <dt>
               <a href="#openct.files.sbinopenctcontrol">
                 sbin/openct-control - OpenCT manager
-              </a>
-            </dt>
-
-            <dt>
-              <a href="#openct.files.init">
-                Init script to start openct
-              </a>
-            </dt>
-
-            <dt>
-              <a href="#openct.files.linuxhp">
-                Linux with hotplugging
               </a>
             </dt>
 
@@ -1162,110 +974,16 @@
                   command
                     -d   enable debugging; repeat to increase
                   verbosity
+                    -n   disable coldplugging
                     -f   specify config file (default
-                  /etc/openct.conf
+                  /etc/openct.conf)
                     -h   display this message
 
                   Where command is one of:
                   init - initialize OpenCT
                   attach device ident - attach a hotplug device
+                  status - display status of all readers present
                   shutdown - shutdown OpenCT
-                                                  
-                </pre>
-              </td>
-            </tr>
-          </table>
-
-          <p></p>
-        </div>
-
-        <div class="section" lang="en" xml:lang="en">
-          <div class="titlepage">
-            <div>
-              <div>
-                <h2 class="title" style="clear: both">
-                  <a id="openct.files.init"></a>Init script to
-                  start openct
-                </h2>
-              </div>
-            </div>
-
-            <div></div>
-          </div>
-
-          <p>
-            On Debian systems install the init script like this:
-          </p>
-
-          <table border="0" bgcolor="#E0E0E0">
-            <tr>
-              <td>
-                <pre class="screen">
-                  # update-rc.d openct start 99 2 3 4 5 . stop 01 0
-                  1 6 .
-                   Adding system startup for /etc/init.d/openct ...
-                     /etc/rc0.d/K01openct -&gt; ../init.d/openct
-                     /etc/rc1.d/K01openct -&gt; ../init.d/openct
-                     /etc/rc6.d/K01openct -&gt; ../init.d/openct
-                     /etc/rc2.d/S99openct -&gt; ../init.d/openct
-                     /etc/rc3.d/S99openct -&gt; ../init.d/openct
-                     /etc/rc4.d/S99openct -&gt; ../init.d/openct
-                     /etc/rc5.d/S99openct -&gt; ../init.d/openct
-                  #
-                                                  
-                </pre>
-              </td>
-            </tr>
-          </table>
-
-          <p></p>
-        </div>
-
-        <div class="section" lang="en" xml:lang="en">
-          <div class="titlepage">
-            <div>
-              <div>
-                <h2 class="title" style="clear: both">
-                  <a id="openct.files.linuxhp"></a>Linux with
-                  hotplugging
-                </h2>
-              </div>
-            </div>
-
-            <div></div>
-          </div>
-
-          <p>
-            If your kernel has hotplugging, you can configure your
-            Linux, so it will launch the driver when a USB crypto
-            token is plugged in (and it terminates when you unplug
-            your key).
-          </p>
-
-          <p>
-            If the file 
-
-            <tt class="filename">
-              /proc/sys/kernel/hotplug
-            </tt>exists, then your kernel supports hotplugging. If
-            not, it does not (check CONFIG_HOTPLUG in your kernel
-            configuration).
-          </p>
-
-          <p>
-            If your Linux has no script 
-
-            <tt class="filename">
-              /sbin/hotplug
-            </tt>you can simply
-          </p>
-
-          <table border="0" bgcolor="#E0E0E0">
-            <tr>
-              <td>
-                <pre class="screen">
-                  ln -s /path/to/openct/sbin/hotplug.openct
-                  /sbin/htplug
                                                   
                 </pre>
               </td>
@@ -1301,11 +1019,14 @@
               <td>
                 <pre class="screen">
                   # /usr/sbin/ifdhandler
-                  usage: ifdhandler [-Hds] driver device socket
-                    -d   enable debugging; repeat to increase
-                  verbosity
+                  usage: ifdhandler [-Hds] [-r reader] driver
+                  [device]
+                    -r   specify index of reader
+                    -F   stay in foreground
                     -H   hotplug device, monitor for detach
                     -s   send error and debug messages to syslog
+                    -d   enable debugging; repeat to increase
+                  verbosity
                     -h   display this message
                                                   
                 </pre>
@@ -1337,11 +1058,12 @@
               <td>
                 <pre class="screen">
                   # /usr/bin/openct-tool
-                  usage: print-atr [-d] [-f configfile] [-r reader]
-                  command ...
+                  usage: openct-tool [-d] [-f configfile] [-r
+                  reader] command ...
                     -d   enable debugging; repeat to increase
                   verbosity
-                    -f   specify config file (default /etc/ifd.conf
+                    -f   specify config file (default
+                  /etc/openct.conf)
                     -r   specify index of reader to use
                     -h   display this message
 
@@ -1349,7 +1071,9 @@
                    list  list all readers found
                    atr   print ATR of card in selected reader
                    wait  wait for card to be inserted
-                   mf    try to select ATR of card
+                   rwait wait for reader to attached
+                   mf    try to select main folder of card
+                   read  dump memory of synchronous card
                                                   
                 </pre>
               </td>
@@ -1387,24 +1111,51 @@
                   #
                   # Path to ifdhandler
                   ifdhandler = /usr/sbin/ifdhandler;
-                  #
-                  # Statically configure non-hotplug aware readers
+
+                  # Configure static, non-hotplug aware readers
                   here
-                  reader towitoko {
-                          driver = towitoko;
-                          device = /dev/ttyS1;
-                  };
+                  #
+                  # For a list of drivers try command 'ifdhandler
+                  -i', please
+                  # notice that not all drivers have serial device
+                  capability.
+
+                  #reader towitoko {
+                  #       driver = towitoko;
+                  #       device = serial:/dev/ttyS0
+                  #};
 
                   #
                   # Hotplug IDs
-                  driver  etoken {
-                          ids = {
-                                  usb:0529/050c,
-                          };
-                  };
                   driver  egate {
                           ids = {
                                   usb:0973/0001,
+                          };
+                  };
+                  driver  etoken {
+                          ids = {
+                                  usb:0529/050c,
+                                  usb:0529/0514,
+                          };
+                  };
+                  driver  eutron {
+                          ids = {
+                                  usb:073d/0005,
+                          };
+                  };
+                  driver  ikey2k {
+                          ids = {
+                                  usb:04b9/1202,
+                          };
+                  };
+                  driver  ikey3k {
+                          ids = {
+                                  usb:04b9/1300,
+                          };
+                  };
+                  driver  cardman {
+                          ids = {
+                                  usb:076b/0596,
                           };
                   };
                                                   
@@ -1698,15 +1449,9 @@
             If you have a file 
 
             <tt class="filename">
-              /etc/hotplug/usb.usermap
+              /etc/hotplug/usb/openct.usermap
             </tt>, is the vendor and product id listed in that
-            file? If not, add a line similar to the 
-
-            <a href="#openct.install.withhp" title=
-            "Installation with hotplug utils">
-              install chapter
-            </a>. The vendor ID is the second number, the product
-            ID the third number.
+            file?
           </p>
 
           <p>
