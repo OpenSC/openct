@@ -31,7 +31,7 @@ ct_mainloop(ct_socket_t *listener, ct_poll_fn_t *poll_more, void *user_data)
 	ct_socket_t	head;
 	struct pollfd	pfd[IFD_MAX_SOCKETS + 1];
 
-	head.next = head.prev = NULL;
+	memset(&head, 0, sizeof(head));
 	ct_socket_link(&head, listener);
 
 	leave_mainloop = 0;
