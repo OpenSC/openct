@@ -457,7 +457,7 @@ gpc_transceive_t0(ifd_reader_t *reader, unsigned int dad,
 					    res_buf, res_len);
 		break;
 	case IFD_APDU_CASE_4S:
-		/* The PCSC-lite driver does an ISO EXCHANGE APDU here,
+		/* The PC/SC IFD driver does an ISO EXCHANGE APDU here,
 		 * but the specs I have say you can do this command only
 		 * for T=1 cards.
 		 * However, we shouldn't get here anyway for T=1, as the
