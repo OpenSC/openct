@@ -1,18 +1,18 @@
 
 
-OpenCT Release 0.1.0
+OpenCT Release 0.5.0
 ====================
 
-We are pleased to announce the availability OpenCT 0.1.0.
+We are pleased to announce the availability OpenCT 0.5.0.
 
 OpenCT is a library for accessing smart card terminals.  It provides a
 rich set of functions for driver writers, protocol drivers for T=0 and
 T=1, serial and USB functionality, including USB hotplugging.
 
 Currently, the main user of OpenCT is the OpenSC smart card framework,
-but OpenCT can of course be used by other applications as well. Shims
-that allow OpenCT drivers to be used from pcsc-lite and CT-API applications
-are currently under development.
+but OpenCT can of course be used by other applications as well. OpenCT
+provides a native OpenCT, CT-API and PC/SC Lite IFD interface with
+an OpenCT ifdhandler resource manager.
 
 
 Supported Hardware
@@ -22,23 +22,19 @@ Currently, OpenCT supports the following set of card terminals
 and USB tokens:
 
  -	Towitoko serial readers
- -	Kobil Kaan Professional (including PIN pad support)
+ -	Kobil Kaan Professional / Siemens B1 (including PIN pad support)
  -	Aladdin eToken
- -	Rainbow iKey 3000
+ -	Rainbow iKey 2032 / 3000
  -	Cryptoflex eGate
  -	Eutron Cypto-Identity ITSEC
 
 More drivers are currently under development.
-
-OpenCT currently does not work with synchronous smart cards (e.g.
-memory cards).
 
 
 Download
 ========
 
 Source is available for download from http://www.opensc.org/ 
-
 
 
 Mailing List

@@ -1,2 +1,20 @@
+NEWS for OpenCT -- History of user visible changes
 
-May 8 2003	No news is good news
+New in 0.5.0; 2003-11-xx; Antti Tapaninen:
+* Initial support for synchronous ICCs
+* Improved support for egate, kaan and towitoko drivers
+* Initial support for Siemens B1 (DTAG/T-TeleSec),
+  iKey 2032, Cherry Smartboard and GemPC readers
+* A new CT-API implementation by Michael Haardt
+* A new PC/SC IFD module implementation based on
+  work by Carlos Prados
+* USB/serial layer cleanups. USB support for other than
+  Linux is under development, volunteers welcome
+* Lots of generic build and portability fixes. Now works
+  with native compilers for several OS's including Linux,
+  *BSD, MacOS X, Solaris, Tru64 and AIX
+* Some OpenCT client API resource leaks fixed
+* Documentation improvements
+
+New in 0.1.0; 2003-08-15; Olaf Kirch:
+* Initial release
