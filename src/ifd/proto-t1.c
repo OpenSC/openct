@@ -350,7 +350,7 @@ t1_transceive(ifd_protocol_t *prot, ifd_apdu_t *apdu)
 	}
 
 done:	apdu->rcv_len = ifd_buf_avail(&rbuf);
-	return 0;
+	return apdu->rcv_len;
 }
 
 static unsigned
@@ -490,7 +490,9 @@ t1_xcv(ifd_protocol_t *prot, ifd_apdu_t *apdu, size_t *countp)
 	t1_data_t	*t1 = (t1_data_t *) prot;
 	int		n, m;
 
-	DEBUG("sending %s", ifd_hexdump(apdu->snd_buf, apdu->snd_len));
+	if (ifd_config.debug >= 3)
+		DEBUG("sending %s", ifd_hexdump(apdu->snd_buf, apdu->snd_len));
+
 	n = ifd_send_command(prot, apdu->snd_buf, apdu->snd_len);
 	if (n < 0)
 		return n;
@@ -522,7 +524,8 @@ t1_xcv(ifd_protocol_t *prot, ifd_apdu_t *apdu, size_t *countp)
 	}
 
 	if (n >= 0) {
-		DEBUG("received %s", ifd_hexdump(apdu->rcv_buf, n));
+		if (ifd_config.debug >= 3)
+			DEBUG("received %s", ifd_hexdump(apdu->rcv_buf, n));
 		*countp = apdu->rcv_buf[2];
 	}
 
