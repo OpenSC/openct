@@ -183,12 +183,29 @@ ctapi_control(ct_handle *h,
 {
 	ct_buf_t	sbuf, rbuf;
 	int		rc;
+	int le = 0;
 
 	if (rsp_len < 2)
 		return ERR_INVALID;
 
 	ct_buf_set(&sbuf, (void *) cmd, cmd_len);
 	ct_buf_init(&rbuf, rsp, rsp_len);
+
+	if (cmd_len == 4)
+	{
+		le = 0;
+		ct_buf_get(&sbuf, NULL, 4);
+	}
+	else if (cmd_len == 5+cmd[4])
+	{
+		le = 0;
+		ct_buf_get(&sbuf, NULL, 5);
+	}
+	else
+	{
+		le = cmd[4];
+		ct_buf_get(&sbuf, NULL, 5);
+	}
 
 	if (cmd[0] != CTBCS_CLA) {
 		ct_error("Bad CTBCS APDU, cla=0x%02x", cmd[0]);
@@ -198,10 +215,10 @@ ctapi_control(ct_handle *h,
 
 	switch (cmd[1]) {
 	case CTBCS_INS_RESET:
-		rc = ctapi_reset(h, cmd[1], cmd[2], &rbuf, 0, NULL);
+		rc = ctapi_reset(h, cmd[2], cmd[3], &rbuf, 0, NULL);
 		break;
 	case CTBCS_INS_REQUEST_ICC:
-		rc = ctapi_request_icc(h, cmd[1], cmd[2], &sbuf, &rbuf);
+		rc = ctapi_request_icc(h, cmd[2], cmd[3], &sbuf, &rbuf);
 		break;
 	case CTBCS_INS_STATUS:
 		rc = ctapi_status(h, &rbuf);
@@ -214,7 +231,7 @@ ctapi_control(ct_handle *h,
 	if (rc < 0)
 		return rc;
 
-	if (ct_buf_avail(&rbuf) > cmd[4] + 2)
+	if (ct_buf_avail(&rbuf) > le + 2)
 		ctapi_error(&rbuf, CTBCS_SW_BAD_LENGTH);
 
 out:	return ct_buf_avail(&rbuf);
@@ -231,7 +248,6 @@ CT_init(unsigned short ctn, unsigned short pn)
 	struct CardTerminal *ct;
 	ct_handle *h;
 	ct_lock_handle lock;
-	unsigned char atr[64];
 
 	if ((ct=malloc(sizeof(struct CardTerminal)))==(struct CardTerminal*)0)
 		return ERR_MEMORY;
@@ -243,17 +259,6 @@ CT_init(unsigned short ctn, unsigned short pn)
 		free(ct);
 		return ERR_HTSI;
 	}
-#if 0
-	if (ct_card_status(h, 0, &status) < 0) {
-		return ERR_HTSI;
-	}
-#endif
-#if 0
-	if (ct_card_reset(h, 0, atr, sizeof(atr)) < 0) {
-		return ERR_HTSI;
-	}
-
-#endif
 	ct->ctn=ctn;
 	ct->h=h;
 	ct->lock=lock;
@@ -286,8 +291,8 @@ CT_data(unsigned short ctn,
 	unsigned short *lr,
 	unsigned char  *rsp)
 {
-	struct CardTerminal **ct,*next;
-	int status, rc;
+	struct CardTerminal **ct;
+	int rc;
 
 	for (ct=&cardTerminals; *ct && (*ct)->ctn!=ctn; ct = &(*ct)->next);
 	if ((*ct)==(struct CardTerminal*)0 || !sad || !dad)
