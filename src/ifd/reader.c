@@ -155,6 +155,17 @@ ifd_card_status(ifd_reader_t *reader, unsigned int idx, int *status)
 int
 ifd_card_reset(ifd_reader_t *reader, unsigned int idx, void *atr, size_t size)
 {
+	return ifd_card_request(reader, idx, 0, NULL, atr, size);
+}
+
+/*
+ * Request ICC
+ */
+int
+ifd_card_request(ifd_reader_t *reader, unsigned int idx,
+		time_t timeout, const char *message,
+		void *atr, size_t size)
+{
 	const ifd_driver_t *drv = reader->driver;
 	ifd_device_t	*dev = reader->device;
 	ifd_slot_t	*slot;
@@ -177,7 +188,16 @@ ifd_card_reset(ifd_reader_t *reader, unsigned int idx, void *atr, size_t size)
 		slot->proto = NULL;
 	}
 
-	/* Serial devices need special frobbing */
+	/* Do the reset thing - if the driver supports
+	 * request ICC, call the function if needed.
+	 * Otherwise fall back to ordinary reset */
+	if (drv->ops->card_request && (timeout || message)) {
+		n = drv->ops->card_request(reader, idx,
+				timeout, message, atr, size);
+		if (n <= 0)
+			return n;
+		count = n;
+	} else
 	if (dev->type != IFD_DEVICE_TYPE_SERIAL
 	 || !drv->ops->change_parity) {
 		n = drv->ops->card_reset(reader, idx,

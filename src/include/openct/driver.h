@@ -19,6 +19,9 @@ struct ifd_driver_ops {
 
 	int		(*card_status)(ifd_reader_t *, int, int *);
 	int		(*card_reset)(ifd_reader_t *, int, void *, size_t);
+	int		(*card_request)(ifd_reader_t *, int,
+				time_t, const char *,
+				void *, size_t);
 
 	int		(*send)(ifd_reader_t *reader,
 				unsigned int dad,

@@ -111,6 +111,12 @@ extern int			ifd_card_reset(ifd_reader_t *reader,
 					unsigned int slot,
 					void *atr_buf,
 					size_t atr_len);
+extern int			ifd_card_request(ifd_reader_t *reader,
+					unsigned int slot,
+					time_t timeout,
+					const char *message,
+					void *atr_buf,
+					size_t atr_len);
 
 extern int			ifd_apdu_case(const ifd_apdu_t *apdu,
 					unsigned int *lc,
