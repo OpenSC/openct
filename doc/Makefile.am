@@ -1,4 +1,4 @@
-MAINTAINERCLEANFILES=Makefile.in openct.html
+MAINTAINERCLEANFILES=Makefile.in
 
 EXTRA_DIST = openct.xml openct.html
 
