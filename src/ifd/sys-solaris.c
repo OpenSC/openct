@@ -14,11 +14,12 @@
 #include <stdio.h>
 #include <openct/driver.h>
 #include <fcntl.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <limits.h>
 
-#include <sys/systeminfo.h>
 #include <sys/usb/usba.h>
 #include <sys/usb/clients/ugen/usb_ugen.h>
 
@@ -54,15 +55,29 @@ typedef struct usb_request {
 /*
  * Globals
  */
+static int cntrl0_fd=0;
 static int cntrl0stat_fd=0;
 static int devstat_fd=0;
+
+typedef struct ep {
+    int ep_fd[2];
+    int ep_stat_fd[2];
+} ep_t;
+
+typedef ep_t interface_t[128];
+
+static interface_t interfaces[1];
 
 /*
  * Defines
  */
 #define USB_DEVICE_ROOT	"/dev/usb"
 #define BYTESWAP(in)	(((in & 0xFF) << 8) + ((in & 0xFF00) >> 8))
+#define USB_REQUEST_SIZE	8
 
+/*
+ * Open device status interface
+ */
 static int
 open_devstat(char *name)
 {
@@ -70,7 +85,10 @@ open_devstat(char *name)
     if(!devstat_fd) {
 	char *devstat;
 
-	devstat=malloc(strlen(name) + 2);
+	if((devstat=malloc(strlen(name) + 2))==NULL) {
+	    ct_error("devstat malloc failed");
+	    return -1;
+	}
 	memset(devstat,0,strlen(name) + 2);
 	strcpy(devstat, name);
 	strcpy(devstat+strlen(name)-6, "devstat");
@@ -88,6 +106,9 @@ open_devstat(char *name)
     return 0;
 }
 
+/*
+ * Open device control status interface
+ */
 static int
 open_cntrl0stat(char *name)
 {
@@ -95,7 +116,10 @@ open_cntrl0stat(char *name)
     if(!cntrl0stat_fd) {
 	char *cntrl0stat;
 
-	cntrl0stat=malloc(strlen(name) + 5);
+	if((cntrl0stat=malloc(strlen(name) + 5))==NULL) {
+	    ct_error("cntrl0stat malloc failed");
+	    return -1;
+	}
 	memset(cntrl0stat,0,strlen(name) + 5);
 	strcpy(cntrl0stat, name);
 	strcat(cntrl0stat, "stat");
@@ -114,16 +138,58 @@ open_cntrl0stat(char *name)
 }
 
 /*
- * Return true if running on a SPARC system.
+ * Open interface endpoint
  */
-#define IS_SPARC_BUFSIZE	6
-static boolean_t
-is_sparc(void)
+int
+open_ep(char *name, int interface, int endpoint, int direction, int flags)
 {
-    char buf[IS_SPARC_BUFSIZE];
-    sysinfo(SI_ARCHITECTURE, buf, IS_SPARC_BUFSIZE);
+    char filename[256];
+    char intdirep[32];
 
-    return (strcmp(buf, "sparc") == 0);
+    if(interfaces[interface][endpoint].ep_fd[direction]) {
+	ifd_debug(6, "open_ep: endpoint already opened");
+	return 0;
+    }
+    sprintf((char *)&intdirep,"if%d%s%d",
+	interface,
+	direction ? "in" : "out",
+	endpoint);
+	
+    memset((char *)&filename,0,strlen(name) + 2);
+    strcpy((char *)&filename, name);
+    filename[strlen(name)-6]='\0';
+    strcat((char *)&filename, (char *)&intdirep);
+
+    if((interfaces[interface][endpoint].ep_fd[direction]=open(
+	filename, direction ? O_RDONLY|flags : O_WRONLY|flags)) < 0) {
+	ifd_debug(6, "open_ep: error opening \"%s\": %s", filename, strerror(errno));
+        interfaces[interface][endpoint].ep_fd[direction]=0;
+	return -1;
+    }
+#if 0
+    strcat((char *)&filename, "stat");
+    if((interfaces[interface][endpoint].ep_stat_fd[direction]=open(
+	filename, O_RDONLY|O_EXCL|O_NONBLOCK)) < 0) {
+	ifd_debug(6, "open_ep: error opening \"%s\": %s", filename, strerror(errno));
+        close(interfaces[interface][endpoint].ep_fd[direction]);
+        interfaces[interface][endpoint].ep_fd[direction]=0;
+        interfaces[interface][endpoint].ep_stat_fd[direction]=0;
+	return -1;
+    }
+#endif
+    return 0;
+}
+
+close_ep(int interface, int endpoint, int direction)
+{
+    if(interfaces[interface][endpoint].ep_fd[direction]) {
+        close(interfaces[interface][endpoint].ep_fd[direction]);
+        interfaces[interface][endpoint].ep_fd[direction]=0;
+    }
+    if(interfaces[interface][endpoint].ep_stat_fd[direction]) {
+        close(interfaces[interface][endpoint].ep_stat_fd[direction]);
+        interfaces[interface][endpoint].ep_stat_fd[direction]=0;
+    }
 }
 
 /*
@@ -135,27 +201,32 @@ prepare_usb_control_req(usb_request_t *req, uint8_t bmRequestType, uint8_t bRequ
     (*req).bmRequestType	= bmRequestType;
     (*req).bRequest		= bRequest;
 
-    /* Sparc is big endian, USB little endian */
-    if (is_sparc()) {
+#ifdef _BIG_ENDIAN
+	/* Sparc is big endian, USB little endian */
 	(*req).wValue	= BYTESWAP(wValue);
 	(*req).wIndex	= BYTESWAP(wIndex);
 	(*req).wLength	= BYTESWAP(wLength);
-    } else {
+#else
 	(*req).wValue	= wValue;
 	(*req).wIndex	= wIndex;
 	(*req).wLength	= wLength;
-    }
+#endif /* _BIG_ENDIAN */
 }
 
 int
 ifd_sysdep_device_type(const char *name)
 {
+    char *cwd;
+
+    if((cwd=getcwd(NULL,PATH_MAX))==NULL) {
+	return -1;
+    }
     /*
      * A USB device that is supported through the UGEN driver
      * is typically indicated by its control endpoint.
      * Eg /dev/usb/<vendor>.<product>/<instance>/cntrl0
      */
-    ifd_debug(6, "ifd_sysdep_device_type: name=\"%s\"", name);
+    ifd_debug(6, "ifd_sysdep_device_type: cwd=\"%s\" name=\"%s\"", cwd, name);
 
     if (!name || name[0] != '/') {
 	ifd_debug(6, "ifd_sysdep_device_type: device name does not start with \"/\"");
@@ -180,7 +251,10 @@ ifd_sysdep_usb_poll_presence(ifd_device_t *dev, struct pollfd *pfd)
     int	devstat = 0;
 
     pfd->fd = -1;
-    open_devstat(dev->name);
+    if(open_devstat(dev->name)<0) {
+	ifd_debug(1, "ifd_sysdep_usb_poll_presence: cannot open devstat device for %s", dev->name);
+	return 0;
+    }
     if(read(devstat_fd, &devstat, sizeof (devstat))) {
 	switch(devstat) {
 	    case USB_DEV_STAT_ONLINE:
@@ -212,6 +286,7 @@ ifd_sysdep_usb_control(ifd_device_t *dev,
     int			 bytes_processed;
     int			 failed=0;
     usb_request_t	*usb_control_req;
+    char		*recv_data;
 
     ifd_debug(6,"ifd_sysdep_usb_control:"
 		" requestType = 0x%02x"
@@ -220,11 +295,18 @@ ifd_sysdep_usb_control(ifd_device_t *dev,
 		" index = 0x%02x",
 		requesttype, request, value, index);
 
-    bytes_to_process=(sizeof(usb_request_t)-1) + (requesttype == 0x40 ? len : 0);
-    ifd_debug(6, "ifd_sysdep_usb_control: usb_control_req=malloc(%d) [%d][%d]",
-	bytes_to_process, (sizeof(usb_request_t)-1), (requesttype == 0x40 ? len : 0));
-    usb_control_req=malloc(bytes_to_process);
+    bytes_to_process=USB_REQUEST_SIZE +
+	((requesttype & USB_EP_DIR_MASK) == USB_EP_DIR_OUT ? len : 0);
+    if((usb_control_req=malloc(bytes_to_process))==NULL) {
+	ct_error("usb_control_req malloc failed");
+	return -1;
+    }
     memset(usb_control_req,0,bytes_to_process);
+    if((recv_data=malloc(len))==NULL) {
+	ct_error("recv_data malloc failed");
+	free(usb_control_req);
+	return -1;
+    }
 
     if(!open_cntrl0stat(dev->name)) return -1;
 
@@ -232,7 +314,7 @@ ifd_sysdep_usb_control(ifd_device_t *dev,
     prepare_usb_control_req(usb_control_req, requesttype, request, value, index, len);
 
     /* Add any additional */
-    if(requesttype == 0x40 && len) {
+    if(((requesttype & USB_EP_DIR_MASK) == USB_EP_DIR_OUT) && len) {
 	ifd_debug(6, "ifd_sysdep_usb_control: copying output data : %s", ct_hexdump(data,len));
 	memcpy(usb_control_req->data,data,len);
     }
@@ -247,15 +329,23 @@ ifd_sysdep_usb_control(ifd_device_t *dev,
     }
 
     /* Read the return data from the device. */
-    bytes_processed = read(dev->fd, data, len);
+    bytes_processed = read(dev->fd, recv_data, len);
     if (bytes_processed < 0) {
 	ifd_debug(6, "ifd_sysdep_usb_control: read failed: %s", strerror(errno));
 	ct_error("usb_control read failed: %s", strerror(errno));
 	failed=IFD_ERROR_COMM_ERROR;
 	goto cleanup;
     }
+    if(bytes_processed) {
+	ifd_debug(6, "ifd_sysdep_usb_control: input data[%d] : %s", bytes_processed, ct_hexdump(recv_data,bytes_processed));
+	if ((requesttype & USB_EP_DIR_MASK) == USB_EP_DIR_IN)
+	    memcpy(data,recv_data,bytes_processed);
+    } else
+	ifd_debug(6, "ifd_sysdep_usb_control: input data[%d]", bytes_processed);
 
-    cleanup:
+cleanup:
+    if(recv_data)
+	free(recv_data);
     if(usb_control_req)
 	free(usb_control_req);
     if(failed)
@@ -267,31 +357,62 @@ ifd_sysdep_usb_control(ifd_device_t *dev,
 int
 ifd_sysdep_usb_set_configuration(ifd_device_t *dev, int config)
 {
-    return -1;
+    ct_debug("ifd_sysdep_usb_set_configuration: config=%d (not yet implemented)",config);
+    return 0;
 }
 
 int
 ifd_sysdep_usb_set_interface(ifd_device_t *dev, int ifc, int alt)
 {
-    return -1;
+    ct_debug("ifd_sysdep_usb_set_interface: alt=%d ifc=%d (not yet implemented)", alt, ifc);
+    return 0;
 }
 
 int
 ifd_sysdep_usb_claim_interface(ifd_device_t *dev, int interface)
 {
-    return -1;
+    ct_debug("ifd_sysdep_usb_claim_interface: interface=%d (not yet implented)", interface);
+    return 0;
 }
 
 int
 ifd_sysdep_usb_release_interface(ifd_device_t *dev, int interface)
 {
-    return -1;
+    ct_debug("ifd_sysdep_usb_release_interface: not implented yet");
+    return 0;
 }
 
 int
 ifd_sysdep_usb_bulk(ifd_device_t *dev, int ep, void *buffer, size_t len, long timeout)
 {
-    return -1;
+    int	bytes_to_process;
+    int	bytes_processed;
+    int direction = (ep & USB_EP_DIR_MASK) == USB_EP_DIR_IN ? 1 : 0;
+    int endpoint = (ep & ~USB_EP_DIR_MASK);
+
+    ct_debug("ifd_sysdep_usb_bulk: endpoint=%d direction=%d", endpoint, direction);
+    if(open_ep(dev->name,0,endpoint,direction,0)) {
+	ct_debug("ifd_sysdep_usb_bulk: opening endpoint failed");
+	return -1;
+    }
+    if(direction) {
+	if((bytes_to_process=read(interfaces[0][endpoint].ep_fd[direction],buffer,len))<0) {
+	    ifd_debug(6, "ifd_sysdep_usb_bulk: read failed: %s", strerror(errno));
+	    ct_error("usb_bulk read failed: %s", strerror(errno));
+	    return IFD_ERROR_COMM_ERROR;
+	}
+	ct_debug("ifd_sysdep_usb_bulk: read %d bytes", bytes_to_process);
+	return bytes_to_process;
+    } else {
+	bytes_to_process=len;
+	if((bytes_processed=write(interfaces[0][endpoint].ep_fd[direction],buffer,bytes_to_process))!=bytes_to_process) {
+	    ifd_debug(6, "ifd_sysdep_usb_bulk: write failed: %s", strerror(errno));
+	    ct_error("usb_bulk write failed: %s", strerror(errno));
+	    return IFD_ERROR_COMM_ERROR;
+	}
+	ct_debug("ifd_sysdep_usb_bulk: wrote buffer[%d]=%s", bytes_processed, ct_hexdump(buffer,len));
+	return bytes_processed;
+    }
 }
 
 /*
@@ -306,10 +427,29 @@ struct ifd_usb_capture {
 
 int
 ifd_sysdep_usb_begin_capture(ifd_device_t *dev,
-	int type, int endpoint, size_t maxpacket,
+	int type, int ep, size_t maxpacket,
 	ifd_usb_capture_t **capret)
 {
-    return -1;
+    ifd_usb_capture_t	*cap;
+    int			 direction = (ep & USB_EP_DIR_MASK) == USB_EP_DIR_IN ? 1 : 0;
+    int			 endpoint = (ep & ~USB_EP_DIR_MASK);
+
+    if(!(cap = (ifd_usb_capture_t *) calloc(1, sizeof(*cap) + maxpacket))) {
+	ct_debug("ifd_sysdep_usb_begin_capture: cannot calloc");
+	return -1;
+    }
+    cap->type = type;
+    cap->endpoint = ep;
+    cap->maxpacket = maxpacket;
+
+    if(!interfaces[0][endpoint].ep_fd[direction]) {
+	if(open_ep(dev->name,0,endpoint,direction, O_NONBLOCK)) {
+	    ct_debug("ifd_sysdep_usb_begin_capture: opening endpoint failed");
+	    return -1;
+	}
+    }
+    *capret = cap;
+    return 0;
 }
 
 int
@@ -318,13 +458,42 @@ ifd_sysdep_usb_capture(ifd_device_t *dev,
 	void *buffer, size_t len,
 	long timeout)
 {
-    return -1;
+    struct timeval	begin;
+    int			bytes_to_process=0;
+    int			direction = (cap->endpoint & USB_EP_DIR_MASK) == USB_EP_DIR_IN ? 1 : 0;
+    int			endpoint = (cap->endpoint & ~USB_EP_DIR_MASK);
+
+    gettimeofday(&begin,NULL);
+    do {
+	struct pollfd	pfd;
+	long		wait;
+
+	if ((wait = (timeout - ifd_time_elapsed(&begin))) <= 0)
+	    return IFD_ERROR_TIMEOUT;
+
+	pfd.fd = interfaces[0][endpoint].ep_fd[direction];
+	pfd.events = POLL_IN;
+	if(poll(&pfd,1,wait)!=1)
+	    continue;
+
+	if((bytes_to_process=read(interfaces[0][endpoint].ep_fd[direction],buffer,len))<0) {
+	    ifd_debug(6, "ifd_sysdep_usb_bulk: read failed: %s", strerror(errno));
+	    ct_error("usb_bulk read failed: %s", strerror(errno));
+	    return IFD_ERROR_COMM_ERROR;
+	}
+    } while (!bytes_to_process);
+    ct_debug("ifd_sysdep_usb_capture: read buffer[%d]=%s", bytes_to_process, ct_hexdump(buffer,bytes_to_process));
+    return bytes_to_process;
 }
 
 int
 ifd_sysdep_usb_end_capture(ifd_device_t *dev, ifd_usb_capture_t *cap)
 {
-    return -1;
+    int	direction = (cap->endpoint & USB_EP_DIR_MASK) == USB_EP_DIR_IN ? 1 : 0;
+    int	endpoint = (cap->endpoint & ~USB_EP_DIR_MASK);
+    close_ep(0,endpoint,direction);
+    if(cap) free(cap);
+    return 0;
 }
 
 /*

@@ -1,7 +1,8 @@
 NEWS for OpenCT -- History of user visible changes
 
 New in 0.6.4; not yet released
-* improved usb code for bsd by William Wanders.
+* improved usb code for bsd
+* improved usb code for solaris
 
 New in 0.6.3; 2005-01-11; Andreas Jellinghaus
 * silence "unable to open" and "Debug: connect() failed:" error messages,
