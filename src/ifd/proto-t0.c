@@ -328,10 +328,10 @@ struct ifd_protocol_ops	ifd_protocol_t0 = {
 	IFD_PROTOCOL_T0,
 	"T=0",
 	sizeof(t0_state_t),
-	t0_init,
-	t0_release,
-	t0_set_param,
-	t0_get_param,
-	t0_transceive,
+	.init		= t0_init,
+	.release	= t0_release,
+	.set_param	= t0_set_param,
+	.get_param	= t0_get_param,
+	.transceive	= t0_transceive,
 };
 

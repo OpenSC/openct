@@ -75,10 +75,10 @@ struct ifd_protocol_ops	ifd_protocol_trans = {
 	IFD_PROTOCOL_TRANSPARENT,
 	"transparent",
 	sizeof(ifd_protocol_t),
-	trans_init,
-	trans_release,
-	trans_set_param,
-	trans_get_param,
-	trans_transceive,
+	.init		= trans_init,
+	.release	= trans_release,
+	.set_param	= trans_set_param,
+	.get_param	= trans_get_param,
+	.transceive	= trans_transceive,
 };
 
