@@ -188,6 +188,7 @@ ifd_sync_probe_memory_size(ifd_protocol_t *p, int slot)
 		length = 8192;
 	}
 
+#ifdef this_doesnt_work_for_all_cards
 	while (length > 0) {
 		unsigned int	address = length - 1;
 		unsigned char	byte;
@@ -207,6 +208,7 @@ ifd_sync_probe_memory_size(ifd_protocol_t *p, int slot)
 			break;
 		}
 	}
+#endif
 
 	st->mem_size = length;
 	return 0;
