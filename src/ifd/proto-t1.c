@@ -56,7 +56,7 @@ typedef struct {
 #define T1_BUFFER_SIZE		(3 + 254 + 2)
 
 enum {
-	SENDING, RECEIVING, RESYNCH
+	SENDING, RECEIVING, RESYNCH, CONFUSED
 };
 
 static void		t1_set_checksum(t1_state_t *, int);
@@ -180,7 +180,7 @@ t1_get_param(ifd_protocol_t *prot, int type, long *result)
  * Send an APDU through T=1
  */
 static int
-t1_transceive(ifd_protocol_t *prot, int dad,
+do_transceive(ifd_protocol_t *prot, int dad,
 		const void *snd_buf, size_t snd_len,
 		void *rcv_buf, size_t rcv_len)
 {
@@ -190,6 +190,10 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 	unsigned int	slen, retries, last_send = 0, sent_length = 0;
 
 	if (snd_len == 0)
+		return -1;
+
+	/* A confused card or reader needs a reset first */
+	if (t1->state == CONFUSED)
 		return -1;
 
 	/* Perform resynch if required */
@@ -354,6 +358,29 @@ done:	return ct_buf_avail(&rbuf);
 
 error:	t1->state = RESYNCH;
 	return -1;
+}
+
+static int
+t1_transceive(ifd_protocol_t *prot, int dad,
+		const void *snd_buf, size_t snd_len,
+		void *rcv_buf, size_t rcv_len)
+{
+	t1_state_t	*t1 = (t1_state_t *) prot;
+	int		rc;
+
+	rc = do_transceive(prot, dad, snd_buf, snd_len, rcv_buf, rcv_len);
+	if (rc < 0 && t1->state == RESYNCH) {
+		/* Some sort of T1 error. Try again,
+		 * if the problem persists, mark the
+		 * device as terminally confused.
+		 */
+		rc = do_transceive(prot, dad,
+					snd_buf, snd_len,
+					rcv_buf, rcv_len);
+		if (rc < 0 && t1->state == RESYNCH)
+			t1->state = CONFUSED;
+	}
+	return rc;
 }
 
 static unsigned
