@@ -3,7 +3,7 @@
 OpenCT Release 0.5.0
 ====================
 
-We are pleased to announce the availability OpenCT 0.5.0.
+We are pleased to announce the availability of OpenCT 0.5.0.
 
 OpenCT is a library for accessing smart card terminals.  It provides a
 rich set of functions for driver writers, protocol drivers for T=0 and
