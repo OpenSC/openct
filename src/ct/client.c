@@ -8,7 +8,6 @@
 #include <string.h>
 #include <openct/openct.h>
 #include <openct/socket.h>
-#include <openct/conf.h>
 #include <openct/tlv.h>
 #include <openct/error.h>
 #include "protocol.h"

@@ -8,7 +8,6 @@
 #include <stdarg.h>
 #include <openct/error.h>
 #include <openct/logging.h>
-#include <openct/conf.h>
 
 void
 ct_error(const char *fmt, ...)
