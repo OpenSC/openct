@@ -14,7 +14,7 @@
 #include <ifd/error.h>
 
 #define DEBUG(fmt, args...) \
-	do { ifd_debug("%s:"  fmt, __FUNCTION__ , ##args); } while (0)
+	do { ifd_debug("%s: "  fmt, __FUNCTION__ , ##args); } while (0)
 		
 
 static int		twt_led(ifd_reader_t *, int);
@@ -224,6 +224,15 @@ twt_try_reset(ifd_reader_t *reader,
 
 	if (rc == IFD_ERROR_TIMEOUT)
 		return 0;
+
+	if (rc == 1) {
+		unsigned char c = *(unsigned char *) atr;
+
+		DEBUG("got first byte of ATR %02x", c);
+		if (c != 0x3f && c != 0x3b && c != 0x03)
+			return 0;
+	}
+
 	return rc;
 }
 

@@ -165,102 +165,140 @@ ifd_deactivate(ifd_reader_t *reader)
  * Detect card status
  */
 int
-ifd_card_status(ifd_reader_t *reader, int slot, int *status)
+ifd_card_status(ifd_reader_t *reader, unsigned int idx, int *status)
 {
 	const ifd_driver_t *drv = reader->driver;
 
+	if (idx > reader->nslots) {
+		ifd_error("%s: invalid slot number %u", reader->name, idx);
+		return -1;
+	}
+
 	*status = 0;
-	if (drv && drv->ops && drv->ops->card_status)
-		return drv->ops->card_status(reader, slot, status);
-	return -1;
+	if (!drv || !drv->ops || !drv->ops->card_status)
+		return -1;
+
+	if (drv->ops->card_status(reader, idx, status) < 0)
+		return -1;
+	if (*status & IFD_CARD_STATUS_CHANGED)
+		reader->slot[idx].atr_len = 0;
+	reader->slot[idx].status = *status;
+
+	return 0;
 }
 
 /*
  * Reset card and obtain ATR
  */
 int
-ifd_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
+ifd_card_reset(ifd_reader_t *reader, unsigned int idx, void *atr, size_t size)
 {
 	const ifd_driver_t *drv = reader->driver;
-	ifd_device_t *dev = reader->device;
-	unsigned int count;
-	int n, parity = IFD_SERIAL_PARITY_EVEN;
+	ifd_device_t	*dev = reader->device;
+	ifd_slot_t	*slot;
+	unsigned int	count;
+	int		n, parity;
+
+	if (idx > reader->nslots) {
+		ifd_error("%s: invalid slot number %u", reader->name, idx);
+		return -1;
+	}
 
 	if (!drv || !drv->ops || !drv->ops->card_reset || !dev)
 		return -1;
 
+	slot = &reader->slot[idx];
+	slot->atr_len = 0;
+
 	/* Serial devices need special frobbing */
 	if (dev->type != IFD_DEVICE_TYPE_SERIAL
 	 || !drv->ops->change_parity) {
-		return drv->ops->card_reset(reader, slot, atr, size);
-	}
-
-	if (drv->ops->change_parity(reader, parity) < 0)
-		return -1;
-
-	/* Reset the card */
-	n = drv->ops->card_reset(reader, slot, atr, size);
-
-	/* If there was no ATR, try again with odd parity */
-	if (n == 0) {
-		parity = IFD_SERIAL_PARITY_TOGGLE(parity);
+		n = drv->ops->card_reset(reader, idx,
+					 slot->atr, sizeof(slot->atr));
+		if (n <= 0)
+			return n;
+		count = n;
+	} else {
+		parity = IFD_SERIAL_PARITY_EVEN;
 		if (drv->ops->change_parity(reader, parity) < 0)
 			return -1;
-		n = drv->ops->card_reset(reader, slot, atr, size);
-	}
 
-	/* Bail out in case of general error */
-	if (n < 0)
-		return -1;
+		/* Reset the card */
+		n = drv->ops->card_reset(reader, idx,
+					 slot->atr, sizeof(slot->atr));
 
-	count = n;
-
-	/* If we got just the first byte of the ATR, get the
-	 * rest now */
-	if (count == 1) {
-		ifd_buf_t	rbuf;
-		unsigned char	c, *buf = (unsigned char *) atr;
-		unsigned int	num, nproto = 0;
-		int		revert_bits = 0;
-
-		if (buf[0] == 0x03) {
-			revert_bits = 1;
-			buf[0] = 0x3F;
+		/* If there was no ATR, try again with odd parity */
+		if (n == 0) {
+			parity = IFD_SERIAL_PARITY_TOGGLE(parity);
+			if (drv->ops->change_parity(reader, parity) < 0)
+				return -1;
+			n = drv->ops->card_reset(reader, idx,
+						 slot->atr, sizeof(slot->atr));
 		}
 
-		ifd_buf_init(&rbuf, buf, size);
-		rbuf.tail++;
-
-		if (ifd_recv_atr(dev, &rbuf, 1, revert_bits) < 0)
+		/* Bail out in case of general error */
+		if (n < 0)
 			return -1;
 
-		while ((num = ifd_count_bits(c & 0xF0)) != 0) {
-			if (ifd_recv_atr(dev, &rbuf, num, revert_bits) < 0)
+		count = n;
+
+		/* If we got just the first byte of the ATR, get the
+		 * rest now */
+		if (count == 1) {
+			ifd_buf_t	rbuf;
+			unsigned char	c;
+			unsigned int	num, proto = 0;
+			int		revert_bits = 0;
+
+			if (slot->atr[0] == 0x03) {
+				revert_bits = 1;
+				slot->atr[0] = 0x3F;
+			}
+
+			ifd_buf_init(&rbuf, slot->atr, sizeof(slot->atr));
+			rbuf.tail++;
+
+			if (ifd_recv_atr(dev, &rbuf, 1, revert_bits) < 0)
 				return -1;
 
-			if (c & 0x80) {
-				c = buf[rbuf.tail-1];
-				nproto = c & 0xF;
-			} else {
-				c &= 0xF;
+			while ((num = ifd_count_bits(c & 0xF0)) != 0) {
+				if (ifd_recv_atr(dev, &rbuf, num, revert_bits) < 0)
+					return -1;
+
+				if (c & 0x80) {
+					c = rbuf.base[rbuf.tail-1];
+					proto = c & 0xF;
+				} else {
+					c &= 0xF;
+				}
 			}
+
+			/* Historical bytes */
+			c = rbuf.base[1] & 0xF;
+			if (ifd_recv_atr(dev, &rbuf, c, revert_bits) < 0)
+				return -1;
+
+			/* If a protocol other than T0 was specified,
+			 * read check byte */
+			if (proto && ifd_recv_atr(dev, &rbuf, 1, revert_bits) < 0)
+				return -1;
+
+			if (slot->atr[0] == 0x3F)
+				parity = IFD_SERIAL_PARITY_TOGGLE(parity);
+			count = rbuf.tail - rbuf.head;
 		}
 
-		/* Historical bytes */
-		if (ifd_recv_atr(dev, &rbuf, buf[1] & 0x0F, revert_bits) < 0)
+		/* Set the parity in case it was toggled */
+		if (drv->ops->change_parity(reader, parity) < 0)
 			return -1;
-
-		if (nproto && ifd_recv_atr(dev, &rbuf, 1, revert_bits) < 0)
-			return -1;
-
-		if (buf[0] == 0x3F)
-			parity = IFD_SERIAL_PARITY_TOGGLE(parity);
-		count = rbuf.tail - rbuf.head;
 	}
 
-	/* Set the parity in case it was toggled */
-	if (drv->ops->change_parity(reader, parity) < 0)
-		return -1;
+	slot->atr_len = count;
+
+	if (count > size)
+		size = count;
+	if (atr)
+		memcpy(atr, slot->atr, count);
 
 	return count;
 }
