@@ -39,7 +39,7 @@ t0_set_defaults(t0_state_t *t0)
 {
 	t0->state = IDLE;
 	t0->timeout = 2000;
-	t0->max_nulls = 200;
+	t0->max_nulls = 800;
 }
 
 /*
@@ -236,7 +236,7 @@ t0_xcv(ifd_protocol_t *prot,
 
 		/* Null byte to extend wait time */
 		if (byte == 0x60) {
-			usleep(50000);
+			usleep(100000);
 			if (++null_count > t0->max_nulls)
 				goto failed;
 			continue;
