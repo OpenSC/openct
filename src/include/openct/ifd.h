@@ -24,6 +24,10 @@ enum {
 	IFD_PROTOCOL_I2C_LONG,
 	IFD_PROTOCOL_TLP,		/* older Gemplus protocol */
 	IFD_PROTOCOL_GBP,		/* Gemplus block protocol */
+	IFD_PROTOCOL_4401,		/* Phonecard 4401 */
+	IFD_PROTOCOL_4402,		/* Phonecard 4402 */
+	IFD_PROTOCOL_4403,              /* Phonecard 4403 */
+	IFD_PROTOCOL_4433,              /* Phonecard 4433 */
 	IFD_PROTOCOL_TRANSPARENT = 128,
 
 };
