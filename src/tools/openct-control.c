@@ -26,6 +26,7 @@
 static int		mgr_init(int argc, char **argv);
 static int		mgr_shutdown(int argc, char **argv);
 static int		mgr_attach(int argc, char **argv);
+static int		mgr_status(int argc, char **argv);
 static void		usage(int exval);
 
 static const char *	opt_config = NULL;
@@ -76,6 +77,9 @@ main(int argc, char **argv)
 	} else
 	if (!strcmp(argv[0], "attach")) {
 		return mgr_attach(argc, argv);
+	} else
+	if (!strcmp(argv[0], "status")) {
+		return mgr_status(argc, argv);
 	}
 
 	fprintf(stderr, "Unknown command: %s\n", argv[0]);
@@ -172,7 +176,59 @@ mgr_attach(int argc, char **argv)
 	}
 
 	pid = mgr_spawn_ifdhandler(driver, device, -1);
-	return (pid > 0);
+	return (pid > 0)? 0 : 1;
+}
+
+/*
+ * Show status of all readers
+ */
+int
+mgr_status(int argc, char **argv)
+{
+	const ct_info_t *readers, *r;
+	unsigned int	j;
+	int		i, num, count = 0;
+	char		*sepa;
+
+	if (argc != 1)
+		usage(1);
+	if ((num = ct_status(&readers)) < 0) {
+		fprintf(stderr, "Unable to get reader status\n");
+		return 1;
+	}
+
+	for (i = 0, r = readers; i < num; i++, r++) {
+		if (r->ct_pid == 0
+		 || (kill(r->ct_pid, 0) < 0 && errno == ESRCH))
+		 	continue;
+		if (count == 0)
+			printf("No.   Name                         Info\n"
+			       "===================================================\n");
+		printf(" %2d   %-29.29s", i, r->ct_name);
+
+		sepa = "";
+		if (r->ct_slots > 1) {
+			printf("%s%d slots", sepa, r->ct_slots);
+			sepa = ", ";
+		}
+		if (r->ct_display) {
+			printf("%sdisplay", sepa);
+			sepa = ", ";
+		}
+		if (r->ct_keypad) {
+			printf("%skeypad", sepa);
+			sepa = ", ";
+		}
+		for (j = 0; j < r->ct_slots; j++) {
+			printf("%sslot%u: ", sepa, j);
+			if (r->ct_card[j])
+				printf("card present");
+			else
+				printf("empty");
+			sepa = ", ";
+		}
+		printf("\n");
+	}
 }
 
 /*
@@ -278,6 +334,7 @@ usage(int exval)
 "\nWhere command is one of:\n"
 "init - initialize OpenCT\n"
 "attach device ident - attach a hotplug device\n"
+"status - display status of all readers present\n"
 "shutdown - shutdown OpenCT\n"
 );
 	exit(exval);
