@@ -6,14 +6,10 @@ OBJS	= pcsc.o
 all:: $(LIBS) $(APPS)
 
 clean distclean::
-	rm -rf .objs .sobjs *.a *.o $(APPS)
+	rm -rf .sobjs $(LIBS)
 
 ifdhandler.so: $(addprefix .sobjs/,$(OBJS))
 	ld -shared -o $@ $(addprefix .sobjs/,$(OBJS)) -L../libifd -lifd
-
-.objs/%.o: %.c
-	@mkdir -p .objs
-	$(CC) $(CFLAGS) -c $< -o $@
 
 .sobjs/%.o: %.c
 	@mkdir -p .sobjs
