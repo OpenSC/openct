@@ -1,5 +1,5 @@
 /*
- * Resource manager - handle reader processes
+ * Manage a single reader
  *
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
@@ -28,9 +28,10 @@
 
 static int	opt_debug = 0;
 static int	opt_hotplug = 0;
+static int	opt_reader = -1;
 
 static void	usage(int exval);
-static void	ifdhandler_run(const char *, ifd_reader_t *);
+static void	ifdhandler_run(ifd_reader_t *);
 static int	ifdhandler_poll_presence(struct pollfd *, unsigned int, void *);
 static int	ifdhandler_accept(ct_socket_t *);
 static int	ifdhandler_recv(ct_socket_t *);
@@ -40,14 +41,15 @@ static void	ifdhandler_close(ct_socket_t *);
 int
 main(int argc, char **argv)
 {
-	const char	*socket, *device, *driver;
+	const char	*device, *driver;
 	ifd_reader_t	*reader;
+	ct_info_t	*status;
 	int		c;
 
 	/* Make sure the mask is good */
 	umask(033);
 
-	while ((c = getopt(argc, argv, "dHhs")) != -1) {
+	while ((c = getopt(argc, argv, "dHhr:s")) != -1) {
 		switch (c) {
 		case 'd':
 			opt_debug++;
@@ -55,26 +57,39 @@ main(int argc, char **argv)
 		case 'H':
 			opt_hotplug = 1;
 			break;
-		case 'h':
-			usage(0);
+		case 'r':
+			opt_reader = atoi(optarg);
+			break;
 		case 's':
 			ct_log_destination("@syslog");
 			break;
+		case 'h':
+			usage(0);
 		default:
 			usage(1);
 		}
 	}
 
-	if (optind != argc - 3)
+	if (optind < argc - 2 || optind > argc - 1)
 		usage(1);
 	driver = argv[optind++];
-	device = argv[optind++];
-	socket = argv[optind++];
+	if (optind < argc)
+		device = argv[optind++];
 
 	ct_config.debug = opt_debug;
 
 	/* Initialize IFD library */
 	ifd_init();
+
+	/* Allocate a socket slot
+	 * FIXME: may need to use a lock file here to
+	 * prevent race condition
+	 */
+	status = ct_status_alloc_slot(&opt_reader);
+	if (status == NULL) {
+		ct_error("too many readers, no reader slot available");
+		return 1;
+	}
 
 	/* Create reader */
 	if (!(reader = ifd_open(driver, device))) {
@@ -82,7 +97,15 @@ main(int argc, char **argv)
 		return 1;
 	}
 
-	ifdhandler_run(socket, reader);
+	reader->status = status;
+	strncpy(status->ct_name, reader->name, sizeof(status->ct_name)-1);
+	status->ct_slots = reader->nslots;
+	if (reader->flags & IFD_READER_DISPLAY)
+		status->ct_display = 1;
+	if (reader->flags & IFD_READER_KEYPAD)
+		status->ct_keypad = 1;
+
+	ifdhandler_run(reader);
 	return 0;
 }
 
@@ -90,9 +113,10 @@ main(int argc, char **argv)
  * Spawn a new ifd handler thread
  */
 void
-ifdhandler_run(const char *socket_name, ifd_reader_t *reader)
+ifdhandler_run(ifd_reader_t *reader)
 {
 	ct_socket_t	*sock;
+	char		socket_name[16];
 	int		rc;
 
 	/* Activate reader */
@@ -102,6 +126,7 @@ ifdhandler_run(const char *socket_name, ifd_reader_t *reader)
 	}
 
 	sock = ct_socket_new(0);
+	snprintf(socket_name, sizeof(socket_name), "%u", opt_reader);
 	if (ct_socket_listen(sock, socket_name, 0666) < 0) {
 		ct_error("Failed to create server socket");
 		exit(1);
@@ -111,10 +136,7 @@ ifdhandler_run(const char *socket_name, ifd_reader_t *reader)
 	sock->recv = ifdhandler_accept;
 
 	/* Call the server loop */
-	if (opt_hotplug)
-		ct_mainloop(sock, ifdhandler_poll_presence, reader);
-	else
-		ct_mainloop(sock, NULL, NULL);
+	ct_mainloop(sock, ifdhandler_poll_presence, reader);
 	exit(0);
 }
 
@@ -126,8 +148,36 @@ ifdhandler_poll_presence(struct pollfd *pfd, unsigned int max, void *ptr)
 {
 	ifd_reader_t	*reader = (ifd_reader_t *) ptr;
 	ifd_device_t	*dev = reader->device;
+	unsigned int	n;
 
-	if (!dev->ops->poll_presence)
+	/* Check if the card status changed */
+	for (n = 0; n < reader->nslots; n++) {
+		static unsigned int	card_seq = 1;
+		unsigned int		prev_seq, new_seq;
+		ct_info_t		*info;
+		int			status;
+
+		if (ifd_card_status(reader, n, &status) < 0)
+			continue;
+
+		info = reader->status;
+		new_seq = prev_seq = info->ct_card[n];
+		if (!(status & IFD_CARD_PRESENT))
+			new_seq = 0;
+		else
+		if (!prev_seq || (status & IFD_CARD_STATUS_CHANGED)) {
+			new_seq = card_seq++;
+		}
+
+		if (prev_seq != new_seq) {
+			ifd_debug(1, "card status change: %u -> %u",
+				prev_seq, new_seq);
+			info->ct_card[n] = new_seq;
+			ct_status_update(info);
+		}
+	}
+
+	if (!opt_hotplug || !dev->ops->poll_presence)
 		return 0;
 	if (!dev->ops->poll_presence(dev, pfd)) {
 		ifd_debug(1, "Reader %s detached", reader->name);
