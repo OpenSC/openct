@@ -12,80 +12,64 @@
 
 #include "internal.h"
 
-typedef struct t0_parms {
+typedef struct {
+	ifd_protocol_t	base;
+
 	int		state;
 	long		timeout;
-
 	unsigned int	max_nulls;
-} t0_params_t;
-
-#define t0_params(r)		((t0_params_t *) ((r)->proto_state))
+} t0_data_t;
 
 enum {
 	IDLE, SENDING, RECEIVING, CONFUSED
 };
 
-static int	t0_xcv(ifd_device_t *, t0_params_t *, ifd_apdu_t *);
+static int	t0_xcv(ifd_device_t *, t0_data_t *, ifd_apdu_t *);
 static int	t0_send(ifd_device_t *, ifd_buf_t *, int);
 static int	t0_recv(ifd_device_t *, ifd_buf_t *, int, long);
-static int	t0_resynch(ifd_reader_t *);
+static int	t0_resynch(t0_data_t *);
 
 /*
  * Set default T=1 protocol parameters
  */
 static void
-t0_set_defaults(t0_params_t *t0)
+t0_set_defaults(t0_data_t *t0)
 {
-	t0->timeout = 1000;
 	t0->state = IDLE;
+	t0->timeout = 1000;
 	t0->max_nulls = 50;
 }
 
 /*
- * Attach t1 protocol
+ * Attach t0 protocol
  */
 static int
-t0_attach(ifd_reader_t *reader)
+t0_init(ifd_protocol_t *prot)
 {
-	t0_params_t	*t0;
-
-	t0 = (t0_params_t *) calloc(0, sizeof(*t0));
-	if (t0 == NULL) {
-		ifd_error("Out of memory");
-		return -1;
-	}
-
-	t0_set_defaults(t0);
-
-	reader->proto = &ifd_protocol_t0;
-	reader->proto_state = t0;
-
+	t0_set_defaults((t0_data_t *) prot);
 	return 0;
 }
 
 /*
- * Detach t1 protocol
+ * Detach t0 protocol
  */
 static void
-t0_detach(ifd_reader_t *reader)
+t0_release(ifd_protocol_t *prot)
 {
-	if (reader->proto_state)
-		free(reader->proto_state);
-	reader->proto_state = NULL;
-	reader->proto = NULL;
+	/* NOP */
 }
 
 /*
  * Get/set parmaters for T1 protocol
  */
 static int
-t0_set_param(ifd_reader_t *reader, int type, long value)
+t0_set_param(ifd_protocol_t *prot, int type, long value)
 {
-	t0_params_t	*p = (t0_params_t *) reader->proto_state;
+	t0_data_t	*t0 = (t0_data_t *) prot;
 
 	switch (type) {
 	case IFD_PROTOCOL_RECV_TIMEOUT:
-		p->timeout = value;
+		t0->timeout = value;
 		break;
 	default:
 		ifd_error("Unsupported parameter %d", type);
@@ -96,14 +80,14 @@ t0_set_param(ifd_reader_t *reader, int type, long value)
 }
 
 static int
-t0_get_param(ifd_reader_t *reader, int type, long *result)
+t0_get_param(ifd_protocol_t *prot, int type, long *result)
 {
-	t0_params_t	*p = (t0_params_t *) reader->proto_state;
-	long value;
+	t0_data_t	*t0 = (t0_data_t *) prot;
+	long		value;
 
 	switch (type) {
 	case IFD_PROTOCOL_RECV_TIMEOUT:
-		value = p->timeout;
+		value = t0->timeout;
 		break;
 	default:
 		ifd_error("Unsupported parameter %d", type);
@@ -120,16 +104,16 @@ t0_get_param(ifd_reader_t *reader, int type, long *result)
  * Send an APDU through T=0
  */
 static int
-t0_transceive(ifd_reader_t *reader, unsigned char nad, ifd_apdu_t *apdu)
+t0_transceive(ifd_protocol_t *prot, unsigned char nad, ifd_apdu_t *apdu)
 {
-	ifd_device_t	*dev = reader->device;
-	t0_params_t	*t0 = t0_params(reader);
+	t0_data_t	*t0 = (t0_data_t *) prot;
+	ifd_device_t	*dev = prot->device;
 	ifd_apdu_t	tpdu;
 	unsigned char	sdata[5];
 	unsigned int	cla, cse, lc, le;
 
 	if (t0->state != IDLE) {
-		if (t0_resynch(reader) < 0)
+		if (t0_resynch(t0) < 0)
 			return -1;
 		t0->state = IDLE;
 	}
@@ -219,7 +203,7 @@ done:	t0->state = IDLE;
 }
 
 static int
-t0_xcv(ifd_device_t *dev, t0_params_t *t0, ifd_apdu_t *apdu)
+t0_xcv(ifd_device_t *dev, t0_data_t *t0, ifd_apdu_t *apdu)
 {
 	ifd_buf_t	sbuf, rbuf;
 	unsigned char	sdata[5];
@@ -360,7 +344,7 @@ t0_recv(ifd_device_t *dev, ifd_buf_t *bp, int count, long timeout)
 }
 
 int
-t0_resynch(ifd_reader_t *reader)
+t0_resynch(t0_data_t *t0)
 {
 	return -1;
 }
@@ -368,11 +352,12 @@ t0_resynch(ifd_reader_t *reader)
 /*
  * Protocol struct
  */
-ifd_protocol_t	ifd_protocol_t0 = {
+struct ifd_protocol_ops	ifd_protocol_t0 = {
 	IFD_PROTOCOL_T0,
 	"T=0",
-	t0_attach,
-	t0_detach,
+	sizeof(t0_data_t),
+	t0_init,
+	t0_release,
 	t0_set_param,
 	t0_get_param,
 	t0_transceive,

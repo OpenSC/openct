@@ -21,7 +21,8 @@ typedef struct t1_apdu {
 	unsigned char *	rcv_buf;
 } t1_apdu_t;
 
-typedef struct t1_parms {
+typedef struct {
+	ifd_protocol_t	base;
 	int		state;
 
 	unsigned char	ns;
@@ -35,9 +36,7 @@ typedef struct t1_parms {
 
 	unsigned int	(*checksum)(const unsigned char *,
 					size_t, unsigned char *);
-} t1_params_t;
-
-#define t1_params(r)	((t1_params_t *) ((r)->proto_state))
+} t1_data_t;
 
 /* T=1 protocol constants */
 #define T1_I_BLOCK		0x00
@@ -71,17 +70,17 @@ enum {
 
 static unsigned	int	t1_block_type(unsigned char);
 static unsigned int	t1_seq(unsigned char);
-static unsigned	int	t1_build(ifd_apdu_t *, t1_params_t *,
+static unsigned	int	t1_build(ifd_apdu_t *, t1_data_t *,
 				unsigned char, ifd_buf_t *);
-static void		t1_compute_checksum(t1_params_t *, ifd_apdu_t *);
-static int		t1_verify_checksum(t1_params_t *, ifd_apdu_t *);
-static int		t1_xcv(ifd_reader_t *, ifd_apdu_t *);
+static void		t1_compute_checksum(t1_data_t *, ifd_apdu_t *);
+static int		t1_verify_checksum(t1_data_t *, ifd_apdu_t *);
+static int		t1_xcv(t1_data_t *, ifd_apdu_t *);
 
 /*
  * Set default T=1 protocol parameters
  */
 static void
-t1_set_defaults(t1_params_t *t1)
+t1_set_defaults(t1_data_t *t1)
 {
 	t1->timeout = 3000;
 	t1->ifsc    = 32;
@@ -94,23 +93,14 @@ t1_set_defaults(t1_params_t *t1)
  * Attach t1 protocol
  */
 static int
-t1_attach(ifd_reader_t *reader)
+t1_init(ifd_protocol_t *prot)
 {
-	t1_params_t	*t1;
-
-	t1 = (t1_params_t *) calloc(0, sizeof(*t1));
-	if (t1 == NULL) {
-		ifd_error("Out of memory");
-		return -1;
-	}
+	t1_data_t	*t1 = (t1_data_t *) prot;
 
 	t1_set_defaults(t1);
 
 	t1->rc_bytes = 2;
 	t1->checksum = csum_crc_compute;
-
-	reader->proto = &ifd_protocol_t1;
-	reader->proto_state = t1;
 
 	return 0;
 }
@@ -119,25 +109,22 @@ t1_attach(ifd_reader_t *reader)
  * Detach t1 protocol
  */
 static void
-t1_detach(ifd_reader_t *reader)
+t1_release(ifd_protocol_t *prot)
 {
-	if (reader->proto_state)
-		free(reader->proto_state);
-	reader->proto_state = NULL;
-	reader->proto = NULL;
+	/* NOP */
 }
 
 /*
  * Get/set parmaters for T1 protocol
  */
 static int
-t1_set_param(ifd_reader_t *reader, int type, long value)
+t1_set_param(ifd_protocol_t *prot, int type, long value)
 {
-	t1_params_t	*p = (t1_params_t *) reader->proto_state;
+	t1_data_t	*t1 = (t1_data_t *) prot;
 
 	switch (type) {
 	case IFD_PROTOCOL_RECV_TIMEOUT:
-		p->timeout = value;
+		t1->timeout = value;
 		break;
 	default:
 		ifd_error("Unsupported parameter %d", type);
@@ -148,14 +135,14 @@ t1_set_param(ifd_reader_t *reader, int type, long value)
 }
 
 static int
-t1_get_param(ifd_reader_t *reader, int type, long *result)
+t1_get_param(ifd_protocol_t *prot, int type, long *result)
 {
-	t1_params_t	*p = (t1_params_t *) reader->proto_state;
+	t1_data_t	*t1 = (t1_data_t *) prot;
 	long value;
 
 	switch (type) {
 	case IFD_PROTOCOL_RECV_TIMEOUT:
-		value = p->timeout;
+		value = t1->timeout;
 		break;
 	default:
 		ifd_error("Unsupported parameter %d", type);
@@ -172,9 +159,9 @@ t1_get_param(ifd_reader_t *reader, int type, long *result)
  * Send an APDU through T=1
  */
 static int
-t1_transceive(ifd_reader_t *reader, unsigned char nad, ifd_apdu_t *apdu)
+t1_transceive(ifd_protocol_t *prot, unsigned char nad, ifd_apdu_t *apdu)
 {
-	t1_params_t	*t1 = t1_params(reader);
+	t1_data_t	*t1 = (t1_data_t *) prot;
 	ifd_apdu_t	block;
 	ifd_buf_t	sbuf, rbuf, tbuf;
 	unsigned char	sdata[T1_BUFFER_SIZE], rdata[T1_BUFFER_SIZE];
@@ -206,7 +193,7 @@ t1_transceive(ifd_reader_t *reader, unsigned char nad, ifd_apdu_t *apdu)
 
 		retries--;
 
-		if ((n = t1_xcv(reader, &block)) < 0) {
+		if ((n = t1_xcv(t1, &block)) < 0) {
 			if (retries == 0)
 				return -1;
 			t1_build(&block, t1, T1_R_BLOCK | T1_OTHER_ERROR, NULL);
@@ -348,7 +335,7 @@ t1_seq(unsigned char pcb)
 }
 
 unsigned int
-t1_build(ifd_apdu_t *apdu, t1_params_t *t1, unsigned char pcb, ifd_buf_t *bp)
+t1_build(ifd_apdu_t *apdu, t1_data_t *t1, unsigned char pcb, ifd_buf_t *bp)
 {
 	unsigned int	len;
 
@@ -383,11 +370,12 @@ t1_build(ifd_apdu_t *apdu, t1_params_t *t1, unsigned char pcb, ifd_buf_t *bp)
 /*
  * Protocol struct
  */
-ifd_protocol_t	ifd_protocol_t1 = {
+struct ifd_protocol_ops	ifd_protocol_t1 = {
 	IFD_PROTOCOL_T1,
 	"T=1",
-	t1_attach,
-	t1_detach,
+	sizeof(t1_data_t),
+	t1_init,
+	t1_release,
 	t1_set_param,
 	t1_get_param,
 	t1_transceive,
@@ -397,14 +385,14 @@ ifd_protocol_t	ifd_protocol_t1 = {
  * Build/verify checksum
  */
 void
-t1_compute_checksum(t1_params_t *t1, ifd_apdu_t *apdu)
+t1_compute_checksum(t1_data_t *t1, ifd_apdu_t *apdu)
 {
 	apdu->snd_len += t1->checksum(apdu->snd_buf, apdu->snd_len,
 				apdu->snd_buf + apdu->snd_len);
 }
 
 int
-t1_verify_checksum(t1_params_t *t1, ifd_apdu_t *apdu)
+t1_verify_checksum(t1_data_t *t1, ifd_apdu_t *apdu)
 {
 	unsigned char	csum[2];
 	int		m, n;
@@ -423,10 +411,9 @@ t1_verify_checksum(t1_params_t *t1, ifd_apdu_t *apdu)
  * Send/receive block
  */
 int
-t1_xcv(ifd_reader_t *reader, ifd_apdu_t *apdu)
+t1_xcv(t1_data_t *t1, ifd_apdu_t *apdu)
 {
-	ifd_device_t	*dev = reader->device;
-	t1_params_t	*t1 = t1_params(reader);
+	ifd_device_t	*dev = t1->base.device;
 	struct timeval	now, end;
 	unsigned int	n;
 	long		timeout;

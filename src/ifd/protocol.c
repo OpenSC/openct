@@ -7,11 +7,13 @@
 #include <stdlib.h>
 #include "internal.h"
 
-ifd_protocol_t *
+struct ifd_protocol_ops *
 ifd_protocol_by_id(int id)
 {
 	/* First, check built-in protocols */
 	switch (id) {
+	case IFD_PROTOCOL_T0:
+		return &ifd_protocol_t0;
 	case IFD_PROTOCOL_T1:
 		return &ifd_protocol_t1;
 	}

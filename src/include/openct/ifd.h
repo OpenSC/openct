@@ -55,6 +55,8 @@ typedef struct ifd_slot {
 	int			status;
 	unsigned int		atr_len;
 	unsigned char		atr[IFD_MAX_ATR_LEN];
+
+	ifd_protocol_t *	proto;
 } ifd_slot_t;
 
 #define IFD_MAX_SLOTS		8
@@ -67,10 +69,11 @@ typedef struct ifd_reader {
 	unsigned int		nslots;
 	ifd_slot_t		slot[IFD_MAX_SLOTS];
 
-	ifd_device_t *		device;
-	ifd_protocol_t *	proto;
-	void *			proto_state;
 	const ifd_driver_t *	driver;
+	ifd_device_t *		device;
+
+	/* In case the IFD needs a specific protocol too */
+	ifd_protocol_t *	proto;
 } ifd_reader_t;
 
 #define IFD_READER_DISPLAY	0x0100
@@ -118,8 +121,8 @@ extern int			ifd_card_reset(ifd_reader_t *,
 extern int			ifd_apdu_case(const ifd_apdu_t *,
 					unsigned int *, unsigned int *);
 
-extern ifd_protocol_t *		ifd_protocol_by_id(int);
-extern ifd_protocol_t *		ifd_protocol_by_name(const char *);
+extern struct ifd_protocol_ops *ifd_protocol_by_id(int);
+extern struct ifd_protocol_ops *ifd_protocol_by_name(const char *);
 
 extern int			ifd_select_protocol(ifd_reader_t *, const char *);
 

@@ -54,19 +54,25 @@ struct ifd_device_ops {
 	void			(*close)(ifd_device_t *);
 };
 
-struct ifd_protocol {
+struct ifd_protocol_ops {
 	int			id;
 	const char *		name;
-	int			(*attach)(ifd_reader_t *);
-	void			(*detach)(ifd_reader_t *);
-	int			(*set_param)(ifd_reader_t *, int, long);
-	int			(*get_param)(ifd_reader_t *, int, long *);
-	int			(*transceive)(ifd_reader_t *, unsigned char,
+	size_t			size;
+	int			(*init)(ifd_protocol_t *);
+	void			(*release)(ifd_protocol_t *);
+	int			(*set_param)(ifd_protocol_t *, int, long);
+	int			(*get_param)(ifd_protocol_t *, int, long *);
+	int			(*transceive)(ifd_protocol_t *, unsigned char,
 						ifd_apdu_t *);
 };
 
-extern ifd_protocol_t		ifd_protocol_t1;
-extern ifd_protocol_t		ifd_protocol_t0;
+struct ifd_protocol {
+	ifd_device_t *		device;
+	struct ifd_protocol_ops	*ops;
+};
+
+extern struct ifd_protocol_ops	ifd_protocol_t1;
+extern struct ifd_protocol_ops	ifd_protocol_t0;
 
 typedef struct ifd_buf {
 	unsigned char *		base;
@@ -83,6 +89,9 @@ extern const char *	ifd_driver_for_id(const char *);
 extern ifd_device_t *	ifd_device_new(const char *, struct ifd_device_ops *,
 				size_t);
 extern void		ifd_device_free(ifd_device_t *);
+
+/* protocol.c */
+extern ifd_protocol_t *	ifd_protocol_new(struct ifd_protocol_ops *, size_t);
 
 /* Checksum functions */
 extern unsigned int	csum_lrc_compute(const unsigned char *, size_t, unsigned char *);
