@@ -7,55 +7,9 @@
 #include <string.h>
 #include "internal.h"
 
-static ifd_reader_t *	ifd_new_reader(ifd_device_t *, const char *);
 static int		ifd_recv_atr(ifd_device_t *, ifd_buf_t *,
 				unsigned int, int);
 
-#if 0
-/*
- * New serial reader
- */
-ifd_reader_t *
-ifd_new_serial(const char *device_name, const char *driver_name)
-{
-	ifd_device_t	*dev;
-	ifd_reader_t	*reader;
-
-	if (!(dev = ifd_open_serial(device_name))) {
-		ifd_error("Unable to open %s: %m", device_name);
-		return NULL;
-	}
-
-	if (!(reader = ifd_new_reader(dev, driver_name))) {
-		ifd_device_close(dev);
-		return NULL;
-	}
-
-	return reader;
-}
-
-/*
- * New USB reader
- */
-ifd_reader_t *
-ifd_new_usb(const char *device_name, const char *driver_name)
-{
-	ifd_device_t	*dev;
-	ifd_reader_t	*reader;
-
-	if (!(dev = ifd_open_usb(device_name))) {
-		ifd_error("Unable to open %s: %m", device_name);
-		return NULL;
-	}
-
-	if (!(reader = ifd_new_reader(dev, driver_name))) {
-		ifd_device_close(dev);
-		return NULL;
-	}
-
-	return reader;
-}
-#endif
 
 /*
  * Initialize a reader and open the device
