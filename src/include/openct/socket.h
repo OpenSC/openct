@@ -22,6 +22,7 @@ typedef struct ifd_socket {
 	void *		user_data;
 	int		(*recv)(struct ifd_socket *);
 	int		(*send)(struct ifd_socket *);
+	void		(*close)(struct ifd_socket *);
 
 	pid_t		client_id;
 	uid_t		client_uid;

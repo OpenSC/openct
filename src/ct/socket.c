@@ -61,6 +61,8 @@ void
 ifd_socket_free(ifd_socket_t *sock)
 {
 	ifd_socket_unlink(sock);
+	if (sock->close)
+		sock->close(sock);
 	ifd_socket_close(sock);
 	free(sock);
 }
@@ -507,7 +509,6 @@ ifd_socket_server_loop(ifd_socket_t *listener)
 
 		/* Set up the poll structure */
 		for (n = 0, sock = head.next; sock; sock = sock->next, n++) {
-			ifd_debug("sock fd=%d ev=%u", sock->fd, sock->events);
 			pfd[n].fd = sock->fd;
 			pfd[n].events = sock->events;
 		}
