@@ -159,6 +159,8 @@ extern unsigned int	csum_crc_compute(const unsigned char *, size_t, unsigned cha
 
 /* Internal system dependent device functions */
 extern int		ifd_sysdep_device_type(const char *);
+extern int		ifd_sysdep_usb_poll_presence(ifd_device_t *,
+				struct pollfd *);
 extern int		ifd_sysdep_usb_control(ifd_device_t *,
 				unsigned int,
 				unsigned int,

@@ -108,12 +108,7 @@ ifd_usb_end_capture(ifd_device_t *dev, ifd_usb_capture_t *cap)
 static int
 usb_poll_presence(ifd_device_t *dev, struct pollfd *p)
 {
-	if (p->revents & POLLHUP)
-		return 0;
-
-	p->fd = dev->fd;
-	p->events = POLLHUP;
-	return 1;
+	return ifd_sysdep_usb_poll_presence(dev, p);
 }
 /*
  * Set usb params (for now, endpoint for transceive)

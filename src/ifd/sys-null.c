@@ -8,7 +8,7 @@
  */
 
 #include "internal.h"
-#if !defined (__NetBSD__) && !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__linux__)
+#if !defined(sun) && !defined (__NetBSD__) && !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__linux__)
 #include <sys/types.h>
 #include <stdio.h>
 #include <openct/driver.h>
@@ -20,8 +20,14 @@ ifd_sysdep_device_type(const char *name)
 }
 
 /*
- * USB control command
+ * USB handling
  */
+int
+ifd_sysdep_usb_poll_presence(ifd_device_t *dev, struct pollfd *pfd)
+{
+	return -1;
+}
+
 int
 ifd_sysdep_usb_control(ifd_device_t *dev,
 		unsigned int requesttype,
