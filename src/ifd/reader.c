@@ -273,16 +273,17 @@ ifd_card_reset(ifd_reader_t *reader, unsigned int idx, void *atr, size_t size)
 			if (ifd_recv_atr(dev, &rbuf, 1, revert_bits) < 0)
 				return -1;
 
-			while ((num = ifd_count_bits(c & 0xF0)) != 0) {
+			c = rbuf.base[1];
+			while (1) {
+				num = ifd_count_bits(c & 0xF0);
 				if (ifd_recv_atr(dev, &rbuf, num, revert_bits) < 0)
 					return -1;
 
-				if (c & 0x80) {
-					c = rbuf.base[rbuf.tail-1];
-					proto = c & 0xF;
-				} else {
-					c &= 0xF;
-				}
+				if (!(c & 0x80))
+					break;
+
+				c = rbuf.base[rbuf.tail-1];
+				proto = c & 0xF;
 			}
 
 			/* Historical bytes */
@@ -324,20 +325,27 @@ ifd_recv_atr(ifd_device_t *dev, ifd_buf_t *bp,
 		unsigned int count,
 		int revert_bits)
 {
+	unsigned char	*buf;
+	unsigned int	n;
+
 	if (count > ifd_buf_tailroom(bp)) {
 		ifd_error("ATR buffer too small");
 		return -1;
 	}
 
-	if (ifd_device_recv(dev, bp->base + bp->tail, count, 1000000) < 0) {
-		ifd_error("failed to receive ATR");
-		return -1;
+	buf = ifd_buf_tail(bp);
+	for (n = 0; n < count; n++) {
+		if (ifd_device_recv(dev, buf + n, 1, 1000) < 0) {
+			ifd_error("failed to receive ATR");
+			return -1;
+		}
 	}
 
 	if (revert_bits)
-		ifd_revert_bits(bp->base + bp->tail, count);
+		ifd_revert_bits(buf, count);
 
-	bp->tail += count;
+	/* Advance tail pointer */
+	ifd_buf_put(bp, NULL, count);
 	return count;
 }
 

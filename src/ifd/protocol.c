@@ -47,18 +47,18 @@ ifd_protocol_select(ifd_slot_t *slot, ifd_reader_t *reader, int preferred)
 	len -= atr[1] & 0x0f;
 
 	for (n = 2; n < len; ) {
-		unsigned char	map;
-		int		prot;
+		unsigned char TDi;
+		int	prot;
 
-		map = atr[n++];
-		if (!(map & 0x80))
-			break;
-		prot = map & 0x0f;
+		TDi = atr[n - 1];
+		if (n != 2) {
+			prot = TDi & 0x0f;
+			supported |= (1 << prot);
+			if (def_proto < 0)
+				def_proto = prot;
+		}
 
-		supported |= (1 << prot);
-		if (def_proto < 0)
-			def_proto = prot;
-		n += ifd_count_bits(map & 0xF0);
+		n += ifd_count_bits(TDi & 0xF0);
 	}
 
 	if (supported == 0)
