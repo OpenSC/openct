@@ -27,16 +27,26 @@ typedef struct kaan_status {
 static int		kaan_reset_ct(ifd_reader_t *reader);
 static int		kaan_get_units(ifd_reader_t *reader);
 static int		kaan_freeze(ifd_reader_t *reader);
+static int		kaan_sync_detect(ifd_reader_t *reader, int nslot);
 static int		__kaan_apdu_xcv(ifd_reader_t *,
 				const unsigned char *, size_t,
 				unsigned char *, size_t,
 				time_t, int);
+static int		kaan_get_tlv_from_file(ifd_reader_t *,
+				unsigned int, unsigned int,
+				unsigned char, unsigned char *, size_t);
 static int		kaan_get_tlv(unsigned char *, size_t,
 				unsigned char tag,
 				unsigned char **ptr);
+static int		kaan_select_file(ifd_reader_t *, unsigned char,
+				unsigned int, size_t *);
+static int		kaan_read_binary(ifd_reader_t *, unsigned char,
+				unsigned int, unsigned char *, size_t);
+static int		kaan_update_binary(ifd_reader_t *, unsigned char,
+				unsigned int, const unsigned char *, size_t);
 static int		kaan_check_sw(const char *,
-				unsigned char *, int);
-static int		kaan_get_sw(unsigned char *,
+				const unsigned char *, int);
+static int		kaan_get_sw(const unsigned char *,
 				unsigned int,
 				unsigned short *);
 
@@ -75,6 +85,8 @@ kaan_open(ifd_reader_t *reader, const char *device_name)
 	reader->device = dev;
 	if ((st = (kaan_status_t *) calloc(1, sizeof(*st))) == NULL)
 		return IFD_ERROR_NO_MEMORY;
+	st->icc_proto[0] = -1;
+	st->icc_proto[1] = -1;
 
 	reader->driver_data = st;
 	if (!(st->p = ifd_protocol_new(IFD_PROTOCOL_T1, reader, 0x12))) {
@@ -238,30 +250,67 @@ kaan_freeze(ifd_reader_t *reader)
 }
 
 /*
- * Reset card and get ATR
+ * Common code for card_reset and card_request
  */
 static int
-kaan_card_reset(ifd_reader_t *reader, int slot, void *result, size_t size)
+kaan_do_reset(ifd_reader_t *reader, int slot,
+		const unsigned char *cmd, size_t cmd_len,
+		unsigned char *atr, size_t atr_len,
+		unsigned int timeout)
 {
-	unsigned char	buffer[64] = { 0x20, 0x10, slot+1, 0x01, 0x00 };
+	kaan_status_t	*st = (kaan_status_t *) reader->driver_data;
+	unsigned char	buffer[64];
 	unsigned short	sw;
 	int		rc;
 
-	if ((rc = kaan_apdu_xcv(reader, buffer, 5, buffer, sizeof(buffer), 0)) < 0)
+	st->icc_proto[slot] = -1;
+	if ((rc = kaan_apdu_xcv(reader, cmd, cmd_len, buffer, sizeof(buffer), timeout)) < 0)
 		return rc;
 
 	if ((rc = kaan_get_sw(buffer, rc, &sw)) < 0)
 		return rc;
 
-	if ((sw & 0xFF00) != 0x9000) {
+	switch (sw) {
+	case 0x9000:
+	case 0x62a6:
+		/* synchronous ICC, CT has already done everything we need
+		 * to know. Now just get the info from the CT. */
+		if ((unsigned int) rc > atr_len)
+			rc = atr_len;
+		memcpy(atr, buffer, rc);
+
+		if ((rc = kaan_sync_detect(reader, slot)) < 0)
+			return rc;
+		break;
+	case 0x9001:
+		/* asynchronous ICC, just copy the ATR */
+		if ((unsigned int) rc > atr_len)
+			rc = atr_len;
+		memcpy(atr, buffer, rc);
+		break;
+	case 0x62a7:
+		/* synchronous ICC, unknown proto - try to detect 
+		 * the standard way */
+		rc = ifd_sync_detect_icc(reader, slot, atr, atr_len);
+		break;
+	default:
 		ifd_debug(1, "kaan_card_reset: unable to reset card, sw=0x%04x", sw);
 		return IFD_ERROR_COMM_ERROR;
 	}
 
-	if ((unsigned int) rc > size)
-		rc = size;
-	memcpy(result, buffer, rc);
 	return rc;
+}
+
+/*
+ * Reset card and get ATR
+ */
+static int
+kaan_card_reset(ifd_reader_t *reader, int slot, void *result, size_t size)
+{
+	unsigned char	cmd[5] = { 0x20, 0x10, slot+1, 0x01, 0x00 };
+
+	ifd_debug(1, "called.");
+	return kaan_do_reset(reader, slot, cmd, 5, result, size, 0);
 }
 
 /*
@@ -286,23 +335,7 @@ kaan_card_request(ifd_reader_t *reader, int slot,
 		return n;
 	buffer[n++] = 0x00;
 
-	rc = kaan_apdu_xcv(reader, buffer, n, buffer, sizeof(buffer), timeout);
-	if (rc < 0)
-		return rc;
-
-	if ((rc = kaan_get_sw(buffer, rc, &sw)) < 0)
-		return rc;
-
-	if ((sw & 0xFF00) != 0x9000) {
-		ifd_debug(1, "kaan_card_reset: unable to reset card, sw=0x%04x", sw);
-		return IFD_ERROR_COMM_ERROR;
-	}
-
-
-	if ((unsigned int) rc > atr_len)
-		rc = atr_len;
-	memcpy(atr, buffer, rc);
-	return rc;
+	return kaan_do_reset(reader, slot, buffer, n, atr, atr_len, timeout);
 }
 
 /*
@@ -467,6 +500,228 @@ kaan_perform_verify(ifd_reader_t *reader, int nslot,
 	return 2;
 }
 
+/*
+ * Read from synchronous ICC
+ */
+static int
+kaan_sync_read(ifd_reader_t *reader, int slot, int proto,
+		unsigned short addr,
+		unsigned char *data, size_t len)
+{
+	kaan_status_t	*st = (kaan_status_t *) reader->driver_data;
+	int		r;
+
+	ifd_debug(1, "called, addr=0x%04x, len=%u", addr, len);
+
+	if (st->icc_proto[slot] != proto) {
+		r = kaan_set_protocol(reader, slot, proto);
+		if (r < 0)
+			return r;
+	}
+
+	return kaan_read_binary(reader, reader->slot[slot].dad, addr, data, len);
+}
+
+static int
+kaan_sync_write(ifd_reader_t *reader, int slot, int proto,
+		unsigned short addr,
+		const unsigned char *buffer, size_t len)
+{
+	kaan_status_t	*st = (kaan_status_t *) reader->driver_data;
+	int		r;
+
+	ifd_debug(1, "called, addr=0x%04x, len=%u", addr, len);
+
+	if (st->icc_proto[slot] != proto) {
+		r = kaan_set_protocol(reader, slot, proto);
+		if (r < 0)
+			return r;
+	}
+
+	return kaan_update_binary(reader, reader->slot[slot].dad,
+			addr, buffer, len);
+}
+
+/*
+ * Detect type and size of synchronous card.
+ * When we get here, the CT has done most of the work for us
+ * already, we just need to get the information from it.
+ *
+ * XXX - there does not seem to be a way to find out the size
+ * of the card, so we have to resort to poking around the
+ * card.
+ */
+static int
+kaan_sync_detect(ifd_reader_t *reader, int nslot)
+{
+	kaan_status_t	*st = (kaan_status_t *) reader->driver_data;
+	ifd_slot_t	*slot = &reader->slot[nslot];
+	unsigned char	protocol;
+	size_t		size, n;
+	int		rc;
+
+	rc = kaan_get_tlv_from_file(reader,
+			0x7F70 | nslot,
+			0x7021 | (nslot << 8),
+			0x22, &protocol, 1);
+	if (rc < 0)
+		return rc;
+
+	switch (protocol) {
+	case 0x80:
+		protocol = IFD_PROTOCOL_I2C_LONG;
+		break;
+	case 0x81:
+		protocol = IFD_PROTOCOL_3WIRE;
+		break;
+	case 0x82:
+		protocol = IFD_PROTOCOL_2WIRE;
+		break;
+	default:
+		ct_error("kaan_sync_detect: unknown card protocol 0x%x", protocol);
+		return IFD_ERROR_NOT_SUPPORTED;
+	}
+
+	slot->proto = ifd_protocol_new(protocol, reader, slot->dad);
+	st->icc_proto[nslot] = protocol;
+
+	return ifd_sync_probe_memory_size(slot->proto, nslot);
+}
+
+/*
+ * Read from config/status file
+ */
+int
+kaan_get_tlv_from_file(ifd_reader_t *reader,
+			unsigned int df_id, unsigned int ef_id,
+			unsigned char tag, unsigned char *data, size_t len)
+{
+	unsigned char	buffer[256+2], *ptr;
+	size_t		size, n;
+	int		rc;
+
+	if ((rc = kaan_select_file(reader, 0x12, 0x3F00, &size)) < 0
+	 || (rc = kaan_select_file(reader, 0x12, df_id, &size)) < 0
+	 || (rc = kaan_select_file(reader, 0x12, ef_id, &size)) < 0)
+		return rc;
+	if (size > 256)
+		size = 256;
+	if ((rc = kaan_read_binary(reader, 0x12, 0, buffer, 256)) < 0)
+		return rc;
+
+	if ((rc = kaan_get_tlv(buffer, rc, tag, &ptr)) < 0)
+		return rc;
+	if ((size_t) rc > len)
+		rc = len;
+	memcpy(data, ptr, rc);
+	return rc;
+}
+
+/*
+ * Stuff to interface with the Kaan's internal file system
+ */
+int
+kaan_select_file(ifd_reader_t *reader, unsigned char nad, unsigned int fid, size_t *sizep)
+{
+	unsigned char	cmd[] = { 0x00, 0xa4, 0x00, 0x00, 2, 0x00, 0x00 };
+	unsigned char	resp[64];
+	int		r;
+
+	ifd_debug(1, "called, fid=0x%04x", fid);
+
+	cmd[5] = fid >> 8;
+	cmd[6] = fid & 0xFF;
+
+	r = kaan_transparent(reader, nad, cmd, sizeof(cmd), resp, sizeof(resp));
+	if (r < 0)
+		return r;
+	if ((r = kaan_check_sw("kaan_select_file", resp, r)) < 0)
+		return r;
+
+	if (sizep)
+		*sizep = (resp[0] << 8) | resp[1];
+
+	return 0;
+}
+
+int
+kaan_read_binary(ifd_reader_t *reader, unsigned char nad,
+			unsigned int offset, unsigned char *data, size_t len)
+{
+	unsigned char	cmd[] = { 0x00, 0xB0, 0x00, 0x00, 0x00 };
+	unsigned char	buffer[258];
+	size_t		count, total = 0;
+	unsigned short	sw;
+	int		r;
+
+	ifd_debug(1, "called, offset=0x%04x, len=%u", offset, len);
+	while (total < len) {
+		if ((count = len) > 256)
+			count = 256;
+		cmd[2] = offset >> 8;
+		cmd[3] = offset & 0xFF;
+		cmd[4] = count;
+
+		r = kaan_transparent(reader, nad, cmd, sizeof(cmd), buffer, sizeof(buffer));
+		if (r < 0)
+			return r;
+		if ((r = kaan_get_sw(buffer, r, &sw)) < 0)
+			return r;
+
+		/* 6B00 - offset outside of file */
+		if (sw == 0x6B00)
+			break;
+		if (sw != 0x9000) {
+			ct_error("kaan_read_binary: failure, status code %04X", sw);
+			return IFD_ERROR_COMM_ERROR;
+		}
+
+		if (r == 0)
+			break;
+
+		memcpy(data + total, buffer, r);
+		offset += r;
+		total += r;
+	}
+
+	return total;
+}
+
+int
+kaan_update_binary(ifd_reader_t *reader, unsigned char nad,
+			unsigned int offset,
+			const unsigned char *data, size_t len)
+{
+	kaan_status_t	*st = (kaan_status_t *) reader->driver_data;
+	unsigned char	cmd[256+5] = { 0x00, 0xD0, 0x00, 0x00, 0x00 };
+	unsigned char	resp[2];
+	size_t		count, total = 0;
+	int		r;
+
+	ifd_debug(2, "called, offset=0x%04x, len=%u", offset, len);
+	while (total < len) {
+		if ((count = len) > 256)
+			count = 256;
+		cmd[2] = offset >> 8;
+		cmd[3] = offset & 0xFF;
+		cmd[4] = count;
+		memcpy(cmd+5, data + total, count);
+
+		r = kaan_transparent(reader, nad, cmd, 5 + count, resp, sizeof(resp));
+		if (r < 0)
+			return r;
+		if ((r = kaan_check_sw("kaan_update_binary", resp, r)) < 0)
+			return r;
+
+		if (r == 0)
+			break;
+
+		offset += r;
+		total += r;
+	}
+
+	return total;
+}
 
 /*
  * APDU exchange with terminal
@@ -517,7 +772,7 @@ __kaan_apdu_xcv(ifd_reader_t *reader,
  * Check status word returned by Kaan
  */
 int
-kaan_check_sw(const char *msg, unsigned char *buf, int rc)
+kaan_check_sw(const char *msg, const unsigned char *buf, int rc)
 {
 	unsigned short	sw;
 
@@ -534,7 +789,7 @@ kaan_check_sw(const char *msg, unsigned char *buf, int rc)
 }
 
 int
-kaan_get_sw(unsigned char *buf, unsigned int n, unsigned short *sw)
+kaan_get_sw(const unsigned char *buf, unsigned int n, unsigned short *sw)
 {
 	if (n < 2) {
 		ifd_debug(1, "response too short (%d bytes)", n);
@@ -603,6 +858,8 @@ static struct ifd_driver_ops	kaan_driver = {
 	.recv		= kaan_recv,
 	.set_protocol	= kaan_set_protocol,
 	.transparent	= kaan_transparent,
+	.sync_read	= kaan_sync_read,
+	.sync_write	= kaan_sync_write,
 };
 
 /*
