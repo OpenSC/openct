@@ -426,7 +426,7 @@ do_memory_write(ifd_reader_t *reader, int unit,
 	 || !ct_tlv_get_opaque(args, CT_TAG_DATA, &data, &data_len))
 		return IFD_ERROR_MISSING_ARG;
 
-	rc = ifd_card_write_memory(reader, address, unit, data, data_len);
+	rc = ifd_card_write_memory(reader, unit, address, data, data_len);
 	if (rc < 0)
 		return rc;
 
@@ -452,7 +452,7 @@ do_memory_read(ifd_reader_t *reader, int unit,
 	if (data_len > sizeof(data))
 		data_len = sizeof(data);
 
-	rc = ifd_card_read_memory(reader, address, unit, data, data_len);
+	rc = ifd_card_read_memory(reader, unit, address, data, data_len);
 	if (rc < 0)
 		return rc;
 
