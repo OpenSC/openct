@@ -8,27 +8,7 @@
 #define IFD_CORE_H
 
 #include <sys/types.h>
-
-typedef struct ifd_apdu {
-	unsigned char *		snd_buf;
-	unsigned int		snd_len;
-	unsigned char *		rcv_buf;
-	unsigned int		rcv_len;
-} ifd_apdu_t;
-
-enum {
-	IFD_APDU_CASE_1  = 0x00,
-	IFD_APDU_CASE_2S = 0x01,
-	IFD_APDU_CASE_3S = 0x02,
-	IFD_APDU_CASE_4S = 0x03,
-	IFD_APDU_CASE_2E = 0x10,
-	IFD_APDU_CASE_3E = 0x20,
-	IFD_APDU_CASE_4E = 0x30,
-
-	IFD_APDU_BAD = -1,
-};
-#define IFD_APDU_CASE_LC(c)	((c) & 0x02)
-#define IFD_APDU_CASE_LE(c)	((c) & 0x01)
+#include <ifd/apdu.h>
 
 typedef struct ifd_device	ifd_device_t;
 typedef union ifd_device_params	ifd_device_params_t;

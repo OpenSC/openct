@@ -7,9 +7,7 @@
 
 #include <stdlib.h>
 #include <ifd/ctapi.h>
-#include <ifd/core.h>
-#include <ifd/device.h>
-#include <ifd/logging.h>
+#include "../internal.h"
 
 static ifd_reader_t	*my_reader;
 

@@ -89,6 +89,7 @@ extern int		ifd_send_command(ifd_protocol_t *,
 				const void *, size_t);
 extern int		ifd_recv_response(ifd_protocol_t *,
 				void *, size_t, long);
+extern int		ifd_reader_ctbcs(ifd_reader_t *, ifd_apdu_t *);
 
 /* driver.c */
 extern void		ifd_driver_register(const char *,

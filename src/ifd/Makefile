@@ -1,7 +1,7 @@
 DEBUG	= -Wall -g
 CFLAGS	= -I../include $(DEBUG)
 LDFLAGS	= -Wl,-export-dynamic
-LIBS	= libifd.a
+LIBS	= libifd.a libifd.so
 APPS	= print-atr
 OBJS	= manager.o device.o reader.o driver.o \
           modules.o \
@@ -27,9 +27,16 @@ libifd.a: $(addprefix .objs/,$(OBJS))
 	ar cr $@ $(addprefix .objs/,$(OBJS))
 	ranlib $@
 
+libifd.so: $(addprefix .sobjs/,$(OBJS))
+	ld -shared -o $@ $(addprefix .sobjs/,$(OBJS)) -ldl -lusb -lc
+
 .objs/%.o: %.c
 	@mkdir -p .objs
 	$(CC) $(CFLAGS) -c $< -o $@
+
+.sobjs/%.o: %.c
+	@mkdir -p .sobjs
+	$(CC) -fPIC $(CFLAGS) -c $< -o $@
 
 print-atr: print-atr.o $(LIBS)
 	$(CC) $(LDFLAGS) -o $@ $@.o -L. -lifd -ldl -lusb
