@@ -16,10 +16,7 @@ typedef struct ifd_apdu {
 } ifd_apdu_t;
 
 typedef struct ifd_device	ifd_device_t;
-
-typedef struct ifd_device_params_t {
-	/* TBD */
-} ifd_device_params_t;
+typedef union ifd_device_params	ifd_device_params_t;
 
 enum {
 	IFD_PROTOCOL_DEFAULT = 0,
@@ -43,11 +40,19 @@ typedef struct ifd_driver {
 typedef struct ifd_reader {
 	unsigned int		num;
 	unsigned int		handle;
+
+	const char *		name;
+	unsigned int		nslots;
+	unsigned int		flags;
+
 	ifd_device_t *		device;
 	ifd_protocol_t *	proto;
 	void *			proto_state;
-	ifd_driver_t *		driver;
+	const ifd_driver_t *	driver;
 } ifd_reader_t;
+
+#define IFD_READER_DISPLAY	0x0100
+#define IFD_READER_KEYPAD	0x0200
 
 enum {
 	IFD_PROTOCOL_RECV_TIMEOUT = 0x0000,
@@ -66,16 +71,29 @@ enum {
 	IFD_DAD_ICC2 = 2,
 };
 
+#define IFD_CARD_PRESENT	0x0001
+#define IFD_CARD_STATUS_CHANGED	0x0002
+
+extern ifd_reader_t *		ifd_new_serial(const char *, const char *);
+extern ifd_reader_t *		ifd_new_usb(const char *, const char *);
+extern int			ifd_attach(ifd_reader_t *);
+extern void			ifd_detach(ifd_reader_t *);
+
+extern int			ifd_activate(ifd_reader_t *);
+extern int			ifd_deactivate(ifd_reader_t *);
+
 extern int			ifd_set_protocol(ifd_reader_t *, int);
-extern int			ifd_set_protocol_param(ifd_reader_t *, int, long);
-extern int			ifd_transceive(ifd_reader_t *, int, ifd_apdu_t *);
+extern int			ifd_set_protocol_param(ifd_reader_t *,
+					int, long);
+extern int			ifd_transceive(ifd_reader_t *, int,
+					ifd_apdu_t *);
+extern int			ifd_card_status(ifd_reader_t *, int, int *);
+extern int			ifd_card_reset(ifd_reader_t *, int,
+					void *, size_t);
 
 extern ifd_protocol_t *		ifd_protocol_by_id(int);
 extern ifd_protocol_t *		ifd_protocol_by_name(const char *);
 
 extern int			ifd_select_protocol(ifd_reader_t *, const char *);
-
-/* Internal stuff, really */
-extern ifd_device_t *		ifd_open_serial(const char *);
 
 #endif /* IFD_CORE_H */

@@ -106,7 +106,7 @@ t1_attach(ifd_reader_t *reader)
 	t1->rc_bytes = 2;
 	t1->checksum = csum_crc_compute;
 
-	reader->proto = &t1_protocol;
+	reader->proto = &ifd_protocol_t1;
 	reader->proto_state = t1;
 
 	return 0;
@@ -268,7 +268,7 @@ t1_transceive(ifd_reader_t *reader, unsigned char nad, ifd_apdu_t *apdu)
 
 			t1->nr ^= 1;
 
-			if (!ifd_buf_put(&rbuf, rdata + 3, n))
+			if (ifd_buf_put(&rbuf, rdata + 3, n) < 0)
 				return -1;
 
 			if ((pcb & T1_MORE_BLOCKS) == 0)
@@ -380,7 +380,7 @@ t1_build(ifd_apdu_t *apdu, t1_params_t *t1, unsigned char pcb, ifd_buf_t *bp)
 /*
  * Protocol struct
  */
-ifd_protocol_t	t1_protocol = {
+ifd_protocol_t	ifd_protocol_t1 = {
 	IFD_PROTOCOL_T1,
 	"T=1",
 	t1_attach,
