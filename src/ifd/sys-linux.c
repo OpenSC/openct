@@ -22,6 +22,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#ifdef HAVE_LIBUSB
+#include <usb.h>
+#endif
+#include <openct/driver.h>
 
 int
 ifd_sysdep_device_type(const char *name)
@@ -253,4 +257,48 @@ ifd_sysdep_usb_end_capture(int fd, ifd_usb_capture_t *cap)
 	free(cap);
 	return rc;
 }
+
+/*
+ * Scan all usb devices to see if there is one we support
+ * This function is called at start-up because we can't be
+ * sure the hotplug system notifies us of devices that were
+ * attached at startup time already.
+ */
+int
+ifd_scan_usb(void)
+{
+#ifdef HAVE_LIBUSB
+	ifd_devid_t	id;
+	struct usb_bus	*bus;
+	struct usb_device *dev;
+
+	usb_init();
+	usb_find_busses();
+	usb_find_devices();
+
+	id.type = IFD_DEVICE_TYPE_USB;
+	id.num  = 2;
+	for (bus = usb_busses; bus; bus = bus->next) {
+		for (dev = bus->devices; dev; dev = dev->next) {
+			const char	*driver;
+			char		device[PATH_MAX];
+
+			id.val[0] = dev->descriptor.idVendor;
+			id.val[1] = dev->descriptor.idProduct;
+
+			if (!(driver = ifd_driver_for_id(&id)))
+				continue;
+
+			snprintf(device, sizeof(device),
+				"/proc/bus/usb/%s/%s",
+				bus->dirname,
+				dev->filename);
+
+			ifd_spawn_handler(driver, device, -1);
+		}
+	}
+#endif
+	return 0;
+}
+
 #endif /* __linux__ */

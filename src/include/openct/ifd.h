@@ -111,6 +111,9 @@ extern void			ifd_detach(ifd_reader_t *);
 extern ifd_reader_t *		ifd_reader_by_handle(unsigned int handle);
 extern ifd_reader_t *		ifd_reader_by_index(unsigned int index);
 
+extern int			ifd_spawn_handler(const char *, const char *, int);
+extern int			ifd_scan_usb(void);
+
 extern int			ifd_activate(ifd_reader_t *);
 extern int			ifd_deactivate(ifd_reader_t *);
 extern int			ifd_output(ifd_reader_t *, const char *);

@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <errno.h>
+#include <openct/driver.h>
 
 int
 ifd_sysdep_device_type(const char *name)
@@ -253,6 +254,20 @@ ifd_sysdep_usb_end_capture(int fd, ifd_usb_capture_t *cap)
 	}
 	free(cap);
 	return rc;
+}
+
+/*
+ * Scan all usb devices to see if there is one we support
+ * This function is called at start-up because we can't be
+ * sure the hotplug system notifies us of devices that were
+ * attached at startup time already.
+ */
+int
+ifd_scan_usb(void)
+{
+	/* do some cold plugging here */ 
+
+	return 0;
 }
 
 #endif /* __Net/Free/OpenBSD__ */

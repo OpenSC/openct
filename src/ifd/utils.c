@@ -6,7 +6,9 @@
 
 #include "internal.h"
 #include <stdio.h>
-
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
 
 unsigned int
 ifd_count_bits(unsigned int word)
@@ -72,4 +74,67 @@ ifd_time_elapsed(struct timeval *then)
 	gettimeofday(&now, NULL);
 	timersub(&now, then, &delta);
 	return delta.tv_sec * 1000 + (delta.tv_usec % 1000);
+}
+
+/*
+ * Spawn an ifdhandler
+ */
+int
+ifd_spawn_handler(const char *driver, const char *device, int idx)
+{
+	const char	*argv[16];
+	char		reader[16], debug[10];
+	int		argc, n;
+	pid_t		pid;
+
+	ifd_debug(1, "driver=%s, device=%s, index=%d",
+			driver, device, idx);
+
+	if ((pid = fork()) < 0) {
+		ct_error("fork failed: %m");
+		return 0;
+	}
+
+	if (pid != 0) {
+		/* We're the parent process. The child process should
+		 * call daemon(), causing the process to exit
+		 * immediately after allocating a slot in the status
+		 * file. We wait for it here to make sure USB devices
+		 * don't claim a slot reserved for another device */
+		waitpid(pid, NULL, 0);
+		return 1;
+	}
+
+	argc = 0;
+	argv[argc++] = ct_config.ifdhandler;
+
+	if (idx >= 0) {
+		snprintf(reader, sizeof(reader), "-r%u", idx);
+		argv[argc++] = reader;
+	} else {
+		argv[argc++] = "-H";
+	}
+
+	if (ct_config.debug) {
+		if ((n = ct_config.debug) > 6)
+			n = 6;
+		debug[n+1] = '\0';
+		while (n--)
+			debug[n+1] = 'd';
+		debug[0] = '-';
+		argv[argc++] = debug;
+	}
+
+	argv[argc++] = driver;
+	if (device)
+		argv[argc++] = device;
+	argv[argc] = NULL;
+
+	n = getdtablesize();
+	while (--n > 2)
+		close(n);
+
+	execv(ct_config.ifdhandler, (char **) argv);
+	ct_error("failed to execute %s: %m", ct_config.ifdhandler);
+	exit(1);
 }

@@ -14,8 +14,8 @@ libifd_la_SOURCES = \
 	proto-t0.c proto-t1.c proto-trans.c proto-sync.c \
 	protocol.c ctbcs.c reader.c serial.c usb.c utils.c \
 	$(DRIVERS) \
-	sys-linux.c sys-bsd.c
-libifd_la_LIBADD = ../ct/libopenct.la @LIBDL@
+	sys-null.c sys-linux.c sys-bsd.c
+libifd_la_LIBADD = ../ct/libopenct.la @LIBDL@ @LIBUSB@
 libifd_la_LDFLAGS = -version-info @OPENCT_LT_CURRENT@:@OPENCT_LT_REVISION@:@OPENCT_LT_AGE@
 
 ifdhandler_SOURCES = ifdhandler.c

@@ -4,11 +4,11 @@
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
-#include "internal.h"
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/poll.h>
-#include <sys/wait.h>
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
 #endif
@@ -18,11 +18,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#include <assert.h>
-
-#include <openct/logging.h>
+#include <openct/openct.h>
+#include <openct/ifd.h>
 #include <openct/conf.h>
 #include <openct/driver.h>
+#include <openct/logging.h>
 
 static int		mgr_init(int argc, char **argv);
 static int		mgr_shutdown(int argc, char **argv);
@@ -119,11 +119,9 @@ mgr_init(int argc, char **argv)
 		free(nodes);
 	}
 
-#ifdef HAVE_LIBUSB
 	/* Create an ifdhandler process for every hotplug reader found */
 	if (opt_coldplug)
-		mgr_scan_usb();
-#endif 
+		ifd_scan_usb();
 	return 0;
 }
 
@@ -183,7 +181,7 @@ mgr_attach(int argc, char **argv)
 		return 1;
 	}
 
-	pid = mgr_spawn_ifdhandler(driver, device, -1);
+	pid = ifd_spawn_handler(driver, device, -1);
 	return (pid > 0)? 0 : 1;
 }
 
@@ -263,70 +261,7 @@ configure_reader(ifd_conf_node_t *cf)
 		return;
 	}
 
-	mgr_spawn_ifdhandler(driver, device, nreaders++);
-}
-
-/*
- * Spawn an ifdhandler
- */
-int
-mgr_spawn_ifdhandler(const char *driver, const char *device, int idx)
-{
-	const char	*argv[16];
-	char		reader[16], debug[10];
-	int		argc, n;
-	pid_t		pid;
-
-	ifd_debug(1, "driver=%s, device=%s, index=%d",
-			driver, device, idx);
-
-	if ((pid = fork()) < 0) {
-		ct_error("fork failed: %m");
-		return 0;
-	}
-
-	if (pid != 0) {
-		/* We're the parent process. The child process should
-		 * call daemon(), causing the process to exit
-		 * immediately after allocating a slot in the status
-		 * file. We wait for it here to make sure USB devices
-		 * don't claim a slot reserved for another device */
-		waitpid(pid, NULL, 0);
-		return 1;
-	}
-
-	argc = 0;
-	argv[argc++] = ct_config.ifdhandler;
-
-	if (idx >= 0) {
-		snprintf(reader, sizeof(reader), "-r%u", idx);
-		argv[argc++] = reader;
-	} else {
-		argv[argc++] = "-H";
-	}
-
-	if (ct_config.debug) {
-		if ((n = ct_config.debug) > 6)
-			n = 6;
-		debug[n+1] = '\0';
-		while (n--)
-			debug[n+1] = 'd';
-		debug[0] = '-';
-		argv[argc++] = debug;
-	}
-
-	argv[argc++] = driver;
-	if (device)
-		argv[argc++] = device;
-	argv[argc] = NULL;
-
-	n = getdtablesize();
-	while (--n > 2)
-		close(n);
-
-	execv(ct_config.ifdhandler, (char **) argv);
-	ct_error("failed to execute %s: %m", ct_config.ifdhandler);
-	exit(1);
+	ifd_spawn_handler(driver, device, nreaders++);
 }
 
 /*
