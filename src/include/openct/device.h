@@ -50,16 +50,13 @@ typedef struct ifd_devid {
  * ifd_device_control must always have a guard word
  * that contains the device type.
  */
-typedef struct ifd_usb_cmsg {
-	int		guard;	/* device type */
-
-	int		requesttype;
-	int		request;
-	int		value;
-	int		index;
-	void *		data;
-	size_t		len;
-} ifd_usb_cmsg_t;
+enum {
+	IFD_USB_URB_TYPE_ISO = 0,
+	IFD_USB_URB_TYPE_INTERRUPT = 1,
+	IFD_USB_URB_TYPE_CONTROL = 2,
+	IFD_USB_URB_TYPE_BULK = 3,
+};
+typedef struct ifd_usb_capture ifd_usb_capture_t;
 
 extern ifd_device_t *	ifd_device_open(const char *);
 extern ifd_device_t *	ifd_device_open_channel(unsigned int num);
@@ -83,5 +80,21 @@ extern int		ifd_device_poll_presence(ifd_device_t *,
 extern int		ifd_device_id_parse(const char *, ifd_devid_t *);
 extern int		ifd_device_id_match(const ifd_devid_t *,
 				const ifd_devid_t *);
+
+extern int		ifd_usb_control(ifd_device_t *,
+				int requesttype, int request,
+				int value, int index,
+				void *data, size_t len,
+				long timeout);
+extern int		ifd_usb_begin_capture(ifd_device_t *,
+				int type, int endpoint,
+				size_t maxpacket,
+				ifd_usb_capture_t **);
+extern int		ifd_usb_capture(ifd_device_t *,
+				ifd_usb_capture_t *,
+				void *buffer, size_t len,
+				long timeout);
+extern int		ifd_usb_end_capture(ifd_device_t *,
+				ifd_usb_capture_t *);
 
 #endif /* IFD_DEVICE_H */
