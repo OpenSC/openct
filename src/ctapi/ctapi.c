@@ -13,7 +13,7 @@ static int	ifd_ctapi_request_icc(ifd_reader_t *, ifd_apdu_t *);
 static int	ifd_ctapi_status(ifd_reader_t *, ifd_apdu_t *);
 
 int
-ifd_reader_ctbcs(ifd_reader_t *reader, ifd_apdu_t *apdu)
+ifd_ctapi_control(ifd_reader_t *reader, ifd_apdu_t *apdu)
 {
 	ifd_iso_apdu_t	iso;
 

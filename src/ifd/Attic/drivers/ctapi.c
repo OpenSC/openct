@@ -76,7 +76,7 @@ CT_data(unsigned short ctn,
 		rc = ifd_card_command(my_reader, 0, &apdu);
 		break;
 	case 1:
-		rc = ifd_reader_ctbcs(my_reader, &apdu);
+		rc = ifd_ctapi_control(my_reader, &apdu);
 		break;
 	case 2:
 		ifd_error("CT-API: host talking to itself - "
