@@ -12,15 +12,15 @@ noinst_DATA = openct.conf
 noinst_SCRIPTS = hotplug.openct init-script
 
 hotplug.openct: hotplug.openct.in
-	sed -e "s#SBINDIR#${sbindir}#g" $^ > $@
+	sed -e "s#SBINDIR#${sbindir}#g" < $^ > $@
 	chmod 755 hotplug.openct
 
 init-script: init-script.in
-	sed -e "s#SBINDIR#${sbindir}#g" $^ > $@
+	sed -e "s#SBINDIR#${sbindir}#g" < $^ > $@
 	chmod 755 init-script
 
 %: %.in
-	sed -e "s#SBINDIR#${sbindir}#g" $^ > $@
+	sed -e "s#SBINDIR#${sbindir}#g" < $^ > $@
 
 install-data-local: hotplug.openct
 	@set -e; if test -w $(DESTDIR)$(sysconfdir)/hotplug/usb; then \
