@@ -32,6 +32,7 @@
 static int	opt_debug = 0;
 static int	opt_hotplug = 0;
 static int	opt_foreground = 0;
+static int	opt_info = 0;
 static unsigned int	opt_reader = -1;
 
 static void	usage(int exval);
@@ -41,6 +42,7 @@ static int	ifdhandler_accept(ct_socket_t *);
 static int	ifdhandler_recv(ct_socket_t *);
 static int	ifdhandler_send(ct_socket_t *);
 static void	ifdhandler_close(ct_socket_t *);
+static void	print_info(void);
 
 int
 main(int argc, char **argv)
@@ -53,7 +55,7 @@ main(int argc, char **argv)
 	/* Make sure the mask is good */
 	umask(033);
 
-	while ((c = getopt(argc, argv, "dFHhr:s")) != -1) {
+	while ((c = getopt(argc, argv, "dFHhir:s")) != -1) {
 		switch (c) {
 		case 'd':
 			opt_debug++;
@@ -63,6 +65,9 @@ main(int argc, char **argv)
 			break;
 		case 'H':
 			opt_hotplug = 1;
+			break;
+		case 'i':
+			opt_info = 1;
 			break;
 		case 'r':
 			opt_reader = atoi(optarg);
@@ -75,6 +80,14 @@ main(int argc, char **argv)
 		default:
 			usage(1);
 		}
+	}
+
+	if (opt_info) {
+		if (optind != argc)
+			usage(1);
+		ifd_init();
+		print_info();
+		return 0;
 	}
 
 	if (optind < argc - 2 || optind > argc - 1)
@@ -306,6 +319,58 @@ void
 ifdhandler_close(ct_socket_t *sock)
 {
 	ifdhandler_unlock_all(sock);
+}
+
+/*
+ * Display ifdhandler configuration stuff
+ */
+static void
+print_list(const char **names, unsigned int n)
+{
+	unsigned int	i, width = 0, len;
+
+	for (i = 0; i < n; i++) {
+		len = 1 + strlen(names[i]);
+		if (width && width + len > 64) {
+			printf("\n");
+			width = 0;
+		}
+		if (width == 0) {
+			printf("   ");
+			width = 3;
+		}
+		printf(" %s", names[i]);
+		if (i < n - 1) {
+			printf(",");
+			len++;
+		}
+		width += len;
+	}
+	if (width)
+		printf("\n");
+}
+
+void
+print_info(void)
+{
+	const char	*names[64];
+	unsigned int	n;
+
+	n = ifd_drivers_list(names, 64);
+	if (n == 0) {
+		printf("No reader drivers configured\n");
+	} else {
+		printf("Reader drivers:\n");
+		print_list(names, n);
+	}
+
+	n = ifd_protocols_list(names, 64);
+	if (n == 0) {
+		printf("No protocols configured\n");
+	} else {
+		printf("Protocols:\n");
+		print_list(names, n);
+	}
 }
 
 /*

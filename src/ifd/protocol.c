@@ -253,3 +253,18 @@ ifd_protocol_free(ifd_protocol_t *p)
 	}
 	free(p);
 }
+
+/*
+ * List available protocols
+ */
+unsigned int
+ifd_protocols_list(const char **names, unsigned int max)
+{
+	struct ifd_protocol_info *info;
+	unsigned int	n;
+
+	for (info = list, n = 0; info && n < max; info = info->next, n++) {
+		names[n] = info->ops->name;
+	}
+	return n;
+}

@@ -142,6 +142,7 @@ extern int		ifd_recv_response(ifd_protocol_t *,
 extern void		ifd_driver_register(const char *,
 				struct ifd_driver_ops *);
 extern const ifd_driver_t *ifd_driver_get(const char *);
+extern unsigned int	ifd_drivers_list(const char **, unsigned int);
 
 /* device.c */
 extern ifd_device_t *	ifd_open_serial(const char *);
@@ -180,6 +181,6 @@ extern long		ifd_time_elapsed(struct timeval *);
 extern void		ifd_protocol_register(struct ifd_protocol_ops *);
 extern int		ifd_sync_detect_icc(ifd_reader_t *, int,
 					void *, size_t);
-extern int		ifd_sync_probe_memory_size(ifd_protocol_t *p, int slot);
+extern unsigned int	ifd_protocols_list(const char **, unsigned int);
 
 #endif /* IFD_INTERNAL_H */

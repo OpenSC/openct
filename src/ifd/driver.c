@@ -104,3 +104,15 @@ ifd_driver_get(const char *name)
 
 	return NULL;
 }
+
+unsigned int
+ifd_drivers_list(const char **names, size_t max)
+{
+	struct ifd_driver_info *ip;
+	unsigned int	n;
+
+	for (ip = list, n = 0; ip && n < max; ip = ip->next, n++) {
+		names[n] = ip->driver.name;
+	}
+	return n;
+}
