@@ -235,17 +235,9 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 		switch (t1_block_type(pcb)) {
 		case T1_R_BLOCK:
 			if (T1_IS_ERROR(pcb)) {
-				ifd_debug(1, "received error block, err=%d", T1_IS_ERROR(pcb));
-				if (retries == 0)
-					goto error;
-				if (t1->state == SENDING) {
-
-					slen = t1_build(t1, sdata,
-						dad, T1_S_BLOCK|T1_S_RESYNC,
-						NULL, NULL);
-					t1->state = RESYNCH;
-					continue;
-				}
+				ifd_debug(1, "received error block, err=%d",
+					     T1_IS_ERROR(pcb));
+				goto resync;
 			}
 
 			if (t1->state == RECEIVING) {
@@ -268,10 +260,9 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 			/* If there's no data available, the ICC
 			 * shouldn't be asking for more */
 			if (ct_buf_avail(&sbuf) == 0)
-				goto error;
+				goto resync;
 
-			slen = t1_build(t1, sdata,
-					dad, T1_I_BLOCK,
+			slen = t1_build(t1, sdata, dad, T1_I_BLOCK,
 					&sbuf, &last_send);
 			break;
 
@@ -290,8 +281,8 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 			 * what we expected it to send, reply with
 			 * an R block */
 			if (t1_seq(pcb) != t1->nr) {
-				slen = t1_build(t1, sdata,
-						dad, T1_R_BLOCK | T1_OTHER_ERROR,
+				slen = t1_build(t1, sdata, dad,
+						T1_R_BLOCK | T1_OTHER_ERROR,
 						NULL, NULL);
 				continue;
 			}
@@ -313,6 +304,7 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 				sent_length =0;
 				last_send = 0;
 				resyncs = 3;
+				retries = t1->retries;
 				ct_buf_init(&rbuf, rcv_buf, rcv_len);
 				slen = t1_build(t1, sdata, dad, T1_I_BLOCK,
 						&sbuf, &last_send);
