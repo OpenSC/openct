@@ -15,16 +15,77 @@
 		<title>About OpenCT</title>
 
 		<para>
-			OpenCT is an open source implmentation providing card
-			terminal drivers. OpenCT was written by Olaf Kirch.
+			This is OpenCT, a middleware framework for smart card
+			terminals.
 		</para>
+
+		<para>
+			It all started with a reader driver library - Olaf
+			wanted to write a library to provide a framework for
+			people writing drivers for smart card readers. The idea
+			was to provide all the usualy stuff (T=0, T=1, serial
+			vs USB device handling, etc) in a single place, and
+			reduce driver writing to interaction with the device
+			itself. 
+		</para>
+
+		<para>
+			Olaf added interface bindings for CTAPI and PCSC, both
+			of which are broken at the moment because he ended up
+			writing my own resource manager.
+		</para>
+		
+
+		<para>
+			OpenCT is an open source implmentation providing card
+			terminal drivers. OpenCT was written by Olaf Kirch
+			<email>okir@suse.de</email> with contributions
+			from the following people:
+		</para>
+
+		<orderedlist>
+			<listitem>
+				 The checksum code for T=1 (src/ifd/checksum.c)
+				 was taken from Matthias Bruestle's excellent
+				 SCEZ library.
+			</listitem>
+
+			<listitem>
+				The eGate driver was contributed, and is
+				copyright by, Chaskiel Grundman
+				<email>cg2v@andrew.cmu.edu</email>
+			</listitem>
+
+			<listitem>
+				 The eToken driver is loosely based on code
+				 written by Andreas Jellinghaus
+				 <email>aj@dungeon.inka.de</email>
+				 (the ikey3k and eutron driver, too,
+				 and most of the documentation)
+			</listitem>
+		</orderedlist>
 
 		<para>
 			OpenCT provides CT-API drivers, ifdhandler drivers
 			as well as it's own resource manager for direct
 			use by applications.
 		</para>
-		
+	</chapter>
+
+	<chapter>
+		<title>Copyright and License</title>
+
+		<para>
+			Most of OpenCT is copyright by Olaf Kirch
+			<email>okir@suse.de</email>, but see every
+			source file for the individual authors.
+		</para>
+
+		<para>
+			FIXME: Olaf should realy assign some license
+			to the whole think. I vote for LGPL or BSD
+			license (or both). 
+		</para>
 	</chapter>
 
 	<chapter>
@@ -32,14 +93,12 @@
 
 		<variablelist>
 			<varlistentry>
-				<term>towitoko</term>
+				<term>Towitoko Chipdrive micro</term>
 				<listentry>
 					A cheap and very popular smart card
 					reader for the serial interfaces
 					manufactured by the towitoko
 					company. fully supported.
-					FIXME: are there several models? which
-					one is exactly supported?
 				</listentry>
 			</varlistentry>
 
