@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  * Copyright (C) 2003 Andreas Jellinghaus <aj@suse.de>
- * Copyright (C) 2003 Markus Friedl <aj@suse.de>
+ * Copyright (C) 2003 Markus Friedl <markus@openbsd.org>
  *
  * These functions need to be re-implemented for every
  * new platform.
