@@ -27,9 +27,6 @@ ct_debug(const char *fmt, ...)
 {
 	va_list	ap;
 
-	if (!ct_config.debug)
-		return;
-
 	va_start(ap, fmt);
 	fprintf(stderr, "Debug: ");
 	vfprintf(stderr, fmt, ap);
