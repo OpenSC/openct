@@ -8,6 +8,9 @@ TODO list
  -	driver framework: eject_card
  -	resource manager: request icc, eject icc
  -	resource manager: poll card status every few seconds
+ 	(put card status info into mmapped file so clients don't
+	incur the network round-trip time every time they check
+	the status?)
  -	resource manager: reliable mechanism to notify client of
  	card change event
  -	find out why client hangs when resource manager crashes
