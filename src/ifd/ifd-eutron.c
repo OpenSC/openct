@@ -66,9 +66,9 @@ static int
 eutron_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 {
 	ifd_device_t *dev = reader->device;
-	unsigned char	buffer[256];
-	int		rc, n;
-	unsigned char cookie[] = { 0x00, 0x00, 0x01, 0x00, 0x88, 0x13 };
+	unsigned char	buffer[IFD_MAX_ATR_LEN+100];
+	unsigned char	cookie[] = { 0xff, 0x11, 0x98, 0x76 };
+	int		rc, lr, c, atrlen;
 
 	if (ifd_usb_control(dev, 0x41, 0xa3, 0, 0, NULL, 0, -1) != 0
 	 || ifd_usb_control(dev, 0x41, 0xa1, 0, 0, NULL, 0, -1) != 0
@@ -77,27 +77,52 @@ eutron_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 	 || ifd_usb_control(dev, 0x41, 0x09, 0, 0, NULL, 0, -1) != 0)
 		goto failed;
 
-	/* Request the ATR */
-	rc = ifd_usb_control(dev, 0x40, 0x01, 0, 0, NULL, 0, 1000);
-	if (rc < 0)
+	for (lr=0,c=0;c < 20;c++) {
+		rc = ifd_usb_control(dev, 0xc1, 0x02, 0, 0,
+				&buffer[lr], 100, 1000);
+
+		if (rc < 0)
+			goto failed;
+		lr+=rc;
+
+		rc = ifd_atr_complete(buffer,lr);
+
+		if (rc) break;
+
+		if (lr > IFD_MAX_ATR_LEN) 
+			goto failed;
+	}
+	if (c >= 20)
 		goto failed;
 
-	/* Receive the ATR */
-	rc = ifd_usb_control(dev, 0xc0, 0x81, 0, 0, buffer, 0x23, 1000);
-	if (rc <= 0)
+	atrlen = lr;
+	memcpy(atr, buffer, atrlen);
+
+	if (ifd_usb_control(dev, 0x41, 0x01, 0, 0, 
+		cookie, sizeof(cookie), 1000) != sizeof(cookie))
 		goto failed;
 
-	n = buffer[0];
-	if (n + 1 > rc)
-		goto failed;
-	if (n > IFD_MAX_ATR_LEN)
+	for (lr=0,c=0;c < 20;c++) {
+		rc = ifd_usb_control(dev, 0xc1, 0x02, 0, 0,
+				&buffer[lr], 100, 1000);
+
+		if (rc < 0)
+			goto failed;
+		lr+=rc;
+		if (lr >= 4)
+			break;
+
+		if (lr > IFD_MAX_ATR_LEN) 
+			goto failed;
+	}
+	if (c >= 20)
 		goto failed;
 
-	if (n > size)
-		n = size;
-	memcpy(atr, buffer + 1, n);
+	if (ifd_usb_control(dev, 0x41, 0x65, 0x98, 0, NULL, 0, -1) != 0
+		|| ifd_usb_control(dev, 0x41, 0xa0, 0, 0, NULL, 0, -1) != 0)
+		goto failed;
 
-	return n;
+	return atrlen;
 
 failed:	ct_error("eutron: failed to activate token");
 	return -1;
@@ -109,15 +134,37 @@ failed:	ct_error("eutron: failed to activate token");
 static int
 eutron_send(ifd_reader_t *reader, unsigned int dad, const unsigned char *buffer, size_t len)
 {
-	return ifd_usb_control(reader->device, 0x40, 0x06, 0, 0,
-				(void *) buffer, len, -1);
+	return ifd_usb_control(reader->device, 0x42, 0x01, 0, 0,
+				buffer, len, 1000);
 }
 
 static int
 eutron_recv(ifd_reader_t *reader, unsigned int dad, unsigned char *buffer, size_t len, long timeout)
 {
-	return ifd_usb_control(reader->device, 0xc0, 0x86, 0, 0,
-				buffer, len, timeout);
+	int rc,lr,c,rbs;
+
+	for (lr=0,c=0;c < 200;c++) {
+		rbs = len - lr;
+		if (rbs > 100) rbs = 100;
+		if (rbs == 0)
+			goto failed;
+
+		rc = ifd_usb_control(reader->device, 0xc1, 0x02, 0, 0,
+				&buffer[lr], rbs, timeout);
+
+		if (rc < 0)
+			goto failed;
+		lr+=rc;
+
+		if (lr >= 4 && lr>=buffer[2]+4)
+			break;
+	}
+	if (c >= 200)
+		goto failed;
+
+	return lr;
+failed:	ct_error("eutron: failed to receive t=1 frame");
+	return -1;
 }
 
 /*
