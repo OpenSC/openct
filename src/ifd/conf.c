@@ -20,7 +20,7 @@ struct ct_config	ct_config = {
 	0,			/* debug */
 	1,			/* autoload */
 	1,			/* hotplug */
-	0,			/* hush_errors */
+	0,			/* suppress_errors */
 	OPENCT_IFDHANDLER_PATH,	/* ifdhandler */
 	OPENCT_MODULES_PATH,	/* modules_dir */
 	NULL,			/* driver_modules_dir */

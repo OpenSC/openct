@@ -271,7 +271,7 @@ ifd_serial_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeo
 
 timeout:/* Timeouts are a little special; they may happen e.g.
 	 * when trying to obtain the ATR */
-	if (!ct_config.hush_errors)
+	if (!ct_config.suppress_errors)
 		ct_error("%s: timed out while waiting for input",
 				dev->name);
 	ifd_debug(9, "(%u bytes received so far)", total - len);

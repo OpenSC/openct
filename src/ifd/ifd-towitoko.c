@@ -226,7 +226,7 @@ twt_try_reset(ifd_reader_t *reader,
 
 	ifd_debug(2, "sending %s", ct_hexdump(cmd, cmd_len));
 
-	ct_config.hush_errors++;
+	ct_config.suppress_errors++;
 	if (ifd_device_type(dev) != IFD_DEVICE_TYPE_SERIAL) {
 		rc = ifd_device_transceive(dev, cmd, cmd_len,
 						atr, atr_len, 1000);
@@ -235,7 +235,7 @@ twt_try_reset(ifd_reader_t *reader,
 			return -1;
 		rc = ifd_device_recv(dev, (unsigned char *) atr, 1, 1000);
 	}
-	ct_config.hush_errors--;
+	ct_config.suppress_errors--;
 
 	if (rc == IFD_ERROR_TIMEOUT)
 		return 0;
