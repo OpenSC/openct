@@ -88,7 +88,6 @@ extern int		ifd_send_command(ifd_protocol_t *,
 				const void *, size_t);
 extern int		ifd_recv_response(ifd_protocol_t *,
 				void *, size_t, long);
-extern int		ifd_ctapi_control(ifd_reader_t *, ifd_apdu_t *);
 
 /* driver.c */
 extern void		ifd_driver_register(const char *,
@@ -97,9 +96,13 @@ extern const ifd_driver_t *ifd_driver_get(const char *);
 extern const char *	ifd_driver_for_id(const char *);
 
 /* device.c */
-extern ifd_device_t *	ifd_device_new(const char *, struct ifd_device_ops *,
-				size_t);
+extern ifd_device_t *	ifd_open_serial(const char *);
+extern ifd_device_t *	ifd_open_psaux(const char *);
+extern ifd_device_t *	ifd_open_usb(const char *);
+extern ifd_device_t *	ifd_device_new(const char *,
+				struct ifd_device_ops *, size_t);
 extern void		ifd_device_free(ifd_device_t *);
+
 
 /* checksum.c */
 extern unsigned int	csum_lrc_compute(const unsigned char *, size_t, unsigned char *);

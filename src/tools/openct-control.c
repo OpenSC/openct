@@ -12,7 +12,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#include <openct/core.h>
+#include <openct/ifd.h>
 #include <openct/conf.h>
 #include <openct/logging.h>
 
