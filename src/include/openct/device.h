@@ -7,7 +7,7 @@
 #ifndef IFD_DEVICE_H
 #define IFD_DEVICE_H
 
-#include <openct/core.h>
+#include <openct/ifd.h>
 
 /* Types of devices supported by libifd */
 enum {
@@ -72,10 +72,5 @@ extern int		ifd_sysdep_device_type(const char *);
 extern const char *	ifd_sysdep_channel_to_name(unsigned int num);
 extern int		ifd_sysdep_usb_control(int, ifd_usb_cmsg_t *, long);
 extern int		ifd_sysdep_usb_scan(void);
-
-/* scheduled to go away */
-extern ifd_device_t *	ifd_open_serial(const char *);
-extern ifd_device_t *	ifd_open_psaux(const char *);
-extern ifd_device_t *	ifd_open_usb(const char *);
 
 #endif /* IFD_DEVICE_H */

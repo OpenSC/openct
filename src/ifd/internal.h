@@ -7,7 +7,7 @@
 #ifndef IFD_INTERNAL_H
 #define IFD_INTERNAL_H
 
-#include "core.h"
+#include "ifd.h"
 #include "device.h"
 #include "driver.h"
 #include <openct/conf.h>
@@ -17,13 +17,13 @@
 #include <openct/buffer.h>
 
 struct ifd_device {
-	char *			name;
-	int			type;
-	unsigned int		etu;
-	long			timeout;
-	ifd_device_params_t	settings;
+	char *		name;
+	int		type;
+	unsigned int	etu;
+	long		timeout;
+	ifd_device_params_t settings;
 
-	struct ifd_device_ops *	ops;
+	struct ifd_device_ops *ops;
 
 	/* data follows */
 };
@@ -32,45 +32,47 @@ struct ifd_device_ops {
 	/* Try to identify the attached device. In the case of
 	 * a serial device, perform serial PnP. For USB devices,
 	 * get the vendor/device ID */
-	int			(*identify)(ifd_device_t *, char *, size_t);
+	int		(*identify)(ifd_device_t *, char *, size_t);
 
 	/* Reset device */
-//	int			(*reset)(ifd_device_t *, void *, size_t);
+#if 0
+	int		(*reset)(ifd_device_t *, void *, size_t);
+#endif
 
-	int			(*set_params)(ifd_device_t *, const ifd_device_params_t *);
-	int			(*get_params)(ifd_device_t *, ifd_device_params_t *);
+	int		(*set_params)(ifd_device_t *, const ifd_device_params_t *);
+	int		(*get_params)(ifd_device_t *, ifd_device_params_t *);
 
 	/* Flush any pending input */
-	void			(*flush)(ifd_device_t *);
+	void		(*flush)(ifd_device_t *);
 
 	/*
 	 * Send/receive data. Some devices such as USB will support
 	 * the transceive command, others such as serial devices will
 	 * need to use send/recv
 	 */
-	int			(*transceive)(ifd_device_t *,
+	int		(*transceive)(ifd_device_t *,
 					ifd_apdu_t *, long);
-	int			(*send)(ifd_device_t *, const void *, size_t);
-	int			(*recv)(ifd_device_t *, void *, size_t, long);
-	int			(*control)(ifd_device_t *, void *, size_t);
+	int		(*send)(ifd_device_t *, const void *, size_t);
+	int		(*recv)(ifd_device_t *, void *, size_t, long);
+	int		(*control)(ifd_device_t *, void *, size_t);
 
-	void			(*close)(ifd_device_t *);
+	void		(*close)(ifd_device_t *);
 };
 
 struct ifd_protocol_ops {
-	int			id;
-	const char *		name;
-	size_t			size;
-	int			(*init)(ifd_protocol_t *);
-	void			(*release)(ifd_protocol_t *);
-	int			(*set_param)(ifd_protocol_t *, int, long);
-	int			(*get_param)(ifd_protocol_t *, int, long *);
-	int			(*transceive)(ifd_protocol_t *, int dad, ifd_apdu_t *);
+	int		id;
+	const char *	name;
+	size_t		size;
+	int		(*init)(ifd_protocol_t *);
+	void		(*release)(ifd_protocol_t *);
+	int		(*set_param)(ifd_protocol_t *, int, long);
+	int		(*get_param)(ifd_protocol_t *, int, long *);
+	int		(*transceive)(ifd_protocol_t *, int dad, ifd_apdu_t *);
 };
 
 struct ifd_protocol {
-	ifd_reader_t		*reader;
-	unsigned int		dad;
+	ifd_reader_t	*reader;
+	unsigned int	dad;
 	struct ifd_protocol_ops	*ops;
 };
 
