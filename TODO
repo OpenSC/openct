@@ -3,8 +3,6 @@
 TODO list
 
  -	error handling: use error codes everywhere, add ct_strerror
- -	find out why client hangs when resource manager crashes
- -	reader backend for opensc
  -	pin verification via keypad
  -	ifdhandler should clear status file slot on exit
  
