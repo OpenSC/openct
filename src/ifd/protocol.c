@@ -20,6 +20,8 @@ ifd_protocol_by_id(int id)
 		return &ifd_protocol_t0;
 	case IFD_PROTOCOL_T1:
 		return &ifd_protocol_t1;
+	case IFD_PROTOCOL_TRANSPARENT:
+		return &ifd_protocol_trans;
 	}
 
 	/* Check protocols registered dynamically */
@@ -31,8 +33,10 @@ ifd_protocol_by_id(int id)
  * Select a protocol
  */
 ifd_protocol_t *
-ifd_protocol_select(ifd_slot_t *slot, ifd_reader_t *reader, int preferred)
+ifd_protocol_select(ifd_reader_t *reader, int nslot, int preferred)
 {
+	const ifd_driver_t *drv;
+	ifd_slot_t	*slot = &reader->slot[nslot];
 	unsigned char	*atr, TDi;
 	unsigned int	supported = 0;
 	int		def_proto = -1, n, len;
@@ -77,7 +81,13 @@ ifd_protocol_select(ifd_slot_t *slot, ifd_reader_t *reader, int preferred)
 		ifd_debug("protocol selection not supported");
 	}
 
-	slot->proto = ifd_protocol_new(def_proto, reader, slot->dad);
+	if ((drv = reader->driver) && drv->ops && drv->ops->set_protocol) {
+		if (drv->ops->set_protocol(reader, nslot, def_proto) < 0)
+			return NULL;
+	} else {
+		slot->proto = ifd_protocol_new(def_proto, reader, slot->dad);
+	}
+
 	return slot->proto;
 }
 

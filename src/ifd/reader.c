@@ -268,8 +268,7 @@ ifd_card_reset(ifd_reader_t *reader, unsigned int idx, void *atr, size_t size)
 	if (atr)
 		memcpy(atr, slot->atr, count);
 
-	slot->proto = ifd_protocol_select(slot, reader, IFD_PROTOCOL_DEFAULT);
-	if (slot->proto == NULL)
+	if (!ifd_protocol_select(reader, idx, IFD_PROTOCOL_DEFAULT))
 		ifd_error("Protocol selection failed");
 
 	return count;

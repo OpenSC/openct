@@ -74,6 +74,7 @@ struct ifd_protocol {
 
 extern struct ifd_protocol_ops	ifd_protocol_t1;
 extern struct ifd_protocol_ops	ifd_protocol_t0;
+extern struct ifd_protocol_ops	ifd_protocol_trans;
 
 typedef struct ifd_buf {
 	unsigned char *		base;
@@ -105,8 +106,7 @@ extern ifd_protocol_t *	ifd_protocol_new(int proto_id,
 				ifd_reader_t *reader,
 				unsigned int dad);
 extern void		ifd_protocol_free(ifd_protocol_t *);
-extern ifd_protocol_t *	ifd_protocol_select(ifd_slot_t *,
-				ifd_reader_t *, int);
+extern ifd_protocol_t *	ifd_protocol_select(ifd_reader_t *, int, int);
 extern int		ifd_protocol_transceive(ifd_protocol_t *proto,
 				int dad, ifd_apdu_t *apdu);
 

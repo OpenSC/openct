@@ -20,8 +20,6 @@ struct ifd_driver_ops {
 	int		(*card_status)(ifd_reader_t *, int, int *);
 	int		(*card_reset)(ifd_reader_t *, int, void *, size_t);
 
-	int		(*set_protocol)(ifd_reader_t *, int, int);
-
 	int		(*send)(ifd_reader_t *reader,
 				unsigned int dad,
 				const void *buffer,
@@ -31,6 +29,12 @@ struct ifd_driver_ops {
 				void *buffer,
 				size_t len,
 				long timeout);
+
+	/* These functions are used by drivers that transparently
+	 * transmit all APDUs to the device, and let the device
+	 * deal with T=0/T=1 etc */
+	int		(*set_protocol)(ifd_reader_t *, int, int);
+	int		(*transparent)(ifd_reader_t *, int, ifd_apdu_t *);
 };
 
 extern void		ifd_driver_register(const char *,
