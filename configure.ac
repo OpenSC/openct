@@ -1,5 +1,5 @@
 AC_INIT(src/ifd/init.c)
-dnl AC_CONFIG_AUX_DIR(tools)
+AC_CONFIG_AUX_DIR(tools)
 AM_INIT_AUTOMAKE(openct, CVS)
 AM_CONFIG_HEADER(include/config.h)
 
