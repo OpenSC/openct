@@ -8,10 +8,19 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define IFD_MAX_READERS		64
+#define IFD_MAX_READERS		8
 
 static ifd_reader_t *		ifd_readers[IFD_MAX_READERS];
 static unsigned int		ifd_reader_handle = 1;
+
+/*
+ * Return number of readers available
+ */
+int
+ifd_reader_count()
+{
+	return IFD_MAX_READERS;
+}
 
 /*
  * Register a reader

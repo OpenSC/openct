@@ -95,6 +95,7 @@ extern int			ifd_hotplug_init(void);
 extern ifd_reader_t *		ifd_open(const char *driver_name,
 					const char *device_name);
 extern void			ifd_close(ifd_reader_t *);
+extern int			ifd_reader_count(void);
 extern int			ifd_attach(ifd_reader_t *);
 extern void			ifd_detach(ifd_reader_t *);
 extern ifd_reader_t *		ifd_reader_by_handle(unsigned int handle);
