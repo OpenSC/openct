@@ -24,6 +24,8 @@ struct ifd_driver_ops {
 	int		(*card_request)(ifd_reader_t *, int,
 				time_t, const char *,
 				void *, size_t);
+	int		(*card_eject)(ifd_reader_t *, int,
+				time_t, const char *);
 
 	int		(*output)(ifd_reader_t *, const char *);
 

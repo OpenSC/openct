@@ -337,6 +337,26 @@ ifd_recv_atr(ifd_device_t *dev, ct_buf_t *bp,
 }
 
 /*
+ * Eject the card
+ */
+int
+ifd_card_eject(ifd_reader_t *reader, unsigned int idx,
+		time_t timeout, const char *message)
+{
+	const ifd_driver_t *drv = reader->driver;
+
+	if (idx > reader->nslots) {
+		ct_error("%s: invalid slot number %u", reader->name, idx);
+		return -1;
+	}
+
+	if (!drv || !drv->ops || !drv->ops->card_eject)
+		return 0;
+
+	return drv->ops->card_eject(reader, idx, timeout, message);
+}
+
+/*
  * Send/receive APDU to the ICC
  */
 int
