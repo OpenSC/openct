@@ -39,7 +39,7 @@ typedef struct {
 #define T1_I_SEQ_SHIFT		6
 
 /* R block */
-#define T1_IS_ERROR(pcb)	((pcb) & 0x1F)
+#define T1_IS_ERROR(pcb)	((pcb) & 0x0F)
 #define T1_EDC_ERROR		0x01
 #define T1_OTHER_ERROR		0x02
 #define T1_R_SEQ_SHIFT		4
@@ -141,6 +141,12 @@ t1_set_param(ifd_protocol_t *prot, int type, long value)
 	case IFD_PROTOCOL_T1_CHECKSUM_CRC:
 		t1_set_checksum(t1, type);
 		break;
+	case IFD_PROTOCOL_T1_IFSC:
+		t1->ifsc = value;
+		break;
+	case IFD_PROTOCOL_T1_IFSD:
+		t1->ifsd = value;
+		break;
 	default:
 		ct_error("Unsupported parameter %d", type);
 		return -1;
@@ -228,6 +234,7 @@ t1_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 		switch (t1_block_type(pcb)) {
 		case T1_R_BLOCK:
 			if (T1_IS_ERROR(pcb)) {
+				ifd_debug(1, "received error block, err=%d", T1_IS_ERROR(pcb));
 				if (retries == 0)
 					return -1;
 				if (t1->state == SENDING) {
@@ -313,23 +320,25 @@ t1_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 				ifd_debug(1, "abort requested");
 				return -1;
 			case T1_S_IFS:
+				ifd_debug(1, "CT sent S-block with ifs=%u", sdata[3]);
 				if (sdata[3] == 0)
 					return -1;
 				t1->ifsc = sdata[3];
-				ct_buf_put(&tbuf, &sdata[3], 1);
+				ct_buf_putc(&tbuf, sdata[3]);
 				break;
 			case T1_S_WTX:
 				/* We don't handle the wait time extension
 				 * yet */
+				ifd_debug(1, "CT sent S-block with wtx=%u", sdata[3]);
 				/* t1->wtx = sdata[3]; */
-				ct_buf_put(&tbuf, &sdata[3], 1);
+				ct_buf_putc(&tbuf, sdata[3]);
 				break;
 			default:
-				ct_error("T=1: Unknown S block type");
+				ct_error("T=1: Unknown S block type 0x%02x", T1_S_TYPE(pcb));
 				return -1;
 			}
 
-			t1_build(t1, sdata, dad,
+			slen = t1_build(t1, sdata, dad,
 				T1_S_BLOCK | T1_S_RESPONSE | T1_S_TYPE(pcb),
 				&tbuf, NULL);
 		}
@@ -486,7 +495,7 @@ t1_xcv(t1_state_t *t1, unsigned char *block, size_t slen)
 	/* Maximum amount of data we'll receive - some devices
 	 * such as the eToken need this. If you request more, it'll
 	 * just barf */
-	rlen = t1->ifsc + 5;
+	rlen = 3 + t1->ifsd + t1->rc_bytes;
 
 	if (prot->reader->device->type != IFD_DEVICE_TYPE_SERIAL) {
 		/* Get the response en bloc */
