@@ -11,6 +11,7 @@
 #ifdef __linux__
 #include <sys/types.h>
 #include <linux/major.h>
+#include <linux/compiler.h>
 #include <linux/usbdevice_fs.h>
 #include <sys/sysmacros.h>
 #include <sys/stat.h>

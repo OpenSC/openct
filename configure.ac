@@ -54,7 +54,10 @@ case "$host" in
 	AC_CHECK_MEMBER(struct usbdevfs_ctrltransfer.bRequestType,
 		[AC_DEFINE(LINUX_NEWUSB,1,[new usb structure])],
 		[],
-		[#include <linux/usbdevice_fs.h>])
+		[
+#include <linux/compiler.h>
+#include <linux/usbdevice_fs.h>
+		])
 	;;
 *-*-darwin*)
 	LIBS="$LIBS -lobjc"
