@@ -8,11 +8,16 @@
 #include <string.h>
 #include "internal.h"
 
+/* Freeze after that many seconds of inactivity */
+#define FREEZE_DELAY		5
+
 /*
  * CT status
  */
 typedef struct kaan_status {
 	ifd_protocol_t *	p;
+	time_t			last_activity;
+	unsigned int		frozen : 1;
 	int			icc_proto[OPENCT_MAX_SLOTS];
 } kaan_status_t;
 
@@ -21,10 +26,10 @@ static int		kaan_get_units(ifd_reader_t *reader);
 static int		kaan_display(ifd_reader_t *, const char *);
 static int		kaan_build_display_args(unsigned char *, size_t,
 				unsigned int, const char *);
-static int		kaan_apdu_xcv(ifd_reader_t *,
+static int		__kaan_apdu_xcv(ifd_reader_t *,
 				const unsigned char *, size_t,
 				unsigned char *, size_t,
-				time_t);
+				time_t, int);
 static int		kaan_get_tlv(unsigned char *, size_t,
 				unsigned char tag,
 				unsigned char **ptr);
@@ -33,6 +38,9 @@ static int		kaan_check_sw(const char *,
 static int		kaan_get_sw(unsigned char *,
 				unsigned int,
 				unsigned short *);
+
+#define kaan_apdu_xcv(reader, sbuf, slen, rbug, rlen, timeout) \
+	__kaan_apdu_xcv(reader, sbuf, slen, rbug, rlen, timeout, 1)
 
 /*
  * Initialize the device
@@ -84,8 +92,7 @@ kaan_open(ifd_reader_t *reader, const char *device_name)
 
 #if 0
 	/* Clear the display */
-	if (kaan_display(reader, "Kublai Kaan 0.1\nWelcome!") < 0)
-		return -1;
+	kaan_display(reader, "");
 #endif
 
 	return 0;
@@ -186,14 +193,48 @@ kaan_deactivate(ifd_reader_t *reader)
 static int
 kaan_card_status(ifd_reader_t *reader, int slot, int *status)
 {
+	kaan_status_t	*st = (kaan_status_t *) reader->driver_data;
 	unsigned char	buffer[16] = { 0x20, 0x13, slot+1, 0x80, 0x00 };
 	unsigned char	*byte;
 	int		rc, n;
 
 	ifd_debug(1, "slot=%d", slot);
+	if (!st->frozen
+	 && st->last_activity + FREEZE_DELAY < time(NULL)
+	 && ifd_device_type(reader->device) == IFD_DEVICE_TYPE_SERIAL) {
+		unsigned char	freeze[16] = { 0x80, 0x70, 0x00, 0x00, 0x00, 0x30, 00 };
+		unsigned int	m, n;
 
-	if ((rc = kaan_apdu_xcv(reader, buffer, 5, buffer, sizeof(buffer), 0)) < 0
-	 || (rc = kaan_check_sw("kaan_card_status", buffer, rc)) < 0)
+		ifd_debug(1, "trying to freeze reader");
+		for (n = 0, m = 7; n < reader->nslots; n++, m++) {
+			freeze[m] = n + 1;
+			if (reader->slot[n].status != 0)
+				freeze[m] |= 0x02;
+		}
+		freeze[6] = n;
+		freeze[4] = n + 2;
+
+		rc = __kaan_apdu_xcv(reader, freeze, m, freeze, sizeof(freeze), 0, 0);
+		if ((rc = kaan_check_sw("kaan_card_freeze", freeze, rc)) < 0)
+			return rc;
+		usleep(10000);
+		st->frozen = 1;
+	}
+
+	if (st->frozen) {
+		/* Get the DSR status */
+		if (!ifd_serial_get_dsr(reader->device)) {
+			*status = reader->slot[slot].status;
+			return 0;
+		}
+
+		/* Activity detected - go on an get status */
+		st->last_activity = time(NULL);
+		st->frozen = 0;
+	}
+
+	rc = __kaan_apdu_xcv(reader, buffer, 5, buffer, sizeof(buffer), 0, 0);
+	if ((rc = kaan_check_sw("kaan_card_status", buffer, rc)) < 0)
 		return rc;
 	if ((n = kaan_get_tlv(buffer, rc, 0x80, &byte)) >= 0) {
 		if (*byte & 0x01)
@@ -404,10 +445,10 @@ kaan_transparent(ifd_reader_t *reader, int dad,
  * APDU exchange with terminal
  */
 int
-kaan_apdu_xcv(ifd_reader_t *reader,
+__kaan_apdu_xcv(ifd_reader_t *reader,
 		const unsigned char *sbuf, size_t slen,
 		unsigned char *rbuf, size_t rlen,
-		time_t timeout)
+		time_t timeout, int activity)
 {
 	kaan_status_t	*st = (kaan_status_t *) reader->driver_data;
 	long		orig_timeout = 0;
@@ -431,10 +472,15 @@ kaan_apdu_xcv(ifd_reader_t *reader,
 		rc = IFD_ERROR_COMM_ERROR;
 	}
 
-	if (orig_timeout) {
+	if (timeout) {
 		ifd_protocol_set_parameter(st->p,
 				IFD_PROTOCOL_RECV_TIMEOUT,
 				orig_timeout);
+	}
+
+	if (activity) {
+		st->last_activity = time(NULL);
+		st->frozen = 0;
 	}
 
 	return rc;
