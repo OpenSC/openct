@@ -26,6 +26,7 @@ union ifd_device_params {
 		int		bits;
 		int		stopbits;
 		int		parity;
+		int		check_parity;
 		unsigned int	rts : 1,
 				dtr : 1;
 	} serial;
