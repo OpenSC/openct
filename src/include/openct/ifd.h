@@ -14,7 +14,6 @@
 typedef struct ifd_device	ifd_device_t;
 typedef union ifd_device_params	ifd_device_params_t;
 
-
 enum {
 	IFD_PROTOCOL_DEFAULT = -1,
 	IFD_PROTOCOL_T0 = 0,
@@ -23,7 +22,7 @@ enum {
 	IFD_PROTOCOL_3WIRE,
 	IFD_PROTOCOL_I2C_SHORT,
 	IFD_PROTOCOL_I2C_LONG,
-	IFD_PROTOCOL_TLP,		/* older Gemplus protocool */
+	IFD_PROTOCOL_TLP,		/* older Gemplus protocol */
 	IFD_PROTOCOL_GBP,		/* Gemplus block protocol */
 	IFD_PROTOCOL_TRANSPARENT = 128,
 
@@ -50,7 +49,6 @@ typedef struct ifd_slot {
 	ifd_protocol_t *	proto;
 	void *			reader_data;
 } ifd_slot_t;
-
 
 typedef struct ifd_reader {
 	unsigned int		num;
@@ -168,13 +166,16 @@ extern int			ifd_protocol_write_memory(ifd_protocol_t *,
 					const unsigned char *, size_t);
 extern void			ifd_protocol_free(ifd_protocol_t *);
 
-
 /* Debugging macro */
+#ifdef __GNUC__
 #define ifd_debug(level, fmt, args...) \
 	do { \
 		if ((level) <= ct_config.debug) \
 			ct_debug("%s: " fmt, __FUNCTION__ , ##args); \
 	} while (0)
-
+#else
+/* XXX: rewrite ifd_debug */
+#define ifd_debug(level, fmt, args, ...) {}
+#endif
 
 #endif /* OPENCT_IFD_H */
