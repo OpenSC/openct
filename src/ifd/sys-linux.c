@@ -99,7 +99,7 @@ ifd_sysdep_usb_control(int fd, int requesttype, int request,
 		return IFD_ERROR_COMM_ERROR;
 	}
 
-	return len;
+	return rc;
 }
 
 /*
