@@ -6,39 +6,50 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/poll.h>
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <assert.h>
+
 #include <openct/ifd.h>
 #include <openct/conf.h>
 #include <openct/logging.h>
-
 #include <openct/socket.h>
+
 #include "internal.h"
+
+#define IFD_MAX_SOCKETS	256
 
 static void		usage(int exval);
 
 static const char *	opt_config = NULL;
 static int		opt_debug = 0;
+static int		opt_foreground = 0;
 
-static void		mgr_spawn_handler(unsigned int, ifd_reader_t *);
+static pid_t		mgr_spawn_handler(unsigned int, ifd_reader_t *);
 static int		mgr_accept(ct_socket_t *);
 static int		mgr_recv(ct_socket_t *);
 static int		mgr_send(ct_socket_t *);
 static void		mgr_close(ct_socket_t *);
+static void		mgr_mainloop(ct_socket_t *);
 
 int
 main(int argc, char **argv)
 {
+	unsigned int	n, count;
 	int	c;
 
-	while ((c = getopt(argc, argv, "df:h")) != -1) {
+	while ((c = getopt(argc, argv, "dFf:h")) != -1) {
 		switch (c) {
 		case 'd':
 			opt_debug++;
+			break;
+		case 'F':
+			opt_foreground = 1;
 			break;
 		case 'f':
 			opt_config = optarg;
@@ -59,26 +70,75 @@ main(int argc, char **argv)
 	if (ifd_config_parse(opt_config) < 0)
 		exit(1);
 
+	if (!opt_foreground) {
+		if (daemon(0, 0) < 0) {
+			perror("failed to background process");
+			exit(1);
+		}
+		/* XXX change logging destination */
+		/* ct_log_destination("@syslog"); */
+	}
+
 	/* Initialize IFD library */
 	ifd_init();
 
-	/* Test code: just listen on the socket for reader #0 */
-	mgr_spawn_handler(0, ifd_reader_by_index(0));
+	/* Create sub-processes for every reader present */
+	count = ifd_reader_count();
+	for (n = 0; n < count; n++) {
+		ifd_reader_t	*reader;
+
+		if ((reader = ifd_reader_by_index(n)) != NULL)
+			mgr_spawn_handler(n, reader);
+	}
 
 	return 0;
 }
 
 /*
- * Spawn a new ifd handler thread
+ * Master thread; mostly doing the hotplug stuff and
+ * managing the coming and going of its children
  */
 void
+mgr_master(void)
+{
+	ct_socket_t	*sock;
+	char		socket_name[128];
+
+	snprintf(socket_name, sizeof(socket_name),
+			"%s/master", ct_config.socket_dir);
+
+	sock = ct_socket_new(0);
+	if (ct_socket_listen(sock, socket_name) < 0) {
+		ct_error("Failed to create server socket");
+		exit(1);
+	}
+
+	//sock->recv = mgr_master_accept;
+
+	/* Call the server loop */
+	mgr_mainloop(sock);
+}
+
+/*
+ * Spawn a new ifd handler thread
+ */
+pid_t
 mgr_spawn_handler(unsigned int idx, ifd_reader_t *reader)
 {
 	char		socket_name[128];
 	ct_socket_t	*sock;
+	pid_t		pid;
 	int		rc;
 
-	/* XXX - fork process here */
+	/* fork process here */
+	if ((pid = fork()) < 0) {
+		ct_error("failed to fork reader handler: %m");
+		return -1;
+	}
+
+	/* parent returns */
+	if (pid != 0)
+		return pid;
 
 	/* Activate reader */
 	if ((rc = ifd_activate(reader)) < 0) {
@@ -108,7 +168,8 @@ mgr_spawn_handler(unsigned int idx, ifd_reader_t *reader)
 	sock->recv = mgr_accept;
 
 	/* Call the server loop */
-	ct_socket_server_loop(sock);
+	mgr_mainloop(sock);
+	exit(0);
 }
 
 /*
@@ -185,6 +246,75 @@ void
 mgr_close(ct_socket_t *sock)
 {
 	mgr_unlock_all(sock);
+}
+
+/*
+ * Main loop
+ */
+void
+mgr_mainloop(ct_socket_t *listener)
+{
+	unsigned int	nsockets = 1;
+	ct_socket_t	head;
+	struct pollfd	pfd[IFD_MAX_SOCKETS];
+
+	head.next = head.prev = NULL;
+	ct_socket_link(&head, listener);
+
+	while (1) {
+		ct_socket_t	*sock, *next;
+		unsigned int	n = 0;
+		int		rc;
+
+		/* Count active sockets */
+		for (nsockets = 0, sock = head.next; sock; sock = next) {
+			next = sock->next;
+			if (sock->fd < 0)
+				ct_socket_free(sock);
+			else
+				nsockets++;
+		}
+
+		if (nsockets == 0)
+			break;
+
+		/* Stop accepting new connections if there are
+		 * too many already */
+		listener->events = (nsockets < IFD_MAX_SOCKETS)?  POLLIN : 0;
+
+		/* Make sure we don't exceed the max socket limit */
+		assert(nsockets < IFD_MAX_SOCKETS);
+
+		/* Set up the poll structure */
+		for (n = 0, sock = head.next; sock; sock = sock->next, n++) {
+			pfd[n].fd = sock->fd;
+			pfd[n].events = sock->events;
+		}
+
+		rc = poll(pfd, n, 1000);
+		if (rc < 0) {
+			if (rc == EINTR)
+				continue;
+			ct_error("poll: %m");
+			exit(1);
+		}
+
+		for (n = 0, sock = head.next; sock; sock = next, n++) {
+			next = sock->next;
+			if (pfd[n].revents & POLLOUT) {
+				if (sock->send(sock) < 0) {
+					ct_socket_free(sock);
+					continue;
+				}
+			}
+			if (pfd[n].revents & POLLIN) {
+				if ((rc = sock->recv(sock)) < 0) {
+					ct_socket_free(sock);
+					continue;
+				}
+			}
+		}
+	}
 }
 
 
