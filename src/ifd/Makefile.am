@@ -17,7 +17,7 @@ libifd_la_SOURCES = \
 	$(DRIVERS) $(SYS)
 
 libifd_la_LIBADD = ../ct/libopenct.la @LIBDL@
-libifd_la_LDFLAGS = -versioninfo 0:0
+libifd_la_LDFLAGS = -version-info @OPENCT_LT_CURRENT@:@OPENCT_LT_REVISION@:@OPENCT_LT_AGE@
 
 ifdhandler_SOURCES = ifdhandler.c
 ifdhandler_LDADD = libifd.la
