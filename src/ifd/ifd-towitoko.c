@@ -13,10 +13,8 @@
 #include <openct/logging.h>
 #include <openct/conf.h>
 #include <openct/error.h>
+#include "internal.h"
 
-#define DEBUG(fmt, args...) \
-	do { ct_debug("%s: "  fmt, __FUNCTION__ , ##args); } while (0)
-		
 
 static int		twt_led(ifd_reader_t *, int);
 static int		twt_try_reset(ifd_reader_t *,
@@ -45,7 +43,7 @@ twt_open(ifd_reader_t *reader, const char *device_name)
 	ifd_device_t	*dev;
 	unsigned char	buffer[256];
 
-	DEBUG("called, device=%s", device_name);
+	ifd_debug(1, "called, device=%s", device_name);
 
 	reader->name = "Towitoko Reader";
 	reader->nslots = 1;
@@ -72,7 +70,7 @@ twt_open(ifd_reader_t *reader, const char *device_name)
 	 || !twt_recv_checksum(buffer, 3))
 		goto failed;
 
-	DEBUG("init command returns 0x%02x 0x%02x", buffer[0], buffer[1]);
+	ifd_debug(1, "towotoko reader type 0x%02x", buffer[0]);
 
 	/* Special handling for some towitoko readers
 	 * (according to SCEZ) */
@@ -115,7 +113,7 @@ failed: ct_error("towitoko: failed to initialize device");
 static int
 twt_activate(ifd_reader_t *reader)
 {
-	DEBUG("called.");
+	ifd_debug(1, "called.");
 
 	if (twt_command(reader, "\x60\x0F", 2, NULL, 0) < 0)
 		return -1;
@@ -126,7 +124,7 @@ twt_activate(ifd_reader_t *reader)
 static int
 twt_deactivate(ifd_reader_t *reader)
 {
-	DEBUG("called.");
+	ifd_debug(1, "called.");
 
 	if (twt_command(reader, "\x61\x0F", 2, NULL, 0) < 0)
 		return -1;
@@ -177,7 +175,7 @@ twt_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 	static unsigned char reset2[] = { 0xA0, 0x6F, 0x00, 0x05, 0x74 };
 	int	i, n;
 
-	DEBUG("called.");
+	ifd_debug(1, "called.");
 
 	if (slot != 0) {
 		ct_error("towitoko: bad slot index %u", slot);
@@ -205,8 +203,7 @@ twt_try_reset(ifd_reader_t *reader,
 	ifd_device_t *dev = reader->device;
 	int rc;
 
-	if (ct_config.debug > 1)
-		DEBUG("sending %s", ct_hexdump(cmd, cmd_len));
+	ifd_debug(2, "sending %s", ct_hexdump(cmd, cmd_len));
 
 	ct_config.hush_errors++;
 	if (ifd_device_type(dev) != IFD_DEVICE_TYPE_SERIAL) {
@@ -225,7 +222,6 @@ twt_try_reset(ifd_reader_t *reader,
 	if (rc == 1) {
 		unsigned char c = *(unsigned char *) atr;
 
-		DEBUG("got first byte of ATR %02x", c);
 		if (c != 0x3f && c != 0x3b && c != 0x03)
 			return 0;
 	}
@@ -283,7 +279,7 @@ twt_send(ifd_reader_t *reader, unsigned int dad,
 	if (!(dev = reader->device))
 		return -1;
 
-	DEBUG("data:%s", ct_hexdump(buffer, len));
+	ifd_debug(3, "data:%s", ct_hexdump(buffer, len));
 	while (len) {
 		if ((count = len) > 255)
 			count = 255;
@@ -314,7 +310,7 @@ twt_recv(ifd_reader_t *reader, unsigned int dad,
 	n = ifd_device_recv(reader->device, buffer, len, timeout);
 	if (n < 0)
 		return -1;
-	DEBUG("data:%s", ct_hexdump(buffer, len));
+	ifd_debug(3, "data:%s", ct_hexdump(buffer, len));
 	return n;
 }
 
@@ -341,7 +337,7 @@ twt_command(ifd_reader_t *reader, const char *cmd, size_t cmd_len,
 	int		rc;
 
 	if (ct_config.debug > 1)
-		DEBUG("sending:%s", ct_hexdump(cmd, cmd_len));
+		ifd_debug(3, "sending:%s", ct_hexdump(cmd, cmd_len));
 
 	if (res_len > sizeof(buffer)-1
 	 || cmd_len > sizeof(buffer)-1)
@@ -359,7 +355,7 @@ twt_command(ifd_reader_t *reader, const char *cmd, size_t cmd_len,
 	}
 
 	if (ct_config.debug > 1)
-		DEBUG("received:%s", ct_hexdump(buffer, res_len + 1));
+		ifd_debug(3, "received:%s", ct_hexdump(buffer, res_len + 1));
 
 	if (!twt_recv_checksum(buffer, res_len + 1)) {
 		ct_error("towitoko: command failed (bad checksum)");

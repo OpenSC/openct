@@ -271,8 +271,7 @@ t0_xcv(ifd_protocol_t *prot, void *sdata, size_t slen,
 		} else if (((~byte ^ ins) & 0xFE) == 0) {
 			count = 1;
 		} else {
-			ct_debug("%s: unexpected byte 0x%02x",
-					__FUNCTION__, byte);
+			ifd_debug(2, "unexpected byte 0x%02x", byte);
 			return -1;
 		}
 

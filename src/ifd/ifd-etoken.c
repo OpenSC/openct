@@ -15,6 +15,7 @@
 #include <openct/logging.h>
 #include <openct/conf.h>
 #include <openct/error.h>
+#include "internal.h"
 
 #define ET_TIMEOUT	1000
 

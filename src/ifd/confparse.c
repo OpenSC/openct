@@ -227,8 +227,8 @@ again:	s = (char *) ct_buf_head(&config_buf);
 	buffer[copy] = '\0';
 	ct_buf_get(&config_buf, NULL, m);
 
-	if (ct_config.debug > 4)
-		ct_debug("ct_config_parse: token=\"%s\"\n", buffer);
+	ifd_debug(5, "ct_config_parse: token=\"%s\"\n", buffer);
+
 	*tok = buffer;
 	return 0;
 }

@@ -61,7 +61,7 @@ ifd_protocol_select(ifd_reader_t *reader, int nslot, int preferred)
 	unsigned int	supported = 0;
 	int		def_proto = -1, n, len;
 
-	IFD_DEBUG("atr=%s", ct_hexdump(slot->atr, slot->atr_len));
+	ifd_debug(1, "atr=%s", ct_hexdump(slot->atr, slot->atr_len));
 
 	atr = slot->atr;
 	len = slot->atr_len;
@@ -91,14 +91,14 @@ ifd_protocol_select(ifd_reader_t *reader, int nslot, int preferred)
 	if (def_proto < 0)
 		def_proto = IFD_PROTOCOL_T0;
 
-	IFD_DEBUG("default T=%d, supported protocols=0x%x",
+	ifd_debug(1, "default T=%d, supported protocols=0x%x",
 			def_proto, supported);
 
 	if (preferred >= 0
 	 && preferred != def_proto
 	 && (supported & (1 << preferred))) {
 		/* XXX perform PTS */
-		ct_debug("protocol selection not supported");
+		ifd_debug(1, "protocol selection not supported");
 	}
 
 	if ((drv = reader->driver) && drv->ops && drv->ops->set_protocol) {
@@ -122,11 +122,11 @@ ifd_protocol_transceive(ifd_protocol_t *p, int dad, ifd_apdu_t *apdu)
 	if (!p || !p->ops || !p->ops->transceive)
 		return -1;
 
-	IFD_DEBUG("cmd: %s", ct_hexdump(apdu->snd_buf, apdu->snd_len));
+	ifd_debug(1, "cmd: %s", ct_hexdump(apdu->snd_buf, apdu->snd_len));
 	rc = p->ops->transceive(p, dad, apdu);
 
 	if (rc >= 0)
-		IFD_DEBUG("resp:%s", ct_hexdump(apdu->rcv_buf, apdu->rcv_len));
+		ifd_debug(1, "resp:%s", ct_hexdump(apdu->rcv_buf, apdu->rcv_len));
 
 	return rc;
 }

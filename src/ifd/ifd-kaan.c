@@ -12,9 +12,7 @@
 #include <openct/logging.h>
 #include <openct/conf.h>
 #include <openct/error.h>
-
-#define DEBUG(fmt, args...) \
-	do { ct_debug("%s: " fmt, __FUNCTION__ , ##args); } while (0)
+#include "internal.h"
 
 /*
  * CT status
@@ -177,14 +175,14 @@ kaan_display(ifd_reader_t *reader, const char *string)
 static int
 kaan_activate(ifd_reader_t *reader)
 {
-	DEBUG("called.");
+	ifd_debug(1, "called.");
 	return 0;
 }
 
 static int
 kaan_deactivate(ifd_reader_t *reader)
 {
-	DEBUG("called.");
+	ifd_debug(1, "called.");
 	return 0;
 }
 
@@ -198,7 +196,7 @@ kaan_card_status(ifd_reader_t *reader, int slot, int *status)
 	unsigned char	*byte;
 	int		rc, n;
 
-	DEBUG("slot=%d", slot);
+	ifd_debug(1, "slot=%d", slot);
 
 	if ((rc = kaan_apdu_xcv(reader, buffer, 5, buffer, sizeof(buffer))) < 0
 	 || (rc = kaan_check_sw("kaan_card_status", buffer, rc)) < 0)
@@ -248,7 +246,7 @@ kaan_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 	ifd_slot_t	*slot;
 	int		rc;
 
-	DEBUG("proto=%d", proto);
+	ifd_debug(1, "proto=%d", proto);
 
 	switch (proto) {
 	case IFD_PROTOCOL_T0: cmd[6]    = 0x01; break;
@@ -257,7 +255,7 @@ kaan_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 	case IFD_PROTOCOL_3WIRE: cmd[6] = 0x81; break;
 	case IFD_PROTOCOL_2WIRE: cmd[6] = 0x82; break;
 	default:
-		DEBUG("kaan_set_protocol: protocol %d not supported", proto);
+		ifd_debug(1, "kaan_set_protocol: protocol %d not supported", proto);
 		return -1;
 	}
 

@@ -12,10 +12,6 @@
 
 #include "internal.h"
 
-#define DEBUG(fmt, args...) \
-	do { ct_debug("%s: "  fmt, __FUNCTION__ , ##args); } while (0)
-		
-
 typedef struct {
 	ifd_protocol_t	base;
 	int		state;
@@ -209,7 +205,7 @@ t1_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 		retries--;
 
 		if ((n = t1_xcv(t1, sdata, slen)) < 0) {
-			DEBUG("transmit/receive failed");
+			ifd_debug(1, "transmit/receive failed");
 			if (retries == 0 || last_send)
 				return -1;
 			slen = t1_build(t1, sdata, dad,
@@ -219,7 +215,7 @@ t1_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 		}
 
 		if (!t1_verify_checksum(t1, sdata, n)) {
-			DEBUG("checksum failed");
+			ifd_debug(1, "checksum failed");
 			if (retries == 0 || last_send)
 				return -1;
 			slen = t1_build(t1, sdata,
@@ -308,13 +304,13 @@ t1_transceive(ifd_protocol_t *prot, int dad, ifd_apdu_t *apdu)
 
 			switch (T1_S_TYPE(pcb)) {
 			case T1_S_RESYNC:
-				DEBUG("resynch requested");
+				ifd_debug(1, "resynch requested");
 				if (retries == 0)
 					return -1;
 				t1_set_defaults(t1);
 				break;
 			case T1_S_ABORT:
-				DEBUG("abort requested");
+				ifd_debug(1, "abort requested");
 				return -1;
 			case T1_S_IFS:
 				if (sdata[3] == 0)
@@ -481,7 +477,7 @@ t1_xcv(t1_state_t *t1, unsigned char *block, size_t slen)
 	int		n, m;
 
 	if (ct_config.debug >= 3)
-		DEBUG("sending %s", ct_hexdump(block, slen));
+		ifd_debug(3, "sending %s", ct_hexdump(block, slen));
 
 	n = ifd_send_command(prot, block, slen);
 	if (n < 0)
@@ -519,7 +515,7 @@ t1_xcv(t1_state_t *t1, unsigned char *block, size_t slen)
 	}
 
 	if (n >= 0 && ct_config.debug >= 3)
-		DEBUG("received %s", ct_hexdump(block, n));
+		ifd_debug(3, "received %s", ct_hexdump(block, n));
 
 	return n;
 }
