@@ -29,6 +29,8 @@ extern int	ifd_tlv_get_string(ifd_tlv_parser_t *,
 				ifd_tag_t, char *, size_t);
 extern int	ifd_tlv_get_opaque(ifd_tlv_parser_t *,
 				ifd_tag_t, unsigned char **, size_t *);
+extern int	ifd_tlv_get_bytes(ifd_tlv_parser_t *,
+				ifd_tag_t, void *, size_t);
 
 extern void	ifd_tlv_builder_init(ifd_tlv_builder_t *, ifd_buf_t *);
 extern void	ifd_tlv_put_int(ifd_tlv_builder_t *,

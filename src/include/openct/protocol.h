@@ -17,6 +17,14 @@
  */
 
 #define IFD_CMD_STATUS		0x00
+#define IFD_CMD_USER_LOCK	0x01	/* lock out other users */
+#define IFD_CMD_USER_UNLOCK	0x02
+#define IFD_CMD_LOCK		0x03	/* prevent concurrent access */
+#define IFD_CMD_UNLOCK		0x04
+#define IFD_CMD_RESET		0x10
+#define IFD_CMD_REQUEST_ICC	0x11
+#define IFD_CMD_EJECT_ICC	0x12
+#define IFD_CMD_TRANSACT	0x20	/* transceive APDU */
 
 #define IFD_UNIT_ICC1		0x00
 #define IFD_UNIT_ICC2		0x01
@@ -30,8 +38,11 @@
  * TLV items.
  */
 #define IFD_TAG_READER_NAME	0x00	/* ASCII string */
-#define IFD_TAG_READER_UNITS	0x01	/* list if IFD_UNIT_* bytes */
+#define IFD_TAG_READER_UNITS	0x01	/* list IFD_UNIT_* bytes */
 #define IFD_TAG_CARD_STATUS	0x02	/* IFD_CARD_* byte */
+#define IFD_TAG_ATR		0x03	/* Answer to reset */
+#define IFD_TAG_TIMEOUT		0x80
+#define IFD_TAG_MESSAGE		0x81
 
 
 #endif /* IFDMGR_PROTOCOL_H */

@@ -8,6 +8,7 @@
 #define IFD_CORE_H
 
 #include <sys/types.h>
+#include <ifd/openct.h>
 #include <ifd/apdu.h>
 
 typedef struct ifd_device	ifd_device_t;
@@ -86,8 +87,6 @@ enum {
 	IFD_DAD_ICC2,
 };
 
-#define IFD_CARD_PRESENT	0x0001
-#define IFD_CARD_STATUS_CHANGED	0x0002
 
 extern int			ifd_init(void);
 extern int			ifd_hotplug_init(void);

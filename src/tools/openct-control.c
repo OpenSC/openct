@@ -121,8 +121,10 @@ mgr_recv(ifd_socket_t *sock)
 	char		buffer[512];
 	header_t	header;
 	ifd_buf_t	args, resp;
+	int		rc;
 
-	if (ifd_socket_filbuf(sock) < 0)
+	/* Error or client closed connection? */
+	if ((rc = ifd_socket_filbuf(sock)) <= 0)
 		return -1;
 
 	/* If request is incomplete, go back
@@ -140,6 +142,7 @@ mgr_recv(ifd_socket_t *sock)
 		ifd_buf_clear(&resp);
 
 	/* Put packet into transmit buffer */
+	header.count = ifd_buf_avail(&resp);
 	if (ifd_socket_put_packet(sock, &header, &resp) < 0)
 		return -1;
 

@@ -97,6 +97,21 @@ ifd_tlv_get_opaque(ifd_tlv_parser_t *parser, ifd_tag_t tag,
 	return 1;
 }
 
+int
+ifd_tlv_get_bytes(ifd_tlv_parser_t *parser, ifd_tag_t tag,
+			void *buf, size_t size)
+{
+	unsigned char	*p;
+	unsigned int	len;
+
+	if (tag > 255 || !(p = parser->v[tag]))
+		return 0;
+	if ((len = *p++) > size)
+		len = size;
+	memcpy(buf, p, len);
+	return len;
+}
+
 /*
  * Initialize a TLV data builder
  */
@@ -114,7 +129,7 @@ void
 ifd_tlv_put_int(ifd_tlv_builder_t *builder, ifd_tag_t tag,
 		unsigned int value)
 {
-	unsigned int	n;
+	int	n;
 
 	if (builder->error)
 		return;
@@ -124,7 +139,7 @@ ifd_tlv_put_int(ifd_tlv_builder_t *builder, ifd_tag_t tag,
 	do {
 		ifd_tlv_add_byte(builder, value >> n);
 		n -= 8;
-	} while (n);
+	} while (n >= 0);
 
 	builder->lenp = NULL;
 }
@@ -151,7 +166,7 @@ ifd_tlv_put_tag(ifd_tlv_builder_t *builder, ifd_tag_t tag)
 		return;
 	if (ifd_buf_putc(bp, tag) < 0)
 		goto err;
-	builder->lenp = ifd_buf_head(bp);
+	builder->lenp = ifd_buf_tail(bp);
 	if (ifd_buf_putc(bp, 0) < 0)
 		goto err;
 	return;

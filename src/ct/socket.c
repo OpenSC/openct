@@ -134,7 +134,7 @@ ifd_socket_accept(ifd_socket_t *sock)
 		return NULL;;
 	}
 
-	sock->events = POLLIN;
+	svc->events = POLLIN;
 	svc->fd = fd;
 
 	/* XXX - obtain client credentials */
@@ -161,8 +161,7 @@ ifd_socket_close(ifd_socket_t *sock)
  * Transmit a call and receive the response
  */
 int
-ifd_socket_call(ifd_socket_t *sock, unsigned int reader,
-		ifd_buf_t *args, ifd_buf_t *resp)
+ifd_socket_call(ifd_socket_t *sock, ifd_buf_t *args, ifd_buf_t *resp)
 {
 	ifd_buf_t	*bp = &sock->buf, data;
 	unsigned int	xid = ifd_xid++, avail;
@@ -177,7 +176,7 @@ ifd_socket_call(ifd_socket_t *sock, unsigned int reader,
 	 * on the same host, so there's no byte order issue */
 	header.xid   = xid;
 	header.count = ifd_buf_avail(args);
-	header.dest  = reader;
+	header.dest  = 0;
 
 	/* Put everything into send buffer and transmit */
 	if (ifd_socket_put_packet(sock, &header, args) < 0
@@ -194,6 +193,9 @@ ifd_socket_call(ifd_socket_t *sock, unsigned int reader,
 		if ((rc = ifd_socket_get_packet(sock, &header, &data)) < 0)
 			return -1;
 	}  while (rc == 0 || header.xid != xid);
+
+	if (header.error)
+		return header.error;
 
 	avail = ifd_buf_avail(&data);
 	if (avail > ifd_buf_tailroom(resp)) {
@@ -479,18 +481,33 @@ ifd_socket_server_loop(ifd_socket_t *listener)
 	head.next = head.prev = NULL;
 	ifd_socket_link(&head, listener);
 
-	while (nsockets) {
+	while (1) {
 		ifd_socket_t	*sock, *next;
 		unsigned int	n = 0;
 		int		rc;
+
+		/* Count active sockets */
+		for (nsockets = 0, sock = head.next; sock; sock = next) {
+			next = sock->next;
+			if (sock->fd < 0)
+				ifd_socket_free(sock);
+			else
+				nsockets++;
+		}
+
+		if (nsockets == 0)
+			break;
 
 		/* Stop accepting new connections if there are
 		 * too many already */
 		listener->events = (nsockets < IFD_MAX_SOCKETS)?  POLLIN : 0;
 
+		/* Make sure we don't exceed the max socket limit */
+		assert(nsockets < IFD_MAX_SOCKETS);
+
 		/* Set up the poll structure */
 		for (n = 0, sock = head.next; sock; sock = sock->next, n++) {
-			assert(n < nsockets);
+			ifd_debug("sock fd=%d ev=%u", sock->fd, sock->events);
 			pfd[n].fd = sock->fd;
 			pfd[n].events = sock->events;
 		}

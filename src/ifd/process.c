@@ -13,10 +13,12 @@
 #include <ifd/conf.h>
 #include <ifd/logging.h>
 #include <ifd/error.h>
+#include <ifd/tlv.h>
 
 #include "internal.h"
 
 static int mgr_status(ifd_reader_t *, int, ifd_tlv_parser_t *, ifd_tlv_builder_t *);
+static int mgr_reset(ifd_reader_t *, int, ifd_tlv_parser_t *, ifd_tlv_builder_t *);
 
 int
 mgr_process(ifd_reader_t *reader, ifd_buf_t *argbuf, ifd_buf_t *resbuf)
@@ -27,16 +29,20 @@ mgr_process(ifd_reader_t *reader, ifd_buf_t *argbuf, ifd_buf_t *resbuf)
 	int			rc;
 
 	memset(&args, 0, sizeof(args));
-	mgr_tlv_builder_init(&resp, resbuf);
+	ifd_tlv_builder_init(&resp, resbuf);
 
 	if (ifd_buf_get(argbuf, &cmd, 1) < 0
 	 || ifd_buf_get(argbuf, &unit, 1) < 0
-	 || mgr_tlv_parse(&args, argbuf) < 0)
+	 || ifd_tlv_parse(&args, argbuf) < 0)
 		return IFD_ERROR_INVALID_MSG;
 
 	switch (cmd) {
 	case IFD_CMD_STATUS:
 		rc = mgr_status(reader, unit, &args, &resp);
+		break;
+
+	case IFD_CMD_RESET:
+		rc = mgr_reset(reader, unit, &args, &resp);
 		break;
 
 	default:
@@ -60,16 +66,16 @@ mgr_status(ifd_reader_t *reader, int unit,
 
 	switch (unit) {
 	case IFD_UNIT_CT:
-		mgr_tlv_put_string(resp, IFD_TAG_READER_NAME, reader->name);
+		ifd_tlv_put_string(resp, IFD_TAG_READER_NAME, reader->name);
 
-		mgr_tlv_put_tag(resp, IFD_TAG_READER_UNITS);
+		ifd_tlv_put_tag(resp, IFD_TAG_READER_UNITS);
 		for (n = 0; n < reader->nslots; n++)
-			mgr_tlv_add_byte(resp, n);
+			ifd_tlv_add_byte(resp, n);
 
 		if (reader->flags & IFD_READER_DISPLAY)
-			mgr_tlv_add_byte(resp,  IFD_UNIT_DISPLAY);
+			ifd_tlv_add_byte(resp,  IFD_UNIT_DISPLAY);
 		if (reader->flags & IFD_READER_KEYPAD)
-			mgr_tlv_add_byte(resp,  IFD_UNIT_KEYPAD);
+			ifd_tlv_add_byte(resp,  IFD_UNIT_KEYPAD);
 		break;
 
 	default:
@@ -77,7 +83,7 @@ mgr_status(ifd_reader_t *reader, int unit,
 			return IFD_ERROR_INVALID_SLOT;
 		if ((rc = ifd_card_status(reader, unit, &status)) < 0)
 			return rc;
-		mgr_tlv_put_int(resp, IFD_TAG_CARD_STATUS, status);
+		ifd_tlv_put_int(resp, IFD_TAG_CARD_STATUS, status);
 		break;
 	}
 
@@ -85,163 +91,31 @@ mgr_status(ifd_reader_t *reader, int unit,
 }
 
 /*
- * Handle TLV encoding
+ * Reset card
  */
 int
-mgr_tlv_parse(ifd_tlv_parser_t *parser, ifd_buf_t *bp)
+mgr_reset(ifd_reader_t *reader, int unit, ifd_tlv_parser_t *args, ifd_tlv_builder_t *resp)
 {
-	unsigned int	avail;
-	unsigned char	*p, tag, len;
+	unsigned char	atr[64];
+	char		msgbuf[128];
+	const char	*message = NULL;
+	unsigned int	timeout = 0;
+	int		rc;
 
-	while ((avail = ifd_buf_avail(bp)) != 0) {
-		if (avail < 2)
-			return -1;
+	if (unit > reader->nslots)
+		return IFD_ERROR_INVALID_SLOT;
 
-		p = ifd_buf_head(bp);
-		tag = p[0];
-		len = p[1];
+	/* See if we have timeout and/or message parameters */
+	ifd_tlv_get_int(args, IFD_TAG_TIMEOUT, &timeout);
+	if (ifd_tlv_get_string(args, IFD_TAG_MESSAGE, msgbuf, sizeof(msgbuf)) > 0)
+		message = msgbuf;
 
-		if (len == 0 || 2 + len > avail)
-			return -1;
+	if ((rc = ifd_card_request(reader, unit, timeout, message, atr, sizeof(atr))) < 0)
+		return rc;
 
-		parser->v[tag] = p + 1;
-
-		ifd_buf_get(bp, NULL, 2 + len);
-	}
+	/* Add the ATR to the response */
+	ifd_tlv_put_tag(resp, IFD_TAG_ATR);
+	ifd_tlv_add_bytes(resp, atr, rc);
 
 	return 0;
-}
-
-int
-mgr_tlv_get_string(ifd_tlv_parser_t *parser, ifd_tag_t tag,
-			char *buf, size_t size)
-{
-	unsigned char	*p;
-	unsigned int	len;
-
-	if (tag > 255 || !(p = parser->v[tag]))
-		return 0;
-
-	len = *p++;
-	if (len > size - 1)
-		len = size - 1;
-	strncpy(buf, p, len);
-	buf[len] = '\0';
-	return 1;
-}
-
-int
-mgr_tlv_get_int(ifd_tlv_parser_t *parser, ifd_tag_t tag,
-			unsigned int *value)
-{
-	unsigned char	*p;
-	unsigned int	len;
-
-	*value = 0;
-	if (tag > 255 || !(p = parser->v[tag]))
-		return 0;
-
-	len = *p++;
-	while (len--) {
-		*value <<= 8;
-		*value |= *p++;
-	}
-
-	return 1;
-}
-
-int
-mgr_tlv_get_opaque(ifd_tlv_parser_t *parser, ifd_tag_t tag,
-			unsigned char **data, size_t *lenp)
-{
-	unsigned char	*p;
-
-	*data = NULL;
-	*lenp = 0;
-
-	if (tag > 255 || !(p = parser->v[tag]))
-		return 0;
-	*lenp = *p++;
-	*data = p;
-	return 1;
-}
-
-void
-mgr_tlv_builder_init(ifd_tlv_builder_t *builder, ifd_buf_t *bp)
-{
-	memset(builder, 0, sizeof(*builder));
-	builder->buf = bp;
-}
-
-void
-mgr_tlv_put_int(ifd_tlv_builder_t *builder, ifd_tag_t tag,
-		unsigned int value)
-{
-	unsigned int	n;
-
-	if (builder->error)
-		return;
-	mgr_tlv_put_tag(builder, tag);
-	for (n = 0; (value >> (n + 8)) != 0; n += 8)
-		;
-	do {
-		mgr_tlv_add_byte(builder, value >> n);
-		n -= 8;
-	} while (n);
-
-	builder->lenp = NULL;
-}
-
-void
-mgr_tlv_put_string(ifd_tlv_builder_t *builder, ifd_tag_t tag,
-		const char *string)
-{
-	if (builder->error)
-		return;
-
-	mgr_tlv_put_tag(builder, tag);
-	mgr_tlv_add_bytes(builder, string, strlen(string));
-
-	builder->lenp = NULL;
-}
-
-void
-mgr_tlv_put_tag(ifd_tlv_builder_t *builder, ifd_tag_t tag)
-{
-	ifd_buf_t	*bp = builder->buf;
-
-	if (builder->error < 0)
-		return;
-	if (ifd_buf_putc(bp, tag) < 0)
-		goto err;
-	builder->lenp = ifd_buf_head(bp);
-	if (ifd_buf_putc(bp, 0) < 0)
-		goto err;
-	return;
-
-err:	builder->error = -1;
-}
-
-void
-mgr_tlv_add_byte(ifd_tlv_builder_t *builder, unsigned char byte)
-{
-	mgr_tlv_add_bytes(builder, &byte, 1);
-}
-
-void
-mgr_tlv_add_bytes(ifd_tlv_builder_t *builder,
-		const unsigned char *data, size_t num)
-{
-	ifd_buf_t	*bp = builder->buf;
-
-	if (builder->error < 0)
-		return;
-
-	if (!builder->lenp
-	 || *(builder->lenp) >= 256 - num
-	 || ifd_buf_put(bp, data, num)) {
-		builder->error = -1;
-	} else {
-		*(builder->lenp) += num;
-	}
 }

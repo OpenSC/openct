@@ -1,6 +1,7 @@
 /*
  * Socket type definitions
  *
+ * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
 #ifndef IFDD_SOCKET_H
@@ -29,7 +30,7 @@ typedef struct ifd_socket {
 typedef struct header {
 	u_int32_t       xid;
 	u_int32_t	dest;
-	u_int16_t	error;
+	int16_t		error;
 	u_int16_t       count;
 } header_t;
 
@@ -39,8 +40,7 @@ extern int		ifd_socket_connect(ifd_socket_t *, const char *);
 extern int		ifd_socket_listen(ifd_socket_t *, const char *);
 extern ifd_socket_t *	ifd_socket_accept(ifd_socket_t *);
 extern void		ifd_socket_close(ifd_socket_t *);
-extern int		ifd_socket_call(ifd_socket_t *, unsigned int,
-				ifd_buf_t *, ifd_buf_t *);
+extern int		ifd_socket_call(ifd_socket_t *, ifd_buf_t *, ifd_buf_t *);
 extern int		ifd_socket_flsbuf(ifd_socket_t *, int);
 extern int		ifd_socket_filbuf(ifd_socket_t *);
 extern int		ifd_socket_put_packet(ifd_socket_t *,
@@ -55,5 +55,6 @@ extern int		ifd_socket_write(ifd_socket_t *, void *, size_t);
 extern int		ifd_socket_write_nb(ifd_socket_t *, void *, size_t);
 extern int		ifd_socket_read(ifd_socket_t *, void *, size_t);
 extern int		ifd_socket_read_nb(ifd_socket_t *, void *, size_t);
+extern void		ifd_socket_server_loop(ifd_socket_t *);
 
 #endif /* IFDD_SOCKET_H */
