@@ -1,0 +1,16 @@
+
+
+TODO list
+
+ -	add resource manager master socket (for attach/detach notification)
+ -	hotplug attach/detach
+ -	error handling: use error codes everywhere, add ct_strerror
+ -	driver framework: eject_card
+ -	resource manager: request icc, eject icc
+ -	resource manager: poll card status every few seconds
+ -	resource manager: reliable mechanism to notify client of
+ 	card change event
+ -	find out why client hangs when resource manager crashes
+ -	reader backend for opensc
+ -	pin verification via keypad
+ 
