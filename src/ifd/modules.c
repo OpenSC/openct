@@ -5,14 +5,12 @@
  */
 
 #include "internal.h"
-#ifdef HAVE_DLFCN_H
-#include <dlfcn.h>
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
 #include <sys/param.h>
+#include "scdl.h"
 
 static const char *
 ifd_module_path(const char *subdir)
@@ -54,22 +52,24 @@ ifd_load_module(const char *type, const char *name)
 	if (!dirname)
 		dirname = ifd_module_path(type);
 
+#if defined(HAVE_DLFCN_H) && defined(__APPLE__)
 	snprintf(path, sizeof(path), "%s/%s.so", dirname, name);
-
-#ifdef RTLD_NOW
-	handle = dlopen(path, RTLD_NOW);
+#elif defined(__APPLE__)
+	snprintf(path, sizeof(path), "%s/%s.bundle", dirname, name);
 #else
-	handle = dlopen(path, 0);
+	snprintf(path, sizeof(path), "%s/%s.so", dirname, name);
 #endif
+
+	handle = scdl_open(path);
 	if (!handle) {
-		ct_error("Failed to load %s: %s", path, dlerror());
+		ct_error("Failed to load %s", path);	/* TODO: scdl_error */
 		return -1;
 	}
 
-	init_func = (void (*)(void)) dlsym(handle, "ifd_init_module");
+	init_func = (void (*)(void)) scdl_get_address(handle, "ifd_init_module");
 	if (!init_func) {
 		ct_error("%s: no function called ifd_init_module", path);
-		dlclose(handle);
+		scdl_close(handle);
 		return -1;
 	}
 

@@ -312,6 +312,7 @@ src/ifd/Makefile
 src/include/Makefile
 src/include/openct/Makefile
 src/pcsc/Makefile
+src/scdl/Makefile
 src/tools/Makefile
 ])
 

@@ -2,6 +2,8 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
+INCLUDES = -I$(top_srcdir)/src/scdl @CPPFLAGS@ @CFLAGS_PCSC@
+
 lib_LTLIBRARIES = libifd.la
 
 sbin_PROGRAMS = ifdhandler
@@ -15,7 +17,7 @@ libifd_la_SOURCES = \
 	protocol.c ctbcs.c reader.c serial.c usb.c utils.c \
 	$(DRIVERS) \
 	sys-null.c sys-linux.c sys-bsd.c
-libifd_la_LIBADD = ../ct/libopenct.la @LIBDL@ @LIBUSB@
+libifd_la_LIBADD = ../scdl/libscdl.la ../ct/libopenct.la @LIBDL@ @LIBUSB@
 libifd_la_LDFLAGS = -version-info @OPENCT_LT_CURRENT@:@OPENCT_LT_REVISION@:@OPENCT_LT_AGE@
 
 ifdhandler_SOURCES = ifdhandler.c
