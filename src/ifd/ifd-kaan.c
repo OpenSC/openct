@@ -366,6 +366,7 @@ kaan_do_reset(ifd_reader_t *reader, int nslot,
 	kaan_status_t	*st = (kaan_status_t *) reader->driver_data;
 	unsigned char	buffer[64];
 	unsigned short	sw;
+	size_t		got;
 	int		rc;
 
 	st->icc_proto[nslot] = -1;
@@ -375,35 +376,36 @@ kaan_do_reset(ifd_reader_t *reader, int nslot,
 	if ((rc = kaan_get_sw(buffer, rc, &sw)) < 0)
 		return rc;
 
+	if ((got = rc) > atr_len)
+		got = atr_len;
+
 	switch (sw) {
 	case 0x9000:
 	case 0x62a6:
 		/* synchronous ICC, CT has already done everything we need
 		 * to know. Now just get the info from the CT. */
-		if ((unsigned int) rc > atr_len)
-			rc = atr_len;
-		memcpy(atr, buffer, rc);
-
+		memcpy(atr, buffer, got);
 		if ((rc = kaan_sync_detect(reader, nslot)) < 0)
 			return rc;
 		break;
+	case 0x62a5:
+		/* ATR was read, but protocol is unknown. */
+		memcpy(atr, buffer, got);
+		break;
 	case 0x9001:
 		/* asynchronous ICC, just copy the ATR */
-		if ((unsigned int) rc > atr_len)
-			rc = atr_len;
-		memcpy(atr, buffer, rc);
+		memcpy(atr, buffer, got);
 		break;
 	case 0x62a7:
 		/* synchronous ICC, unknown proto - try to detect 
 		 * the standard way */
-		rc = ifd_sync_detect_icc(reader, nslot, atr, atr_len);
-		break;
+		return ifd_sync_detect_icc(reader, nslot, atr, atr_len);
 	default:
 		ifd_debug(1, "kaan_card_reset: unable to reset card, sw=0x%04x", sw);
 		return IFD_ERROR_COMM_ERROR;
 	}
 
-	return rc;
+	return got;
 }
 
 /*
@@ -763,7 +765,7 @@ kaan_read_binary(ifd_reader_t *reader, unsigned char nad,
 {
 	unsigned char	cmd[] = { 0x00, 0xB0, 0x00, 0x00, 0x00 };
 	unsigned char	buffer[258];
-	size_t		count, total = 0;
+	size_t		count, total = 0, got;
 	unsigned short	sw;
 	int		r;
 
@@ -778,25 +780,32 @@ kaan_read_binary(ifd_reader_t *reader, unsigned char nad,
 		r = kaan_transparent(reader, nad, cmd, sizeof(cmd), buffer, sizeof(buffer));
 		if (r < 0)
 			return r;
+		got = r - 2;
+
 		if ((r = kaan_get_sw(buffer, r, &sw)) < 0)
 			return r;
 
-		/* 6B00 - offset outside of file */
-		if (sw == 0x6B00)
+		switch (sw) {
+		case 0x6B00:	/* offset outside of file */
+			goto done;
+		case 0x9000:
+		case 0x6282:	/* EOF reached */
+			memcpy(data + total, buffer, got);
+			offset += got;
+			total += got;
 			break;
-		if (sw != 0x9000) {
-			ct_error("kaan_read_binary: failure, status code %04X", sw);
+		default:
+			ct_error("kaan_read_binary: "
+				 "failure, status code %04X", sw);
 			return IFD_ERROR_COMM_ERROR;
 		}
 
-		if (r == 0)
+		/* end of file? */
+		if (got == 0 || sw == 0x6282)
 			break;
-
-		memcpy(data + total, buffer, r);
-		offset += r;
-		total += r;
 	}
 
+done:
 	return total;
 }
 
