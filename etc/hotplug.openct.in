@@ -1,5 +1,8 @@
 #!/bin/sh
 
-test "$ACTION" == "add" || exit 0
+test "$ACTION" = "add" || exit 0
 
-SBINDIR/openct-control attach $DEVICE usb:$PRODUCT
+if [ -e /var/run/openct/status ]
+then
+	SBINDIR/openct-control attach $DEVICE usb:$PRODUCT
+fi

@@ -36,6 +36,7 @@ static int	opt_info = 0;
 static unsigned int	opt_reader = -1;
 
 static void	usage(int exval);
+static void	version(void);
 static void	ifdhandler_run(ifd_reader_t *);
 static int	ifdhandler_poll_presence(ct_socket_t *, struct pollfd *);
 static int	ifdhandler_accept(ct_socket_t *);
@@ -55,7 +56,7 @@ main(int argc, char **argv)
 	/* Make sure the mask is good */
 	umask(033);
 
-	while ((c = getopt(argc, argv, "dFHhir:s")) != -1) {
+	while ((c = getopt(argc, argv, "dFHhvir:s")) != -1) {
 		switch (c) {
 		case 'd':
 			opt_debug++;
@@ -75,6 +76,8 @@ main(int argc, char **argv)
 		case 's':
 			ct_log_destination("@syslog");
 			break;
+		case 'v':
+			version();
 		case 'h':
 			usage(0);
 		default:
@@ -299,8 +302,8 @@ ifdhandler_recv(ct_socket_t *sock)
 	/* If request is incomplete, go back
 	 * and wait for more
 	 * XXX add timeout? */
-	if (ct_socket_get_packet(sock, &header, &args) < 0)
-		return 0;
+	if ((rc = ct_socket_get_packet(sock, &header, &args)) < 1)
+		return rc;
 
 	ct_buf_init(&resp, buffer, sizeof(buffer));
 
@@ -391,6 +394,16 @@ print_info(void)
 }
 
 /*
+ * Display version
+ */
+void
+version(void)
+{
+	fprintf(stdout, "OpenCT " VERSION "\n");
+	exit(0);
+}
+
+/*
  * Usage message
  */
 void
@@ -404,6 +417,7 @@ usage(int exval)
 "  -s   send error and debug messages to syslog\n"
 "  -d   enable debugging; repeat to increase verbosity\n"
 "  -h   display this message\n"
+"  -v   display version and exit\n"
 );
 	exit(exval);
 }

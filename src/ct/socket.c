@@ -138,7 +138,7 @@ __ct_socket_make(ct_socket_t *sock, int op,
 			sock->fd = fd;
 			return fd;
 		}
-		ct_debug("connect() failed: %m");
+		/* no error message - reader does not exist. */
 		break;
 	default:
 		errno = EINVAL;
@@ -395,8 +395,9 @@ ct_socket_call(ct_socket_t *sock, ct_buf_t *args, ct_buf_t *resp)
 
 	/* Loop until we receive a complete packet with the
 	 * right xid in it */
+	rc = 0;
 	do {
-		if ((rc = ct_socket_filbuf(sock, -1)) < 0)
+		if ((rc == 0) && (rc = ct_socket_filbuf(sock, -1)) < 0)
 			return -1;
 
 		ct_buf_clear(resp);

@@ -303,10 +303,11 @@ static int
 kaan_card_status(ifd_reader_t *reader, int slot, int *status)
 {
 	kaan_status_t	*st = (kaan_status_t *) reader->driver_data;
-	unsigned char	buffer[16] = { 0x20, 0x13, slot+1, 0x80, 0x00 };
+	unsigned char	buffer[16] = { 0x20, 0x13, 0x00, 0x80, 0x00 };
 	unsigned char	*byte;
 	int		rc, n;
 
+	buffer[2] = slot+1;
 	ifd_debug(1, "slot=%d", slot);
 	if (!st->frozen
 	 && st->last_activity + FREEZE_DELAY < time(NULL)
@@ -442,8 +443,9 @@ kaan_do_reset(ifd_reader_t *reader, int nslot,
 static int
 kaan_card_reset(ifd_reader_t *reader, int nslot, void *result, size_t size)
 {
-	unsigned char	cmd[5] = { 0x20, 0x10, nslot+1, 0x01, 0x00 };
+	unsigned char	cmd[5] = { 0x20, 0x10, 0x00, 0x01, 0x00 };
 
+	cmd[2] = nslot + 1;
 	ifd_debug(1, "called.");
 	return kaan_do_reset(reader, nslot, cmd, 5, (unsigned char *) result, size, 0);
 }
@@ -457,9 +459,10 @@ kaan_card_request(ifd_reader_t *reader, int slot,
 			void *atr, size_t atr_len)
 {
 	ct_buf_t	buf;
-	unsigned char	buffer[256] = { 0x20, 0x17, slot+1, 0x01, 0x00 };
+	unsigned char	buffer[256] = { 0x20, 0x17, 0x00, 0x01, 0x00 };
 	int		n;
 
+	buffer[2] = slot + 1;
 	/* Build the APDU, which is basically a modified CTBCS OUTPUT command */
 	ct_buf_init(&buf, buffer, sizeof(buffer)-1);
 	ctbcs_begin(&buf, 0x17, slot + 1, 0x01);
@@ -482,12 +485,13 @@ static int
 kaan_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 {
 	kaan_status_t	*st = (kaan_status_t *) reader->driver_data;
-	unsigned char	cmd[] = { 0x80, 0x60, nslot+1, 0x00, 0x03, 0x22, 0x01, 0x00 };
+	unsigned char	cmd[] = { 0x80, 0x60, 0x00, 0x00, 0x03, 0x22, 0x01, 0x00 };
 	unsigned char	buffer[2];
 	unsigned short	sw;
 	ifd_slot_t	*slot;
 	int		rc;
 
+	cmd[2] = nslot + 1;
 	ifd_debug(1, "proto=%d", proto);
 
 	switch (proto) {

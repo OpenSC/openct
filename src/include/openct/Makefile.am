@@ -11,5 +11,4 @@ include_HEADERS = \
 	logging.h openct.h protocol.h server.h socket.h tlv.h
 
 sysincludedir = @sysincludedir@/openct
-
-sysinclude_HEADERS = types.h
+nodist_sysinclude_HEADERS = types.h

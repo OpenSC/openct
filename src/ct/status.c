@@ -34,7 +34,7 @@ ct_map_status(int flags, size_t *size)
 	void		*addr = NULL;
 
 	if ((fd = open(path, flags)) < 0) {
-		ct_error("unable to open %s: %m", path);
+		/* no error message - openct not started? */
 		return NULL;
 	}
 

@@ -30,6 +30,7 @@ static int		mgr_shutdown(int argc, char **argv);
 static int		mgr_attach(int argc, char **argv);
 static int		mgr_status(int argc, char **argv);
 static void		usage(int exval);
+static void		version(void);
 
 static const char *	opt_config = NULL;
 static int		opt_debug = 0;
@@ -45,7 +46,7 @@ main(int argc, char **argv)
 	/* Make sure the mask is good */
 	umask(033);
 
-	while ((c = getopt(argc, argv, "df:hs")) != -1) {
+	while ((c = getopt(argc, argv, "df:hvs")) != -1) {
 		switch (c) {
 		case 'd':
 			opt_debug++;
@@ -56,6 +57,8 @@ main(int argc, char **argv)
 		case 'f':
 			opt_config = optarg;
 			break;
+		case 'v':
+			version();
 		case 'h':
 			usage(0);
 		default:
@@ -266,6 +269,16 @@ configure_reader(ifd_conf_node_t *cf)
 }
 
 /*
+ * Display version
+ */
+void
+version(void)
+{
+	fprintf(stdout, "OpenCT " VERSION "\n");
+	exit(0);
+}
+
+/*
  * Usage message
  */
 void
@@ -277,6 +290,7 @@ usage(int exval)
 "  -n   disable coldplugging\n"
 "  -f   specify config file (default %s)\n"
 "  -h   display this message\n"
+"  -v   display version and exit\n"
 "\nWhere command is one of:\n"
 "init - initialize OpenCT\n"
 "attach device ident - attach a hotplug device\n"

@@ -20,6 +20,7 @@
 #include <openct/error.h>
 
 static void	usage(int exval);
+static void     version(void);
 static int	do_reset(ct_handle *, unsigned char *, size_t);
 static void	do_select_mf(ct_handle *reader);
 static void	do_read_memory(ct_handle *, unsigned int, unsigned int);
@@ -42,6 +43,7 @@ enum {
 	CMD_ATR,
 	CMD_MF,
 	CMD_READ,
+	CMD_VERSION,
 };
 
 int
@@ -53,7 +55,7 @@ main(int argc, char **argv)
 	ct_lock_handle	lock;
 	int		c, rc;
 
-	while ((c = getopt(argc, argv, "df:r:h")) != -1) {
+	while ((c = getopt(argc, argv, "df:r:hv")) != -1) {
 		switch (c) {
 		case 'd':
 			opt_debug++;
@@ -61,6 +63,8 @@ main(int argc, char **argv)
 		case 'f':
 			opt_config = optarg;
 			break;
+		case 'v':
+			version();
 		case 'h':
 			usage(0);
 		case 'r':
@@ -181,6 +185,13 @@ main(int argc, char **argv)
 }
 
 void
+version(void)
+{
+	fprintf(stdout,"OpenCT " VERSION "\n");
+	exit(0);
+}
+
+void
 usage(int exval)
 {
 	fprintf(stderr,
@@ -189,6 +200,7 @@ usage(int exval)
 "  -f   specify config file (default %s)\n"
 "  -r   specify index of reader to use\n"
 "  -h   display this message\n"
+"  -v   display version and exit\n"
 "\n"
 "command: can be one of the following\n"
 " list  list all readers found\n"
