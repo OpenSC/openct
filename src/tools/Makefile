@@ -14,7 +14,6 @@ clean distclean::
 install:
 	mkdir -p $(BINDIR) $(SBINDIR)
 	install -m 555 -s openct-tool $(BINDIR)
-	install -m 555 -s openct-control $(SBINDIR)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
