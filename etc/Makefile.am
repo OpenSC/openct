@@ -11,6 +11,4 @@ sbin_SCRIPTS = hotplug.openct
 noinst_SCRIPTS = init-script
 
 %: %.in
-	sed -e "s#SBINDIR#${sbindir}#g" $(srcdir)/$^ > $@
-
-
+	sed -e "s#SBINDIR#${sbindir}#g" $^ > $@
