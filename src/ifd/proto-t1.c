@@ -69,7 +69,7 @@ static unsigned	int	t1_build(t1_state_t *, unsigned char *,
 static unsigned int	t1_compute_checksum(t1_state_t *,
 				unsigned char *, size_t);
 static int		t1_verify_checksum(t1_state_t *, unsigned char *, unsigned int);
-static int		t1_xcv(t1_state_t *, unsigned char *, size_t);
+static int		t1_xcv(t1_state_t *, unsigned char *, size_t, size_t);
 
 /*
  * Set default T=1 protocol parameters
@@ -212,7 +212,7 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 
 		retries--;
 
-		if ((n = t1_xcv(t1, sdata, slen)) < 0) {
+		if ((n = t1_xcv(t1, sdata, slen, sizeof(sdata))) < 0) {
 			ifd_debug(1, "transmit/receive failed");
 			if (retries == 0 || last_send)
 				return -1;
@@ -425,7 +425,7 @@ t1_resynch(t1_state_t *t1)
 	t1_set_defaults(t1);
 
 	n = t1_build(t1, block, 0x21, T1_S_BLOCK | T1_S_RESYNC, NULL, NULL);
-	return t1_xcv(t1, block, n);
+	return t1_xcv(t1, block, n, sizeof(block));
 }
 
 /*
@@ -480,7 +480,7 @@ t1_verify_checksum(t1_state_t *t1, unsigned char *rbuf, size_t len)
  * Send/receive block
  */
 int
-t1_xcv(t1_state_t *t1, unsigned char *block, size_t slen)
+t1_xcv(t1_state_t *t1, unsigned char *block, size_t slen, size_t rmax)
 {
 	ifd_protocol_t	*prot = &t1->base;
 	unsigned int	rlen;
@@ -496,13 +496,17 @@ t1_xcv(t1_state_t *t1, unsigned char *block, size_t slen)
 	/* Maximum amount of data we'll receive - some devices
 	 * such as the eToken need this. If you request more, it'll
 	 * just barf */
-	/* Note - Linux USB seems to have an off by one error, you
-	 * actually need the + 1 to get the RC byte */
-	rlen = 3 + t1->ifsd + t1->rc_bytes + 1;
+	rlen = 3 + t1->ifsd + t1->rc_bytes;
 
 	if (prot->reader->device->type != IFD_DEVICE_TYPE_SERIAL) {
+		/* Note - Linux USB seems to have an off by one error, you
+		 * actually need the + 1 to get the RC byte */
+		rlen++;
+		if (rlen < rmax)
+			rmax = rlen;
+
 		/* Get the response en bloc */
-		n = ifd_recv_response(prot, block, rlen, t1->timeout);
+		n = ifd_recv_response(prot, block, rmax, t1->timeout);
 		if (n >= 0) {
 			m = block[2] + 3 + t1->rc_bytes;
 			if (m < n)
@@ -514,7 +518,7 @@ t1_xcv(t1_state_t *t1, unsigned char *block, size_t slen)
 			return -1;
 
 		n = block[2] + t1->rc_bytes;
-		if (n + 3 > T1_BUFFER_SIZE || block[2] >= 254) {
+		if (n + 3 > rmax || block[2] >= 254) {
 			ct_error("receive buffer too small");
 			return -1;
 		}
