@@ -322,7 +322,7 @@ int
 ct_socket_getpeername(ct_socket_t *sock, char *buf, size_t len)
 {
 	struct sockaddr_storage ss;
-	socklen_t	slen;
+	socklen_t	slen = sizeof(struct sockaddr_storage);
 
 	getpeername(sock->fd, (struct sockaddr *) &ss, &slen);
 	switch (ss.ss_family) {
