@@ -2,4 +2,4 @@
 
 test "$ACTION" == "add" || exit 0
 
-SBINDIR/openct-control attach $DEVICE $1:$PRODUCT
+SBINDIR/openct-control attach $DEVICE $TYPE:$PRODUCT
