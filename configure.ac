@@ -15,8 +15,8 @@ AC_CONFIG_SRCDIR(src/ifd/ifdhandler.c)
 #   (Interfaces added/removed/changed:  CURRENT++, REVISION=0)
 #   (Interfaces added:                  AGE++)
 #   (Interfaces removed:                AGE=0)
-OPENCT_LT_CURRENT=0
-OPENCT_LT_REVISION=2
+OPENCT_LT_CURRENT=1
+OPENCT_LT_REVISION=0
 OPENCT_LT_AGE=0
 
 AC_SUBST(OPENCT_LT_CURRENT)

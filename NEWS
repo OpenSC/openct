@@ -3,6 +3,14 @@ NEWS for OpenCT -- History of user visible changes
 New in 0.6.4; not yet released
 * improved usb code for bsd
 * improved usb code for solaris
+* require automake 1.5 
+* on darwin link with -Wl,-framework,CoreFoundation
+* configure code cleanup (use AC_HELP_STRING etc.)
+* implement protocol selection, improved command checking
+* ccid update with some cleanups.
+* improved t=1 protocoll code.
+* improved and fixed remote socket code.
+* increased library version to 1.0.0 (incompatible with 0.*.* versions)
 
 New in 0.6.3; 2005-01-11; Andreas Jellinghaus
 * silence "unable to open" and "Debug: connect() failed:" error messages,
