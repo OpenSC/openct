@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <assert.h>
 
 #include <openct/tlv.h>
 
@@ -20,6 +21,9 @@ ct_tlv_parse(ct_tlv_parser_t *parser, ct_buf_t *bp)
 {
 	unsigned int	avail;
 	unsigned char	*p, tag, len;
+
+	/* Code below relies on it */
+	assert(((ifd_tag_t) -1) == 255);
 
 	while ((avail = ct_buf_avail(bp)) != 0) {
 		if (avail < 2)
@@ -50,7 +54,7 @@ ct_tlv_get_string(ct_tlv_parser_t *parser, ifd_tag_t tag,
 	unsigned char	*p;
 	unsigned int	len;
 
-	if (tag > 255 || !(p = parser->v[tag]))
+	if (!(p = parser->v[tag]))
 		return 0;
 
 	len = *p++;
@@ -69,7 +73,7 @@ ct_tlv_get_int(ct_tlv_parser_t *parser, ifd_tag_t tag,
 	unsigned int	len;
 
 	*value = 0;
-	if (tag > 255 || !(p = parser->v[tag]))
+	if (!(p = parser->v[tag]))
 		return 0;
 
 	len = *p++;
@@ -90,7 +94,7 @@ ct_tlv_get_opaque(ct_tlv_parser_t *parser, ifd_tag_t tag,
 	*data = NULL;
 	*lenp = 0;
 
-	if (tag > 255 || !(p = parser->v[tag]))
+	if (!(p = parser->v[tag]))
 		return 0;
 	*lenp = *p++;
 	*data = p;
@@ -104,7 +108,7 @@ ct_tlv_get_bytes(ct_tlv_parser_t *parser, ifd_tag_t tag,
 	unsigned char	*p;
 	unsigned int	len;
 
-	if (tag > 255 || !(p = parser->v[tag]))
+	if (!(p = parser->v[tag]))
 		return 0;
 	if ((len = *p++) > size)
 		len = size;
