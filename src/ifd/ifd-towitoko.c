@@ -176,6 +176,10 @@ twt_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 		return -1;
 	}
 
+	/* Activate the reader */
+	if (twt_activate(reader) < 0)
+		return -1;
+
 	/* SCEZ does this tree times - I have no clue why */
 	for (i = 0; i < 3; i++) {
 		n = twt_try_reset(reader, reset1, sizeof(reset1), atr, size);
