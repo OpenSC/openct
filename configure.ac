@@ -219,11 +219,11 @@ if test "x$pcsc_path" = "xno"; then
 	PCSC_MSG="no"
 fi
 if test "x$pcsc_path" != "xno" -a "x$PCSC_MSG" != "xyes"; then
-	AC_MSG_CHECKING(for PC/SC Lite support)
 	PKG_CHECK_MODULES(PCSC, libpcsclite, [
 		PCSC_MSG="yes" 
 		AC_MSG_RESULT($PCSC_MSG)
 		], [
+	AC_MSG_CHECKING(for PC/SC Lite support)
 	for pcscdir in "" /pcsc /PCSC; do
 		CPPFLAGS="$saved_CPPFLAGS"
 		LDFLAGS="$saved_LDFLAGS"
