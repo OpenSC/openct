@@ -52,6 +52,7 @@ clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp 
+	rm -f debian/openct.init
 
 	# Add here commands to clean up after the build process.
 	-$(MAKE) distclean
@@ -67,7 +68,6 @@ install: build
 	# Add here commands to install the package into debian/tmp
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
 	cp etc/openct.conf debian/openct/etc/
-	cp etc/init-script debian/openct/etc/init.d/openct
 	chmod 755 debian/tmp/etc/hotplug/usb/openct
 
 # Build architecture-independent files here.
@@ -90,6 +90,7 @@ binary-arch: build install
 #	dh_installemacsen
 #	dh_installpam
 #	dh_installmime
+	cp etc/init-script debian/openct.init
 	dh_installinit
 #	dh_installcron
 #	dh_installinfo
