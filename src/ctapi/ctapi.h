@@ -8,56 +8,48 @@
 /
 ******************************************************************/
 
-#ifndef _ctapi_h_
-#define _ctapi_h_
+#ifndef OPENCT_CTAPI_H
+#define OPENCT_CTAPI_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define MAX_APDULEN     1040
+#define MAX_APDULEN	1040
 
 char CT_init (
-      unsigned short Ctn,                  /* Terminal Number */
-      unsigned short pn                    /* Port Number */
-      );
+	unsigned short Ctn,		/* Terminal Number */
+	unsigned short pn		/* Port Number */
+	);
 
 char CT_close(
-      unsigned short Ctn                  /* Terminal Number */
-      );                 
+	unsigned short Ctn		/* Terminal Number */
+	);
 
 char CT_data( 
-       unsigned short ctn,                /* Terminal Number */
-       unsigned char  *dad,               /* Destination */
-       unsigned char  *sad,               /* Source */
-       unsigned short lc,                 /* Length of command */
-       unsigned char  *cmd,               /* Command/Data Buffer */
-       unsigned short *lr,                /* Length of Response */
-       unsigned char  *rsp                /* Response */
-       );
+	unsigned short	ctn,		/* Terminal Number */
+	unsigned char	*dad,		/* Destination */
+	unsigned char	*sad,		/* Source */
+	unsigned short	lc,		/* Length of command */
+	unsigned char	*cmd,		/* Command/Data Buffer */
+	unsigned short	*lr,		/* Length of Response */
+	unsigned char	*rsp		/* Response */
+	);
 
 
-#define OK               0               /* Success */
-#define ERR_INVALID     -1               /* Invalid Data */
-#define ERR_CT          -8               /* CT Error */
-#define ERR_TRANS       -10              /* Transmission Error */
-#define ERR_MEMORY      -11              /* Memory Allocate Error */
-#define ERR_HTSI        -128             /* HTSI Error */
-
-#define PORT_COM1	   0             /* COM 1 */
-#define PORT_COM2	   1             /* COM 2 */
-#define PORT_COM3	   2             /* COM 3 */
-#define PORT_COM4	   3             /* COM 4 */
-#define PORT_Printer       4             /* Printer Port (MAC) */
-#define PORT_Modem         5             /* Modem Port (MAC)   */
-#define PORT_LPT1	   6             /* LPT 1 */
-#define PORT_LPT2	   7             /* LPT 2 */
+#define OK		0		/* Success */
+#define ERR_INVALID	-1		/* Invalid Data */
+#define ERR_CT		-8		/* CT Error */
+#define ERR_TRANS	-10		/* Transmission Error */
+#define ERR_MEMORY	-11		/* Memory Allocate Error */
+#define ERR_HOST	-127		/* Abort by Host/OS */
+#define ERR_HTSI	-128		/* HTSI Error */
 
 enum {
-	CTAPI_DAD_ICC1 = 0,
-	CTAPI_DAD_CT   = 1,
-	CTAPI_DAD_HOST = 2,
-	CTAPI_DAD_ICC2 = 3,
+	CTAPI_DAD_ICC1	= 0,
+	CTAPI_DAD_CT	= 1,
+	CTAPI_DAD_HOST	= 2,
+	CTAPI_DAD_ICC2	= 3,
 };
 
 /*
@@ -85,9 +77,9 @@ enum {
 /*
  * P2 parameter for Reset CT: data to be returned
  */
-#define CTBCS_P2_RESET_NO_RESP          0x00    /* Return no data */
-#define CTBCS_P2_RESET_GET_ATR          0x01    /* Return complete ATR */
-#define CTBCS_P2_RESET_GET_HIST         0x02    /* Return historical bytes */
+#define CTBCS_P2_RESET_NO_RESP		0x00	/* Return no data */
+#define CTBCS_P2_RESET_GET_ATR		0x01	/* Return complete ATR */
+#define CTBCS_P2_RESET_GET_HIST		0x02	/* Return historical bytes */
 
 /*
  * P2 parameter for Request ICC: data to be returned
@@ -134,17 +126,13 @@ enum {
 /*
  * Data returned by Get Status command
  */
-#define CTBCS_DATA_STATUS_NOCARD        0x00    /* No card present */
-#define CTBCS_DATA_STATUS_CARD          0x01    /* Card present */
-#define CTBCS_DATA_STATUS_CARD_CONNECT  0x05    /* Card present */
+#define CTBCS_DATA_STATUS_NOCARD	0x00	/* No card present */
+#define CTBCS_DATA_STATUS_CARD		0x01	/* Card present */
+#define CTBCS_DATA_STATUS_CARD_CONNECT	0x05	/* Card present */
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
-
-
-
-
+#endif /* OPENCT_CTAPI_H */
