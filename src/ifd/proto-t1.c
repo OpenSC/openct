@@ -1,5 +1,7 @@
 /*
  * Implementation of T=1
+ *
+ * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
 
 #include <sys/time.h>
