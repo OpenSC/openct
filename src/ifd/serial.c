@@ -76,15 +76,31 @@ ifd_serial_set_params(ifd_device_t *dev, const ifd_device_params_t *params)
 	int		control;
 	struct termios	t;
 
-	if (!memcmp(&dev->settings, params, sizeof(*params)))
-		goto skip_setattr;
-
 	if (tcgetattr(dev->fd, &t) < 0) {
 		ct_error("%s: tcgetattr: %m", dev->name);
 		return -1;
 	}
 
+	if (ct_config.debug) {
+		char	parity = 'N';
+
+		if (params->serial.parity == IFD_SERIAL_PARITY_EVEN)
+			parity = 'E';
+		else
+		if (params->serial.parity == IFD_SERIAL_PARITY_ODD)
+			parity = 'O';
+		ifd_debug(1, "setting serial line to %u, %u%c%u, "
+			     "dtr=%d, rts=%d",
+			     params->serial.speed,
+			     params->serial.bits,
+			     parity,
+			     params->serial.stopbits,
+			     params->serial.dtr,
+			     params->serial.rts);
+	}
+
 	cfsetospeed(&t, speed_to_termios(params->serial.speed));
+	cfsetispeed(&t, speed_to_termios(params->serial.speed));
 
 	t.c_cflag &= ~CSIZE;
 	switch (params->serial.bits) {
@@ -122,7 +138,6 @@ ifd_serial_set_params(ifd_device_t *dev, const ifd_device_params_t *params)
 		dev->etu = 1000000 / speed;
 
 
-skip_setattr:
 	if (ioctl(dev->fd, TIOCMGET, &control) < 0) {
 		ct_error("%s: TIOCMGET: %m", dev->name);
 		return -1;
@@ -202,6 +217,8 @@ ifd_serial_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeo
 					dev->name);
 			return -1;
 		}
+		if (ct_config.debug >= 9)
+			ifd_debug(9, "serial recv:%s", ct_hexdump(buffer, n));
 		(caddr_t) buffer += n;
 		len -= n;
 	}
@@ -213,6 +230,7 @@ timeout:/* Timeouts are a little special; they may happen e.g.
 	if (!ct_config.hush_errors)
 		ct_error("%s: timed out while waiting for input",
 				dev->name);
+	ifd_debug(9, "(%u bytes received so far)", total - len);
 	return IFD_ERROR_TIMEOUT;
 }
 
