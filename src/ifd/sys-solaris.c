@@ -51,7 +51,6 @@ typedef struct usb_request {
     uint8_t	data[1];	/* Outgoing Data 		*/
 } usb_request_t;
 
-
 /*
  * Globals
  */
@@ -63,11 +62,6 @@ static int devstat_fd=0;
  */
 #define USB_DEVICE_ROOT	"/dev/usb"
 #define BYTESWAP(in)	(((in & 0xFF) << 8) + ((in & 0xFF00) >> 8))
-
-/*
- * Function Prototypes
- */
-void prepare_usb_control_req(usb_request_t *, uint8_t, uint8_t, uint16_t, uint16_t, uint16_t);
 
 static int
 open_devstat(char *name)
@@ -119,35 +113,13 @@ open_cntrl0stat(char *name)
     return 1;
 }
 
-int
-ifd_sysdep_usb_poll_presence(ifd_device_t *dev, struct pollfd *p)
-{
-    int	devstat = 0;
-
-    p->fd = -1;
-    open_devstat(dev->name);
-    if(read(devstat_fd, &devstat, sizeof (devstat))) {
-	switch(devstat) {
-	    case USB_DEV_STAT_ONLINE:
-		ifd_debug(1, "devstat: ONLINE (%d)", devstat);
-		break;
-	    case USB_DEV_STAT_DISCONNECTED:
-		ifd_debug(1, "devstat: DISCONNECTED (%d)", devstat);
-		return 0;
-	    default:
-		ifd_debug(1, "devstat: %d", devstat);
-		return 0;
-	}
-    }
-    return 1;
-}
-
 /*
  * Return true if running on a SPARC system.
  */
 #define IS_SPARC_BUFSIZE	6
-boolean_t
-is_sparc() {
+static boolean_t
+is_sparc(void)
+{
     char buf[IS_SPARC_BUFSIZE];
     sysinfo(SI_ARCHITECTURE, buf, IS_SPARC_BUFSIZE);
 
@@ -157,10 +129,9 @@ is_sparc() {
 /*
  * Prepare a USB control request.  Please see USB 2.0 spec section 9.4.
  */
-void
+static void
 prepare_usb_control_req(usb_request_t *req, uint8_t bmRequestType, uint8_t bRequest, uint16_t wValue, uint16_t wIndex, uint16_t wLength)
 {
-
     (*req).bmRequestType	= bmRequestType;
     (*req).bRequest		= bRequest;
 
@@ -200,13 +171,27 @@ ifd_sysdep_device_type(const char *name)
     return -1;
 }
 
-static int
-get_cntrl0stat(void)
+int
+ifd_sysdep_usb_poll_presence(ifd_device_t *dev, struct pollfd *p)
 {
-    int	ctrlstat = -1;
-    read(cntrl0stat_fd, &ctrlstat, sizeof (ctrlstat));
-    ifd_debug(6, "ifd_sysdep_usb_control: Endpoint status: %d", ctrlstat);
-    return ctrlstat;
+    int	devstat = 0;
+
+    p->fd = -1;
+    open_devstat(dev->name);
+    if(read(devstat_fd, &devstat, sizeof (devstat))) {
+	switch(devstat) {
+	    case USB_DEV_STAT_ONLINE:
+		ifd_debug(1, "devstat: ONLINE (%d)", devstat);
+		break;
+	    case USB_DEV_STAT_DISCONNECTED:
+		ifd_debug(1, "devstat: DISCONNECTED (%d)", devstat);
+		return 0;
+	    default:
+		ifd_debug(1, "devstat: %d", devstat);
+		return 0;
+	}
+    }
+    return 1;
 }
 
 /*
@@ -277,33 +262,33 @@ ifd_sysdep_usb_control(ifd_device_t *dev,
 }
 
 int
-ifd_sysdep_usb_bulk(ifd_device_t *dev, int ep, void *buffer, size_t len, long timeout)
-{
-    return IFD_ERROR_COMM_ERROR;
-}
-
-int
 ifd_sysdep_usb_set_configuration(ifd_device_t *dev, int config)
 {
-    return IFD_ERROR_COMM_ERROR;
+    return -1;
 }
 
 int
 ifd_sysdep_usb_set_interface(ifd_device_t *dev, int ifc, int alt)
 {
-    return IFD_ERROR_COMM_ERROR;
+    return -1;
 }
 
 int
 ifd_sysdep_usb_claim_interface(ifd_device_t *dev, int interface)
 {
-    return IFD_ERROR_COMM_ERROR;
+    return -1;
 }
 
 int
 ifd_sysdep_usb_release_interface(ifd_device_t *dev, int interface)
 {
-    return IFD_ERROR_COMM_ERROR;
+    return -1;
+}
+
+int
+ifd_sysdep_usb_bulk(ifd_device_t *dev, int ep, void *buffer, size_t len, long timeout)
+{
+    return -1;
 }
 
 /*

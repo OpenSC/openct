@@ -58,6 +58,12 @@ ifd_sysdep_device_type(const char *name)
 	return -1;
 }
 
+int
+ifd_sysdep_usb_poll_presence(ifd_device_t *dev, struct pollfd *pfd)
+{
+	return -1;
+}
+
 /*
  * USB control command
  */
@@ -114,12 +120,45 @@ ifd_sysdep_usb_control(ifd_device_t *dev,
 }
 
 int
+ifd_sysdep_usb_set_configuration(ifd_device_t *dev, int config) 
+{
+     return -1;
+}
+
+int
+ifd_sysdep_usb_set_interface(ifd_device_t *dev, int ifc, int alt) 
+{
+     return -1;
+}
+
+int
+ifd_sysdep_usb_claim_interface(ifd_device_t *dev, int interface) 
+{
+     return -1;
+}
+
+int
+ifd_sysdep_usb_release_interface(ifd_device_t *dev, int interface) 
+{
+     return -1;
+}
+
+/*
+ * USB bulk transfer
+ */
+int
+ifd_sysdep_usb_bulk(ifd_device_t *dev, int ep, void *buffer, size_t len,
+		    long timeout) 
+{
+     return -1;
+}
+
+int
 ifd_sysdep_usb_begin_capture(ifd_device_t *dev,
 		int type, int endpoint, size_t maxpacket,
 	       	ifd_usb_capture_t **capret)
 {
-	ifd_debug(1, "BSD: ifd_sysdep_begin_capture");
-	return 0;
+	return -1;
 }
 
 int
@@ -128,15 +167,13 @@ ifd_sysdep_usb_capture(ifd_device_t *dev,
 		void *buffer, size_t len,
 		long timeout)
 {
-	ifd_debug(1, "BSD: ifd_sysdep_capture");
-	return 0;
+	return -1;
 }
 
 int
 ifd_sysdep_usb_end_capture(ifd_device_t *dev, ifd_usb_capture_t *cap)
 {
-	ifd_debug(1, "BSD: ifd_sysdep_end_capture");
-	return 0;
+	return -1;
 }
 
 /*
@@ -172,7 +209,6 @@ ifd_scan_usb(void)
 
 		if(strncmp(device_info.udi_devnames[0],"ugen",4)!=0)
 		    continue;
-
 
 		id.type = IFD_DEVICE_TYPE_USB;
 		id.num  = 2;

@@ -112,29 +112,6 @@ ifd_sysdep_usb_control(ifd_device_t *dev,
 	return rc;
 }
 
-
-/*
- * USB bulk transfer
- */
-int
-ifd_sysdep_usb_bulk(ifd_device_t *dev, int ep, void *buffer, size_t len,
-		       long timeout) 
-{
-	struct usbdevfs_bulktransfer bulk;
-	int rc;
-
-	bulk.ep = ep;
-	bulk.data = buffer;
-	bulk.len = len;
-	bulk.timeout = timeout;
-	if ((rc = ioctl(dev->fd, USBDEVFS_BULK, &bulk)) < 0) {
-		ct_error("usb_bulk failed: %m");
-		return IFD_ERROR_COMM_ERROR;
-	}
-
-	return rc;
-}
-
 int
 ifd_sysdep_usb_set_configuration(ifd_device_t *dev, int config) 
 {
@@ -177,6 +154,28 @@ ifd_sysdep_usb_release_interface(ifd_device_t *dev, int interface)
 		return IFD_ERROR_COMM_ERROR;
 	}
 	return 0;
+}
+
+/*
+ * USB bulk transfer
+ */
+int
+ifd_sysdep_usb_bulk(ifd_device_t *dev, int ep, void *buffer, size_t len,
+		       long timeout) 
+{
+	struct usbdevfs_bulktransfer bulk;
+	int rc;
+
+	bulk.ep = ep;
+	bulk.data = buffer;
+	bulk.len = len;
+	bulk.timeout = timeout;
+	if ((rc = ioctl(dev->fd, USBDEVFS_BULK, &bulk)) < 0) {
+		ct_error("usb_bulk failed: %m");
+		return IFD_ERROR_COMM_ERROR;
+	}
+
+	return rc;
 }
 
 /*

@@ -102,15 +102,6 @@ ifd_usb_end_capture(ifd_device_t *dev, ifd_usb_capture_t *cap)
 }
 
 /*
- * Check presence of USB device
- * XXX: make this a system dependent function?
- */
-static int
-usb_poll_presence(ifd_device_t *dev, struct pollfd *p)
-{
-	return ifd_sysdep_usb_poll_presence(dev, p);
-}
-/*
  * Set usb params (for now, endpoint for transceive)
  */
 static int
@@ -186,7 +177,6 @@ usb_recv(ifd_device_t *dev, unsigned char *recv, size_t recvlen, long timeout)
 	return rc;
 }
 
-
 static struct ifd_device_ops	ifd_usb_ops;
 
 /*
@@ -203,7 +193,7 @@ ifd_open_usb(const char *device)
 		return NULL;
 	}
 
-	ifd_usb_ops.poll_presence = usb_poll_presence;
+	ifd_usb_ops.poll_presence = ifd_sysdep_usb_poll_presence;
 	ifd_usb_ops.set_params = usb_set_params;
 	ifd_usb_ops.send = usb_send;
 	ifd_usb_ops.recv = usb_recv;
