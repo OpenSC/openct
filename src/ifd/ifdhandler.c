@@ -45,7 +45,7 @@ static void	ifdhandler_close(ct_socket_t *);
 int
 main(int argc, char **argv)
 {
-	const char	*device, *driver;
+	const char	*device = NULL, *driver;
 	ifd_reader_t	*reader;
 	ct_info_t	*status;
 	int		c;
