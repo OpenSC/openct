@@ -69,16 +69,18 @@ ikey2k_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 	unsigned char	buffer[256];
 	int		rc, atrlen;
 
-	unsigned char expect5[] =
-		{ 0x0d, 0x63, 0x00, 0x05, 0x2d, 0x2d, 0xc0, 0x80,
-		  0x80, 0x60, 0x80, 0x01, 0x19 };
-	unsigned char expect6[] =
-		{ 0x0d, 0x60, 0x00, 0x03, 0x2d, 0x2d, 0xc0, 0x80,
+	static unsigned char expect5[] =
+		{ 0x0d, 0x63, 0x00, 0x00, 0x2d, 0x2d, 0xc0, 0x80,
 		  0x80, 0x60, 0x80, 0x01, 0x19 };
 
-	if (ifd_usb_control(dev, 0xc1, 0x00, 0, 0, buffer, 0x40, -1) != 13
-	 || (memcmp(buffer,expect5, sizeof(expect5)) != 0 
- 	  && memcmp(buffer,expect6, sizeof(expect5)) != 0)
+	if (ifd_usb_control(dev, 0xc1, 0x00, 0, 0, buffer, 0x40, -1) != 13)
+		goto failed;
+
+	/* we've seen values of 0x03, 0x05 and 0x06 in position 3, and
+	 * since we don't know what they mean, we mask them here. */
+	buffer[3] &= 0xF0;
+
+	if (memcmp(buffer,expect5, sizeof(expect5)) != 0 
 	 || ifd_usb_control(dev, 0x41, 0x16, 0, 0, buffer, 00, -1) != 0
 	 || ifd_usb_control(dev, 0xc1, 0x01, 0, 0, buffer, 02, -1) != 1
 	 || buffer[0] != 00)
