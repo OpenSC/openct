@@ -131,7 +131,9 @@ ifd_serial_set_params(ifd_device_t *dev, const ifd_device_params_t *params)
 	else
 		t.c_iflag |= IGNPAR;
 
+#ifdef CRTSCTS
 	t.c_cflag &= ~CRTSCTS;
+#endif
 	t.c_cflag |= HUPCL | CREAD | CLOCAL;
 	t.c_oflag = 0;
 	t.c_lflag = 0;
@@ -328,7 +330,7 @@ ifd_serial_identify(ifd_device_t *dev, char *namebuf, size_t len)
 /*
  * Close the device
  */
-void
+static void
 ifd_serial_close(ifd_device_t *dev)
 {
 	if (dev->fd >= 0)

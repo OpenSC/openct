@@ -100,6 +100,7 @@ extern int		ifd_usb_capture(ifd_device_t *,
 extern int		ifd_usb_end_capture(ifd_device_t *,
 				ifd_usb_capture_t *);
 
+extern void		ifd_serial_send_break(ifd_device_t *);
 extern int		ifd_serial_get_cts(ifd_device_t *);
 extern int		ifd_serial_get_dsr(ifd_device_t *);
 extern int		ifd_serial_get_dtr(ifd_device_t *);
