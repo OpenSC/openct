@@ -16,14 +16,14 @@ SYSDEP	= linux.o
 all:: $(LIBS) $(APPS)
 
 clean distclean::
-	rm -rf .objs .sobjs *.a *.o $(APPS)
+	rm -rf .objs .sobjs *.so *.a *.o $(APPS)
 
 libifd.a: $(addprefix .objs/,$(OBJS))
 	ar cr $@ $(addprefix .objs/,$(OBJS))
 	ranlib $@
 
 libifd.so: $(addprefix .sobjs/,$(OBJS))
-	ld -shared -o $@ $(addprefix .sobjs/,$(OBJS)) -ldl -lc
+	$(CC) -shared -o $@ $(addprefix .sobjs/,$(OBJS)) -ldl -lusb
 
 .objs/%.o: %.c
 	@mkdir -p .objs
@@ -34,4 +34,4 @@ libifd.so: $(addprefix .sobjs/,$(OBJS))
 	$(CC) -fPIC $(CFLAGS) -c $< -o $@
 
 print-atr: print-atr.o $(LIBS)
-	$(CC) $(LDFLAGS) -o $@ $@.o -L. -lifd -ldl -lusb
+	$(CC) $(LDFLAGS) -o $@ $@.o -L. -lifd
