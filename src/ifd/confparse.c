@@ -38,7 +38,7 @@ ifd_config_parse(const char *filename)
 	int	rc;
 
 	if ((config_filename = filename) == NULL)
-		config_filename = "/etc/ifd.conf";
+		config_filename = OPENCT_CONFIG_PATH;
 
 	/* If config file doesn't exist, quietly sneak out of here */
 	if ((config_fd = open(config_filename, O_RDONLY)) < 0) {
