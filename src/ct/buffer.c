@@ -6,6 +6,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "internal.h"
 
 void
@@ -73,4 +74,22 @@ void *
 ifd_buf_tail(ifd_buf_t *bp)
 {
 	return bp->base + bp->tail;
+}
+
+int
+ifd_buf_read(ifd_buf_t *bp, int fd)
+{
+	unsigned int	count;
+	int		n;
+
+	count = bp->tail - bp->head;
+	memmove(bp->base, bp->base + bp->head, count);
+	bp->tail -= bp->head;
+	bp->head  = 0;
+
+	count = bp->size - bp->tail;
+	if ((n = read(fd, bp->base + bp->tail, count)) < 0)
+		return -1;
+	bp->tail += n;
+	return 0;
 }

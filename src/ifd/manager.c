@@ -23,7 +23,7 @@ ifd_attach(ifd_reader_t *reader)
 	if (reader->num)
 		return 0;
 
-	for (slot = 1; slot < IFD_MAX_READERS; slot++) {
+	for (slot = 0; slot < IFD_MAX_READERS; slot++) {
 		if (!ifd_readers[slot])
 			break;
 	}
@@ -54,6 +54,22 @@ ifd_reader_by_handle(unsigned int handle)
 	return NULL;
 }
 
+ifd_reader_t *
+ifd_reader_by_index(unsigned int index)
+{
+	ifd_reader_t *reader;
+
+	if (index >= IFD_MAX_READERS) {
+		ifd_error("ifd_reader_by_index: invalid index %u", index);
+		return NULL;
+	}
+	if (!(reader = ifd_readers[index])) {
+		ifd_debug("ifd_reader_by_index: no reader at index %u", index);
+		return NULL;
+	}
+
+	return reader;
+}
 
 void
 ifd_detach(ifd_reader_t *reader)

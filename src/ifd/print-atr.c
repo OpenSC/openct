@@ -12,54 +12,63 @@
 #include <ifd/config.h>
 
 static void	usage(int exval);
-static void	print_atr(const char *);
+static void	print_atr(ifd_reader_t *);
 static void	select_mf(ifd_reader_t *reader);
 static void	dump(unsigned char *data, size_t len);
 
-static const char *	opt_driver = "auto";
+static unsigned int	opt_reader = 0;
+static const char *	opt_config = NULL;
 
 int
 main(int argc, char **argv)
 {
-	int	c;
+	ifd_reader_t	*reader;
+	int		c;
 
-	while ((c = getopt(argc, argv, "dD:h")) != -1) {
+	while ((c = getopt(argc, argv, "df:r:h")) != -1) {
 		switch (c) {
 		case 'd':
 			ifd_config.debug++;
 			break;
-		case 'D':
-			opt_driver = optarg;
+		case 'f':
+			opt_config = optarg;
 			break;
 		case 'h':
 			usage(0);
+		case 'r':
+			opt_reader = atoi(optarg);
+			break;
 		default:
 			usage(1);
 		}
 	}
-	if (optind != argc - 1)
+	if (optind != argc)
 		usage(1);
 
-	print_atr(argv[optind]);
+	if (ifd_config_parse(opt_config) < 0)
+		exit(1);
+
+	if (!(reader = ifd_reader_by_index(opt_reader))) {
+		fprintf(stderr, "Unknown reader #%u\n", opt_reader);
+		return 1;
+	}
+
+	print_atr(reader);
 	return 0;
 }
 
 void
 usage(int exval)
 {
-	fprintf(stderr, "usage: print-atr [-h] device\n");
+	fprintf(stderr, "usage: print-atr [-d] [-f configfile] [-r reader]\n");
 	exit(exval);
 }
 
 void
-print_atr(const char *device)
+print_atr(ifd_reader_t *reader)
 {
-	ifd_reader_t	*reader;
 	unsigned char	atr[64];
 	int		m, n, status;
-
-	if (!(reader = ifd_open(opt_driver, device)))
-		exit(1);
 
 	printf("Detected %s (%d slot%s%s%s)\n",
 		reader->name,

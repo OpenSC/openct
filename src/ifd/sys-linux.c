@@ -55,7 +55,7 @@ ifd_device_cannel_to_name(unsigned int num)
 		sprintf(namebuf, "/dev/ttyS%u", num);
 		break;
 	case 1:
-		sprintf(namebuf, "usb:%d:%d",
+		sprintf(namebuf, "usb:id=%d,%d",
 				(num >> 8) & 0xff,
 				num & 0xff);
 		break;

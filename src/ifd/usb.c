@@ -74,11 +74,11 @@ usb_control(ifd_device_t *dev, void *data, size_t len)
 }
 
 static struct ifd_device_ops	ifd_usb_ops = {
-	control:	usb_control,
+	.control =	usb_control,
 };
 
 /*
- * Open USB device
+ * Open USB device - used by CTAPI
  */
 ifd_device_t *
 ifd_open_usb(const char *device)

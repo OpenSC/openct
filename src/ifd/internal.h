@@ -116,6 +116,7 @@ extern unsigned int	ifd_buf_avail(ifd_buf_t *);
 extern unsigned int	ifd_buf_tailroom(ifd_buf_t *);
 extern void *		ifd_buf_head(ifd_buf_t *);
 extern void *		ifd_buf_tail(ifd_buf_t *);
+extern int		ifd_buf_read(ifd_buf_t *, int);
 
 /* module.c */
 extern int		ifd_load_module(const char *, const char *);

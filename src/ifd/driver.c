@@ -58,6 +58,8 @@ ifd_driver_add_id(const char *id, const char *name)
 {
 	struct ifd_driver_info *ip;
 
+	if (ifd_config.debug > 2)
+		ifd_debug("ifd_driver_add_id(%s, %s)", id, name);
 	ip = find_by_name(name, 1);
 	ip->nids++;
 	ip->id = (char **) realloc(ip->id, ip->nids * sizeof(char *));
