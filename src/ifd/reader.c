@@ -307,7 +307,7 @@ ifd_recv_atr(ifd_device_t *dev, ifd_buf_t *bp,
  * Send/receive APDU to the ICC
  */
 int
-ifd_icc_command(ifd_reader_t *reader, unsigned int idx, ifd_apdu_t *apdu)
+ifd_card_command(ifd_reader_t *reader, unsigned int idx, ifd_apdu_t *apdu)
 {
 	ifd_slot_t	*slot;
 

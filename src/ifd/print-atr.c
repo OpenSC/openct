@@ -104,7 +104,7 @@ select_mf(ifd_reader_t *reader)
 	apdu.rcv_buf = res;
 	apdu.rcv_len = sizeof(res);
 
-	if (ifd_icc_command(reader, 0, &apdu) < 0) {
+	if (ifd_card_command(reader, 0, &apdu) < 0) {
 		fprintf(stderr, "card communication failure\n");
 		return;
 	}

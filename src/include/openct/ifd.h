@@ -120,7 +120,7 @@ extern int			ifd_deactivate(ifd_reader_t *);
 extern int			ifd_set_protocol(ifd_reader_t *reader,
 					unsigned int slot,
 					int id);
-extern int			ifd_icc_command(ifd_reader_t *reader,
+extern int			ifd_card_command(ifd_reader_t *reader,
 					unsigned int slot,
 					ifd_apdu_t *);
 extern int			ifd_card_status(ifd_reader_t *reader,
