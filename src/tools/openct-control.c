@@ -22,6 +22,7 @@
 #include <openct/driver.h>
 
 #include "internal.h"
+#include "config.h"
 
 static int		mgr_init(int argc, char **argv);
 static int		mgr_shutdown(int argc, char **argv);
