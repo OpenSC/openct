@@ -6,6 +6,7 @@
  */
 
 #include "internal.h"
+#include <sys/poll.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
