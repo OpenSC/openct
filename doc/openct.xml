@@ -11,7 +11,7 @@
 
 	<toc />
 
-	<chapter>
+	<chapter id="openct.about">
 		<title>About OpenCT</title>
 
 		<para>
@@ -76,7 +76,7 @@
 		</para>
 	</chapter>
 
-	<chapter>
+	<chapter id="openct.copyright">
 		<title>Copyright and License</title>
 
 		<para>
@@ -92,7 +92,7 @@
 		</para>
 	</chapter>
 
-	<chapter>
+	<chapter id="openct.supported">
 		<title>Supported Readers and Tokens</title>
 
 		<variablelist>
@@ -139,7 +139,7 @@
 				<term>Eutron Crypto Idendity IT-SEC</term>
 				<listentry>
 					A usb crypto Token by Eutron.
-					Very early support at best. 
+					Fully supported.
 				</listentry>
 			</varlistentry>
 
@@ -162,7 +162,7 @@
 	</chapter>
 
 
-	<chapter>
+	<chapter id="openct.requirements">
 		<title>Requirements</title>
 
 		<para>
@@ -220,7 +220,7 @@ none	/proc/bus/usb	usbfs		defaults	0	0
 		</para>
 	</chapter>
 
-	<chapter>
+	<chapter id="openct.install">
 		<title>Installation</title>
 
 		<para>
@@ -283,7 +283,7 @@ $ /etc/init.d/openct start
 			card reader or crypto token.
 		</para>
 
-		<section>
+		<section id="openct.install.withouthp">
 			<title>Installation without hotplug utils</title>
 
 		<para>
@@ -313,7 +313,7 @@ ln -s /path/to/openct/sbin/hotplug.openct /sbin/hotplug
 
 	</section>
 
-	<section>
+	<section id="openct.install.withhp">
 		<title>Installation with hotplut utils</title>
 
 		<para>
@@ -349,7 +349,7 @@ ln -s /path/to/openct/sbin/hotplug.openct /etc/hotplug/usb/openct
 
 	</chapter>
 
-	<chapter>
+	<chapter id="openct.debug">
 		<title>Debugging</title>
 
 		<para>
@@ -366,16 +366,15 @@ ln -s /path/to/openct/sbin/hotplug.openct /etc/hotplug/usb/openct
 
 	</chapter>
 	
-	<chapter>
-
+	<chapter id="openct.files">
 		<title>OpenCT files and tools</title>
 
 		<para>
-			This section will list all tools and files and
+			This chapter will list all tools and files and
 			explain what they do.
 		</para>
 
-		<section>
+		<section id="openct.files.varrunopenct">
 			<title>/var/run/openct	OpenCT status directory</title>
 
 			<para>
@@ -398,7 +397,7 @@ chmod 750 /var/run/openct
 			</para>
 		</section>
 
-		<section>
+		<section id="openct.files.sbinopenctcontrol">
 			<title>sbin/openct-control	OpenCT Manager</title>
 
 			<para>
@@ -429,7 +428,7 @@ shutdown - shutdown OpenCT
 			</para>
 		</section>
 
-		<section>
+		<section id="openct.files.init">
 			<title>init script to start openct</title>
 
 			<para>
@@ -450,7 +449,7 @@ shutdown - shutdown OpenCT
 
 		</section>
 
-		<section>
+		<section id="openct.files.linuxhp">
 			<title>Linux with hotplugging</title>
 
 			<para>
@@ -478,7 +477,7 @@ ln -s /path/to/openct/sbin/hotplug.openct /sbin/htplug
 		</section>
 
 
-		<section>
+		<section id="openct.files.sbinifdhandler">
 			<title>sbin/ifdhandler		OpenCT Device Handler</title>
 
 			<para>
@@ -499,7 +498,7 @@ usage: ifdhandler [-Hds] driver device socket
 			</para>
 		</section>
 
-		<section>
+		<section id="openct.files.opencttool">
 			<title>bin/openct-tool</title>
 
 			<para>
@@ -520,27 +519,7 @@ command: can be one of the following
 			</para>
 		</section>
 
-		<section>
-			<title>bin/print-atr</title>
-
-			<para>
-				<screen>
-aj@simulacron:~/openct$ bin/print-atr -h
-usage: print-atr [-d] [-f configfile] [-r reader] [command]
-  -d   enable debugging; repeat to increase verbosity
-  -f   specify config file (default /etc/ifd.conf
-  -r   specify index of reader to use
-  -h   display this message
-
-command: can be one of the following
- list  list all readers found
- atr   print ATR of card in selected reader
- mf    try to select ATR of card
-				</screen>
-			</para>
-		</section>
-
-		<section>
+		<section files="openct.files.openctconf">
 			<title>etc/openct.conf</title>
 
 			<para>
@@ -576,7 +555,7 @@ driver	egate {
 			</para>
 		</section>
 
-		<section>
+		<section id="openct.files.includes">
 			<title>include/openct/</title>
 
 			<para>
@@ -588,7 +567,7 @@ buffer.h  device.h  error.h   logging.h  pathnames.h  server.h    tlv.h
 			</para>
 		</section>
 
-		<section>
+		<section id="openct.files.lib">
 			<title>lib/libifd.so</title>
 
 			<para>
@@ -602,7 +581,7 @@ lib/libifd.la  lib/libifd.so.0
 
 	</chapter>
 
-	<chapter>
+	<chapter id="openct.ct-api">
 		<title>Using OpenCT as CT-API driver</title>
 
 		<para>
@@ -631,7 +610,7 @@ openct ifd-ctapi.so
 		</para>
 	</chapter>
 
-	<chapter>
+	<chapter id="openct.pcsc">
 		<title>Using OpenCT as IfdHandler</title>
 
 		<para>
@@ -654,7 +633,7 @@ openct ifdhandeler.so
 
 	</chapter>
 
-	<chapter>
+	<chapter id="openct.library">
 		<title>Writing smart card applications using openct</title>
 
 		<para>
@@ -677,7 +656,7 @@ openct ifdhandeler.so
 		</para>
 	</chapter>
 
-	<chapter>
+	<chapter id="openct.trouble">
 		<title>Troubleshooting</title>
 
 		<para>
@@ -731,11 +710,11 @@ drwxr-xr-x    8 root     root         4096 2003-07-02 08:13 ../
 -rw-r--r--    1 root     root         1728 2003-07-02 08:13 status
 $ 
 			</screen>
-			See the security section for details on file permissions
+			See the security chapter for details on file permissions
 			of this directory.
 		</para>
 
-		<section>
+		<section id="openct.trouble.usb">
 			<title>problems with usb devices</title>
 		<para>
 			Are you using an usb smart card reader or
@@ -753,7 +732,7 @@ $
 			If you have a file
 			<filename>/etc/hotplug/usb.usermal</filename>, is the
 			vendor and product id listed in that file?
-			If not, add a line similar to the install section.
+			If not, add a line similar to the install chapter.
 			The vendor ID is the second number, the product ID
 			the third number.
 		</para>
@@ -769,7 +748,7 @@ $
 		</section>
 	</chapter>
 
-	<chapter>
+	<chapter id="openct.security">
 		<title>Security</title>
 
 		<para>

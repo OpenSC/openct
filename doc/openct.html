@@ -36,89 +36,92 @@
         </p>
         <dl>
           <dt>1. 
-          <a href="#id2752122">About OpenCT</a></dt>
+          <a href="#openct.about">About OpenCT</a></dt>
           <dt>2. 
-          <a href="#id2796693">Copyright and License</a></dt>
+          <a href="#openct.copyright">Copyright and
+          License</a></dt>
           <dt>3. 
-          <a href="#id2796714">Supported Readers and
+          <a href="#openct.supported">Supported Readers and
           Tokens</a></dt>
           <dt>4. 
-          <a href="#id2796817">Requirements</a></dt>
+          <a href="#openct.requirements">Requirements</a></dt>
           <dt>5. 
-          <a href="#id2796902">Installation</a></dt>
+          <a href="#openct.install">Installation</a></dt>
           <dd>
             <dl>
               <dt>
-                <a href="#id2796987">Installation without hotplug
-                utils</a>
+                <a href="#openct.install.withouthp">Installation
+                without hotplug utils</a>
               </dt>
               <dt>
-                <a href="#id2797032">Installation with hotplut
-                utils</a>
+                <a href="#openct.install.withhp">Installation with
+                hotplut utils</a>
               </dt>
             </dl>
           </dd>
           <dt>6. 
-          <a href="#id2797088">Debugging</a></dt>
+          <a href="#openct.debug">Debugging</a></dt>
           <dt>7. 
-          <a href="#id2797113">OpenCT files and tools</a></dt>
+          <a href="#openct.files">OpenCT files and tools</a></dt>
           <dd>
             <dl>
               <dt>
-                <a href="#id2797126">/var/run/openct OpenCT status
-                directory</a>
+                <a href="#openct.files.varrunopenct">
+                /var/run/openct OpenCT status directory</a>
               </dt>
               <dt>
-                <a href="#id2797158">sbin/openct-control OpenCT
-                Manager</a>
+                <a href="#openct.files.sbinopenctcontrol">
+                sbin/openct-control OpenCT Manager</a>
               </dt>
               <dt>
-                <a href="#id2797201">init script to start
+                <a href="#openct.files.init">init script to start
                 openct</a>
               </dt>
               <dt>
-                <a href="#id2797227">Linux with hotplugging</a>
+                <a href="#openct.files.linuxhp">Linux with
+                hotplugging</a>
               </dt>
               <dt>
-                <a href="#id2797270">sbin/ifdhandler OpenCT Device
-                Handler</a>
+                <a href="#openct.files.sbinifdhandler">
+                sbin/ifdhandler OpenCT Device Handler</a>
               </dt>
               <dt>
-                <a href="#id2797298">bin/openct-tool</a>
+                <a href="#openct.files.opencttool">
+                bin/openct-tool</a>
               </dt>
               <dt>
-                <a href="#id2797324">bin/print-atr</a>
+                <a href="#id2797368">etc/openct.conf</a>
               </dt>
               <dt>
-                <a href="#id2797348">etc/openct.conf</a>
+                <a href="#openct.files.includes">
+                include/openct/</a>
               </dt>
               <dt>
-                <a href="#id2797372">include/openct/</a>
-              </dt>
-              <dt>
-                <a href="#id2797392">lib/libifd.so</a>
+                <a href="#openct.files.lib">lib/libifd.so</a>
               </dt>
             </dl>
           </dd>
           <dt>8. 
-          <a href="#id2797413">Using OpenCT as CT-API
+          <a href="#openct.ct-api">Using OpenCT as CT-API
           driver</a></dt>
           <dt>9. 
-          <a href="#id2797462">Using OpenCT as IfdHandler</a></dt>
+          <a href="#openct.pcsc">Using OpenCT as
+          IfdHandler</a></dt>
           <dt>10. 
-          <a href="#id2797500">Writing smart card applications
+          <a href="#openct.library">Writing smart card applications
           using openct</a></dt>
           <dt>11. 
-          <a href="#id2797541">Troubleshooting</a></dt>
+          <a href="#openct.trouble">Troubleshooting</a></dt>
           <dd>
             <dl>
               <dt>
-                <a href="#id2797628">problems with usb devices</a>
+                <a href="#openct.trouble.usb">problems with usb
+                devices</a>
               </dt>
             </dl>
           </dd>
           <dt>12. 
-          <a href="#id2797682">Security</a></dt>
+          <a href="#openct.security">Security</a></dt>
         </dl>
       </div>
       <div class="chapter" lang="en" xml:lang="en">
@@ -126,7 +129,7 @@
           <div>
             <div>
               <h2 class="title">
-              <a id="id2752122"></a>Chapter&#160;1.&#160;About
+              <a id="openct.about"></a>Chapter&#160;1.&#160;About
               OpenCT</h2>
             </div>
           </div>
@@ -176,8 +179,8 @@
           <div>
             <div>
               <h2 class="title">
-              <a id="id2796693"></a>Chapter&#160;2.&#160;Copyright
-              and License</h2>
+              <a id="openct.copyright">
+              </a>Chapter&#160;2.&#160;Copyright and License</h2>
             </div>
           </div>
           <div></div>
@@ -194,8 +197,9 @@
           <div>
             <div>
               <h2 class="title">
-              <a id="id2796714"></a>Chapter&#160;3.&#160;Supported
-              Readers and Tokens</h2>
+              <a id="openct.supported">
+              </a>Chapter&#160;3.&#160;Supported Readers and
+              Tokens</h2>
             </div>
           </div>
           <div></div>
@@ -239,7 +243,7 @@
           <div>
             <div>
               <h2 class="title">
-              <a id="id2796817">
+              <a id="openct.requirements">
               </a>Chapter&#160;4.&#160;Requirements</h2>
             </div>
           </div>
@@ -301,7 +305,7 @@ none    /proc/bus/usb   usbfs           defaults        0       0
           <div>
             <div>
               <h2 class="title">
-              <a id="id2796902">
+              <a id="openct.install">
               </a>Chapter&#160;5.&#160;Installation</h2>
             </div>
           </div>
@@ -313,12 +317,12 @@ none    /proc/bus/usb   usbfs           defaults        0       0
           </p>
           <dl>
             <dt>
-              <a href="#id2796987">Installation without hotplug
-              utils</a>
+              <a href="#openct.install.withouthp">Installation
+              without hotplug utils</a>
             </dt>
             <dt>
-              <a href="#id2797032">Installation with hotplut
-              utils</a>
+              <a href="#openct.install.withhp">Installation with
+              hotplut utils</a>
             </dt>
           </dl>
         </div>
@@ -392,8 +396,8 @@ $ /etc/init.d/openct start
             <div>
               <div>
                 <h2 class="title" style="clear: both">
-                <a id="id2796987"></a>Installation without hotplug
-                utils</h2>
+                <a id="openct.install.withouthp"></a>Installation
+                without hotplug utils</h2>
               </div>
             </div>
             <div></div>
@@ -434,8 +438,8 @@ ln -s /path/to/openct/sbin/hotplug.openct /sbin/hotplug
             <div>
               <div>
                 <h2 class="title" style="clear: both">
-                <a id="id2797032"></a>Installation with hotplut
-                utils</h2>
+                <a id="openct.install.withhp"></a>Installation with
+                hotplut utils</h2>
               </div>
             </div>
             <div></div>
@@ -489,7 +493,7 @@ ln -s /path/to/openct/sbin/hotplug.openct /etc/hotplug/usb/openct
           <div>
             <div>
               <h2 class="title">
-              <a id="id2797088">
+              <a id="openct.debug">
               </a>Chapter&#160;6.&#160;Debugging</h2>
             </div>
           </div>
@@ -508,7 +512,7 @@ ln -s /path/to/openct/sbin/hotplug.openct /etc/hotplug/usb/openct
           <div>
             <div>
               <h2 class="title">
-              <a id="id2797113"></a>Chapter&#160;7.&#160;OpenCT
+              <a id="openct.files"></a>Chapter&#160;7.&#160;OpenCT
               files and tools</h2>
             </div>
           </div>
@@ -520,49 +524,49 @@ ln -s /path/to/openct/sbin/hotplug.openct /etc/hotplug/usb/openct
           </p>
           <dl>
             <dt>
-              <a href="#id2797126">/var/run/openct OpenCT status
-              directory</a>
+              <a href="#openct.files.varrunopenct">/var/run/openct
+              OpenCT status directory</a>
             </dt>
             <dt>
-              <a href="#id2797158">sbin/openct-control OpenCT
-              Manager</a>
+              <a href="#openct.files.sbinopenctcontrol">
+              sbin/openct-control OpenCT Manager</a>
             </dt>
             <dt>
-              <a href="#id2797201">init script to start openct</a>
+              <a href="#openct.files.init">init script to start
+              openct</a>
             </dt>
             <dt>
-              <a href="#id2797227">Linux with hotplugging</a>
+              <a href="#openct.files.linuxhp">Linux with
+              hotplugging</a>
             </dt>
             <dt>
-              <a href="#id2797270">sbin/ifdhandler OpenCT Device
-              Handler</a>
+              <a href="#openct.files.sbinifdhandler">
+              sbin/ifdhandler OpenCT Device Handler</a>
             </dt>
             <dt>
-              <a href="#id2797298">bin/openct-tool</a>
+              <a href="#openct.files.opencttool">
+              bin/openct-tool</a>
             </dt>
             <dt>
-              <a href="#id2797324">bin/print-atr</a>
+              <a href="#id2797368">etc/openct.conf</a>
             </dt>
             <dt>
-              <a href="#id2797348">etc/openct.conf</a>
+              <a href="#openct.files.includes">include/openct/</a>
             </dt>
             <dt>
-              <a href="#id2797372">include/openct/</a>
-            </dt>
-            <dt>
-              <a href="#id2797392">lib/libifd.so</a>
+              <a href="#openct.files.lib">lib/libifd.so</a>
             </dt>
           </dl>
         </div>
-        <p>This section will list all tools and files and explain
+        <p>This chapter will list all tools and files and explain
         what they do.</p>
         <div class="section" lang="en" xml:lang="en">
           <div class="titlepage">
             <div>
               <div>
                 <h2 class="title" style="clear: both">
-                <a id="id2797126"></a>/var/run/openct OpenCT status
-                directory</h2>
+                <a id="openct.files.varrunopenct">
+                </a>/var/run/openct OpenCT status directory</h2>
               </div>
             </div>
             <div></div>
@@ -600,8 +604,8 @@ chmod 750 /var/run/openct
             <div>
               <div>
                 <h2 class="title" style="clear: both">
-                <a id="id2797158"></a>sbin/openct-control OpenCT
-                Manager</h2>
+                <a id="openct.files.sbinopenctcontrol">
+                </a>sbin/openct-control OpenCT Manager</h2>
               </div>
             </div>
             <div></div>
@@ -638,7 +642,7 @@ shutdown - shutdown OpenCT
             <div>
               <div>
                 <h2 class="title" style="clear: both">
-                <a id="id2797201"></a>init script to start
+                <a id="openct.files.init"></a>init script to start
                 openct</h2>
               </div>
             </div>
@@ -671,7 +675,8 @@ shutdown - shutdown OpenCT
             <div>
               <div>
                 <h2 class="title" style="clear: both">
-                <a id="id2797227"></a>Linux with hotplugging</h2>
+                <a id="openct.files.linuxhp"></a>Linux with
+                hotplugging</h2>
               </div>
             </div>
             <div></div>
@@ -703,8 +708,8 @@ ln -s /path/to/openct/sbin/hotplug.openct /sbin/htplug
             <div>
               <div>
                 <h2 class="title" style="clear: both">
-                <a id="id2797270"></a>sbin/ifdhandler OpenCT Device
-                Handler</h2>
+                <a id="openct.files.sbinifdhandler">
+                </a>sbin/ifdhandler OpenCT Device Handler</h2>
               </div>
             </div>
             <div></div>
@@ -733,7 +738,8 @@ usage: ifdhandler [-Hds] driver device socket
             <div>
               <div>
                 <h2 class="title" style="clear: both">
-                <a id="id2797298"></a>bin/openct-tool</h2>
+                <a id="openct.files.opencttool">
+                </a>bin/openct-tool</h2>
               </div>
             </div>
             <div></div>
@@ -766,39 +772,7 @@ command: can be one of the following
             <div>
               <div>
                 <h2 class="title" style="clear: both">
-                <a id="id2797324"></a>bin/print-atr</h2>
-              </div>
-            </div>
-            <div></div>
-          </div>
-          <p></p>
-          <table border="0" bgcolor="#E0E0E0">
-            <tr>
-              <td>
-                <pre class="screen">
-aj@simulacron:~/openct$ bin/print-atr -h
-usage: print-atr [-d] [-f configfile] [-r reader] [command]
-  -d   enable debugging; repeat to increase verbosity
-  -f   specify config file (default /etc/ifd.conf
-  -r   specify index of reader to use
-  -h   display this message
-
-command: can be one of the following
- list  list all readers found
- atr   print ATR of card in selected reader
- mf    try to select ATR of card
-</pre>
-              </td>
-            </tr>
-          </table>
-          <p></p>
-        </div>
-        <div class="section" lang="en" xml:lang="en">
-          <div class="titlepage">
-            <div>
-              <div>
-                <h2 class="title" style="clear: both">
-                <a id="id2797348"></a>etc/openct.conf</h2>
+                <a id="id2797368"></a>etc/openct.conf</h2>
               </div>
             </div>
             <div></div>
@@ -846,7 +820,8 @@ driver  egate {
             <div>
               <div>
                 <h2 class="title" style="clear: both">
-                <a id="id2797372"></a>include/openct/</h2>
+                <a id="openct.files.includes">
+                </a>include/openct/</h2>
               </div>
             </div>
             <div></div>
@@ -872,7 +847,7 @@ tlv.h
             <div>
               <div>
                 <h2 class="title" style="clear: both">
-                <a id="id2797392"></a>lib/libifd.so</h2>
+                <a id="openct.files.lib"></a>lib/libifd.so</h2>
               </div>
             </div>
             <div></div>
@@ -897,7 +872,7 @@ lib/libifd.la  lib/libifd.so.0
           <div>
             <div>
               <h2 class="title">
-              <a id="id2797413"></a>Chapter&#160;8.&#160;Using
+              <a id="openct.ct-api"></a>Chapter&#160;8.&#160;Using
               OpenCT as CT-API driver</h2>
             </div>
           </div>
@@ -931,7 +906,7 @@ openct ifd-ctapi.so
           <div>
             <div>
               <h2 class="title">
-              <a id="id2797462"></a>Chapter&#160;9.&#160;Using
+              <a id="openct.pcsc"></a>Chapter&#160;9.&#160;Using
               OpenCT as IfdHandler</h2>
             </div>
           </div>
@@ -961,8 +936,9 @@ openct ifdhandeler.so
           <div>
             <div>
               <h2 class="title">
-              <a id="id2797500"></a>Chapter&#160;10.&#160;Writing
-              smart card applications using openct</h2>
+              <a id="openct.library">
+              </a>Chapter&#160;10.&#160;Writing smart card
+              applications using openct</h2>
             </div>
           </div>
           <div></div>
@@ -984,7 +960,7 @@ openct ifdhandeler.so
           <div>
             <div>
               <h2 class="title">
-              <a id="id2797541">
+              <a id="openct.trouble">
               </a>Chapter&#160;11.&#160;Troubleshooting</h2>
             </div>
           </div>
@@ -996,7 +972,8 @@ openct ifdhandeler.so
           </p>
           <dl>
             <dt>
-              <a href="#id2797628">problems with usb devices</a>
+              <a href="#openct.trouble.usb">problems with usb
+              devices</a>
             </dt>
           </dl>
         </div>
@@ -1047,14 +1024,14 @@ $
             </td>
           </tr>
         </table>
-        <p>See the security section for details on file permissions
+        <p>See the security chapter for details on file permissions
         of this directory.</p>
         <div class="section" lang="en" xml:lang="en">
           <div class="titlepage">
             <div>
               <div>
                 <h2 class="title" style="clear: both">
-                <a id="id2797628"></a>problems with usb
+                <a id="openct.trouble.usb"></a>problems with usb
                 devices</h2>
               </div>
             </div>
@@ -1069,7 +1046,7 @@ $
           <p>If you have a file 
           <tt class="filename">/etc/hotplug/usb.usermal</tt>, is
           the vendor and product id listed in that file? If not,
-          add a line similar to the install section. The vendor ID
+          add a line similar to the install chapter. The vendor ID
           is the second number, the product ID the third
           number.</p>
           <p>If that solves the proble, please let the openct
@@ -1086,7 +1063,7 @@ $
           <div>
             <div>
               <h2 class="title">
-              <a id="id2797682">
+              <a id="openct.security">
               </a>Chapter&#160;12.&#160;Security</h2>
             </div>
           </div>
