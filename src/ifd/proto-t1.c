@@ -186,7 +186,7 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 {
 	t1_state_t	*t1 = (t1_state_t *) prot;
 	ct_buf_t	sbuf, rbuf, tbuf;
-	unsigned char	sdata[T1_BUFFER_SIZE];
+	unsigned char	sdata[T1_BUFFER_SIZE], sblk[5];
 	unsigned int	slen, retries, last_send = 0;
 
 	if (snd_len == 0)
@@ -309,7 +309,7 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 			if (T1_S_IS_RESPONSE(pcb))
 				return -1;
 
-			ct_buf_init(&tbuf, sdata, sizeof(sdata));
+			ct_buf_init(&tbuf, sblk, sizeof(sblk));
 
 			switch (T1_S_TYPE(pcb)) {
 			case T1_S_RESYNC:
