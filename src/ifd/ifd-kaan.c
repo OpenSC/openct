@@ -416,7 +416,7 @@ kaan_do_reset(ifd_reader_t *reader, int nslot,
 		/* size. */
 		memcpy(atr, buffer, got);
 		if (got == 4 && st->reader_type == TYPE_B1)
-			kaan_set_protocol(reader, nslot, IFD_PROTOCOL_4433);
+			kaan_set_protocol(reader, nslot, IFD_PROTOCOL_EUROCHIP);
 		if ((rc = kaan_sync_detect(reader, nslot)) < 0)
 			return rc;
 		break;
@@ -497,10 +497,7 @@ kaan_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 	case IFD_PROTOCOL_I2C_LONG:  cmd[7] = 0x80; break;
 	case IFD_PROTOCOL_3WIRE:     cmd[7] = 0x81; break;
 	case IFD_PROTOCOL_2WIRE:     cmd[7] = 0x82; break;
-	case IFD_PROTOCOL_4401:      cmd[7] = 0x90; break;
-	case IFD_PROTOCOL_4402:      cmd[7] = 0x91; break;
-	case IFD_PROTOCOL_4403:      cmd[7] = 0x92; break;
-	case IFD_PROTOCOL_4433:      cmd[7] = 0x93; break;
+	case IFD_PROTOCOL_EUROCHIP:  cmd[7] = 0x93; break;
 	default:
 		ifd_debug(1, "kaan_set_protocol: protocol %d not supported", proto);
 		return -1;
@@ -721,16 +718,10 @@ kaan_sync_detect(ifd_reader_t *reader, int nslot)
 		protocol = IFD_PROTOCOL_2WIRE;
 		break;
 	case 0x90:
-		protocol = IFD_PROTOCOL_4401;
-		break;
 	case 0x91:
-		protocol = IFD_PROTOCOL_4402;
-		break;
 	case 0x92:
-		protocol = IFD_PROTOCOL_4403;
-		break;
 	case 0x93:
-		protocol = IFD_PROTOCOL_4433;
+		protocol = IFD_PROTOCOL_EUROCHIP;
 		break;
 	default:
 		ct_error("kaan_sync_detect: unknown card protocol 0x%x", protocol);

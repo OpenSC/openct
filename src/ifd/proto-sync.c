@@ -238,9 +238,9 @@ struct ifd_protocol_ops	ifd_protocol_3wire = {
 	sync_write,			/* sync_write */
 };
 
-struct ifd_protocol_ops	ifd_protocol_4401 = {
-	IFD_PROTOCOL_4401,		/* id */
-	"4401"	,			/* name */
+struct ifd_protocol_ops	ifd_protocol_eurochip = {
+	IFD_PROTOCOL_EUROCHIP,		/* id */
+	"Eurochip Countercard",		/* name */
 	sizeof(sync_state_t),		/* size */
 	NULL,				/* init */
 	sync_release,			/* release */
@@ -252,44 +252,3 @@ struct ifd_protocol_ops	ifd_protocol_4401 = {
 	sync_write,			/* sync_write */
 };
 
-struct ifd_protocol_ops	ifd_protocol_4402 = {
-	IFD_PROTOCOL_4402,		/* id */
-	"4402"	,			/* name */
-	sizeof(sync_state_t),		/* size */
-	NULL,				/* init */
-	sync_release,			/* release */
-	NULL,				/* set_param */
-	NULL,				/* get_param */
-	NULL,				/* resynchronize */
-	NULL,				/* transceive */
-	sync_read,			/* sync_read */
-	sync_write,			/* sync_write */
-};
-
-struct ifd_protocol_ops	ifd_protocol_4403 = {
-	IFD_PROTOCOL_4403,		/* id */
-	"4403"	,			/* name */
-	sizeof(sync_state_t),		/* size */
-	NULL,				/* init */
-	sync_release,			/* release */
-	NULL,				/* set_param */
-	NULL,				/* get_param */
-	NULL,				/* resynchronize */
-	NULL,				/* transceive */
-	sync_read,			/* sync_read */
-	sync_write,			/* sync_write */
-};
-
-struct ifd_protocol_ops	ifd_protocol_4433 = {
-	IFD_PROTOCOL_4433,		/* id */
-	"4433"	,			/* name */
-	sizeof(sync_state_t),		/* size */
-	NULL,				/* init */
-	sync_release,			/* release */
-	NULL,				/* set_param */
-	NULL,				/* get_param */
-	NULL,				/* resynchronize */
-	NULL,				/* transceive */
-	sync_read,			/* sync_read */
-	sync_write,			/* sync_write */
-};
