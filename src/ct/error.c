@@ -19,16 +19,26 @@ enum {
 	DST_SYSLOG
 };
 
+static int	log_open = 0;
 static int	log_dest = DST_STDERR;
+
+static void
+ct_log_init(void)
+{
+	if (!log_open) {
+		openlog("ifdhandler", LOG_PID, LOG_DAEMON);
+		log_open = 1;
+	}
+}
 
 void
 ct_log_destination(const char *dest)
 {
+	ct_log_init();
 	if (!strcmp(dest, "@stderr")) {
 		log_dest = DST_STDERR;
 	} else if (!strcmp(dest, "@syslog")) {
 		log_dest = DST_SYSLOG;
-		openlog("ifdhandler", LOG_PID, LOG_DAEMON);
 	} else {
 		log_dest = DST_STDERR;
 		ct_error("log destination %s not implemented yet", dest);
