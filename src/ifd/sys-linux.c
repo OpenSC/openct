@@ -1,12 +1,17 @@
 /*
  * Linux specific functions
  *
+ * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
+ *
+ * These functions need to be re-implemented for every
+ * new platform.
  */
 
 #include <linux/major.h>
 #include <sys/sysmacros.h>
 #include <sys/stat.h>
 #include <string.h>
+#include <stdio.h>
 #include "internal.h"
 
 int
@@ -38,5 +43,27 @@ ifd_device_guess_type(const char *name)
 	}
 
 	return -1;
+}
+
+const char *
+ifd_device_cannel_to_name(unsigned int num)
+{
+	static char	namebuf[256];
+
+	switch (num >> 24) {
+	case 0:
+		sprintf(namebuf, "/dev/ttyS%u", num);
+		break;
+	case 1:
+		sprintf(namebuf, "usb:%d:%d",
+				(num >> 8) & 0xff,
+				num & 0xff);
+		break;
+	default:
+		ifd_error("Unknown device channel 0x%x\n", num);
+		return NULL;
+	}
+
+	return namebuf;
 }
 

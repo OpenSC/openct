@@ -1,18 +1,21 @@
 /*
  * Generic IFD device layer
  *
- *
+ * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
  */
 
 #include <stdlib.h>
 #include <string.h>
 #include "internal.h"
 
+/*
+ * Open a device given the name
+ */
 ifd_device_t *
 ifd_device_open(const char *name)
 {
 	if (!strncmp(name, "serial:", 7))
-		return ifd_open_usb(name + 7);
+		return ifd_open_serial(name + 7);
 	if (!strncmp(name, "usb:", 4))
 		return ifd_open_usb(name + 4);
 
@@ -26,6 +29,25 @@ ifd_device_open(const char *name)
 	return NULL;
 }
 
+/*
+ * Open a device given a numeric "channel" as used in
+ * the CTAPI and PCSC interface
+ */
+ifd_device_t *
+ifd_device_open_channel(unsigned int num)
+{
+	const char	*name;
+
+	if (!(name = ifd_device_cannel_to_name(num)))
+		return NULL;
+	return ifd_device_open(name);
+}
+
+/*
+ * Create a new device struct
+ * This is an internal function called by the different device
+ * type handlers (serial, usb, etc)
+ */
 ifd_device_t *
 ifd_device_new(const char *name, struct ifd_device_ops *ops, size_t size)
 {
@@ -38,6 +60,9 @@ ifd_device_new(const char *name, struct ifd_device_ops *ops, size_t size)
 	return dev;
 }
 
+/*
+ * Destroy a device handle
+ */
 void
 ifd_device_free(ifd_device_t *dev)
 {
@@ -47,6 +72,11 @@ ifd_device_free(ifd_device_t *dev)
 	free(dev);
 }
 
+/*
+ * Miscellaneous device operations. These functions
+ * just do a consistency check on the handle, and route
+ * the call to the appropriate member function
+ */
 int
 ifd_device_type(ifd_device_t *dev)
 {

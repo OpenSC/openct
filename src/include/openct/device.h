@@ -51,6 +51,7 @@ typedef struct ifd_usb_cmsg {
 } ifd_usb_cmsg_t;
 
 extern ifd_device_t *	ifd_device_open(const char *);
+extern ifd_device_t *	ifd_device_open_channel(unsigned int num);
 extern int		ifd_device_type(ifd_device_t *);
 extern int		ifd_device_guess_type(const char *);
 extern void		ifd_device_flush(ifd_device_t *);
@@ -65,6 +66,7 @@ extern int		ifd_device_send(ifd_device_t *, const void *, size_t);
 extern int		ifd_device_recv(ifd_device_t *, void *, size_t, long);
 extern int		ifd_device_control(ifd_device_t *, void *, size_t);
 extern void		ifd_device_close(ifd_device_t *);
+extern const char *	ifd_device_cannel_to_name(unsigned int num);
 
 /* scheduled to go away */
 extern ifd_device_t *	ifd_open_serial(const char *);
