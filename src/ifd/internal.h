@@ -162,9 +162,16 @@ extern int		ifd_sysdep_device_type(const char *);
 extern int		ifd_sysdep_usb_control(ifd_device_t *,
 				unsigned int,
 				unsigned int,
-		               	unsigned int,
+				unsigned int,
 				unsigned int,
 				void *, size_t, long);
+extern int		ifd_sysdep_usb_bulk(ifd_device_t *, int,
+	 			void *, size_t ,
+				long) ;
+extern int		ifd_sysdep_usb_set_configuration(ifd_device_t *, int);
+extern int		ifd_sysdep_usb_set_interface(ifd_device_t *, int, int);
+extern int		ifd_sysdep_usb_claim_interface(ifd_device_t *, int);
+extern int		ifd_sysdep_usb_release_interface(ifd_device_t *, int);
 extern int		ifd_sysdep_usb_begin_capture(ifd_device_t *, int, int, size_t, ifd_usb_capture_t **);
 extern int		ifd_sysdep_usb_capture(ifd_device_t *, ifd_usb_capture_t *, void *, size_t, long);
 extern int		ifd_sysdep_usb_end_capture(ifd_device_t *, ifd_usb_capture_t *cap);

@@ -99,6 +99,72 @@ ifd_sysdep_usb_control(ifd_device_t *dev,
 	return rc;
 }
 
+
+/*
+ * USB bulk transfer
+ */
+int
+ifd_sysdep_usb_bulk(ifd_device_t *dev, int ep, void *buffer, size_t len,
+		       long timeout) 
+{
+	struct usbdevfs_bulktransfer bulk;
+
+	bulk.ep = ep;
+	bulk.data = buffer;
+	bulk.len = len;
+	bulk.timeout = timeout;
+	if (ioctl(dev->fd, USBDEVFS_BULK, &bulk) < 0) {
+		ct_error("usb_bulk failed: %m");
+		return IFD_ERROR_COMM_ERROR;
+	}
+
+	return 0;
+}
+
+int
+ifd_sysdep_usb_set_configuration(ifd_device_t *dev, int config) 
+{
+	if (ioctl(dev->fd, USBDEVFS_SETCONFIGURATION, &config) < 0) {
+		ct_error("usb_setconfig failed: %m");
+		return IFD_ERROR_COMM_ERROR;
+	}
+	return 0;
+}
+
+int
+ifd_sysdep_usb_set_interface(ifd_device_t *dev, int ifc, int alt) 
+{
+	struct usbdevfs_setinterface set;
+
+	set.interface = ifc;
+	set.altsetting = alt;
+	if (ioctl(dev->fd, USBDEVFS_SETINTERFACE, &set) < 0) {
+		ct_error("usb_setinterface failed: %m");
+		return IFD_ERROR_COMM_ERROR;
+	}
+	return 0;
+}
+
+int
+ifd_sysdep_usb_claim_interface(ifd_device_t *dev, int interface) 
+{
+	if (ioctl(dev->fd, USBDEVFS_CLAIMINTERFACE, &interface) < 0) {
+		ct_error("usb_claiminterface failed: %m");
+		return IFD_ERROR_COMM_ERROR;
+	}
+	return 0;
+}
+
+int
+ifd_sysdep_usb_release_interface(ifd_device_t *dev, int interface) 
+{
+	if (ioctl(dev->fd, USBDEVFS_RELEASEINTERFACE, &interface) < 0) {
+		ct_error("usb_releaseinterface failed: %m");
+		return IFD_ERROR_COMM_ERROR;
+	}
+	return 0;
+}
+
 /*
  * USB URB capture
  */
@@ -107,7 +173,6 @@ struct ifd_usb_capture {
 	int		type;
 	int		endpoint;
 	size_t		maxpacket;
-	unsigned int	interface;
 };
 
 static int
@@ -129,18 +194,8 @@ ifd_sysdep_usb_begin_capture(ifd_device_t *dev,
 	       	ifd_usb_capture_t **capret)
 {
 	ifd_usb_capture_t	*cap;
-	int			rc = 0;
 
 	cap = (ifd_usb_capture_t *) calloc(1, sizeof(*cap) + maxpacket);
-
-	/* Assume the interface # is 0 */
-	cap->interface = 0;
-	rc = ioctl(dev->fd, USBDEVFS_CLAIMINTERFACE, &cap->interface);
-	if (rc < 0) {
-		ct_error("usb_claiminterface failed: %m");
-		free(cap);
-		return IFD_ERROR_COMM_ERROR;
-	}
 
 	cap->type = type;
 	cap->endpoint = endpoint;
@@ -229,10 +284,6 @@ ifd_sysdep_usb_end_capture(ifd_device_t *dev, ifd_usb_capture_t *cap)
 	 * clobbering random memory.
 	 */
 	(void) ioctl(dev->fd, USBDEVFS_REAPURBNDELAY, &cap->urb);
-	if (ioctl(dev->fd, USBDEVFS_RELEASEINTERFACE, &cap->interface) < 0) {
-		ct_error("usb_releaseinterface failed: %m");
-		rc = IFD_ERROR_COMM_ERROR;
-	}
 	free(cap);
 	return rc;
 }

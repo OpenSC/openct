@@ -115,6 +115,82 @@ usb_poll_presence(ifd_device_t *dev, struct pollfd *p)
 	p->events = POLLHUP;
 	return 1;
 }
+/*
+ * Set usb params (for now, endpoint for transceive)
+ */
+static int
+usb_set_params(ifd_device_t *dev, const ifd_device_params_t *params)
+{
+
+	ifd_debug(1, "called. config x%02x ifc x%02x eps x%02x/x%02x",
+			params->usb.configuration, params->usb.interface, 
+			params->usb.ep_o, params->usb.ep_i);
+        if (params->usb.interface != -1 && params->usb.interface > 255)
+		return IFD_ERROR_INVALID_ARG;
+        if (params->usb.ep_o != -1 && (params->usb.ep_o & ~0x7F))
+		return IFD_ERROR_INVALID_ARG;
+        if ((params->usb.ep_i != -1 && (params->usb.ep_i & ~0xFF))
+	 || !(params->usb.ep_i & 0x80))
+		return IFD_ERROR_INVALID_ARG;
+
+	if (dev->settings.usb.interface != -1)
+		ifd_sysdep_usb_release_interface(dev, 
+					      dev->settings.usb.interface);
+
+	if (params->usb.configuration != -1
+	 && ifd_sysdep_usb_set_configuration(dev, params->usb.configuration))
+		return -1;
+
+	if (params->usb.interface != -1) {
+		if (params->usb.altsetting != -1
+		 && ifd_sysdep_usb_set_interface(dev, 
+					    params->usb.interface,
+					    params->usb.altsetting))
+			return -1;
+		if (ifd_sysdep_usb_claim_interface(dev, params->usb.interface))
+			return -1;
+	}
+
+        dev->settings = *params;
+        return 0;
+}
+
+static int 
+usb_send(ifd_device_t *dev, const unsigned char *send, size_t sendlen)
+{
+	if (dev->settings.usb.ep_o == -1)
+		return IFD_ERROR_NOT_SUPPORTED;
+	if (ct_config.debug >= 3) {
+		ifd_debug(4, "usb send to=x%02x", dev->settings.usb.ep_o);
+		if (sendlen)
+			ifd_debug(4, "send %s", ct_hexdump(send, sendlen));
+	}
+
+	return ifd_sysdep_usb_bulk(dev,
+			dev->settings.usb.ep_o, 
+			(unsigned char *) send, sendlen, 10000);
+}
+
+
+static int 
+usb_recv(ifd_device_t *dev, unsigned char *recv, size_t recvlen, long timeout)
+{
+	int	rc;
+
+	if (dev->settings.usb.ep_i == -1)
+		return IFD_ERROR_NOT_SUPPORTED;
+
+	rc = ifd_sysdep_usb_bulk(dev, dev->settings.usb.ep_i, 
+			recv, recvlen, timeout);
+	if (rc >= 0 && ct_config.debug >= 4) {
+		ifd_debug(4, "usb recv from=x%02x", dev->settings.usb.ep_i);
+		if (rc > 0)
+			ifd_debug(4, "recv %s", ct_hexdump(recv, rc));
+	}
+
+	return rc;
+}
+
 
 static struct ifd_device_ops	ifd_usb_ops;
 
@@ -133,11 +209,19 @@ ifd_open_usb(const char *device)
 	}
 
 	ifd_usb_ops.poll_presence = usb_poll_presence;
+	ifd_usb_ops.set_params = usb_set_params;
+	ifd_usb_ops.send = usb_send;
+	ifd_usb_ops.recv = usb_recv;
 
 	dev = ifd_device_new(device, &ifd_usb_ops, sizeof(*dev));
 	dev->type = IFD_DEVICE_TYPE_USB;
 	dev->timeout = 10000;
 	dev->fd = fd;
+	dev->settings.usb.configuration = -1;
+	dev->settings.usb.interface = -1;
+	dev->settings.usb.altsetting = -1;
+	dev->settings.usb.ep_o = -1;
+	dev->settings.usb.ep_i = -1;
 
 	return dev;
 }

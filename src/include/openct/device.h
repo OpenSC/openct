@@ -34,6 +34,13 @@ union ifd_device_params {
 		unsigned int	rts : 1,
 				dtr : 1;
 	} serial;
+	struct {
+		int configuration;
+		int interface;
+		int altsetting;
+		int ep_o;
+		int ep_i;
+	} usb;
 };
 
 enum {

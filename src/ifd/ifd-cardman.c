@@ -43,6 +43,7 @@ cm_open(ifd_reader_t *reader, const char *device_name)
 {
 	ifd_device_t	*dev;
 	cm_priv_t	*priv;
+	ifd_device_params_t params;
 
 	reader->name = "Omnikey Cardman";
 	reader->nslots = 1;
@@ -55,7 +56,13 @@ cm_open(ifd_reader_t *reader, const char *device_name)
 		return -1;
 	}
 
-       	priv = (cm_priv_t *) calloc(1, sizeof(cm_priv_t));
+	params = dev->settings;
+	params.usb.interface = 0;
+	if (ifd_device_set_parameters(dev, &params) < 0) {
+		ifd_device_close(dev);
+		return -1;
+	}
+	priv = (cm_priv_t *) calloc(1, sizeof(cm_priv_t));
 
 	reader->driver_data = priv;
 	reader->device = dev;

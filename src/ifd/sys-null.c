@@ -33,6 +33,36 @@ ifd_sysdep_usb_control(ifd_device_t *dev,
 	return -1;
 }
 
+int
+ifd_sysdep_usb_set_configuration(ifd_device_t *dev, int config) 
+{
+     return -1;
+}
+int
+ifd_sysdep_usb_set_interface(ifd_device_t *dev, int ifc, int alt) 
+{
+     return -1;
+}
+int
+ifd_sysdep_usb_claim_interface(ifd_device_t *dev, int interface) 
+{
+     return -1;
+}
+int
+ifd_sysdep_usb_release_interface(ifd_device_t *dev, int interface) 
+{
+     return -1;
+}
+/*
+ * USB bulk transfer
+ */
+int
+ifd_sysdep_usb_bulk(ifd_device_t *dev, int ep, void *buffer, size_t len,
+		    long timeout) 
+{
+     return -1;
+}
+
 /*
  * USB URB capture
  */
