@@ -245,9 +245,11 @@ do_transceive(ifd_protocol_t *prot, int dad,
 				if (retries == 0)
 					goto error;
 				if (t1->state == SENDING) {
+
 					slen = t1_build(t1, sdata,
-							dad, T1_I_BLOCK,
-							&sbuf, &last_send);
+						dad, T1_S_BLOCK|T1_S_RESYNC,
+						NULL, NULL);
+					t1->state = RESYNCH;
 					continue;
 				}
 			}
@@ -312,6 +314,16 @@ do_transceive(ifd_protocol_t *prot, int dad,
 			break;
 
 		case T1_S_BLOCK:
+			if (T1_S_IS_RESPONSE(pcb) && t1->state == RESYNCH) {
+				t1->state = SENDING;
+				sent_length =0;
+				last_send = 0;
+				ct_buf_init(&rbuf, rcv_buf, rcv_len);
+				slen = t1_build(t1, sdata, dad, T1_I_BLOCK,
+						&sbuf, &last_send);
+				continue;
+			}
+
 			if (T1_S_IS_RESPONSE(pcb))
 				goto error;
 
