@@ -115,10 +115,15 @@ extern struct ifd_protocol_ops	ifd_protocol_i2c_short;
 extern struct ifd_protocol_ops	ifd_protocol_i2c_long;
 extern struct ifd_protocol_ops	ifd_protocol_2wire;
 extern struct ifd_protocol_ops	ifd_protocol_3wire;
+extern struct ifd_protocol_ops	ifd_protocol_4401;
+extern struct ifd_protocol_ops	ifd_protocol_4402;
+extern struct ifd_protocol_ops	ifd_protocol_4403;
+extern struct ifd_protocol_ops	ifd_protocol_4433;
 
 extern void	ifd_egate_register(void);
 extern void	ifd_etoken_register(void);
 extern void	ifd_eutron_register(void);
+extern void	ifd_ikey2k_register(void);
 extern void	ifd_ikey3k_register(void);
 extern void	ifd_kaan_register(void);
 extern void	ifd_towitoko_register(void);

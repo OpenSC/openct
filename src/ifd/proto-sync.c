@@ -12,20 +12,7 @@
 
 typedef struct {
 	ifd_protocol_t	base;
-	unsigned int	mem_size;
 } sync_state_t;
-
-/*
- * Attach synchronous protocol
- */
-static int
-sync_init(ifd_protocol_t *prot)
-{
-	sync_state_t	*st = (sync_state_t *) prot;
-
-	st->mem_size = -1;
-	return 0;
-}
 
 /*
  * Detach protocol
@@ -44,17 +31,11 @@ sync_read(ifd_protocol_t *prot, int slot,
 			unsigned short addr,
 			unsigned char *rbuf, size_t rlen)
 {
-	sync_state_t	*st = (sync_state_t *) prot;
 	ifd_reader_t	*reader = prot->reader;
 	const ifd_driver_t *drv;
 
 	if (!(drv = reader->driver) || !drv->ops || !drv->ops->sync_read)
 		return IFD_ERROR_NOT_SUPPORTED;
-
-	if (addr > st->mem_size)
-		return IFD_ERROR_INVALID_ARG;
-	if (rlen > st->mem_size - addr)
-		rlen = st->mem_size - addr;
 
 	return drv->ops->sync_read(reader, slot, prot->ops->id,
 			addr, rbuf, rlen);
@@ -65,7 +46,6 @@ sync_write(ifd_protocol_t *prot, int slot,
 			unsigned short addr,
 			const unsigned char *sbuf, size_t slen)
 {
-	sync_state_t	*st = (sync_state_t *) prot;
 	ifd_reader_t	*reader = prot->reader;
 	const ifd_driver_t *drv;
 	unsigned int	retries = 1;
@@ -78,11 +58,6 @@ sync_write(ifd_protocol_t *prot, int slot,
 	if ((prot_id == IFD_PROTOCOL_I2C_SHORT
 	   || prot_id == IFD_PROTOCOL_I2C_LONG) && slen > 1)
 		retries = 2;
-
-	if (addr > st->mem_size)
-		return IFD_ERROR_INVALID_ARG;
-	if (slen > st->mem_size - addr)
-		slen = st->mem_size - addr;
 
 	while (slen) {
 		unsigned char	temp[256];
@@ -163,64 +138,6 @@ out:	if (!res) {
 }
 
 /*
- * Detect I2C memory length
- */
-int
-ifd_sync_probe_memory_size(ifd_protocol_t *p, int slot)
-{
-	sync_state_t	*st = (sync_state_t *) p;
-	unsigned int	prot_id, length;
-
-	prot_id = p->ops->id;
-	if (prot_id == IFD_PROTOCOL_2WIRE) {
-		st->mem_size = 256;
-		return 0;
-	} else
-	if (prot_id == IFD_PROTOCOL_3WIRE) {
-		st->mem_size = 1024;
-		return 0;
-	}
-
-	/* Probe memory length. */
-	if (prot_id == IFD_PROTOCOL_I2C_SHORT) {
-		length = 4096;
-	} else {
-		length = 8192;
-	}
-
-#ifdef this_doesnt_work_for_all_cards
-	while (length > 0) {
-		unsigned int	address = length - 1;
-		unsigned char	byte;
-		int		r;
-
-		if ((r = sync_read(p, slot, address, &byte, 1)) < 0)
-			return r;
-		byte = ~byte;
-
-		if ((r = sync_write(p, slot, address, &byte, 1)) < 0) {
-			length /= 2;
-		} else {
-			byte = ~byte;
-			r = sync_write(p, slot, address, &byte, 1);
-			if (r < 0)
-				return r;
-			break;
-		}
-	}
-#endif
-
-	st->mem_size = length;
-	return 0;
-}
-
-unsigned int
-ifd_sync_memory_length(ifd_protocol_t *p)
-{
-	return ((sync_state_t *) p)->mem_size;
-}
-
-/*
  * Detect synchronous ICC
  */
 int
@@ -248,15 +165,10 @@ ifd_sync_detect_icc(ifd_reader_t *reader, int slot, void *atr, size_t size)
 	}
 
 
-	/* Probe memory length */
-	if (ifd_sync_probe_memory_size(p, slot))
-		goto failed;
-
 	reader->slot[slot].proto = p;
 
-	ifd_debug(1, "Detected synchronous card (%s), size=%u, %satr%s",
+	ifd_debug(1, "Detected synchronous card (%s), %satr%s",
 			p->ops->name,
-			ifd_sync_memory_length(p),
 			n? "" : "no ",
 			ct_hexdump(atr, n));
 
@@ -274,7 +186,7 @@ struct ifd_protocol_ops	ifd_protocol_i2c_short = {
 	IFD_PROTOCOL_I2C_SHORT,		/* id */
 	"I2C short",			/* name */
 	sizeof(sync_state_t),		/* size */
-	sync_init,			/* init */
+	NULL,				/* init */
 	sync_release,			/* release */
 	NULL,				/* set_param */
 	NULL,				/* get_param */
@@ -288,7 +200,7 @@ struct ifd_protocol_ops	ifd_protocol_i2c_long = {
 	IFD_PROTOCOL_I2C_LONG,		/* id */
 	"I2C long",			/* name */
 	sizeof(sync_state_t),		/* size */
-	sync_init,			/* init */
+	NULL,				/* init */
 	sync_release,			/* release */
 	NULL,				/* set_param */
 	NULL,				/* get_param */
@@ -302,7 +214,7 @@ struct ifd_protocol_ops	ifd_protocol_2wire = {
 	IFD_PROTOCOL_2WIRE,		/* id */
 	"2Wire",			/* name */
 	sizeof(sync_state_t),		/* size */
-	sync_init,			/* init */
+	NULL,				/* init */
 	sync_release,			/* release */
 	NULL,				/* set_param */
 	NULL,				/* get_param */
@@ -316,7 +228,63 @@ struct ifd_protocol_ops	ifd_protocol_3wire = {
 	IFD_PROTOCOL_3WIRE,		/* id */
 	"3Wire",			/* name */
 	sizeof(sync_state_t),		/* size */
-	sync_init,			/* init */
+	NULL,				/* init */
+	sync_release,			/* release */
+	NULL,				/* set_param */
+	NULL,				/* get_param */
+	NULL,				/* resynchronize */
+	NULL,				/* transceive */
+	sync_read,			/* sync_read */
+	sync_write,			/* sync_write */
+};
+
+struct ifd_protocol_ops	ifd_protocol_4401 = {
+	IFD_PROTOCOL_4401,		/* id */
+	"4401"	,			/* name */
+	sizeof(sync_state_t),		/* size */
+	NULL,				/* init */
+	sync_release,			/* release */
+	NULL,				/* set_param */
+	NULL,				/* get_param */
+	NULL,				/* resynchronize */
+	NULL,				/* transceive */
+	sync_read,			/* sync_read */
+	sync_write,			/* sync_write */
+};
+
+struct ifd_protocol_ops	ifd_protocol_4402 = {
+	IFD_PROTOCOL_4402,		/* id */
+	"4402"	,			/* name */
+	sizeof(sync_state_t),		/* size */
+	NULL,				/* init */
+	sync_release,			/* release */
+	NULL,				/* set_param */
+	NULL,				/* get_param */
+	NULL,				/* resynchronize */
+	NULL,				/* transceive */
+	sync_read,			/* sync_read */
+	sync_write,			/* sync_write */
+};
+
+struct ifd_protocol_ops	ifd_protocol_4403 = {
+	IFD_PROTOCOL_4403,		/* id */
+	"4403"	,			/* name */
+	sizeof(sync_state_t),		/* size */
+	NULL,				/* init */
+	sync_release,			/* release */
+	NULL,				/* set_param */
+	NULL,				/* get_param */
+	NULL,				/* resynchronize */
+	NULL,				/* transceive */
+	sync_read,			/* sync_read */
+	sync_write,			/* sync_write */
+};
+
+struct ifd_protocol_ops	ifd_protocol_4433 = {
+	IFD_PROTOCOL_4433,		/* id */
+	"4433"	,			/* name */
+	sizeof(sync_state_t),		/* size */
+	NULL,				/* init */
 	sync_release,			/* release */
 	NULL,				/* set_param */
 	NULL,				/* get_param */

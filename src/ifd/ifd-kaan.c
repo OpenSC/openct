@@ -698,7 +698,7 @@ kaan_sync_detect(ifd_reader_t *reader, int nslot)
 	slot->proto = ifd_protocol_new(protocol, reader, slot->dad);
 	st->icc_proto[nslot] = protocol;
 
-	return ifd_sync_probe_memory_size(slot->proto, nslot);
+	return 0;
 }
 
 /*

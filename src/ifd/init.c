@@ -21,6 +21,7 @@ ifd_init(void)
 	ifd_egate_register();
 	ifd_etoken_register();
 	ifd_eutron_register();
+	ifd_ikey2k_register();
 	ifd_ikey3k_register();
 	ifd_kaan_register();
 	ifd_towitoko_register();
@@ -35,6 +36,10 @@ ifd_init(void)
 	ifd_protocol_register(&ifd_protocol_i2c_long);
 	ifd_protocol_register(&ifd_protocol_2wire);
 	ifd_protocol_register(&ifd_protocol_3wire);
+	ifd_protocol_register(&ifd_protocol_4401);
+	ifd_protocol_register(&ifd_protocol_4402);
+	ifd_protocol_register(&ifd_protocol_4403);
+	ifd_protocol_register(&ifd_protocol_4433);
 
 	if (ifd_conf_get_integer("debug", &ival) >= 0
 	 && ival > ct_config.debug)
