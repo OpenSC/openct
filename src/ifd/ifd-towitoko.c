@@ -419,7 +419,6 @@ twt_build(ifd_apdu_t *apdu, const void *snd_buf, size_t snd_len,
  * Driver operations
  */
 static struct ifd_driver_ops	towitoko_driver = {
-	default_protocol:IFD_PROTOCOL_T1,
 	open:		twt_open,
 	close:		twt_close,
 	change_parity:	twt_change_parity,
