@@ -496,7 +496,9 @@ t1_xcv(t1_state_t *t1, unsigned char *block, size_t slen)
 	/* Maximum amount of data we'll receive - some devices
 	 * such as the eToken need this. If you request more, it'll
 	 * just barf */
-	rlen = 3 + t1->ifsd + t1->rc_bytes;
+	/* Note - Linux USB seems to have an off by one error, you
+	 * actually need the + 1 to get the RC byte */
+	rlen = 3 + t1->ifsd + t1->rc_bytes + 1;
 
 	if (prot->reader->device->type != IFD_DEVICE_TYPE_SERIAL) {
 		/* Get the response en bloc */
