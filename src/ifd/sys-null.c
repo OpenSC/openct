@@ -8,7 +8,7 @@
  */
 
 #include "internal.h"
-#if !defined (__NetBSD__) && !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__linux__)
+#if /* !defined (__NetBSD__) && !defined(__FreeBSD__) && !defined(__OpenBSD__) && */ !defined(__linux__)
 #include <sys/types.h>
 #include <stdio.h>
 #include <openct/driver.h>

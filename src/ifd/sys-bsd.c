@@ -10,7 +10,7 @@
  */
 
 #include "internal.h"
-#if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
+#ifdef notyet /* defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__) */
 #include <sys/types.h>
 #include </usr/src/sys/dev/usb/usb.h>
 #include <sys/stat.h>
