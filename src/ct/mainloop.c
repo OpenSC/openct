@@ -10,9 +10,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/poll.h>
-#ifdef HAVE_GETOPT_H
-#include <getopt.h>
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,59 +22,65 @@
 
 #define IFD_MAX_SOCKETS	256
 
-static int	leave_mainloop;
+static ct_socket_t	sock_head;
+static int		leave_mainloop;
+
+void
+ct_mainloop_add_socket(ct_socket_t *sock)
+{
+	if (sock)
+		ct_socket_link(&sock_head, sock);
+}
 
 /*
  * Main loop
  */
 void
-ct_mainloop(ct_socket_t *listener, ct_poll_fn_t *poll_more, void *user_data)
+ct_mainloop(void)
 {
-	ct_socket_t	head;
-	struct pollfd	pfd[IFD_MAX_SOCKETS + 1];
-
-	memset(&head, 0, sizeof(head));
-	ct_socket_link(&head, listener);
-
 	leave_mainloop = 0;
 	while (!leave_mainloop) {
+		struct pollfd	pfd[IFD_MAX_SOCKETS + 1];
 		ct_socket_t	*poll_socket[IFD_MAX_SOCKETS];
 		ct_socket_t	*sock, *next;
 		unsigned int	nsockets = 0, npoll = 0;
-		unsigned int	n = 0;
+		unsigned int	n = 0, listening;
 		int		rc;
 
 		/* Zap poll structure */
 		memset(pfd, 0, sizeof(pfd));
 
-		/* Count active sockets */
-		for (nsockets = 0, sock = head.next; sock; sock = next) {
+		/* Count active sockets, and decide whether to
+		 * accept additional connections or not. */
+		for (sock = sock_head.next; sock; sock = next) {
 			next = sock->next;
-			if (sock->fd < 0) {
+			/* Kill any dead or excess sockets */
+			if (sock->fd < 0 || nsockets == IFD_MAX_SOCKETS) {
 				ct_socket_free(sock);
-			} else if (nsockets < IFD_MAX_SOCKETS) {
-				poll_socket[nsockets++] = sock;
+			} else {
+				nsockets++;
+			}
+		}
+		listening = (nsockets < IFD_MAX_SOCKETS)?  POLLIN : 0;
+
+		/* Now loop over all sockets and set up the poll structs */
+		for (sock = sock_head.next; sock; sock = sock->next) {
+			poll_socket[npoll] = sock;
+			if (sock->poll) {
+				if (sock->poll(sock, &pfd[npoll]) == 1)
+					npoll++;
+			} else {
+				if (sock->listener)
+					sock->events = listening;
 
 				pfd[npoll].fd = sock->fd;
 				pfd[npoll].events = sock->events;
 				npoll++;
-			} else {
-				/* should not happen */
-				ct_error("too many open sockets?!");
-				ct_socket_free(sock);
 			}
 		}
 
-		/* poll for unplug events of hotplug devices */
-		if (poll_more)
-			npoll += poll_more(&pfd[npoll], 1, user_data);
-
 		if (npoll == 0)
 			break;
-
-		/* Stop accepting new connections if there are
-		 * too many already */
-		listener->events = (nsockets < IFD_MAX_SOCKETS)?  POLLIN : 0;
 
 		rc = poll(pfd, npoll, 1000);
 		if (rc < 0) {
@@ -87,8 +90,16 @@ ct_mainloop(ct_socket_t *listener, ct_poll_fn_t *poll_more, void *user_data)
 			break;
 		}
 
-		for (n = 0; n < nsockets; n++) {
+		for (n = 0; n < npoll; n++) {
 			sock = poll_socket[n];
+			if (sock->poll) {
+				if (sock->poll(sock, &pfd[n]) < 0) {
+					ct_socket_free(sock);
+					continue;
+				}
+				continue;
+			}
+
 			if (pfd[n].revents & POLLOUT) {
 				if (sock->send(sock) < 0) {
 					ct_socket_free(sock);
@@ -102,9 +113,6 @@ ct_mainloop(ct_socket_t *listener, ct_poll_fn_t *poll_more, void *user_data)
 				}
 			}
 		}
-
-		if (nsockets < npoll)
-			poll_more(&pfd[nsockets], npoll - nsockets, user_data);
 	}
 }
 

@@ -13,9 +13,8 @@ extern "C" {
 
 #include <sys/poll.h>
 
-typedef int	ct_poll_fn_t(struct pollfd *, unsigned int, void *);
-
-extern void	ct_mainloop(ct_socket_t *, ct_poll_fn_t *, void *);
+extern void	ct_mainloop_add_socket(ct_socket_t *);
+extern void	ct_mainloop(void);
 extern void	ct_mainloop_leave();
 
 #ifdef __cplusplus

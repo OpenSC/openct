@@ -59,7 +59,7 @@ ct_handle *
 ct_reader_connect(unsigned int reader)
 {
 	const ct_info_t	*info;
-	char		path[128];
+	char		path[1024];
 	ct_handle	*h;
 	int		rc;
 
@@ -75,7 +75,7 @@ ct_reader_connect(unsigned int reader)
 		return NULL;
 	}
 
-	snprintf(path, sizeof(path), "%u", reader);
+	snprintf(path, sizeof(path), OPENCT_SOCKET_PATH "/%u", reader);
 	if (ct_socket_connect(h->sock, path) < 0) {
 		ct_reader_disconnect(h);
 		return NULL;
