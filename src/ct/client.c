@@ -10,6 +10,7 @@
 #include <ifd/socket.h>
 #include <ifd/conf.h>
 #include <ifd/tlv.h>
+#include <ifd/error.h>
 #include "protocol.h"
 
 static void	ct_args_int(ifd_buf_t *, ifd_tag_t, unsigned int);
@@ -154,6 +155,82 @@ ct_card_request(ct_handle *h, unsigned int slot,
 
 	/* Get the ATR */
 	return ifd_tlv_get_bytes(&tlv, IFD_TAG_ATR, atr, atr_len);
+}
+
+/*
+ * Transceive an APDU
+ */
+int
+ct_card_transact(ct_handle *h, unsigned int slot,
+			const void *send_data, size_t send_len,
+			void *recv_buf, size_t recv_size)
+{
+	unsigned char	buffer[512];
+	ifd_buf_t	args, resp;
+	int		rc;
+
+	ifd_buf_init(&resp, buffer, sizeof(buffer));
+	ifd_buf_init(&args, recv_buf, recv_size);
+
+	ifd_buf_putc(&args, IFD_CMD_TRANSACT);
+	ifd_buf_putc(&args, slot);
+	if ((rc = ifd_buf_put(&args, send_data, send_len)) < 0)
+		return rc;
+
+	rc = ifd_socket_call(h, &args, &resp);
+	if (rc < 0)
+		return rc;
+
+	return ifd_buf_avail(&resp);
+}
+
+/*
+ * Lock/unlock a card
+ */
+int
+ct_card_lock(ct_handle *h, unsigned int slot, int type, ct_lock_handle *res)
+{
+	ifd_tlv_parser_t tlv;
+	unsigned char	buffer[256];
+	ifd_buf_t	args, resp;
+	int		rc;
+
+	ifd_buf_init(&resp, buffer, sizeof(buffer));
+	ifd_buf_init(&args, buffer, sizeof(buffer));
+
+	ifd_buf_putc(&args, IFD_CMD_LOCK);
+	ifd_buf_putc(&args, slot);
+
+	ct_args_int(&args, IFD_TAG_LOCKTYPE, type);
+
+	rc = ifd_socket_call(h, &args, &resp);
+	if (rc < 0)
+		return rc;
+
+	if ((rc = ifd_tlv_parse(&tlv, &resp)) < 0)
+		return rc;
+
+	if (ifd_tlv_get_int(&tlv, IFD_TAG_LOCK, res) < 0)
+		return IFD_ERROR_GENERIC;
+
+	return 0;
+}
+
+int
+ct_card_unlock(ct_handle *h, unsigned int slot, ct_lock_handle lock)
+{
+	unsigned char	buffer[256];
+	ifd_buf_t	args, resp;
+
+	ifd_buf_init(&resp, buffer, sizeof(buffer));
+	ifd_buf_init(&args, buffer, sizeof(buffer));
+
+	ifd_buf_putc(&args, IFD_CMD_UNLOCK);
+	ifd_buf_putc(&args, slot);
+
+	ct_args_int(&args, IFD_TAG_LOCK, lock);
+
+	return ifd_socket_call(h, &args, &resp);
 }
 
 /*
