@@ -27,6 +27,7 @@ extern int		ct_buf_gets(ct_buf_t *, char *, size_t);
 extern int		ct_buf_put(ct_buf_t *, const void *, size_t);
 extern int		ct_buf_putc(ct_buf_t *, int);
 extern int		ct_buf_puts(ct_buf_t *, const char *);
+extern int		ct_buf_push(ct_buf_t *, const void *, size_t);
 extern unsigned int	ct_buf_avail(ct_buf_t *);
 extern unsigned int	ct_buf_tailroom(ct_buf_t *);
 extern unsigned int	ct_buf_size(ct_buf_t *);
