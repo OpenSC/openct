@@ -22,6 +22,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <pwd.h>
+#include <grp.h>
 
 #include <openct/socket.h>
 #include <openct/server.h>
@@ -35,6 +37,8 @@ static int		opt_foreground = 0;
 static char *		opt_config = NULL;
 static const char *	opt_device_port = ":6666";
 static const char *	opt_server_port = OPENCT_SOCKET_PATH "/proxy";
+static const char *	opt_chroot = NULL;
+static const char *	opt_user = NULL;
 
 static int		get_ports(void);
 static int		run_server(int, char **);
@@ -51,7 +55,9 @@ main(int argc, char **argv)
 	if (argc < 2)
 		usage(1);
 
-	while ((c = getopt(argc, argv, "df:F")) != -1) {
+	ct_log_destination("@stderr");
+
+	while ((c = getopt(argc, argv, "df:FR:U:")) != -1) {
 		switch (c) {
 		case 'd':
 			ct_config.debug++;
@@ -61,6 +67,12 @@ main(int argc, char **argv)
 			break;
 		case 'F':
 			opt_foreground++;
+			break;
+		case 'R':
+			opt_chroot = optarg;
+			break;
+		case 'U':
+			opt_user = optarg;
 			break;
 		default:
 			usage(1);
@@ -91,6 +103,39 @@ main(int argc, char **argv)
 	}
 
 	return 0;
+}
+
+static void
+enter_jail(void)
+{
+	struct passwd	*pw = NULL;
+
+	if (opt_chroot && !opt_user)
+		opt_user = "nobody";
+	if (opt_user) {
+		if (!(pw = getpwnam(opt_user))) {
+			ct_error("Unknown user %s\n", opt_user);
+			exit(1);
+		}
+		endpwent();
+	}
+
+	if (opt_chroot) {
+		if (chroot(opt_chroot) < 0
+		 || chdir("/") < 0) {
+			ct_error("chroot(%s) failed: %m", opt_chroot);
+			exit(1);
+		}
+	}
+
+	if (pw) {
+		if (setgroups(0, NULL) < 0
+		 || setgid(pw->pw_gid) < 0
+		 || setuid(pw->pw_uid) < 0) {
+			ct_error("Failed to drop privileges: %m");
+			exit(1);
+		}
+	}
 }
 
 static void
@@ -149,6 +194,7 @@ run_server(int argc, char **argv)
 		return rc;
 	}
 
+	enter_jail();
 	if (!opt_foreground)
 		background_process();
 
@@ -181,6 +227,7 @@ run_client(int argc, char **argv)
 		exit(1);
 	}
 
+	enter_jail();
 	if (!opt_foreground)
 		background_process();
 
