@@ -1,9 +1,7 @@
-TODO list
-
- -	error handling: use error codes everywhere, add ct_strerror
- -	pin verification via keypad
- -	ifdhandler should clear status file slot on exit
- 
-openct-control init:
-	debug messages to syslog
-
+- error handling: use error codes everywhere
+- pin verification via keypad
+- ifdhandler should clear status file slot on exit
+- openct-control init: debug messages to syslog
+- rewrite USB layer, add native support for *BSD
+  and MacOS X. Remove optional libusb dependency
+- CCID driver
