@@ -1,6 +1,7 @@
 NEWS for OpenCT -- History of user visible changes
 
 New in 0.6.4; not yet released
+* solaris/ directory with files for building openct on solaris
 * improved usb code for bsd
 * improved usb code for solaris
 * require automake 1.5 

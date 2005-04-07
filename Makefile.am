@@ -2,7 +2,12 @@
 
 SUBDIRS = . aclocal doc etc macos src
 
-EXTRA_DIST = ANNOUNCE LICENSE README QUICKSTART bootstrap depcomp
+EXTRA_DIST = ANNOUNCE LICENSE README QUICKSTART bootstrap depcomp \
+	solaris/Makefile solaris/README solaris/checkinstall.in \
+	solaris/devices-openct-fabric.xml-dist solaris/openct-fabric-dist \
+	solaris/openct-hotplug-dist solaris/openct.conf-dist \
+	solaris/pkginfo.in solaris/postinstall solaris/preremove \
+	solaris/proto
 
 MAINTAINERCLEANFILES = \
 	Makefile.in config.h.in configure \
