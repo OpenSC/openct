@@ -68,7 +68,7 @@ creator="????"
 [ -d "$root" ] && rm -rf "$root"
 
 mkdir -p "$root"/Contents/$arch
-cp "$sofile" "$root"/Contents/$arch/"$name"
+cp "$sofile" "$root"/Contents/$arch/
 echo "$type$creator" > "$root"/Contents/PkgInfo
 
 create_info_plist ()
@@ -80,7 +80,7 @@ create_info_plist ()
   echo "	<key>CFBundleDevelopmentRegion</key>"
   echo "	<string>English</string>"
   echo "	<key>CFBundleExecutable</key>"
-  echo "	<string>$name</string>"
+  echo "	<string>`basename \"$sofile\"`</string>"
   echo "	<key>CFBundleInfoDictionaryVersion</key>"
   echo "	<string>6.0</string>"
   echo "	<key>CFBundleName</key>"
