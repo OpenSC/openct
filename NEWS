@@ -12,6 +12,7 @@ New in 0.6.4; not yet released
 * improved t=1 protocoll code.
 * improved and fixed remote socket code.
 * increased library version to 1.0.0 (incompatible with 0.*.* versions)
+* fix libtool issue on mac os X (thanks to ville skytta)
 
 New in 0.6.3; 2005-01-11; Andreas Jellinghaus
 * silence "unable to open" and "Debug: connect() failed:" error messages,
