@@ -20,6 +20,8 @@ ifd_device_open(const char *name)
 		return ifd_open_usb(name + 4);
 	if (!strncmp(name, "remote:", 7))
 		return ifd_open_remote(name + 7);
+	if (!strncmp(name, "pcmcia:", 7))
+		return ifd_open_pcmcia(name + 7);
 
 	switch (ifd_sysdep_device_type(name)) {
 	case IFD_DEVICE_TYPE_SERIAL:
