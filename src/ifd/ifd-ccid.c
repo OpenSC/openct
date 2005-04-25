@@ -425,7 +425,7 @@ ccid_open(ifd_reader_t *reader, const char *device_name)
      ccid_status_t *st;
      ifd_device_t *dev;
      ifd_device_params_t params;
-     int r,i, c, ifc, alt, intr_endp;
+     int r,i, c, ifc, alt;
      struct ifd_usb_device_descriptor de;
      struct ifd_usb_config_descriptor conf;
      struct ifd_usb_interface_descriptor *intf;
@@ -498,7 +498,8 @@ ccid_open(ifd_reader_t *reader, const char *device_name)
 			      IFD_USB_ENDPOINT_DIR_MASK) ==
 			     IFD_USB_ENDPOINT_IN) {
 			      ok|=4;
-			      intr_endp=intf->endpoint[i].bEndpointAddress;
+			      params.usb.ep_intr =
+				   intf->endpoint[i].bEndpointAddress;
 			 }
 		    }
 		    if (ok == 7)
@@ -679,7 +680,7 @@ static int ccid_card_status(ifd_reader_t *reader, int slot, int *status)
 
      r = ifd_usb_begin_capture(reader->device,
 			       IFD_USB_URB_TYPE_INTERRUPT,
-			       0x81, 8, &cap);
+			       reader->device->settings.usb.ep_intr, 8, &cap);
      if (r < 0) {
 	  ct_error("ccid: begin capture: %d", r);
 	  return r;

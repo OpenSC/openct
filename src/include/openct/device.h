@@ -40,6 +40,7 @@ union ifd_device_params {
 		int altsetting;
 		int ep_o;
 		int ep_i;
+		int ep_intr;
 	} usb;
 };
 
