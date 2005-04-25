@@ -26,6 +26,7 @@ ifd_init(void)
 	ifd_kaan_register();
 	ifd_towitoko_register();
 	ifd_cardman_register();
+	ifd_cm4000_register();
 	ifd_smartboard_register();
 	ifd_gempc_register();
 	ifd_ccid_register();

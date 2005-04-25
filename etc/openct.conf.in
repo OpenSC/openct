@@ -68,6 +68,7 @@ driver	ccid {
 		usb:04e6/E001,
 		usb:04e6/E003,
 		usb:076b/3021,
+		usb:076b/5121,
 		usb:0783/0003,
 	};
 };

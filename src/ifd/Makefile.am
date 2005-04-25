@@ -10,12 +10,14 @@ sbin_PROGRAMS = ifdhandler ifdproxy
 
 libifd_la_SOURCES = \
 	apdu.c atr.c checksum.c conf.c ctbcs.c device.c driver.c \
-	init.c locks.c manager.c modules.c process.c protocol.c \
+	init.c locks.c manager.c modules.c pcmcia.c process.c protocol.c \
 	reader.c serial.c usb.c usb-descriptors.c utils.c \
 	\
-	ifd-cardman.c ifd-ccid.c ifd-egate.c ifd-etoken.c ifd-eutron.c \
+	ifd-cardman.c ifd-ccid.c ifd-cm4000.c ifd-egate.c ifd-etoken.c \
+	ifd-eutron.c \
 	ifd-gempc.c ifd-ikey2k.c ifd-ikey3k.c ifd-kaan.c \
 	ifd-smartboard.c ifd-towitoko.c \
+	cardman.h \
 	\
 	proto-gbp.c proto-sync.c proto-t0.c proto-t1.c \
 	proto-trans.c \
