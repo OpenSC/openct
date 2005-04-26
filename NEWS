@@ -1,6 +1,11 @@
 NEWS for OpenCT -- History of user visible changes
 
-New in 0.6.4; not yet released
+New in 0.6.5; not yet released:
+* add pcmcia subsystem (Harald Welte)
+* add cm4000 driver (Harald Welte)
+* improve ccid driver (Harald Welte)
+
+New in 0.6.4; 2005-04-25; Andreas Jellinghaus:
 * solaris/ directory with files for building openct on solaris
 * improved usb code for bsd
 * improved usb code for solaris
