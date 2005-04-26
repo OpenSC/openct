@@ -12,18 +12,24 @@
 
 	<key>ifdVendorID</key>
 	<array>
-		<string>0x076B</string>			<!-- 1 -->
-		<string>0x0529</string>			<!-- 2 -->
+		<!--string>0x076B</string-->
+		<string>0x0529</string>
+		<string>0x076B</string>
+		<string>0x076B</string>
 	</array>
 
 	<key>ifdProductID</key>
 	<array>
-		<string>0x0596</string>			<!-- 1 -->
-		<string>0x050C</string>			<!-- 2 -->
+		<!--string>0x0596</string-->
+		<string>0x050C</string>
+		<string>0x3021</string>
+		<string>0x5121</string>
 	</array>
 
 	<key>ifdFriendlyName</key>
 	<array>
-		<string>OMNIKEY CardMan 2020</string>	<!-- 1 -->
-		<string>Aladdin eToken PRO</string>	<!-- 2 -->
+		<!--string>OMNIKEY CardMan 2020</string-->
+		<string>Aladdin eToken PRO</string>
+		<string>OMNIKEY CardMan 3121</string>
+		<string>OMNIKEY CardMan 5121</string>
 	</array>

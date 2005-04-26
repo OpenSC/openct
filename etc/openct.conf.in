@@ -54,9 +54,9 @@ driver	ikey3k {
 };
 driver	cardman {
 	ids = {
-		usb:076b/0596, # OMNIKEY CardMan 2020
-		usb:076b/1784, # OMNIKEY CardMan 6020
-		usb:08d4/0009, # Fujitsu Siemens SCR USB SmartCard Reader
+#		usb:076b/0596, # OMNIKEY CardMan 2020
+#		usb:076b/1784, # OMNIKEY CardMan 6020
+#		usb:08d4/0009, # Fujitsu Siemens SCR USB SmartCard Reader
 	};
 };
 driver	ccid {
