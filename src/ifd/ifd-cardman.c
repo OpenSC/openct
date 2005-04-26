@@ -1,5 +1,5 @@
 /*
- * Omnikey Cardman driver
+ * OMNIKEY CardMan 2020/6020/6120 driver
  * This driver is not yet complete, but at least it
  * spits out the ATR already.
  * Needs a recentish Linux Kernel (2.4.5 does NOT work)
@@ -45,7 +45,7 @@ cm_open(ifd_reader_t *reader, const char *device_name)
 	cm_priv_t	*priv;
 	ifd_device_params_t params;
 
-	reader->name = "Omnikey Cardman";
+	reader->name = "OMNIKEY CardMan 2020/6020/6120";
 	reader->nslots = 1;
 	if (!(dev = ifd_device_open(device_name)))
 		return -1;

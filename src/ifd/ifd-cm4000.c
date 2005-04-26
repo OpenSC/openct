@@ -1,5 +1,5 @@
 /*
- * Omnikey Cardman 4000 PCMCIA Driver
+ * OMNIKEY CardMan Mobile PCMCIA 4000 Driver
  *
  * This driver is not yet complete, but at least it
  * spits out the ATR already.
@@ -36,12 +36,12 @@ cm_open(ifd_reader_t *reader, const char *device_name)
 	cm_priv_t	*priv;
 	ifd_device_params_t params;
 
-	reader->name = "Omnikey Cardman 4000";
+	reader->name = "OMNIKEY CardMan 4000";
 	reader->nslots = 1;
 	if (!(dev = ifd_device_open(device_name)))
 		return -1;
 	if (ifd_device_type(dev) != IFD_DEVICE_TYPE_PCMCIA) {
-		ct_error("cardman: device %s is not a PCMCIA device",
+		ct_error("cm4000: device %s is not a PCMCIA device",
 				device_name);
 		ifd_device_close(dev);
 		return -1;
@@ -68,7 +68,7 @@ cm_activate(ifd_reader_t *reader)
 	ifd_debug(1, "called.");
 	/* Set async card @9600 bps, 2 stop bits, even parity */
 	if ((rc = cm_set_card_parameters(dev, 0x01)) < 0) {
-		ct_error("cardman: failed to set card parameters 9600/8E2");
+		ct_error("cm4000: failed to set card parameters 9600/8E2");
 		return rc;
 	}
 	return 0;
@@ -82,7 +82,7 @@ cm_deactivate(ifd_reader_t *reader)
 
 	ifd_debug(1, "called.");
 	if ((rc = ifd_usb_control(dev, 0x42, 0x11, 0, 0, NULL, 0, -1)) < 0) {
-		ct_error("cardman: failed to deactivate card");
+		ct_error("cm4000: failed to deactivate card");
 		return rc;
 	}
 	return 0;
@@ -102,7 +102,7 @@ cm_card_status(ifd_reader_t *reader, int slot, int *status)
 
 #if 0
 	if ((rc = cm_usb_int(dev, 0x42, 0x20, 0, 0, NULL, 0, &cm_status, 1, NULL, -1)) < 0) {
-		ct_error("cardman: failed to get card status");
+		ct_error("cm4000: failed to get card status");
 		return -1;
 	}
 	if (rc == 1 && (cm_status & 0x42))
