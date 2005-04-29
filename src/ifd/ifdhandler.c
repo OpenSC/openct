@@ -416,6 +416,7 @@ usage(int exval)
 "  -H   hotplug device, monitor for detach\n"
 "  -s   send error and debug messages to syslog\n"
 "  -d   enable debugging; repeat to increase verbosity\n"
+"  -i   display list of available drivers and protocols\n"
 "  -h   display this message\n"
 "  -v   display version and exit\n"
 );
