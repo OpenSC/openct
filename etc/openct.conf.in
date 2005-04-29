@@ -24,6 +24,11 @@ ifdproxy {
 #	device = serial:/dev/ttyS0;
 #};
 
+#reader gempc {
+#	driver = gempc;
+#	device = serial:/dev/ttyS0;
+#};
+
 #reader cm4000 {
 #	driver = cm4000;
 #	device = pcmcia:/dev/cmm0;
