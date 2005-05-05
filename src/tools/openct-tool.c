@@ -194,7 +194,7 @@ version(void)
 void
 usage(int exval)
 {
-	fprintf(stderr,
+	fprintf(exval ? stderr : stdout,
 "usage: openct-tool [-d] [-f configfile] [-r reader] command ...\n"
 "  -d   enable debugging; repeat to increase verbosity\n"
 "  -f   specify config file (default %s)\n"
@@ -206,7 +206,7 @@ usage(int exval)
 " list  list all readers found\n"
 " atr   print ATR of card in selected reader\n"
 " wait  wait for card to be inserted\n"
-" rwait wait for reader to attached\n"
+" rwait wait for reader to be attached\n"
 " mf    try to select main folder of card\n"
 " read  dump memory of synchronous card\n",
 OPENCT_CONF_PATH

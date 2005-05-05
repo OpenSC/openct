@@ -284,7 +284,7 @@ version(void)
 void
 usage(int exval)
 {
-	fprintf(stderr,
+	fprintf(exval ? stderr : stdout,
 "usage: openct-control [-d] [-f configfile] command\n"
 "  -d   enable debugging; repeat to increase verbosity\n"
 "  -n   disable coldplugging\n"
