@@ -338,6 +338,7 @@ openct_etc_path=`eval echo ${sysconfdir}` ; openct_etc_path=`eval echo ${openct_
 AC_DEFINE_UNQUOTED(OPENCT_ETC_PATH, "$openct_etc_path", [etc path for libopenct])
 openct_conf_path=`eval echo ${openct_etc_path}/openct.conf`
 AC_DEFINE_UNQUOTED(OPENCT_CONF_PATH, "$openct_conf_path", [default config file for libopenct])
+AC_SUBST(openct_conf_path)
 
 openct_modules_path=`eval echo ${libdir}` ; openct_modules_path=`eval echo ${openct_modules_path}/ifd`
 AC_DEFINE_UNQUOTED(OPENCT_MODULES_PATH, "$openct_modules_path", [modules path for libopenct])
@@ -375,6 +376,7 @@ src/include/openct/Makefile
 src/pcsc/Makefile
 src/scdl/Makefile
 src/tools/Makefile
+src/tools/openct-tool.1
 ])
 
 AC_CREATE_STDINT_H(src/include/openct/types.h)

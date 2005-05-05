@@ -1,0 +1,40 @@
+.TH openct-tool "1" "May 2005" "OpenCT @VERSION@" "OpenCT"
+.SH NAME
+openct-tool \- OpenCT smart card utility
+.SH SYNOPSIS
+openct\-tool [options] command ...
+.SH OPTIONS
+.TP
+\fB\-d\fR
+enable debugging; repeat to increase verbosity
+.TP
+\fB\-f\fR \fIconfigfile\fR
+specify config file (default @openct_conf_path@)
+.TP
+\fB\-r\fR \fIreader\fR
+specify index of reader to use
+.TP
+\fB\-h\fR
+display this message
+.TP
+\fB\-v\fR
+display version and exit
+.SH COMMANDS
+.TP
+\fBlist\fR
+list all readers found
+.TP
+\fBatr\fR
+print ATR of card in selected reader
+.TP
+\fBwait\fR
+wait for card to be inserted
+.TP
+\fBrwait\fR
+wait for reader to be attached
+.TP
+\fBmf\fR
+try to select main folder of card
+.TP
+\fBread\fR
+dump memory of synchronous card
