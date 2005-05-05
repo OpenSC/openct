@@ -1,6 +1,12 @@
 PACKAGE=OSCopenct
 PACKAGE_NAME=openct
-VERSION=CVS
+CLASSES=none
+CATEGORY=drivers
+VENDOR=OSC
+EMAIL=william@wanders.org
+DATE=date
+PSTAMP=$(DATE:sh)
+VERSION=SVN
 PWD=pwd
 CONFIGURE_PREFIX=$(PWD:sh)/..
 CONFIGURE=${CONFIGURE_PREFIX}/configure
@@ -9,7 +15,6 @@ CONFIG_GUESS=${CONFIGURE_PREFIX}/config.guess
 UNAME_ARCH=/sbin/uname -p
 PLATFORM = $(CONFIG_GUESS:sh)
 ARCH = $(UNAME_ARCH:sh)
-PKG_NAME = OSCopenct
 
 build:
 	@echo "Setup platform specific build directory ${PLATFORM}"
@@ -24,12 +29,20 @@ dist:
 
 package:
 	@echo "Setup package meta files"
-	-cp proto dist-${PLATFORM}
-	-sed "s|@ARCH@|${ARCH}|" <checkinstall.in >dist-${PLATFORM}/checkinstall
-	-sed -e "s|@ARCH@|${ARCH}|" -e "s|@VERSION@|${VERSION}|" \
-		<pkginfo.in >dist-${PLATFORM}/pkginfo
-	-cp postinstall dist-${PLATFORM}
-	-cp preremove dist-${PLATFORM}
+	-rm proto checkinstall pkginfo
+	-sed "s|@ARCH@|${ARCH}|" <checkinstall.in >checkinstall
+	-(	echo "PKG=\"${PACKAGE}\""; \
+		echo "NAME=\"${PACKAGE_NAME}\""; \
+		echo "VERSION=\"${VERSION}\""; \
+		echo "ARCH=\"${ARCH}\""; \
+		echo "CLASSES=\"${CLASSES}\""; \
+		echo "CATEGORY=\"${CATEGORY}\""; \
+		echo "VENDOR=\"${VENDOR}\""; \
+		echo "PSTAMP=\"${PSTAMP}\""; \
+		echo "EMAIL=\"${EMAIL}\""; \
+		echo "ISTATES=\"S s 1 2 3\""; \
+		echo "RSTATES=\"S s 1 2 3\""; \
+		echo "BASEDIR=\"/\"" ) >pkginfo
 	@echo "Setup package distribution"
 	mkdir -p dist-${PLATFORM}/lib/svc/method
 	-cp openct-fabric-dist dist-${PLATFORM}/lib/svc/method/openct-fabric
@@ -39,13 +52,20 @@ package:
 	-cp openct-hotplug-dist dist-${PLATFORM}/usr/sbin/openct-hotplug
 	mkdir -p dist-${PLATFORM}/etc/openct
 	-cp openct.conf-dist dist-${PLATFORM}/etc/openct/openct.conf
+	-(	pkgproto dist-${PLATFORM}= | sed -e "s|$(LOGNAME) other$$|root bin|" | egrep -v "(s|d) none (/|/etc|/var|/usr|/usr/local) "; \
+		echo "i checkinstall=checkinstall"; \
+		echo "i postinstall=postinstall"; \
+		echo "i preremove=preremove"; \
+		echo "i pkginfo=pkginfo" ) >proto
 	@echo "Creating package"
-	( \
-		cd dist-${PLATFORM}; \
-		pkgmk -o -r . -d . -f proto; \
-		pkgtrans -s . ../${PKG_NAME}-${VERSION}-${PLATFORM}.pkg ${PKG_NAME} \
-	)
+	-pkgmk -o -r . -d . -f proto
+	-pkgtrans -s . ${PACKAGE_NAME}-${VERSION}-${PLATFORM}.pkg ${PACKAGE}
 
 clean:
 	rm -rf build-${PLATFORM}
 	rm -rf dist-${PLATFORM}
+	rm -rf ${PACKAGE}
+	rm -f proto checkinstall pkginfo
+
+veryclean: clean
+	rm -f ${PACKAGE_NAME}-${VERSION}-${PLATFORM}.pkg
