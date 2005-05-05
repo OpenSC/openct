@@ -409,7 +409,7 @@ version(void)
 void
 usage(int exval)
 {
-	fprintf(stderr,
+	fprintf(exval ? stderr : stdout,
 "usage: ifdhandler [-Hds] [-r reader] driver [device]\n"
 "  -r   specify index of reader\n"
 "  -F   stay in foreground\n"

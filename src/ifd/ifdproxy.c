@@ -292,7 +292,7 @@ version()
 void
 usage(int exval)
 {
-	fprintf(stderr,
+	fprintf(exval ? stderr : stdout,
 	"Usage:\n"
 	"ifdproxy server [-dF]\n"
 	"ifdproxy export [-dF] name device address\n"
