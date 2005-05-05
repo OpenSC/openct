@@ -75,7 +75,19 @@ ct_reader_connect(unsigned int reader)
 		return NULL;
 	}
 
+#if defined (sunray) || defined (sunrayclient)
+	{
+		char *utdevroot=getenv("UTDEVROOT");
+		if(utdevroot)
+			snprintf(path, sizeof(path),
+				"%s/openct/%u", utdevroot, reader);
+		else
+			snprintf(path, sizeof(path),
+				OPENCT_SOCKET_PATH "/%u", reader);
+	}
+#else
 	snprintf(path, sizeof(path), OPENCT_SOCKET_PATH "/%u", reader);
+#endif
 	if (ct_socket_connect(h->sock, path) < 0) {
 		ct_reader_disconnect(h);
 		return NULL;

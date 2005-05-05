@@ -14,13 +14,12 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 
 #include <openct/openct.h>
 #include <openct/logging.h>
-
-#define OPENCT_STATUS_LOCK	OPENCT_STATUS_PATH ".lock"
 
 static int		ct_status_lock(void);
 static void		ct_status_unlock(void);
@@ -28,18 +27,30 @@ static void		ct_status_unlock(void);
 static void *
 ct_map_status(int flags, size_t *size)
 {
-	const char	*path = OPENCT_STATUS_PATH;
 	struct stat	stb;
 	int		fd, prot;
 	void		*addr = NULL;
+	char		status_path[1024];
 
-	if ((fd = open(path, flags)) < 0) {
+#if defined (sunray) || defined (sunrayclient)
+	char		*utdevroot=getenv("UTDEVROOT");
+
+	if(utdevroot)
+		snprintf(status_path, sizeof(status_path),
+			"%s/openct/status", utdevroot);
+	else
+		snprintf(status_path, sizeof(status_path), OPENCT_STATUS_PATH);
+#else
+	snprintf(status_path, sizeof(status_path), OPENCT_STATUS_PATH);
+#endif
+
+	if ((fd = open(status_path, flags)) < 0) {
 		/* no error message - openct not started? */
 		return NULL;
 	}
 
 	if (fstat(fd, &stb) < 0) {
-		ct_error("unable to stat %s: %m", path);
+		ct_error("unable to stat %s: %m", status_path);
 		goto done;
 	}
 	*size = stb.st_size;
@@ -58,13 +69,25 @@ int
 ct_status_clear(unsigned int count)
 {
 	int	fd;
+	char	status_path[1024];
 
-	unlink(OPENCT_STATUS_PATH);
-	if ((fd = open(OPENCT_STATUS_PATH, O_RDWR|O_CREAT, 0644)) < 0
+#if defined (sunray) || defined (sunrayclient)
+	char	*utdevroot=getenv("UTDEVROOT");
+
+	if(utdevroot)
+		snprintf(status_path, sizeof(status_path),
+			"%s/openct/status", utdevroot);
+	else
+		snprintf(status_path, sizeof(status_path), OPENCT_STATUS_PATH);
+#else
+	snprintf(status_path, sizeof(status_path), OPENCT_STATUS_PATH);
+#endif
+	unlink(status_path);
+	if ((fd = open(status_path, O_RDWR|O_CREAT, 0644)) < 0
 	 || ftruncate(fd, count * sizeof(ct_info_t)) < 0
 	 || fchmod(fd, 0644) < 0) {
-		ct_error("cannot create %s: %m", OPENCT_STATUS_PATH);
-		unlink(OPENCT_STATUS_PATH);
+		ct_error("cannot create %s: %m", status_path);
+		unlink(status_path);
 		if (fd >= 0)
 			close(fd);
 		return -1;
@@ -170,17 +193,31 @@ ct_status_update(ct_info_t *status)
 int
 ct_status_lock(void)
 {
-	char	locktemp[sizeof(OPENCT_STATUS_PATH) + 32];
 	int	fd, retries = 10;
+	char	status_lock_path[1024];
+	char	locktemp[1024];
 
+#if defined (sunray) || defined (sunrayclient)
+	char	*utdevroot=getenv("UTDEVROOT");
+
+	if(utdevroot)
+		snprintf(status_lock_path, sizeof(status_lock_path),
+			"%s/openct/status.lock", utdevroot);
+	else
+		snprintf(status_lock_path, sizeof(status_lock_path),
+			OPENCT_STATUS_PATH ".lock");
+#else
+	snprintf(status_lock_path, sizeof(status_lock_path),
+		OPENCT_STATUS_PATH ".lock");
+#endif
 	snprintf(locktemp, sizeof(locktemp),
-			OPENCT_STATUS_PATH ".%u", (unsigned int) getpid());
+		"%s.%u", status_lock_path, (unsigned int) getpid());
 
 	if ((fd = open(locktemp, O_CREAT|O_RDWR, 0600)) < 0)
 		return -1;
 
 	while (retries--) {
-		if (link(locktemp, OPENCT_STATUS_LOCK) >= 0) {
+		if (link(locktemp, status_lock_path) >= 0) {
 			unlink(locktemp);
 			return 0;
 		}
@@ -193,5 +230,20 @@ ct_status_lock(void)
 void
 ct_status_unlock(void)
 {
-	unlink(OPENCT_STATUS_LOCK);
+	char	status_lock_path[1024];
+
+#if defined (sunray) || defined (sunrayclient)
+	char	*utdevroot=getenv("UTDEVROOT");
+
+	if(utdevroot)
+		snprintf(status_lock_path, sizeof(status_lock_path),
+			"%s/openct/status.lock", utdevroot);
+	else
+		snprintf(status_lock_path, sizeof(status_lock_path),
+			OPENCT_STATUS_PATH ".lock");
+#else
+	snprintf(status_lock_path, sizeof(status_lock_path),
+		OPENCT_STATUS_PATH ".lock");
+#endif
+	unlink(status_lock_path);
 }
