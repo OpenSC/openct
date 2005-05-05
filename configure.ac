@@ -33,8 +33,8 @@ case "$host" in
 	CPPFLAGS="$CPPFLAGS -D_HPUX_SOURCE -D_XOPEN_SOURCE_EXTENDED"
 	;;
 *-*-solaris*)
-	CPPFLAGS="$CPPFLAGS -I/usr/local/include"
-	LDFLAGS="$LDFLAGS -L/usr/local/lib -R/usr/local/lib"
+	CPPFLAGS="$CPPFLAGS -I/usr/sfw/include -I/usr/local/include"
+	LDFLAGS="$LDFLAGS -L/usr/sfw/lib -R/usr/sfw/lib -L/usr/local/lib -R/usr/local/lib"
 	need_dash_r=1
 	;;
 *-*-sunos4*)
@@ -330,6 +330,15 @@ dnl Enable/disable debugging messages.
 AC_ARG_ENABLE(debug,
 	AC_HELP_STRING([--enable-debug], [enable debug messages. [[default=no]]]),
 	AC_DEFINE(DEBUG, 1, [Enable debug messages.]))
+
+dnl Enable/disable SunRay support.
+AC_ARG_ENABLE(sunray,
+	AC_HELP_STRING([--enable-sunray], [enable sunray support. [[default=no]]]),
+	AC_DEFINE(sunray, 1, [Enable sunray support.]))
+
+AC_ARG_ENABLE(sunrayclient,
+	AC_HELP_STRING([--enable-sunrayclient], [enable sunray client support. [[default=no]]]),
+	AC_DEFINE(sunrayclient, 1, [Enable sunray client support.]))
 
 CPPFLAGS="-I\${top_builddir}/src/include -I\${top_srcdir}/src/include $CPPFLAGS"
 AM_CONDITIONAL(HAVE_BUNDLES, test "x$with_bundles" = "xyes")
