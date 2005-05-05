@@ -1,0 +1,63 @@
+PACKAGE=OSCutopenct
+PACKAGE_NAME=utopenct
+CLASSES=none
+CATEGORY=drivers
+VENDOR=OSC
+EMAIL=william@wanders.org
+DATE=date
+PSTAMP=$(DATE:sh)
+VERSION=SVN
+PWD=pwd
+CONFIGURE_PREFIX=$(PWD:sh)/..
+CONFIGURE=${CONFIGURE_PREFIX}/configure
+CONFIGURE_ARGS=--prefix=/opt/SUNWut --sysconfdir=/etc/opt/SUNWut/openct --enable-sunray
+CONFIG_GUESS=${CONFIGURE_PREFIX}/config.guess
+UNAME_ARCH=/sbin/uname -p
+PLATFORM = $(CONFIG_GUESS:sh)
+ARCH = $(UNAME_ARCH:sh)
+
+build:
+	@echo "Setup platform specific build directory ${PLATFORM}"
+	mkdir -p build-${PLATFORM}
+	( cd build-${PLATFORM}; CC=cc ${CONFIGURE} ${CONFIGURE_ARGS}; make )
+
+dist:
+	@echo "Setup platform specific dist directory dist-${PLATFORM}"
+	mkdir -p dist-${PLATFORM}
+	@echo "Performing Installing in dist directory"
+	( cd build-${PLATFORM}; make DESTDIR=`pwd`/../dist-${PLATFORM} install )
+
+package:
+	@echo "Setup package meta files"
+	-rm proto checkinstall pkginfo
+	-sed "s|@ARCH@|${ARCH}|" <checkinstall.in >checkinstall
+	-(	echo "PKG=\"${PACKAGE}\""; \
+		echo "NAME=\"${PACKAGE_NAME}\""; \
+		echo "VERSION=\"${VERSION}\""; \
+		echo "ARCH=\"${ARCH}\""; \
+		echo "CLASSES=\"${CLASSES}\""; \
+		echo "CATEGORY=\"${CATEGORY}\""; \
+		echo "VENDOR=\"${VENDOR}\""; \
+		echo "PSTAMP=\"${PSTAMP}\""; \
+		echo "EMAIL=\"${EMAIL}\""; \
+		echo "ISTATES=\"S s 1 2 3\""; \
+		echo "RSTATES=\"S s 1 2 3\""; \
+		echo "BASEDIR=\"/\"" ) >pkginfo
+	@echo "Setup package distribution"
+	mkdir -p dist-${PLATFORM}/etc/opt/SUNWut/openct
+	-cp openct.conf-dist dist-${PLATFORM}/etc/opt/SUNWut/openct/openct.conf
+	-(	pkgproto dist-${PLATFORM}= | sed -e "s|$(LOGNAME) other$$|root bin|" | egrep -v "(s|d) none (/|/etc|/var|/usr|/usr/local) "; \
+		echo "i checkinstall=checkinstall"; \
+		echo "i pkginfo=pkginfo" ) >proto
+	@echo "Creating package"
+	-pkgmk -o -r . -d . -f proto
+	-pkgtrans -s . ${PACKAGE_NAME}-${VERSION}-${PLATFORM}.pkg ${PACKAGE}
+
+clean:
+	rm -rf build-${PLATFORM}
+	rm -rf dist-${PLATFORM}
+	rm -rf ${PACKAGE}
+	rm -f proto checkinstall pkginfo
+
+veryclean: clean
+	rm -f ${PACKAGE_NAME}-${VERSION}-${PLATFORM}.pkg

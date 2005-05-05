@@ -10,7 +10,7 @@ VERSION=SVN
 PWD=pwd
 CONFIGURE_PREFIX=$(PWD:sh)/..
 CONFIGURE=${CONFIGURE_PREFIX}/configure
-CONFIGURE_ARGS=--prefix=/usr --sysconfdir=/etc/openct
+CONFIGURE_ARGS=--prefix=/usr --sysconfdir=/etc/openct --enable-sunrayclient
 CONFIG_GUESS=${CONFIGURE_PREFIX}/config.guess
 UNAME_ARCH=/sbin/uname -p
 PLATFORM = $(CONFIG_GUESS:sh)
@@ -44,18 +44,10 @@ package:
 		echo "RSTATES=\"S s 1 2 3\""; \
 		echo "BASEDIR=\"/\"" ) >pkginfo
 	@echo "Setup package distribution"
-	mkdir -p dist-${PLATFORM}/lib/svc/method
-	-cp openct-fabric-dist dist-${PLATFORM}/lib/svc/method/openct-fabric
-	mkdir -p dist-${PLATFORM}/var/svc/manifest/system/device
-	-cp devices-openct-fabric.xml-dist dist-${PLATFORM}/var/svc/manifest/system/device/devices-openct-fabric.xml
-	mkdir -p dist-${PLATFORM}/usr/sbin
-	-cp openct-hotplug-dist dist-${PLATFORM}/usr/sbin/openct-hotplug
 	mkdir -p dist-${PLATFORM}/etc/openct
 	-cp openct.conf-dist dist-${PLATFORM}/etc/openct/openct.conf
 	-(	pkgproto dist-${PLATFORM}= | sed -e "s|$(LOGNAME) other$$|root bin|" | egrep -v "(s|d) none (/|/etc|/var|/usr|/usr/local) "; \
 		echo "i checkinstall=checkinstall"; \
-		echo "i postinstall=postinstall"; \
-		echo "i preremove=preremove"; \
 		echo "i pkginfo=pkginfo" ) >proto
 	@echo "Creating package"
 	-pkgmk -o -r . -d . -f proto

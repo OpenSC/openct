@@ -5,7 +5,7 @@ debug	= 0;
 hotplug	= yes;
 #
 # Path to ifdhandler
-ifdhandler = /usr/sbin/ifdhandler;
+ifdhandler = /opt/SUNWut/sbin/ifdhandler;
 
 #
 # Configuration for ifdproxy (if you use it)
