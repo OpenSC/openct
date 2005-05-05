@@ -179,9 +179,13 @@ ifdhandler_run(ifd_reader_t *reader)
 	}
 
 	sock = ct_socket_new(0);
+#if defined (sunray)
 	snprintf(socket_name, sizeof(socket_name),
-			OPENCT_SOCKET_PATH "/%u",
-			opt_reader);
+			"%s/openct/%u", getenv("UTDEVROOT"), opt_reader);
+#else
+	snprintf(socket_name, sizeof(socket_name),
+			"%s/%u", OPENCT_SOCKET_PATH, opt_reader);
+#endif
 	if (ct_socket_listen(sock, socket_name, 0666) < 0) {
 		ct_error("Failed to create server socket");
 		exit(1);

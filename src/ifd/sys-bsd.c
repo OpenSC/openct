@@ -321,6 +321,12 @@ ifd_sysdep_usb_release_interface(ifd_device_t *dev, int interface)
     return 0;
 }
 
+int
+ifd_sysdep_usb_open(char *device, int flags)
+{
+    return open(device, O_EXCL | O_RDWR);
+}
+
 /*
  * Scan all usb devices to see if there is one we support
  */

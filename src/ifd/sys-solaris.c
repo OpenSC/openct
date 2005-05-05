@@ -6,7 +6,7 @@
  */
 
 #include "internal.h"
-#if defined (sun)
+#if defined (sun) && !defined (sunray)
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -496,6 +496,12 @@ ifd_sysdep_usb_end_capture(ifd_device_t *dev, ifd_usb_capture_t *cap)
     return 0;
 }
 
+int
+ifd_sysdep_usb_open(char *device, int flags)
+{
+    return open(device, O_EXCL | O_RDWR);
+}
+
 /*
  * Scan the /dev/usb directory to see if there is any control pipe matching:
  *
@@ -579,4 +585,4 @@ ifd_scan_usb(void)
     closedir(usb_device_root);
     return 0;
 }
-#endif
+#endif /* sun && !sunray */

@@ -88,7 +88,9 @@ ifd_usb_capture(ifd_device_t *dev, ifd_usb_capture_t *cap,
 		if (rc < 0)
 			ifd_debug(1, "usb capture: %s", ct_strerror(rc));
 		if (rc > 0)
-			ifd_debug(5, "recv %s", ct_hexdump(buffer, rc));
+			ifd_debug(5, "usb capture: recv %s", ct_hexdump(buffer, rc));
+		if (rc == 0)
+			ifd_debug(5, "usb capture: rc=%d (timeout?)", rc);
 	}
 	return rc;
 }
@@ -188,7 +190,7 @@ ifd_open_usb(const char *device)
 	ifd_device_t	*dev;
 	int		fd;
 
-	if ((fd = open(device, O_EXCL | O_RDWR)) < 0) {
+	if ((fd = ifd_sysdep_usb_open(device, O_EXCL | O_RDWR)) < 0) {
 		ct_error("Unable to open USB device %s: %m", device);
 		return NULL;
 	}

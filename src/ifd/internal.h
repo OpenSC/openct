@@ -181,6 +181,7 @@ extern int		ifd_sysdep_usb_release_interface(ifd_device_t *, int);
 extern int		ifd_sysdep_usb_begin_capture(ifd_device_t *, int, int, size_t, ifd_usb_capture_t **);
 extern int		ifd_sysdep_usb_capture(ifd_device_t *, ifd_usb_capture_t *, void *, size_t, long);
 extern int		ifd_sysdep_usb_end_capture(ifd_device_t *, ifd_usb_capture_t *cap);
+extern int		ifd_sysdep_usb_open(char *device, int flags);
 
 /* module.c */
 extern int		ifd_load_module(const char *, const char *);

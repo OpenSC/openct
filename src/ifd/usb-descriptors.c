@@ -321,7 +321,7 @@ int ifd_usb_get_device(ifd_device_t *dev,  struct ifd_usb_device_descriptor *d) 
      /* 0x6  == USB_REQ_GET_DESCRIPTOR
       * 0x1  == USB_DT_DEVICE
      */
-     r=ifd_usb_control(dev, 0x80, 0x6, 0x100, 0, devd, 18, 1000);
+     r=ifd_usb_control(dev, 0x80, 0x6, 0x100, 0, devd, 18, 10000);
      if (r <= 0) {
 	  ct_error("cannot get descriptors");
 	  return 1;
