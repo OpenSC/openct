@@ -22,6 +22,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <errno.h>
 #ifdef HAVE_LIBUSB
 #include <usb.h>
