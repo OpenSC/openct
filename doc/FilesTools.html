@@ -1,0 +1,70 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:html="http://www.w3.org/1999/xhtml">
+<head>
+<title>FilesTools - OpenCT - Trac</title>
+<style type="text/css">
+           @import url(trac.css);
+          </style>
+</head>
+<body>
+<div class="wikipage">
+    <div id="searchable">
+<h1>Files and Tools in OpenCT</h1>
+<p>
+OpenCT needs a config file. It is recommended to configure openct with "--sysconfdir=/etc" so the usual name is /etc/openct.conf.
+</p>
+<p>
+OpenCT needs a directory -- /var/run/openct -- for it's files and sockets.
+During bootup OpenCT will create the file -- /var/run/openct/status -- for coordination of all tools.
+For each reader there will be a process called "ifdhandler" and a socket in this directory, the name
+for the first reader is usualy "0", for the second "1" and so on.
+</p>
+<p>
+OpenCT needs an init.d script to be run at bootup and at shutdown. The script is usualy called /etc/init.d/openct
+and there are symlinks in the /etc/rc*.d/ directories pointing to it.
+</p>
+<p>
+On linux systems with hotplugging, OpenCT also has these files:
+</p>
+<ul>
+<li>/etc/hotplug/usb/openct.usermap -- tells the hotplug system which devices OpenCT knows about.
+</li>
+<li>/etc/hotplug/usb/openct -- script called by hotplug for each device added or removed.
+</li>
+</ul>
+<p>
+OpenCT is shipped with these tools:
+</p>
+<ul>
+<li>openct-tool -- lists all readers, their names, the atr, waits for a reader or card etc. great for debugging.
+</li>
+<li>openct-control -- usualy only called by the init.d script on boot and shutdown
+</li>
+<li>ifdhandler -- does all the work in the background, called by openct-control or the hotplug script.
+</li>
+</ul>
+<p>
+OpenCT is shipped with two plugins/drivers/shared objects:
+</p>
+<ul>
+<li>libopenctapi.so -- a shared object in CT-API format, you can use this with every ct-api aware application.
+</li>
+<li>openct-ifd.so -- a shared obejct in Ifdhandler v2 format, to be used by pcsc-lite as reader.
+</li>
+</ul>
+<h2>Shared library</h2>
+<p>
+If you want to write an application to use openct directly, you can do so using the shared library libopenct.so.
+OpenCT also has header files for you in $(prefix)/include/openct/ and it comes with a pkg-config file "libopenct.pc",
+see the pkg-config documentation how to use it in your Makefile or autoconf configure.in file. This should make
+linking with OpenCT easy, please send us some feedback.
+</p>
+</div>
+   </div>
+<div class="footer">
+<hr/>
+<p>
+<a href="index.html">Back to Index</a>
+</p>
+</div>
+</body>
+</html>

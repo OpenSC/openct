@@ -1,0 +1,58 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:html="http://www.w3.org/1999/xhtml">
+<head>
+<title>OperatingSystems - OpenCT - Trac</title>
+<style type="text/css">
+           @import url(trac.css);
+          </style>
+</head>
+<body>
+<div class="wikipage">
+    <div id="searchable">
+<h1>Operating Systems</h1>
+<h2>Linux</h2>
+<p>
+Linux should work fine, and is tested all the time.
+Serial support needs nothing special (only the serial driver for your
+serial device), but usb support on linux has a few requirements:
+</p>
+<ul>
+<li>Libusb needed during compilation and runtime.
+</li>
+<li>CONFIG_HOTPLUG so the kernel can let us know if you plugin a reader or token.
+</li>
+<li>hotplug utilities will be called by the kernel and run openct.
+</li>
+<li>CONFIG_USB_DEVICEFS so we can talk to usb devices from userspace.
+</li>
+<li>mount usbfs (kernel 2.4: usbdevfs) at /proc/bus/usb, to do that put this line into your /etc/fstab:
+<pre class="wiki" xml:space="preserve">usbfs           /proc/bus/usb   usbfs   defaults                0       0
+</pre>
+</li>
+</ul>
+<p>
+(replace "usbfs" with "usbdevfs" for linux kernel 2.4.* - will work on kernel 2.6.* too)
+</p>
+<h2>BSD</h2>
+<p>
+OpenCT should work, but this wasn't tested for sometime. Latest OpenCT seems to not find libusb,
+we are working on it.
+</p>
+<h2>Solaris</h2>
+<p>
+Latest OpenCT supports Solaris fine and was tested to work.
+</p>
+<h2>Sunray</h2>
+<p>
+Sunray including client/server architecture was recently added to OpenCT and 0.6.5 once release should work fine.
+Till then please use a snapshot or svn trunk checkout.
+</p>
+</div>
+   </div>
+<div class="footer">
+<hr/>
+<p>
+<a href="index.html">Back to Index</a>
+</p>
+</div>
+</body>
+</html>

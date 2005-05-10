@@ -1,0 +1,85 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:html="http://www.w3.org/1999/xhtml">
+<head>
+<title>RemoteAccess - OpenCT - Trac</title>
+<style type="text/css">
+           @import url(trac.css);
+          </style>
+</head>
+<body>
+<div class="wikipage">
+    <div id="searchable">
+<h1>Remote Access to smart card readers</h1>
+<p>
+NOTE: This page is completely untested.
+</p>
+<p>
+OpenCT includes a very simple facility to access smart card readers
+on a remote system. Please note that this mechanism has no security
+mechanisms in it at all. Therefore please use it only on trusted networks,
+or add a security wrapper like openssl to it. 
+</p>
+<p>
+The setup needs to be done one two machines: the machine with the reader,
+and the machine with the software that wants to access the reader. We will
+call these machines "mwr" and "mws" in this example. 
+</p>
+<p>
+On the machine with the reader, add it as usual to the openct.conf,
+here is an example for a serial reader:
+</p>
+<pre class="wiki" xml:space="preserve">reader xiring {
+        driver = xiring;
+        device = serial:/dev/ttyS0;
+};
+</pre>
+<p>
+In addition to that you need to start ifdproxy on the machine with the
+reader, and point the proxy to the machine with the software:
+</p>
+<pre class="wiki" xml:space="preserve">root@mwr# ifdproxy export xiring /dev/ttyS0 mws:6666
+</pre>
+<p>
+On the machine with the software, you need to edit openct.conf like this:
+</p>
+<pre class="wiki" xml:space="preserve">
+ifdhandler = /usr/sbin/ifdhandler;
+ifdproxy {
+        server-port     = /var/run/openct/proxy,
+        device-port     = :6666;
+};
+reader xiring {
+        driver = xiring;
+        device = remote:serial1@/var/run/openct/proxy;
+};
+</pre>
+<p>
+and then start openct via the init.d script as normal:
+</p>
+<pre class="wiki" xml:space="preserve">root@mws# /etc/init.d/openct start
+root@mws# ifdproxy server
+</pre>
+<p>
+now you should be able to see the remote reader using the ifproxy list command:
+</p>
+<pre class="wiki" xml:space="preserve">root@mws# ifdproxy list
+Exported devices
+  serial1          MachineB's_IP                 xiring
+</pre>
+<h2>Adding security</h2>
+<p>
+As discussed, the setup above is completely unsecure. But with the openssl
+commands, it can be improved:
+</p>
+<p>
+TODO
+</p>
+</div>
+   </div>
+<div class="footer">
+<hr/>
+<p>
+<a href="index.html">Back to Index</a>
+</p>
+</div>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:html="http://www.w3.org/1999/xhtml">
+<head>
+<title>TroubleShooting - OpenCT - Trac</title>
+<style type="text/css">
+           @import url(trac.css);
+          </style>
+</head>
+<body>
+<div class="wikipage">
+    <div id="searchable">
+<h1>Troubleshooting and debugging</h1>
+<p>
+If something doesn't work, please contact us on the opensc-users mailing lists.
+For details, please see <a class="ext-link" title="http://www.opensc.org/resources.php" href="http://www.opensc.org/resources.php" shape="rect">http://www.opensc.org/resources.php</a>
+</p>
+<p>
+If you subscribe to these mailing lists you can post directly, if not a moderator
+will review your posting first, so we can filter spam.
+</p>
+<p>
+So here are some step by step instructions to find your problem:
+</p>
+<p>
+If you try to use a USB device, please try this: 
+</p>
+<ul>
+<li>Is your /proc filesystem mounted? ls /proc will show some files and directories.
+</li>
+<li>Is your linux kernel compiled with usb support? Does it work? "lsusb" should list your usb controller and all devices.
+</li>
+<li>Is your linux kernel compiled with hotplugging support? cat /proc/sys/kernel/hotplug should output "/sbin/hotplug".
+</li>
+<li>Do you have a hotplug script? ls /sbin/hotplug will list it or print an error message?
+</li>
+<li>Did you create the directory /var/run/openct? What files are in there? What are the file permissions? ls -la /var/run/openct will tell you.
+</li>
+</ul>
+<p>
+In all cases:
+</p>
+<ul>
+<li>Did you install the openct init.d script? Did you run it? 
+</li>
+<li>Does openct-tool list show your reader?
+</li>
+</ul>
+<p>
+If you are using a usb smart card reader, and openct-tool does not list it: What is that readers USB vendor and product id?
+lsusb will tell you. Edit /etc/openct.conf and /etc/hotplug/usb/openct.usermap, check if that entry is listed, and add it if not.
+If the reader works after doing this, please contact opensc-devel@opensc.org, so we can add that id to OpenCT.
+</p>
+</div>
+   </div>
+<div class="footer">
+<hr/>
+<p>
+<a href="index.html">Back to Index</a>
+</p>
+</div>
+</body>
+</html>

@@ -21,7 +21,7 @@ xmlns:html="http://www.w3.org/1999/xhtml">
           <xsl:apply-templates select="//html:div[@class='wikipage']" />
           <div class="footer">
             <hr />
-            <p><a href="wiki-index.html">Back to Index</a></p>
+            <p><a href="index.html">Back to Index</a></p>
           </div>
         </body>
       </html>
@@ -46,10 +46,6 @@ xmlns:html="http://www.w3.org/1999/xhtml">
   
   <xsl:template match="page">
     <li><a href="{.}.html"><xsl:value-of select="." /></a></li>
-  </xsl:template>
-  
-  <xsl:template match="html:a">
-    <xsl:apply-templates />
   </xsl:template>
   
   <xsl:template match="node()|@*" priority="-1">

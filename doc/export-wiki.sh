@@ -1,35 +1,32 @@
 #!/bin/bash
 
-# Main variables.  Replace these defaults with ones suitable for your
-# environment.
-pagesList=${pagesList:-"TracGuide TracInstall TracUpgrade"}
-server=${server:-"https://trac.prelude-ids.org"}
-xsl=${xsl:-"export-wiki.xsl"}
-tmpDir=${tmpDir:-"tmp"}
-docsDir=${docsDir:-"docs"}
+set -e
 
-#####################################################################
+export PATH=/opt/j2sdk1.4.2/bin:$PATH
+export CLASSPATH=/usr/share/java/xalan2.jar
+export SERVER=http://www.opensc.org
+export WIKI=openct/wiki
+export XSL=export-wiki.xsl
 
-# generated temp variables
-tmpIndex="$tmpDir/tmp.xml"
-pages=($pagesList)
+mkdir tmp
 
-# create the directories as needed
-mkdir $tmpDir
-mkdir $docsDir
+wget -P tmp $SERVER/$WIKI/TitleIndex
 
-# process each page
-echo "<pages>" > $tmpIndex 
-cnt=${#pages[@]}
-for (( i = 0 ; i < cnt ; i++ ))
+grep "\"/$WIKI/[^\"]*\"" tmp/TitleIndex \
+        |sed -e "s#.*\"/$WIKI/\([^\"]*\)\".*#\1#g" \
+	> tmp/WikiWords
+sed -e /^Trac/d -e /^Wiki/d -e /^TitleIndex/d -e /^RecentChanges/d \
+	-e /^CamelCase/d -e /^SandBox/d -i tmp/WikiWords
+
+for A in WikiStart `cat tmp/WikiWords`
 do
-    wget -P$tmpDir -E ${server}/wiki/${pages[$i]}   
-    java org.apache.xalan.xslt.Process -IN $tmpDir/${pages[$i]}.html -XSL $xsl -OUT $docsDir/${pages[$i]}.html
-    echo "<page>${pages[$i]}</page>" >> $tmpIndex
+	wget -P tmp $SERVER/$WIKI/$A 
+	java org.apache.xalan.xslt.Process -IN tmp/$A -XSL $XSL \
+		-OUT $A.html
+	sed -e "s#<a href=\"/$WIKI/\([^\"]*\)\"#<a href=\"\1.html\"#g" \
+		-i $A.html
 done
-echo "</pages>" >> $tmpIndex
 
-# get the css and create the index page
-wget -P$docsDir -E ${server}/trac/css/trac.css        
-java org.apache.xalan.xslt.Process -IN $tmpIndex -XSL $xsl -OUT $docsDir/wiki-index.html 
+mv WikiStart.html index.html
 
+wget http://www.opensc.org/trac/css/trac.css
