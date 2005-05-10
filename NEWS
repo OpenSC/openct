@@ -1,9 +1,18 @@
 NEWS for OpenCT -- History of user visible changes
 
-New in 0.6.5; not yet released:
+New in 0.6.5rc2; 2005-05-10; Andreas Jellinghaus
 * add pcmcia subsystem (Harald Welte)
 * add cm4000 driver (Harald Welte)
 * improve ccid driver (Harald Welte)
+* sunray support (William Wanders)
+* updated solaris support (William Wanders)
+* silience some aclocal warning (Ville Skytta)
+* man page for openct-tool (Ville Skytta)
+* print usage to stdout if there is no error (Ville Skytta)
+* document ifdhandler "-i" option (Ville Skytta)
+* gempc configuration example (Ville Skytta)
+* first claim usb interface, then configure it.
+* replace xml/html documentation with a wiki snapshot.
 
 New in 0.6.4; 2005-04-25; Andreas Jellinghaus:
 * solaris/ directory with files for building openct on solaris
