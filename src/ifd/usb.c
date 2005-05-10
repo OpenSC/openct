@@ -130,12 +130,12 @@ usb_set_params(ifd_device_t *dev, const ifd_device_params_t *params)
 		return -1;
 
 	if (params->usb.interface != -1) {
+		if (ifd_sysdep_usb_claim_interface(dev, params->usb.interface))
+			return -1;
 		if (params->usb.altsetting != -1
 		 && ifd_sysdep_usb_set_interface(dev, 
 					    params->usb.interface,
 					    params->usb.altsetting))
-			return -1;
-		if (ifd_sysdep_usb_claim_interface(dev, params->usb.interface))
 			return -1;
 	}
 
