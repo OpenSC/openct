@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 	if (!strcmp(command, "server")) {
 		run_server(argc - optind, argv + optind);
 	} else if (!strcmp(command, "export")) {
-		run_client(argc - optind, argv + optind);
+		return run_client(argc - optind, argv + optind);
 	} else if (!strcmp(command, "list")) {
 		list_devices(argc - optind, argv + optind);
 	} else if (!strcmp(command, "version")) {
@@ -206,7 +206,9 @@ int run_client(int argc, char **argv)
 	int rc;
 
 	/* Initialize IFD library */
-	ifd_init();
+	if (ifd_init())
+		return 1;
+
 
 	if (argc != 2 && argc != 3)
 		usage(1);

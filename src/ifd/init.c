@@ -7,7 +7,7 @@
 #include "internal.h"
 #include <stdlib.h>
 
-static void configure_driver(ifd_conf_node_t * cf);
+static int configure_driver(ifd_conf_node_t * cf);
 
 int ifd_init(void)
 {
@@ -51,9 +51,15 @@ int ifd_init(void)
 	n = ifd_conf_get_nodes("driver", NULL, 0);
 	if (n >= 0) {
 		nodes = (ifd_conf_node_t **) calloc(n, sizeof(*nodes));
+		if (!nodes) {
+			ct_error("out of memory");
+			return 1;
+		}
 		n = ifd_conf_get_nodes("driver", nodes, n);
-		for (i = 0; i < n; i++)
-			configure_driver(nodes[i]);
+		for (i = 0; i < n; i++) {
+			if (configure_driver(nodes[i]))
+				return 1;
+		}
 		free(nodes);
 	}
 	return 0;
@@ -62,7 +68,7 @@ int ifd_init(void)
 /*
  * Configure a reader driver
  */
-void configure_driver(ifd_conf_node_t * cf)
+int configure_driver(ifd_conf_node_t * cf)
 {
 	const char *driver;
 	char **ids;
@@ -72,9 +78,14 @@ void configure_driver(ifd_conf_node_t * cf)
 		return;
 	if ((n = ifd_conf_node_get_string_list(cf, "ids", NULL, 0)) >= 0) {
 		ids = (char **)calloc(n, sizeof(char *));
+		if (!ids) {
+			ct_error("out of memory");
+			return 1;
+		}
 		n = ifd_conf_node_get_string_list(cf, "ids", ids, n);
 		for (j = 0; j < n; j++)
 			ifd_driver_add_id(ids[j], driver);
 		free(ids);
 	}
+	return 0;
 }

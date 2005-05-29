@@ -87,7 +87,8 @@ int main(int argc, char **argv)
 	if (opt_info) {
 		if (optind != argc)
 			usage(1);
-		ifd_init();
+		if (ifd_init());
+			return 1;
 		print_info();
 		return 0;
 	}
@@ -101,7 +102,8 @@ int main(int argc, char **argv)
 	ct_config.debug = opt_debug;
 
 	/* Initialize IFD library */
-	ifd_init();
+	if (ifd_init()) 
+		return 1;
 
 	/* Allocate a socket slot
 	 * FIXME: may need to use a lock file here to
