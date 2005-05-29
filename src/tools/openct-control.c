@@ -25,23 +25,22 @@
 #include <openct/driver.h>
 #include <openct/conf.h>
 
-static int		mgr_init(int argc, char **argv);
-static int		mgr_shutdown(int argc, char **argv);
-static int		mgr_attach(int argc, char **argv);
-static int		mgr_status(int argc, char **argv);
-static void		usage(int exval);
-static void		version(void);
+static int mgr_init(int argc, char **argv);
+static int mgr_shutdown(int argc, char **argv);
+static int mgr_attach(int argc, char **argv);
+static int mgr_status(int argc, char **argv);
+static void usage(int exval);
+static void version(void);
 
-static const char *	opt_config = NULL;
-static int		opt_debug = 0;
-static int		opt_coldplug = 1;
+static const char *opt_config = NULL;
+static int opt_debug = 0;
+static int opt_coldplug = 1;
 
-static void		configure_reader(ifd_conf_node_t *);
+static void configure_reader(ifd_conf_node_t *);
 
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
-	int	c;
+	int c;
 
 	/* Make sure the mask is good */
 	umask(033);
@@ -52,7 +51,7 @@ main(int argc, char **argv)
 			opt_debug++;
 			break;
 		case 'n':
-			opt_coldplug=0;
+			opt_coldplug = 0;
 			break;
 		case 'f':
 			opt_config = optarg;
@@ -80,14 +79,11 @@ main(int argc, char **argv)
 
 	if (!strcmp(argv[0], "init")) {
 		return mgr_init(argc, argv);
-	} else
-	if (!strcmp(argv[0], "shutdown")) {
+	} else if (!strcmp(argv[0], "shutdown")) {
 		return mgr_shutdown(argc, argv);
-	} else
-	if (!strcmp(argv[0], "attach")) {
+	} else if (!strcmp(argv[0], "attach")) {
 		return mgr_attach(argc, argv);
-	} else
-	if (!strcmp(argv[0], "status")) {
+	} else if (!strcmp(argv[0], "status")) {
 		return mgr_status(argc, argv);
 	}
 
@@ -95,10 +91,9 @@ main(int argc, char **argv)
 	return 1;
 }
 
-int
-mgr_init(int argc, char **argv)
+int mgr_init(int argc, char **argv)
 {
-	int	n;
+	int n;
 
 	if (argc != 1)
 		usage(1);
@@ -113,8 +108,8 @@ mgr_init(int argc, char **argv)
 	 * in the config file */
 	n = ifd_conf_get_nodes("reader", NULL, 0);
 	if (n >= 0) {
-		ifd_conf_node_t	**nodes;
-		int		i;
+		ifd_conf_node_t **nodes;
+		int i;
 
 		nodes = (ifd_conf_node_t **) calloc(n, sizeof(*nodes));
 		n = ifd_conf_get_nodes("reader", nodes, n);
@@ -132,11 +127,10 @@ mgr_init(int argc, char **argv)
 /*
  * shut down the whole thing
  */
-int
-mgr_shutdown(int argc, char **argv)
+int mgr_shutdown(int argc, char **argv)
 {
-	const ct_info_t	*status;
-	int		num, killed = 0;
+	const ct_info_t *status;
+	int num, killed = 0;
 
 	if (argc != 1)
 		usage(1);
@@ -149,23 +143,22 @@ mgr_shutdown(int argc, char **argv)
 
 	while (num--) {
 		if (status[num].ct_pid
-		 && kill(status[num].ct_pid, SIGTERM) >= 0)
+		    && kill(status[num].ct_pid, SIGTERM) >= 0)
 			killed++;
 	}
 
-	printf("%d process%s killed.\n", killed, (killed == 1)? "" : "es");
+	printf("%d process%s killed.\n", killed, (killed == 1) ? "" : "es");
 	return 0;
 }
 
 /*
  * Attach a new reader
  */
-int
-mgr_attach(int argc, char **argv)
+int mgr_attach(int argc, char **argv)
 {
-	const char	*device, *driver, *idstring;
-	ifd_devid_t	id;
-	pid_t		pid;
+	const char *device, *driver, *idstring;
+	ifd_devid_t id;
+	pid_t pid;
 
 	if (argc != 3)
 		usage(1);
@@ -186,19 +179,18 @@ mgr_attach(int argc, char **argv)
 	}
 
 	pid = ifd_spawn_handler(driver, device, -1);
-	return (pid > 0)? 0 : 1;
+	return (pid > 0) ? 0 : 1;
 }
 
 /*
  * Show status of all readers
  */
-int
-mgr_status(int argc, char **argv)
+int mgr_status(int argc, char **argv)
 {
 	const ct_info_t *readers, *r;
-	unsigned int	j;
-	int		i, num, count = 0;
-	char		*sepa;
+	unsigned int j;
+	int i, num, count = 0;
+	char *sepa;
 
 	if (argc != 1)
 		usage(1);
@@ -209,8 +201,8 @@ mgr_status(int argc, char **argv)
 
 	for (i = 0, r = readers; i < num; i++, r++) {
 		if (r->ct_pid == 0
-		 || (kill(r->ct_pid, 0) < 0 && errno == ESRCH))
-		 	continue;
+		    || (kill(r->ct_pid, 0) < 0 && errno == ESRCH))
+			continue;
 		if (count == 0)
 			printf("No.   Name                         Info\n"
 			       "===================================================\n");
@@ -245,11 +237,10 @@ mgr_status(int argc, char **argv)
 /*
  * Configure a reader using info from the config file
  */
-void
-configure_reader(ifd_conf_node_t *cf)
+void configure_reader(ifd_conf_node_t * cf)
 {
 	static unsigned int nreaders = 0;
-	char		*device, *driver;
+	char *device, *driver;
 
 	if (ifd_conf_node_get_string(cf, "device", &device) < 0) {
 		ct_error("no device specified in reader configuration");
@@ -261,7 +252,7 @@ configure_reader(ifd_conf_node_t *cf)
 
 	if (device == NULL && driver == NULL) {
 		ct_error("neither device nor driver specified "
-			  "in reader configuration");
+			 "in reader configuration");
 		return;
 	}
 
@@ -271,8 +262,7 @@ configure_reader(ifd_conf_node_t *cf)
 /*
  * Display version
  */
-void
-version(void)
+void version(void)
 {
 	fprintf(stdout, "OpenCT " VERSION "\n");
 	exit(0);
@@ -281,21 +271,19 @@ version(void)
 /*
  * Usage message
  */
-void
-usage(int exval)
+void usage(int exval)
 {
 	fprintf(exval ? stderr : stdout,
-"usage: openct-control [-d] [-f configfile] command\n"
-"  -d   enable debugging; repeat to increase verbosity\n"
-"  -n   disable coldplugging\n"
-"  -f   specify config file (default %s)\n"
-"  -h   display this message\n"
-"  -v   display version and exit\n"
-"\nWhere command is one of:\n"
-"init - initialize OpenCT\n"
-"attach device ident - attach a hotplug device\n"
-"status - display status of all readers present\n"
-"shutdown - shutdown OpenCT\n", OPENCT_CONF_PATH
-);
+		"usage: openct-control [-d] [-f configfile] command\n"
+		"  -d   enable debugging; repeat to increase verbosity\n"
+		"  -n   disable coldplugging\n"
+		"  -f   specify config file (default %s)\n"
+		"  -h   display this message\n"
+		"  -v   display version and exit\n"
+		"\nWhere command is one of:\n"
+		"init - initialize OpenCT\n"
+		"attach device ident - attach a hotplug device\n"
+		"status - display status of all readers present\n"
+		"shutdown - shutdown OpenCT\n", OPENCT_CONF_PATH);
 	exit(exval);
 }
