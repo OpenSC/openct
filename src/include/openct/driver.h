@@ -68,7 +68,7 @@ struct ifd_driver_ops {
 extern void		ifd_driver_register(const char *,
 				struct ifd_driver_ops *);
 extern const ifd_driver_t *ifd_driver_get(const char *);
-extern void		ifd_driver_add_id(const char *, const char *);
+extern int		ifd_driver_add_id(const char *, const char *);
 extern const char *	ifd_driver_for_id(ifd_devid_t *);
 
 /*

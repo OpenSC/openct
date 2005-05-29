@@ -292,7 +292,7 @@ int ifd_sysdep_usb_end_capture(ifd_device_t * dev, ifd_usb_capture_t * cap)
 	return rc;
 }
 
-int ifd_sysdep_usb_open(char *device, int flags)
+int ifd_sysdep_usb_open(const char *device, int flags)
 {
 	return open(device, O_EXCL | O_RDWR);
 }

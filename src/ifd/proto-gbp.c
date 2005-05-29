@@ -271,9 +271,11 @@ static int gbp_transceive(ifd_protocol_t * prot, int dad, const void *snd_buf,
 		continue;
 	}
 
-      done:return ct_buf_avail(&rbuf);
+done:
+	return ct_buf_avail(&rbuf);
 
-      error:gp->state = DEAD;
+error:
+	gp->state = DEAD;
 	return -1;
 }
 

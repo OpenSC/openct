@@ -350,6 +350,7 @@ int gpc_set_mode(ifd_reader_t * reader, int mode)
 	return gpc_command(reader, cmd, sizeof(cmd), NULL, 0);
 }
 
+#if 0
 /*
  * Send command to IFD
  *
@@ -384,6 +385,7 @@ static int gpc_recv(ifd_reader_t * reader, unsigned int dad,
 		ifd_debug(3, "received:%s", ct_hexdump(res_buf, rc));
 	return rc;
 }
+#endif
 
 static int gpc_transparent(ifd_reader_t * reader, int nad, const void *cmd_buf,
 			   size_t cmd_len, void *res_buf, size_t res_len)

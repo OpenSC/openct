@@ -165,7 +165,8 @@ static int eutron_recv(ifd_reader_t * reader, unsigned int dad,
 		goto failed;
 
 	return lr;
-      failed:ct_error("eutron: failed to receive t=1 frame");
+failed:
+	ct_error("eutron: failed to receive t=1 frame");
 	return -1;
 }
 

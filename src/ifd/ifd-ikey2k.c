@@ -122,7 +122,8 @@ static int ikey2k_card_reset(ifd_reader_t * reader, int slot, void *atr,
 
 	return atrlen;
 
-      failed:ct_error("ikey2k: failed to activate token");
+failed:
+	ct_error("ikey2k: failed to activate token");
 	return -1;
 }
 

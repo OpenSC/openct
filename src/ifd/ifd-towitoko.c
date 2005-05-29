@@ -103,7 +103,8 @@ static int twt_open(ifd_reader_t * reader, const char *device_name)
 
 	return 0;
 
-      failed:ct_error("towitoko: failed to initialize device");
+failed:
+	ct_error("towitoko: failed to initialize device");
 	return -1;
 }
 

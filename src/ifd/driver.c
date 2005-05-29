@@ -75,6 +75,8 @@ int ifd_driver_add_id(const char *id, const char *name)
 	}
 	if (ifd_device_id_parse(id, &ip->id[ip->nids]) >= 0)
 		ip->nids++;
+
+	return 0;
 }
 
 const char *ifd_driver_for_id(ifd_devid_t * id)

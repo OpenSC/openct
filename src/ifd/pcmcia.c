@@ -42,7 +42,7 @@ static int ifd_pcmcia_recv(ifd_device_t * dev, unsigned char *buffer,
 {
 	size_t total = len, to_read;
 	struct timeval begin;
-	int n, last_ff = 0;
+	int n;
 
 	gettimeofday(&begin, NULL);
 
@@ -105,7 +105,6 @@ static struct ifd_device_ops ifd_pcmcia_ops;
  */
 ifd_device_t *ifd_open_pcmcia(const char *name)
 {
-	ifd_device_params_t params;
 	ifd_device_t *dev;
 	int fd;
 

@@ -119,17 +119,19 @@ extern struct ifd_protocol_ops ifd_protocol_2wire;
 extern struct ifd_protocol_ops ifd_protocol_3wire;
 extern struct ifd_protocol_ops ifd_protocol_eurochip;
 
+extern void ifd_cardman_register(void);
+extern void ifd_ccid_register(void);
+extern void ifd_cm4000_register(void);
 extern void ifd_egate_register(void);
 extern void ifd_etoken_register(void);
 extern void ifd_eutron_register(void);
+extern void ifd_gempc_register(void);
 extern void ifd_ikey2k_register(void);
 extern void ifd_ikey3k_register(void);
 extern void ifd_kaan_register(void);
 extern void ifd_towitoko_register(void);
-extern void ifd_cardman_register(void);
 extern void ifd_smartboard_register(void);
-extern void ifd_gempc_register(void);
-extern void ifd_ccid_register(void);
+extern void ifd_starkey_register(void);
 
 /* reader.c */
 extern int ifd_send_command(ifd_protocol_t *, const void *, size_t);
@@ -141,10 +143,11 @@ extern const ifd_driver_t *ifd_driver_get(const char *);
 extern unsigned int ifd_drivers_list(const char **, size_t);
 
 /* device.c */
-extern ifd_device_t *ifd_open_serial(const char *);
+extern ifd_device_t *ifd_open_pcmcia(const char *);
 extern ifd_device_t *ifd_open_psaux(const char *);
-extern ifd_device_t *ifd_open_usb(const char *);
 extern ifd_device_t *ifd_open_remote(const char *);
+extern ifd_device_t *ifd_open_serial(const char *);
+extern ifd_device_t *ifd_open_usb(const char *);
 extern ifd_device_t *ifd_device_new(const char *,
 				    struct ifd_device_ops *, size_t);
 extern void ifd_device_free(ifd_device_t *);
@@ -171,7 +174,7 @@ extern int ifd_sysdep_usb_begin_capture(ifd_device_t *, int, int, size_t,
 extern int ifd_sysdep_usb_capture(ifd_device_t *, ifd_usb_capture_t *, void *,
 				  size_t, long);
 extern int ifd_sysdep_usb_end_capture(ifd_device_t *, ifd_usb_capture_t * cap);
-extern int ifd_sysdep_usb_open(char *device, int flags);
+extern int ifd_sysdep_usb_open(const char *device, int flags);
 
 /* module.c */
 extern int ifd_load_module(const char *, const char *);
@@ -185,7 +188,7 @@ extern int daemon(int, int);
 #endif
 
 /* protocol.c */
-extern void ifd_protocol_register(struct ifd_protocol_ops *);
+extern int ifd_protocol_register(struct ifd_protocol_ops *);
 extern int ifd_sync_detect_icc(ifd_reader_t *, int, void *, size_t);
 extern unsigned int ifd_protocols_list(const char **, unsigned int);
 

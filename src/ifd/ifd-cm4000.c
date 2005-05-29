@@ -31,7 +31,6 @@ static int cm_open(ifd_reader_t * reader, const char *device_name)
 {
 	ifd_device_t *dev;
 	cm_priv_t *priv;
-	ifd_device_params_t params;
 
 	reader->name = "OMNIKEY CardMan 4000";
 	reader->nslots = 1;
@@ -87,6 +86,7 @@ static int cm_deactivate(ifd_reader_t * reader)
 	return 0;
 }
 
+#if 0 
 /*
  * Card status - always present
  */
@@ -99,6 +99,7 @@ static int cm_card_status(ifd_reader_t * reader, int slot, int *status)
 	*status = 0;
 
 #if 0
+
 	if ((rc =
 	     cm_usb_int(dev, 0x42, 0x20, 0, 0, NULL, 0, &cm_status, 1, NULL,
 			-1)) < 0) {
@@ -111,6 +112,7 @@ static int cm_card_status(ifd_reader_t * reader, int slot, int *status)
 	ifd_debug(1, "card %spresent", *status ? "" : "not ");
 	return 0;
 }
+#endif
 
 /*
  * Reset
@@ -149,7 +151,6 @@ static int cm_send(ifd_reader_t * reader, unsigned int dad,
 		   const unsigned char *buffer, size_t len)
 {
 	ifd_device_t *dev = reader->device;
-	cm_priv_t *priv = (cm_priv_t *) reader->driver_data;
 
 	return write(dev->fd, buffer, len);
 }
@@ -158,7 +159,6 @@ static int cm_recv(ifd_reader_t * reader, unsigned int dad,
 		   unsigned char *buffer, size_t len, long timeout)
 {
 	ifd_device_t *dev = reader->device;
-	cm_priv_t *priv = (cm_priv_t *) reader->driver_data;
 
 	return read(dev->fd, buffer, len);
 }
