@@ -13,40 +13,36 @@ extern "C" {
 
 #define MAX_APDULEN	1040
 
-char CT_init (
-	unsigned short Ctn,		/* Terminal Number */
-	unsigned short pn		/* Port Number */
-	);
+	char CT_init(unsigned short Ctn,	/* Terminal Number */
+		     unsigned short pn	/* Port Number */
+	    );
 
-char CT_close(
-	unsigned short Ctn		/* Terminal Number */
-	);
+	char CT_close(unsigned short Ctn	/* Terminal Number */
+	    );
 
-char CT_data( 
-	unsigned short	ctn,		/* Terminal Number */
-	unsigned char	*dad,		/* Destination */
-	unsigned char	*sad,		/* Source */
-	unsigned short	lc,		/* Length of command */
-	unsigned char	*cmd,		/* Command/Data Buffer */
-	unsigned short	*lr,		/* Length of Response */
-	unsigned char	*rsp		/* Response */
-	);
+	char CT_data(unsigned short ctn,	/* Terminal Number */
+		     unsigned char *dad,	/* Destination */
+		     unsigned char *sad,	/* Source */
+		     unsigned short lc,	/* Length of command */
+		     unsigned char *cmd,	/* Command/Data Buffer */
+		     unsigned short *lr,	/* Length of Response */
+		     unsigned char *rsp	/* Response */
+	    );
 
+#define OK		0	/* Success */
+#define ERR_INVALID	-1	/* Invalid Data */
+#define ERR_CT		-8	/* CT Error */
+#define ERR_TRANS	-10	/* Transmission Error */
+#define ERR_MEMORY	-11	/* Memory Allocate Error */
+#define ERR_HOST	-127	/* Abort by Host/OS */
+#define ERR_HTSI	-128	/* HTSI Error */
 
-#define OK		0		/* Success */
-#define ERR_INVALID	-1		/* Invalid Data */
-#define ERR_CT		-8		/* CT Error */
-#define ERR_TRANS	-10		/* Transmission Error */
-#define ERR_MEMORY	-11		/* Memory Allocate Error */
-#define ERR_HOST	-127		/* Abort by Host/OS */
-#define ERR_HTSI	-128		/* HTSI Error */
-
-enum {
-	CTAPI_DAD_ICC1	= 0,
-	CTAPI_DAD_CT	= 1,
-	CTAPI_DAD_HOST	= 2,
-	CTAPI_DAD_ICC2	= 3,
-};
+	enum {
+		CTAPI_DAD_ICC1 = 0,
+		CTAPI_DAD_CT = 1,
+		CTAPI_DAD_HOST = 2,
+		CTAPI_DAD_ICC2 = 3,
+	};
 
 /*
  * CT-BCS commands
@@ -130,7 +126,6 @@ enum {
 #define CTBCS_SW_BAD_ICC		0x6f00
 #define CTBCS_SW_SUCCESS		0x9000
 
-
 /*
  * Data returned by Get Status command
  */
@@ -138,9 +133,7 @@ enum {
 #define CTBCS_DATA_STATUS_CARD		0x01	/* Card present */
 #define CTBCS_DATA_STATUS_CARD_CONNECT	0x05	/* Card present */
 
-
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* OPENCT_CTAPI_H */
+#endif				/* OPENCT_CTAPI_H */
