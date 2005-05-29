@@ -132,6 +132,7 @@ static int cm_card_reset(ifd_reader_t * reader, int slot, void *atr,
 		return -1;
 	}
 
+	len = cmatr.atr_len;
 	if ((size_t) len > size)
 		len = size;
 
