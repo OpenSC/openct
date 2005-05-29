@@ -88,7 +88,7 @@ static int dir(struct CardTerminal *ct, ct_buf_t * buf, off_t start,
 {
 	struct CardTerminalFile **entry;
 
-	if (size != (size_t *) 0)
+	if (size)
 		*size = 0;
 	for (entry = &ct->cwd->dir[0]; *entry; ++entry) {
 		unsigned char r[5];
@@ -118,7 +118,7 @@ static int hostcf(struct CardTerminal *ct, ct_buf_t * buf, off_t start,
 	const char *version = "OpenCT";
 	int rc;
 
-	if (size != (size_t *) 0)
+	if (size)
 		*size = 0;
 	data[0] = 0x01;
 	data[1] = strlen(version);
