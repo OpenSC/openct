@@ -15,34 +15,30 @@
 #include <string.h>
 
 typedef struct cm_priv {
-	int		icc_proto;
-	unsigned char	rbuf[64];
-	unsigned int	head, tail;
+	int icc_proto;
+	unsigned char rbuf[64];
+	unsigned int head, tail;
 } cm_priv_t;
 
-
-typedef int	complete_fn_t(const void *, size_t);
-static int	cm_set_card_parameters(ifd_device_t *,
-				unsigned int baudRate);
-static int	cm_transceive_t0(ifd_reader_t *reader,
-				const void *sbuf, size_t slen,
-				void *rbuf, size_t rlen);
-static int	cm_usb_int(ifd_device_t *dev, int requesttype, int request,
-			       	int value, int index,
-			       	const void *sbuf, size_t slen,
-			       	void *rbuf, size_t rlen,
-			       	complete_fn_t check,
-			       	long timeout);
-static int	cm_anyreply(const void *, size_t);
+typedef int complete_fn_t(const void *, size_t);
+static int cm_set_card_parameters(ifd_device_t *, unsigned int baudRate);
+static int cm_transceive_t0(ifd_reader_t * reader,
+			    const void *sbuf, size_t slen,
+			    void *rbuf, size_t rlen);
+static int cm_usb_int(ifd_device_t * dev, int requesttype, int request,
+		      int value, int index,
+		      const void *sbuf, size_t slen,
+		      void *rbuf, size_t rlen,
+		      complete_fn_t check, long timeout);
+static int cm_anyreply(const void *, size_t);
 
 /*
  * Initialize the device
  */
-static int
-cm_open(ifd_reader_t *reader, const char *device_name)
+static int cm_open(ifd_reader_t * reader, const char *device_name)
 {
-	ifd_device_t	*dev;
-	cm_priv_t	*priv;
+	ifd_device_t *dev;
+	cm_priv_t *priv;
 	ifd_device_params_t params;
 
 	reader->name = "OMNIKEY CardMan 2020/6020/6120";
@@ -50,8 +46,7 @@ cm_open(ifd_reader_t *reader, const char *device_name)
 	if (!(dev = ifd_device_open(device_name)))
 		return -1;
 	if (ifd_device_type(dev) != IFD_DEVICE_TYPE_USB) {
-		ct_error("cardman: device %s is not a USB device",
-				device_name);
+		ct_error("cardman: device %s is not a USB device", device_name);
 		ifd_device_close(dev);
 		return -1;
 	}
@@ -74,11 +69,10 @@ cm_open(ifd_reader_t *reader, const char *device_name)
 /*
  * Power up the card slot
  */
-static int
-cm_activate(ifd_reader_t *reader)
+static int cm_activate(ifd_reader_t * reader)
 {
 	ifd_device_t *dev = reader->device;
-	int	rc;
+	int rc;
 
 	ifd_debug(1, "called.");
 	/* Set async card @9600 bps, 2 stop bits, even parity */
@@ -89,11 +83,10 @@ cm_activate(ifd_reader_t *reader)
 	return 0;
 }
 
-static int
-cm_deactivate(ifd_reader_t *reader)
+static int cm_deactivate(ifd_reader_t * reader)
 {
 	ifd_device_t *dev = reader->device;
-	int	rc;
+	int rc;
 
 	ifd_debug(1, "called.");
 	if ((rc = ifd_usb_control(dev, 0x42, 0x11, 0, 0, NULL, 0, -1)) < 0) {
@@ -106,40 +99,40 @@ cm_deactivate(ifd_reader_t *reader)
 /*
  * Card status - always present
  */
-static int
-cm_card_status(ifd_reader_t *reader, int slot, int *status)
+static int cm_card_status(ifd_reader_t * reader, int slot, int *status)
 {
-	ifd_device_t	*dev = reader->device;
-	unsigned char	cm_status = 0;
-	int		rc;
+	ifd_device_t *dev = reader->device;
+	unsigned char cm_status = 0;
+	int rc;
 
 	*status = 0;
 
-	if ((rc = cm_usb_int(dev, 0x42, 0x20, 0, 0, NULL, 0, &cm_status, 1, NULL, -1)) < 0) {
+	if ((rc =
+	     cm_usb_int(dev, 0x42, 0x20, 0, 0, NULL, 0, &cm_status, 1, NULL,
+			-1)) < 0) {
 		ct_error("cardman: failed to get card status");
 		return -1;
 	}
 	if (rc == 1 && (cm_status & 0x42))
 		*status = IFD_CARD_PRESENT;
-	ifd_debug(1, "card %spresent", *status? "" : "not ");
+	ifd_debug(1, "card %spresent", *status ? "" : "not ");
 	return 0;
 }
 
 /*
  * Reset
  */
-static int
-cm_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
+static int cm_card_reset(ifd_reader_t * reader, int slot, void *atr,
+			 size_t size)
 {
-	ifd_device_t	*dev = reader->device;
-	unsigned char	buffer[IFD_MAX_ATR_LEN];
-	int		n;
+	ifd_device_t *dev = reader->device;
+	unsigned char buffer[IFD_MAX_ATR_LEN];
+	int n;
 
 	/* Request the ATR */
 	if ((n = cm_usb_int(dev, 0x42, 0x10, 1, 0, NULL, 0,
-					buffer, sizeof(buffer),
-					(complete_fn_t *) ifd_atr_complete,
-					-1)) < 0) {
+			    buffer, sizeof(buffer),
+			    (complete_fn_t *) ifd_atr_complete, -1)) < 0) {
 		ct_error("cardman: failed to reset card");
 		return n;
 	}
@@ -155,15 +148,14 @@ cm_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 /*
  * Select a protocol for communication with the ICC.
  */
-static int
-cm_set_protocol(ifd_reader_t *reader, int nslot, int proto)
+static int cm_set_protocol(ifd_reader_t * reader, int nslot, int proto)
 {
-	ifd_device_t	*dev = reader->device;
-	ifd_slot_t	*slot;
-	cm_priv_t	*priv;
-	unsigned char	pts[4], reply[4];
-	unsigned int	baudRate;
-	int		n;
+	ifd_device_t *dev = reader->device;
+	ifd_slot_t *slot;
+	cm_priv_t *priv;
+	unsigned char pts[4], reply[4];
+	unsigned int baudRate;
+	int n;
 
 	ifd_debug(1, "called, proto=%d", proto);
 
@@ -184,7 +176,8 @@ cm_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 	pts[3] = pts[0] ^ pts[1] ^ pts[2];
 
 	/* Send the PTS bytes */
-	if ((n = cm_usb_int(dev, 0x42, 1, 0, 0, pts, 4, reply, 2, NULL, -1)) < 0) {
+	if ((n =
+	     cm_usb_int(dev, 0x42, 1, 0, 0, pts, 4, reply, 2, NULL, -1)) < 0) {
 		ct_error("cardman: failed to send PTS");
 		return n;
 	}
@@ -192,7 +185,6 @@ cm_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 		ct_error("cardman: card refused PTS");
 		return IFD_ERROR_COMM_ERROR;
 	}
-
 #ifdef notyet
 	/* Receive PTS response */
 	if ((n = ifd_usb_control(dev, 0xC2, 0, 0, 0, reply, 4, -1)) < 0) {
@@ -214,7 +206,8 @@ cm_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 	if ((pts[2] & 0xF0) == 0x90)
 		baudRate |= 0x10;
 	if ((n = cm_set_card_parameters(dev, baudRate)) < 0) {
-		ct_error("cardman: failed to set card communication parameters");
+		ct_error
+		    ("cardman: failed to set card communication parameters");
 		return n;
 	}
 
@@ -225,7 +218,7 @@ cm_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 		slot->proto = ifd_protocol_new(proto, reader, slot->dad);
 	} else {
 		slot->proto = ifd_protocol_new(IFD_PROTOCOL_TRANSPARENT,
-						reader, slot->dad);
+					       reader, slot->dad);
 	}
 	if (slot->proto == NULL) {
 		ct_error("cardman: internal error");
@@ -241,42 +234,41 @@ cm_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 /*
  * Send/receive using the underlying protocol.
  */
-static int
-cm_transparent(ifd_reader_t *reader, int dad,
-		const void *sbuf, size_t slen,
-		void *rbuf, size_t rlen)
+static int cm_transparent(ifd_reader_t * reader, int dad,
+			  const void *sbuf, size_t slen, void *rbuf,
+			  size_t rlen)
 {
-	cm_priv_t	*priv = (cm_priv_t *) reader->driver_data;
+	cm_priv_t *priv = (cm_priv_t *) reader->driver_data;
 
 	switch (priv->icc_proto) {
 	case IFD_PROTOCOL_T0:
 		return cm_transceive_t0(reader, sbuf, slen, rbuf, rlen);
 	case IFD_PROTOCOL_T1:
-		return IFD_ERROR_NOT_SUPPORTED; /* not yet */
+		return IFD_ERROR_NOT_SUPPORTED;	/* not yet */
 	}
 
 	return IFD_ERROR_NOT_SUPPORTED;
 }
 
-static int
-cm_transceive_t0(ifd_reader_t *reader,
-		const void *sbuf, size_t slen,
-		void *rbuf, size_t rlen)
+static int cm_transceive_t0(ifd_reader_t * reader,
+			    const void *sbuf, size_t slen, void *rbuf,
+			    size_t rlen)
 {
 #if 0
-	ifd_device_t	*dev = reader->device;
-	int		rc;
+	ifd_device_t *dev = reader->device;
+	int rc;
 
 	if (len > 5) {
 		rc = ifd_usb_control(dev, 0x42, 2, 0, 0, rbuf, rlen);
 	} else {
-		unsigned char	temp[5];
+		unsigned char temp[5];
 
 		if (len < 4)
 			return IFD_ERROR_INVALID_ARG;
 		temp[4] = 0;
 		memcpy(temp, sbuf, slen);
-		rc = ifd_usb_control(dev, 0x42, 3, 8, (temp[1] << 8)|temp[4], temp, 5);
+		rc = ifd_usb_control(dev, 0x42, 3, 8, (temp[1] << 8) | temp[4],
+				     temp, 5);
 	}
 #endif
 	return IFD_ERROR_NOT_SUPPORTED;
@@ -285,18 +277,17 @@ cm_transceive_t0(ifd_reader_t *reader,
 /*
  * Send/receive routines
  */
-static int
-cm_send_t0(ifd_reader_t *reader, unsigned int dad, const unsigned char *sbuf, size_t slen)
+static int cm_send_t0(ifd_reader_t * reader, unsigned int dad,
+		      const unsigned char *sbuf, size_t slen)
 {
-	cm_priv_t	*priv = (cm_priv_t *) reader->driver_data;
-	ifd_device_t	*dev = reader->device;
-	int		rc;
+	cm_priv_t *priv = (cm_priv_t *) reader->driver_data;
+	ifd_device_t *dev = reader->device;
+	int rc;
 
 	/* XXX how can we know if this is a CASE 1 or CASE 2 APDU? */
 	priv->head = priv->tail = 0;
 	rc = cm_usb_int(dev, 0x42, 2, 0, 0, sbuf, slen,
-			priv->rbuf, sizeof(priv->rbuf),
-		       	cm_anyreply, -1);
+			priv->rbuf, sizeof(priv->rbuf), cm_anyreply, -1);
 	if (rc >= 0) {
 		priv->tail = rc;
 		rc = slen;
@@ -304,10 +295,10 @@ cm_send_t0(ifd_reader_t *reader, unsigned int dad, const unsigned char *sbuf, si
 	return rc;
 }
 
-static int
-cm_send(ifd_reader_t *reader, unsigned int dad, const unsigned char *buffer, size_t len)
+static int cm_send(ifd_reader_t * reader, unsigned int dad,
+		   const unsigned char *buffer, size_t len)
 {
-	cm_priv_t	*priv = (cm_priv_t *) reader->driver_data;
+	cm_priv_t *priv = (cm_priv_t *) reader->driver_data;
 
 	switch (priv->icc_proto) {
 	case IFD_PROTOCOL_T0:
@@ -317,10 +308,10 @@ cm_send(ifd_reader_t *reader, unsigned int dad, const unsigned char *buffer, siz
 	return IFD_ERROR_NOT_SUPPORTED;
 }
 
-static int
-cm_recv(ifd_reader_t *reader, unsigned int dad, unsigned char *buffer, size_t len, long timeout)
+static int cm_recv(ifd_reader_t * reader, unsigned int dad,
+		   unsigned char *buffer, size_t len, long timeout)
 {
-	cm_priv_t	*priv = (cm_priv_t *) reader->driver_data;
+	cm_priv_t *priv = (cm_priv_t *) reader->driver_data;
 
 	switch (priv->icc_proto) {
 	case IFD_PROTOCOL_T0:
@@ -330,14 +321,13 @@ cm_recv(ifd_reader_t *reader, unsigned int dad, unsigned char *buffer, size_t le
 		priv->head += len;
 		return len;
 	}
-	return IFD_ERROR_NOT_SUPPORTED; /* not yet */
+	return IFD_ERROR_NOT_SUPPORTED;	/* not yet */
 }
 
 /*
  * Set the card's baud rate etc
  */
-int
-cm_set_card_parameters(ifd_device_t *dev, unsigned int baudrate)
+int cm_set_card_parameters(ifd_device_t * dev, unsigned int baudrate)
 {
 	return ifd_usb_control(dev, 0x42, 0x30, baudrate << 8, 2, NULL, 0, -1);
 }
@@ -346,45 +336,40 @@ cm_set_card_parameters(ifd_device_t *dev, unsigned int baudrate)
  * Send USB control message, and receive data via
  * Interrupt URBs.
  */
-int
-cm_usb_int(ifd_device_t *dev, int requesttype, int request,
-	       int value, int index,
-	       const void *sbuf, size_t slen,
-	       void *rbuf, size_t rlen,
-	       complete_fn_t complete,
-	       long timeout)
+int cm_usb_int(ifd_device_t * dev, int requesttype, int request, int value,
+	       int index, const void *sbuf, size_t slen, void *rbuf,
+	       size_t rlen, complete_fn_t complete, long timeout)
 {
-	ifd_usb_capture_t	*cap;
-	struct timeval		begin;
-	unsigned int		total = 0;
-	int			rc;
+	ifd_usb_capture_t *cap;
+	struct timeval begin;
+	unsigned int total = 0;
+	int rc;
 
 	if (timeout < 0)
 		timeout = dev->timeout;
 
 	rc = ifd_usb_begin_capture(dev,
-		       	IFD_USB_URB_TYPE_INTERRUPT,
-			0x81, 8, &cap);
+				   IFD_USB_URB_TYPE_INTERRUPT, 0x81, 8, &cap);
 	if (rc < 0)
 		return rc;
 
 	gettimeofday(&begin, NULL);
 	rc = ifd_usb_control(dev, requesttype, request,
-			value, index, (void *) sbuf, slen, timeout);
+			     value, index, (void *)sbuf, slen, timeout);
 	if (rc < 0)
 		goto out;
 
 	/* Capture URBs until we have a complete answer */
 	while (rc >= 0 && total < rlen) {
-		unsigned char	temp[8];
-		long		wait;
+		unsigned char temp[8];
+		long wait;
 
 		wait = timeout - ifd_time_elapsed(&begin);
 		if (wait <= 0)
 			return IFD_ERROR_TIMEOUT;
 		rc = ifd_usb_capture(dev, cap, temp, sizeof(temp), wait);
 		if (rc > 0) {
-			if (rc > (int) (rlen - total))
+			if (rc > (int)(rlen - total))
 				rc = rlen - total;
 			memcpy((caddr_t) rbuf + total, temp, rc);
 			total += rc;
@@ -395,17 +380,17 @@ cm_usb_int(ifd_device_t *dev, int requesttype, int request,
 	}
 
 	if (rc >= 0) {
-		ifd_debug(3, "received %u bytes:%s", total, ct_hexdump(rbuf, total));
+		ifd_debug(3, "received %u bytes:%s", total,
+			  ct_hexdump(rbuf, total));
 		rc = total;
 	}
 
-out:
+      out:
 	ifd_usb_end_capture(dev, cap);
 	return rc;
 }
 
-static int
-cm_anyreply(const void *ptr, size_t len)
+static int cm_anyreply(const void *ptr, size_t len)
 {
 	return 1;
 }
@@ -413,13 +398,12 @@ cm_anyreply(const void *ptr, size_t len)
 /*
  * Driver operations
  */
-static struct ifd_driver_ops	cardman_driver;
+static struct ifd_driver_ops cardman_driver;
 
 /*
  * Initialize this module
  */
-void
-ifd_cardman_register(void)
+void ifd_cardman_register(void)
 {
 	cardman_driver.open = cm_open;
 	cardman_driver.activate = cm_activate;
