@@ -42,15 +42,14 @@ typedef struct scdl_context scdl_context_t;
 /*
  * Module loader for platforms that have dlopen
  */
-static int
-dlfcn_open(scdl_context_t *mod, const char *name)
+static int dlfcn_open(scdl_context_t * mod, const char *name)
 {
-	const char	**dir, *ldlist[64];
-	char		pathbuf[4096], *ldenv;
-	unsigned int	n = 0, flags = 0;
+	const char **dir, *ldlist[64];
+	char pathbuf[4096], *ldenv;
+	unsigned int n = 0, flags = 0;
 
 	if ((ldenv = getenv("LD_LIBRARY_PATH"))
-	 && (ldenv = strdup(ldenv))) {
+	    && (ldenv = strdup(ldenv))) {
 		ldlist[n] = strtok(ldenv, ":");
 		while (ldlist[n] != NULL && ++n < 63)
 			ldlist[n] = strtok(NULL, ":");
@@ -74,11 +73,10 @@ dlfcn_open(scdl_context_t *mod, const char *name)
 		free(ldenv);
 
 	mod->type = SCDL_TYPE_DLFCN;
-	return (mod->handle? 0 : -1);
+	return (mod->handle ? 0 : -1);
 }
 
-static int
-dlfcn_close(scdl_context_t *mod)
+static int dlfcn_close(scdl_context_t * mod)
 {
 	if (mod->handle)
 		dlclose(mod->handle);
@@ -86,8 +84,7 @@ dlfcn_close(scdl_context_t *mod)
 	return 0;
 }
 
-static void *
-dlfcn_get_address(scdl_context_t *mod, const char *symbol)
+static void *dlfcn_get_address(scdl_context_t * mod, const char *symbol)
 {
 	char sym_name[256];
 	void *address;
@@ -113,32 +110,28 @@ dlfcn_get_address(scdl_context_t *mod, const char *symbol)
 /*
  * Module loader for the Windows platform.
  */
-static int
-win32_open(scdl_context_t *mod, const char *name)
+static int win32_open(scdl_context_t * mod, const char *name)
 {
 	mod->handle = LoadLibrary(name);
 	mod->type = SCDL_TYPE_WIN32;
 
-	return (mod->handle? 0 : GetLastError());
+	return (mod->handle ? 0 : GetLastError());
 }
 
-static int
-win32_close(scdl_context_t *mod)
+static int win32_close(scdl_context_t * mod)
 {
 	if (mod->handle) {
 		if (FreeLibrary(mod->handle)) {
 			mod->handle = NULL;
 			return 0;
-		}
-		else
+		} else
 			return -1;
 	}
 
 	return 0;
 }
 
-static void *
-win32_get_address(scdl_context_t *mod, const char *symbol)
+static void *win32_get_address(scdl_context_t * mod, const char *symbol)
 {
 	if (!mod->handle)
 		return NULL;
@@ -152,21 +145,21 @@ win32_get_address(scdl_context_t *mod, const char *symbol)
 /*
  * Module loader for MacOS X
  */
-static int
-mac_open(scdl_context_t *mod, const char *name)
+static int mac_open(scdl_context_t * mod, const char *name)
 {
 	if (strstr(name, ".bundle")) {
-		CFStringRef text = CFStringCreateWithFormat(
-			NULL, NULL, CFSTR("%s"), name);
-		CFURLRef urlRef = CFURLCreateWithFileSystemPath(
-			kCFAllocatorDefault, text, kCFURLPOSIXPathStyle, 1);
+		CFStringRef text =
+		    CFStringCreateWithFormat(NULL, NULL, CFSTR("%s"), name);
+		CFURLRef urlRef =
+		    CFURLCreateWithFileSystemPath(kCFAllocatorDefault, text,
+						  kCFURLPOSIXPathStyle, 1);
 		mod->bundleRef = CFBundleCreate(kCFAllocatorDefault, urlRef);
 		CFRelease(urlRef);
 		CFRelease(text);
 		mod->handle = NULL;
 	} else {
-		mod->handle = (struct mach_header *) NSAddImage(name,
-			NSADDIMAGE_OPTION_WITH_SEARCHING);
+		mod->handle = (struct mach_header *)NSAddImage(name,
+							       NSADDIMAGE_OPTION_WITH_SEARCHING);
 		mod->bundleRef = NULL;
 	}
 	mod->type = SCDL_TYPE_MAC;
@@ -174,8 +167,7 @@ mac_open(scdl_context_t *mod, const char *name)
 	return (mod->handle == NULL && mod->bundleRef == NULL ? -1 : 0);
 }
 
-static int
-mac_close(scdl_context_t *mod)
+static int mac_close(scdl_context_t * mod)
 {
 	if (mod->bundleRef != NULL) {
 		CFBundleUnloadExecutable(mod->bundleRef);
@@ -185,16 +177,14 @@ mac_close(scdl_context_t *mod)
 	return 0;
 }
 
-static void *
-mac_get_address(scdl_context_t *mod, const char *symbol)
+static void *mac_get_address(scdl_context_t * mod, const char *symbol)
 {
 	NSSymbol nssym = NULL;
 
 	if (mod->bundleRef != NULL) {
-		CFStringRef text = CFStringCreateWithFormat(
-			NULL, NULL, CFSTR("%s"), symbol);
-		nssym = CFBundleGetFunctionPointerForName(
-			mod->bundleRef, text);
+		CFStringRef text =
+		    CFStringCreateWithFormat(NULL, NULL, CFSTR("%s"), symbol);
+		nssym = CFBundleGetFunctionPointerForName(mod->bundleRef, text);
 		CFRelease(text);
 		return nssym;
 	} else {
@@ -202,8 +192,8 @@ mac_get_address(scdl_context_t *mod, const char *symbol)
 
 		snprintf(sym_name, sizeof(sym_name), "_%s", symbol);
 		nssym = NSLookupSymbolInImage((const struct mach_header *)
-			mod->handle, sym_name,
-			NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
+					      mod->handle, sym_name,
+					      NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
 		if (nssym == NULL)
 			return NULL;
 		return NSAddressOfSymbol(nssym);
@@ -211,8 +201,7 @@ mac_get_address(scdl_context_t *mod, const char *symbol)
 }
 #endif
 
-void *
-scdl_open(const char *name)
+void *scdl_open(const char *name)
 {
 	scdl_context_t *mod;
 	int rv;
@@ -241,11 +230,10 @@ scdl_open(const char *name)
 		free(mod);
 		return NULL;
 	}
-	return (void *) mod;
+	return (void *)mod;
 }
 
-int
-scdl_close(void *module)
+int scdl_close(void *module)
 {
 	scdl_context_t *mod = (scdl_context_t *) module;
 	int rv;
@@ -255,7 +243,7 @@ scdl_close(void *module)
 #if defined(_WIN32)
 	rv = win32_close(mod);
 #elif defined(HAVE_DLFCN_H) && defined(__APPLE__)
-	switch(mod->type) {
+	switch (mod->type) {
 	case SCDL_TYPE_MAC:
 		rv = mac_close(mod);
 		break;
@@ -273,8 +261,7 @@ scdl_close(void *module)
 	return 0;
 }
 
-void *
-scdl_get_address(void *module, const char *symbol)
+void *scdl_get_address(void *module, const char *symbol)
 {
 	scdl_context_t *mod = (scdl_context_t *) module;
 
@@ -283,7 +270,7 @@ scdl_get_address(void *module, const char *symbol)
 #if defined(_WIN32)
 	return win32_get_address(mod, symbol);
 #elif defined(HAVE_DLFCN_H) && defined(__APPLE__)
-	switch(mod->type) {
+	switch (mod->type) {
 	case SCDL_TYPE_MAC:
 		return mac_get_address(mod, symbol);
 		break;
