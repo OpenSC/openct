@@ -21,11 +21,10 @@ static unsigned int speed_to_termios(unsigned int speed);
 /*
  * Reset the device
  */
-static int
-ifd_serial_reset(ifd_device_t *dev)
+static int ifd_serial_reset(ifd_device_t * dev)
 {
-	ifd_device_params_t	params, orig_params;
-	int			rc;
+	ifd_device_params_t params, orig_params;
+	int rc;
 
 	if ((rc = ifd_device_get_parameters(dev, &orig_params)) < 0)
 		return rc;
@@ -47,12 +46,12 @@ ifd_serial_reset(ifd_device_t *dev)
 /*
  * Get the current configuration
  */
-static int
-ifd_serial_get_params(ifd_device_t *dev, ifd_device_params_t *params)
+static int ifd_serial_get_params(ifd_device_t * dev,
+				 ifd_device_params_t * params)
 {
-	int		control;
-	unsigned int	bits;
-	struct termios	t;
+	int control;
+	unsigned int bits;
+	struct termios t;
 
 	memset(params, 0, sizeof(*params));
 
@@ -62,16 +61,25 @@ ifd_serial_get_params(ifd_device_t *dev, ifd_device_params_t *params)
 	}
 
 	switch (t.c_cflag & CSIZE) {
-	case CS5: bits = 5; break;
-	case CS6: bits = 6; break;
-	case CS7: bits = 7; break;
-	case CS8: bits = 8; break;
-	default:  bits = 8; /* hmmm */
+	case CS5:
+		bits = 5;
+		break;
+	case CS6:
+		bits = 6;
+		break;
+	case CS7:
+		bits = 7;
+		break;
+	case CS8:
+		bits = 8;
+		break;
+	default:
+		bits = 8;	/* hmmm */
 	}
 
 	params->serial.speed = termios_to_speed(cfgetospeed(&t));
 	params->serial.bits = bits;
-	params->serial.stopbits = (t.c_cflag & CSTOPB)? 2 : 1;
+	params->serial.stopbits = (t.c_cflag & CSTOPB) ? 2 : 1;
 	if (!(t.c_cflag & PARENB))
 		params->serial.parity = IFD_SERIAL_PARITY_NONE;
 	else if (t.c_cflag & PARODD)
@@ -86,8 +94,10 @@ ifd_serial_get_params(ifd_device_t *dev, ifd_device_params_t *params)
 		ct_error("%s: TIOCMGET: %m", dev->name);
 		return -1;
 	}
-	if (control & TIOCM_RTS) params->serial.rts = 1;
-	if (control & TIOCM_DTR) params->serial.dtr = 1;
+	if (control & TIOCM_RTS)
+		params->serial.rts = 1;
+	if (control & TIOCM_DTR)
+		params->serial.dtr = 1;
 
 	dev->settings = *params;
 	return 0;
@@ -96,12 +106,12 @@ ifd_serial_get_params(ifd_device_t *dev, ifd_device_params_t *params)
 /*
  * Set serial line params
  */
-static int
-ifd_serial_set_params(ifd_device_t *dev, const ifd_device_params_t *params)
+static int ifd_serial_set_params(ifd_device_t * dev,
+				 const ifd_device_params_t * params)
 {
-	unsigned int	speed;
-	int		control, ocontrol;
-	struct termios	t;
+	unsigned int speed;
+	int control, ocontrol;
+	struct termios t;
 
 	if (tcgetattr(dev->fd, &t) < 0) {
 		ct_error("%s: tcgetattr: %m", dev->name);
@@ -109,21 +119,19 @@ ifd_serial_set_params(ifd_device_t *dev, const ifd_device_params_t *params)
 	}
 
 	if (ct_config.debug) {
-		char	parity = 'N';
+		char parity = 'N';
 
 		if (params->serial.parity == IFD_SERIAL_PARITY_EVEN)
 			parity = 'E';
-		else
-		if (params->serial.parity == IFD_SERIAL_PARITY_ODD)
+		else if (params->serial.parity == IFD_SERIAL_PARITY_ODD)
 			parity = 'O';
 		ifd_debug(1, "setting serial line to %u, %u%c%u, "
-			     "dtr=%d, rts=%d",
-			     params->serial.speed,
-			     params->serial.bits,
-			     parity,
-			     params->serial.stopbits,
-			     params->serial.dtr,
-			     params->serial.rts);
+			  "dtr=%d, rts=%d",
+			  params->serial.speed,
+			  params->serial.bits,
+			  parity,
+			  params->serial.stopbits,
+			  params->serial.dtr, params->serial.rts);
 	}
 
 	cfsetospeed(&t, speed_to_termios(params->serial.speed));
@@ -131,10 +139,18 @@ ifd_serial_set_params(ifd_device_t *dev, const ifd_device_params_t *params)
 
 	t.c_cflag &= ~CSIZE;
 	switch (params->serial.bits) {
-	case 5:  t.c_cflag |= CS5; break;
-	case 6:  t.c_cflag |= CS6; break;
-	case 7:  t.c_cflag |= CS7; break;
-	default: t.c_cflag |= CS8; break;
+	case 5:
+		t.c_cflag |= CS5;
+		break;
+	case 6:
+		t.c_cflag |= CS6;
+		break;
+	case 7:
+		t.c_cflag |= CS7;
+		break;
+	default:
+		t.c_cflag |= CS8;
+		break;
 	}
 
 	t.c_cflag &= ~(PARENB | PARODD);
@@ -177,10 +193,12 @@ ifd_serial_set_params(ifd_device_t *dev, const ifd_device_params_t *params)
 		return -1;
 	}
 	control = ocontrol & ~(TIOCM_DTR | TIOCM_RTS);
-	if (params->serial.rts) control |= TIOCM_RTS;
-	if (params->serial.dtr) control |= TIOCM_DTR;
+	if (params->serial.rts)
+		control |= TIOCM_RTS;
+	if (params->serial.dtr)
+		control |= TIOCM_DTR;
 	if (((control ^ ocontrol) & (TIOCM_DTR | TIOCM_RTS))
-	 && ioctl(dev->fd, TIOCMSET, &control) < 0) {
+	    && ioctl(dev->fd, TIOCMSET, &control) < 0) {
 		ct_error("%s: TIOCMGET: %m", dev->name);
 		return -1;
 	}
@@ -192,8 +210,7 @@ ifd_serial_set_params(ifd_device_t *dev, const ifd_device_params_t *params)
 /*
  * Flush pending input
  */
-static void
-ifd_serial_flush(ifd_device_t *dev)
+static void ifd_serial_flush(ifd_device_t * dev)
 {
 	tcflush(dev->fd, TCIFLUSH);
 }
@@ -201,8 +218,7 @@ ifd_serial_flush(ifd_device_t *dev)
 /*
  * Send a BREAK command
  */
-void
-ifd_serial_send_break(ifd_device_t *dev, unsigned int usec)
+void ifd_serial_send_break(ifd_device_t * dev, unsigned int usec)
 {
 	ioctl(dev->fd, TIOCSBRK);
 	usleep(usec);
@@ -212,17 +228,16 @@ ifd_serial_send_break(ifd_device_t *dev, unsigned int usec)
 /*
  * Input/output routines
  */
-static int
-ifd_serial_send(ifd_device_t *dev, const unsigned char *buffer, size_t len)
+static int ifd_serial_send(ifd_device_t * dev, const unsigned char *buffer,
+			   size_t len)
 {
-	size_t		total = len;
-	int		n;
+	size_t total = len;
+	int n;
 
 	while (len) {
 		n = write(dev->fd, buffer, len);
 		if (n < 0) {
-			ct_error("Error writing to %s: %m",
-					dev->name);
+			ct_error("Error writing to %s: %m", dev->name);
 			return -1;
 		}
 		buffer += n;
@@ -232,12 +247,12 @@ ifd_serial_send(ifd_device_t *dev, const unsigned char *buffer, size_t len)
 	return total;
 }
 
-static int
-ifd_serial_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeout)
+static int ifd_serial_recv(ifd_device_t * dev, unsigned char *buffer,
+			   size_t len, long timeout)
 {
-	size_t		total = len, to_read;
-	struct timeval	begin;
-	int		n, last_ff = 0;
+	size_t total = len, to_read;
+	struct timeval begin;
+	int n, last_ff = 0;
 
 	gettimeofday(&begin, NULL);
 
@@ -253,7 +268,7 @@ ifd_serial_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeo
 		n = poll(&pfd, 1, wait);
 		if (n < 0) {
 			ct_error("%s: error while waiting for input: %m",
-					dev->name);
+				 dev->name);
 			return -1;
 		}
 		if (n == 0)
@@ -266,7 +281,7 @@ ifd_serial_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeo
 		n = read(dev->fd, buffer, to_read);
 		if (n < 0) {
 			ct_error("%s: failed to read from device: %m",
-					dev->name);
+				 dev->name);
 			return -1;
 		}
 		if (ct_config.debug >= 9)
@@ -275,13 +290,14 @@ ifd_serial_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeo
 		if (dev->settings.serial.check_parity) {
 			if (last_ff) {
 				if (buffer[0] == 0x00) {
-					ct_error("%s: parity error on input", dev->name);
+					ct_error("%s: parity error on input",
+						 dev->name);
 					return -1;
 				}
 				if (buffer[0] != 0xFF) {
 					ifd_debug(1,
-						"%s: unexpected character pair FF %02x",
-						dev->name, buffer[0]);
+						  "%s: unexpected character pair FF %02x",
+						  dev->name, buffer[0]);
 				}
 				last_ff = 0;
 			} else if (buffer[0] == 0xFF) {
@@ -295,11 +311,10 @@ ifd_serial_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeo
 
 	return total;
 
-timeout:/* Timeouts are a little special; they may happen e.g.
-	 * when trying to obtain the ATR */
+      timeout:			/* Timeouts are a little special; they may happen e.g.
+				 * when trying to obtain the ATR */
 	if (!ct_config.suppress_errors)
-		ct_error("%s: timed out while waiting for input",
-				dev->name);
+		ct_error("%s: timed out while waiting for input", dev->name);
 	ifd_debug(9, "(%u bytes received so far)", total - len);
 	return IFD_ERROR_TIMEOUT;
 }
@@ -307,47 +322,43 @@ timeout:/* Timeouts are a little special; they may happen e.g.
 /*
  * Get status of modem lines
  */
-int
-ifd_serial_get_dtr(ifd_device_t *dev)
+int ifd_serial_get_dtr(ifd_device_t * dev)
 {
-	int	status;
+	int status;
 
 	if (ioctl(dev->fd, TIOCMGET, &status) < 0) {
 		ct_error("%s: ioctl(TIOCMGET) failed: %m", dev->name);
 		return -1;
 	}
-	return (status & TIOCM_DTR)? 1 : 0;
+	return (status & TIOCM_DTR) ? 1 : 0;
 }
 
-int
-ifd_serial_get_dsr(ifd_device_t *dev)
+int ifd_serial_get_dsr(ifd_device_t * dev)
 {
-	int	status;
+	int status;
 
 	if (ioctl(dev->fd, TIOCMGET, &status) < 0) {
 		ct_error("%s: ioctl(TIOCMGET) failed: %m", dev->name);
 		return -1;
 	}
-	return (status & TIOCM_DSR)? 1 : 0;
+	return (status & TIOCM_DSR) ? 1 : 0;
 }
 
-int
-ifd_serial_get_cts(ifd_device_t *dev)
+int ifd_serial_get_cts(ifd_device_t * dev)
 {
-	int	status;
+	int status;
 
 	if (ioctl(dev->fd, TIOCMGET, &status) < 0) {
 		ct_error("%s: ioctl(TIOCMGET) failed: %m", dev->name);
 		return -1;
 	}
-	return (status & TIOCM_CTS)? 1 : 0;
+	return (status & TIOCM_CTS) ? 1 : 0;
 }
 
 /*
  * Identify attached device
  */
-static int
-ifd_serial_identify(ifd_device_t *dev, char *namebuf, size_t len)
+static int ifd_serial_identify(ifd_device_t * dev, char *namebuf, size_t len)
 {
 	ct_error("Serial PNP not yet implemented");
 	return -1;
@@ -356,8 +367,7 @@ ifd_serial_identify(ifd_device_t *dev, char *namebuf, size_t len)
 /*
  * Close the device
  */
-static void
-ifd_serial_close(ifd_device_t *dev)
+static void ifd_serial_close(ifd_device_t * dev)
 {
 	if (dev->fd >= 0)
 		close(dev->fd);
@@ -369,14 +379,13 @@ static struct ifd_device_ops ifd_serial_ops;
 /*
  * Open serial device
  */
-ifd_device_t *
-ifd_open_serial(const char *name)
+ifd_device_t *ifd_open_serial(const char *name)
 {
 	ifd_device_params_t params;
-	ifd_device_t	*dev;
-	int		fd;
+	ifd_device_t *dev;
+	int fd;
 
-	if ((fd = open(name, O_RDWR|O_NDELAY)) < 0) {
+	if ((fd = open(name, O_RDWR | O_NDELAY)) < 0) {
 		ct_error("Unable to open %s: %m", name);
 		return NULL;
 	}
@@ -395,7 +404,7 @@ ifd_open_serial(const char *name)
 	ifd_serial_ops.close = ifd_serial_close;
 
 	dev = ifd_device_new(name, &ifd_serial_ops, sizeof(*dev));
-	dev->timeout = 1000; /* acceptable? */
+	dev->timeout = 1000;	/* acceptable? */
 	dev->type = IFD_DEVICE_TYPE_SERIAL;
 	dev->fd = fd;
 
@@ -416,72 +425,73 @@ ifd_open_serial(const char *name)
  * Map termios speed flags to speed
  */
 static struct {
-	unsigned int	bits, speed;
+	unsigned int bits, speed;
 } termios_speed[] = {
 #ifdef B0
-      {	B0,		0 },
+	{ B0, 0 },
 #endif
 #ifdef B50
-      {	B50,		50 },
+	{ B50, 50 },
 #endif
 #ifdef B75
-      {	B75,		75 },
+	{ B75, 75 },
 #endif
 #ifdef B110
-      {	B110,		110 },
+	{ B110, 110 },
 #endif
 #ifdef B134
-      {	B134,		134 },
+	{ B134, 134 },
 #endif
 #ifdef B150
-      {	B150,		150 },
+	{ B150, 150 },
 #endif
 #ifdef B200
-      {	B200,		200 },
+	{ B200, 200 },
 #endif
 #ifdef B300
-      {	B300,		300 },
+	{ B300, 300 },
 #endif
 #ifdef B600
-      {	B600,		600 },
+	{ B600, 600 },
 #endif
 #ifdef B1200
-      {	B1200,		1200 },
+	{ B1200, 1200 },
 #endif
 #ifdef B1800
-      {	B1800,		1800 },
+	{ B1800, 1800 },
 #endif
 #ifdef B2400
-      {	B2400,		2400 },
+	{ B2400, 2400 },
 #endif
 #ifdef B4800
-      {	B4800,		4800 },
+	{ B4800, 4800 },
 #endif
 #ifdef B9600
-      {	B9600,		9600 },
+	{ B9600, 9600 },
 #endif
 #ifdef B19200
-      {	B19200,		19200 },
+	{
+	B19200, 19200 },
 #endif
 #ifdef B38400
-      {	B38400,		38400 },
+	{
+	B38400, 38400 },
 #endif
 #ifdef B57600
-      {	B57600,		57600 },
+	{ B57600, 57600 },
 #endif
 #ifdef B115200
-      {	B115200,	115200 },
+	{ B115200, 115200 },
 #endif
 #ifdef B230400
-      {	B230400,	230400 },
+	{ B230400, 230400 },
 #endif
-      { -1, -1 }
+	{ -1, -1 }
 };
 
-unsigned int
-speed_to_termios(unsigned int speed)
+unsigned int speed_to_termios(unsigned int speed)
 {
-	unsigned int	n;
+	unsigned int n;
 
 	for (n = 0; termios_speed[n].bits >= 0; n++) {
 		if (termios_speed[n].speed >= speed) {
@@ -491,8 +501,7 @@ speed_to_termios(unsigned int speed)
 	return B9600;
 }
 
-unsigned int
-termios_to_speed(unsigned int bits)
+unsigned int termios_to_speed(unsigned int bits)
 {
 	unsigned int n;
 
