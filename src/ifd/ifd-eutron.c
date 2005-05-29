@@ -107,11 +107,11 @@ static int eutron_card_reset(ifd_reader_t * reader, int slot, void *atr,
 		if (rc < 0)
 			goto failed;
 		lr += rc;
-		if (lr >= 4)
-			break;
-
 		if (lr > IFD_MAX_ATR_LEN)
 			goto failed;
+
+		if (lr >= 4)
+			break;	/* heuristik: guess we got the full atr */
 		usleep(100000);
 	}
 	if (c >= 20)
@@ -123,7 +123,8 @@ static int eutron_card_reset(ifd_reader_t * reader, int slot, void *atr,
 
 	return atrlen;
 
-      failed:ct_error("eutron: failed to activate token");
+failed:
+	ct_error("eutron: failed to activate token");
 	return -1;
 }
 
