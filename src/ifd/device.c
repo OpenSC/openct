@@ -11,8 +11,7 @@
 /*
  * Open a device given the name
  */
-ifd_device_t *
-ifd_device_open(const char *name)
+ifd_device_t *ifd_device_open(const char *name)
 {
 	if (!strncmp(name, "serial:", 7))
 		return ifd_open_serial(name + 7);
@@ -28,7 +27,7 @@ ifd_device_open(const char *name)
 		return ifd_open_serial(name);
 	case IFD_DEVICE_TYPE_USB:
 		return ifd_open_usb(name);
-	/* Other types to be added */
+		/* Other types to be added */
 	case -1:
 		ct_error("Unknown device type \"%s\"", name);
 	}
@@ -40,8 +39,8 @@ ifd_device_open(const char *name)
  * This is an internal function called by the different device
  * type handlers (serial, usb, etc)
  */
-ifd_device_t *
-ifd_device_new(const char *name, struct ifd_device_ops *ops, size_t size)
+ifd_device_t *ifd_device_new(const char *name, struct ifd_device_ops * ops,
+			     size_t size)
 {
 	ifd_device_t *dev;
 
@@ -55,8 +54,7 @@ ifd_device_new(const char *name, struct ifd_device_ops *ops, size_t size)
 /*
  * Destroy a device handle
  */
-void
-ifd_device_free(ifd_device_t *dev)
+void ifd_device_free(ifd_device_t * dev)
 {
 	if (dev->name)
 		free(dev->name);
@@ -69,14 +67,12 @@ ifd_device_free(ifd_device_t *dev)
  * just do a consistency check on the handle, and route
  * the call to the appropriate member function
  */
-int
-ifd_device_type(ifd_device_t *dev)
+int ifd_device_type(ifd_device_t * dev)
 {
 	return dev->type;
 }
 
-int
-ifd_device_identify(const char *name, char *ident, size_t len)
+int ifd_device_identify(const char *name, char *ident, size_t len)
 {
 	ifd_device_t *dev;
 	int res = -1;
@@ -89,71 +85,64 @@ ifd_device_identify(const char *name, char *ident, size_t len)
 	return res;
 }
 
-int
-ifd_device_reset(ifd_device_t *dev)
+int ifd_device_reset(ifd_device_t * dev)
 {
 	if (!dev || !dev->ops || !dev->ops->reset)
 		return IFD_ERROR_NOT_SUPPORTED;
 	return dev->ops->reset(dev);
 }
 
-void
-ifd_device_set_hotplug(ifd_device_t *dev, int hotplug)
+void ifd_device_set_hotplug(ifd_device_t * dev, int hotplug)
 {
 	if (hotplug)
 		dev->hotplug = 1;
 }
 
-int
-ifd_device_set_parameters(ifd_device_t *dev, const ifd_device_params_t *parms)
+int ifd_device_set_parameters(ifd_device_t * dev,
+			      const ifd_device_params_t * parms)
 {
 	if (!dev || !dev->ops || !dev->ops->set_params)
 		return IFD_ERROR_NOT_SUPPORTED;
 	return dev->ops->set_params(dev, parms);
 }
 
-int
-ifd_device_get_parameters(ifd_device_t *dev, ifd_device_params_t *parms)
+int ifd_device_get_parameters(ifd_device_t * dev, ifd_device_params_t * parms)
 {
 	if (!dev || !dev->ops || !dev->ops->get_params)
 		return IFD_ERROR_NOT_SUPPORTED;
 	return dev->ops->get_params(dev, parms);
 }
 
-void
-ifd_device_flush(ifd_device_t *dev)
+void ifd_device_flush(ifd_device_t * dev)
 {
 	if (!dev || !dev->ops || !dev->ops->flush)
 		return;
 	dev->ops->flush(dev);
 }
 
-void
-ifd_device_send_break(ifd_device_t *dev, unsigned int usec)
+void ifd_device_send_break(ifd_device_t * dev, unsigned int usec)
 {
-        if (!dev || !dev->ops || !dev->ops->send_break)
-                return;
-        dev->ops->send_break(dev, usec);
+	if (!dev || !dev->ops || !dev->ops->send_break)
+		return;
+	dev->ops->send_break(dev, usec);
 }
 
-int
-ifd_device_send(ifd_device_t *dev, const unsigned char *data, size_t len)
+int ifd_device_send(ifd_device_t * dev, const unsigned char *data, size_t len)
 {
 	if (!dev || !dev->ops || !dev->ops->send)
 		return IFD_ERROR_NOT_SUPPORTED;
 	return dev->ops->send(dev, data, len);
 }
 
-int
-ifd_device_control(ifd_device_t *dev, void *cmsg, size_t len)
+int ifd_device_control(ifd_device_t * dev, void *cmsg, size_t len)
 {
 	if (!dev || !dev->ops || !dev->ops->control)
 		return IFD_ERROR_NOT_SUPPORTED;
 	return dev->ops->control(dev, cmsg, len);
 }
 
-int
-ifd_device_recv(ifd_device_t *dev, unsigned char *data, size_t len, long timeout)
+int ifd_device_recv(ifd_device_t * dev, unsigned char *data, size_t len,
+		    long timeout)
 {
 	if (timeout < 0)
 		timeout = dev->timeout;
@@ -163,13 +152,10 @@ ifd_device_recv(ifd_device_t *dev, unsigned char *data, size_t len, long timeout
 	return dev->ops->recv(dev, data, len, timeout);
 }
 
-int
-ifd_device_transceive(ifd_device_t *dev, 
-		const void *sbuf, size_t slen,
-		void *rbuf, size_t rlen,
-		long timeout)
+int ifd_device_transceive(ifd_device_t * dev, const void *sbuf, size_t slen,
+			  void *rbuf, size_t rlen, long timeout)
 {
-	int	rc;
+	int rc;
 
 	if (timeout < 0)
 		timeout = dev->timeout;
@@ -178,26 +164,23 @@ ifd_device_transceive(ifd_device_t *dev,
 		return -1;
 	if (dev->ops->transceive)
 		return dev->ops->transceive(dev,
-						sbuf, slen,
-						rbuf, rlen, timeout);
+					    sbuf, slen, rbuf, rlen, timeout);
 
 	/* Fall back to send/recv */
 	ifd_device_flush(dev);
-	if ((rc = ifd_device_send(dev, (const unsigned char *) sbuf, slen)) < 0)
+	if ((rc = ifd_device_send(dev, (const unsigned char *)sbuf, slen)) < 0)
 		return rc;
-	return ifd_device_recv(dev, (unsigned char *) rbuf, rlen, timeout);
+	return ifd_device_recv(dev, (unsigned char *)rbuf, rlen, timeout);
 }
 
-int
-ifd_device_poll_presence(ifd_device_t *dev, struct pollfd *pfd)
+int ifd_device_poll_presence(ifd_device_t * dev, struct pollfd *pfd)
 {
 	if (!dev || !dev->ops || !dev->ops->poll_presence)
 		return 1;
 	return dev->ops->poll_presence(dev, pfd);
 }
 
-void
-ifd_device_close(ifd_device_t *dev)
+void ifd_device_close(ifd_device_t * dev)
 {
 	if (!dev)
 		return;
@@ -209,10 +192,9 @@ ifd_device_close(ifd_device_t *dev)
 /*
  * Device ID handling
  */
-int
-ifd_device_id_parse(const char *str, ifd_devid_t *id)
+int ifd_device_id_parse(const char *str, ifd_devid_t * id)
 {
-	unsigned int	n;
+	unsigned int n;
 
 	id->type = IFD_DEVICE_TYPE_OTHER;
 
@@ -220,8 +202,7 @@ ifd_device_id_parse(const char *str, ifd_devid_t *id)
 	if (str[n] == ':') {
 		if (!strncmp(str, "usb", n))
 			id->type = IFD_DEVICE_TYPE_USB;
-		else
-		if (!strncmp(str, "pcmcia", n))
+		else if (!strncmp(str, "pcmcia", n))
 			id->type = IFD_DEVICE_TYPE_PCMCIA;
 		else
 			return -1;
@@ -229,7 +210,7 @@ ifd_device_id_parse(const char *str, ifd_devid_t *id)
 	}
 
 	for (n = 0; *str && n < IFD_MAX_DEVID_PARTS; n++) {
-		id->val[n] = strtoul(str, (char **) &str, 16);
+		id->val[n] = strtoul(str, (char **)&str, 16);
 		if (*str == '/')
 			str++;
 	}
@@ -240,12 +221,11 @@ ifd_device_id_parse(const char *str, ifd_devid_t *id)
 	return 0;
 }
 
-int
-ifd_device_id_match(const ifd_devid_t *match, const ifd_devid_t *id)
+int ifd_device_id_match(const ifd_devid_t * match, const ifd_devid_t * id)
 {
 	if (id->type != match->type
-	 || id->num < match->num
-	 || memcmp(id->val, match->val, match->num * sizeof(id->val[0])))
+	    || id->num < match->num
+	    || memcmp(id->val, match->val, match->num * sizeof(id->val[0])))
 		return 0;
 	return 1;
 }
