@@ -7,21 +7,20 @@
 #define	CM4000_MAX_DEV		4
 
 typedef struct atreq {
-  int  atr_len;
-  unsigned char atr[64];
-  int power_act;
-  unsigned char bIFSD;
-  unsigned char bIFSC;
+	int atr_len;
+	unsigned char atr[64];
+	int power_act;
+	unsigned char bIFSD;
+	unsigned char bIFSC;
 } atreq_t;
 
 typedef struct ptsreq {
-  unsigned long protocol; /*T=0: 2^0, T=1:  2^1*/
-  unsigned char flags;
-  unsigned char pts1;
-  unsigned char pts2;
-  unsigned char pts3;
+	unsigned long protocol;	/*T=0: 2^0, T=1:  2^1 */
+	unsigned char flags;
+	unsigned char pts1;
+	unsigned char pts2;
+	unsigned char pts3;
 } ptsreq_t;
-
 
 #define	CM_IOC_MAGIC		'c'
 #define	CM_IOC_MAXNR	        255
@@ -32,7 +31,7 @@ typedef struct ptsreq {
 #define	CM_IOCSRDR		_IO  (CM_IOC_MAGIC, 3)
 #define CM_IOCARDOFF            _IO  (CM_IOC_MAGIC, 4)
 
-#define CM_IOSDBGLVL            _IOW(CM_IOC_MAGIC, 250, int*) 
+#define CM_IOSDBGLVL            _IOW(CM_IOC_MAGIC, 250, int*)
 
 /* card and device states */
 #define	CM_CARD_INSERTED		0x01
@@ -43,7 +42,6 @@ typedef struct ptsreq {
 /* extra info only from CM4000 */
 #define	CM_NO_READER			0x10
 #define	CM_BAD_CARD			0x20
-
 
 #ifdef __KERNEL__
 
@@ -98,7 +96,7 @@ enum {
 	CB_READ_STATUS,
 	CB_READ_ATR,
 	CB_WRITE_PTS,
-        CB_READ_PTS,
+	CB_READ_PTS,
 	CB_WRITE_T1,
 	CB_PROG_T1,
 	CB_READ_T1,
@@ -115,64 +113,64 @@ enum {
 
 typedef struct usb_cardman {
 
-	struct usb_device	*dev;
-	#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
-	 struct usb_interface *	interface;		/* the interface for this device */
-	#endif
-	struct task_struct	*owner;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,20)
-        struct usb_ctrlrequest  *dr;
-#else 
-        devrequest		*dr;
+	struct usb_device *dev;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
+	struct usb_interface *interface;	/* the interface for this device */
 #endif
-	struct urb		*irq,*ctrl,*rctl;
-	unsigned char		*ibuf,*cbuf,*rcbuf;
-	wait_queue_head_t	waitq;
+	struct task_struct *owner;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,20)
+	struct usb_ctrlrequest *dr;
+#else
+	devrequest *dr;
+#endif
+	struct urb *irq, *ctrl, *rctl;
+	unsigned char *ibuf, *cbuf, *rcbuf;
+	wait_queue_head_t waitq;
 
-	unsigned char		atr[MAX_ATR];
-	unsigned char		atr_csum;
-	unsigned char 		atr_len;
-        unsigned char           bIFSD, bIFSC;
-        unsigned char		ta1; // TA(1) specifies Fi over b8 to b5, Di over b4 to b1
-        unsigned char           pts[4];
+	unsigned char atr[MAX_ATR];
+	unsigned char atr_csum;
+	unsigned char atr_len;
+	unsigned char bIFSD, bIFSC;
+	unsigned char ta1;	// TA(1) specifies Fi over b8 to b5, Di over b4 to b1
+	unsigned char pts[4];
 
-	unsigned char		rbuf[MAX_RBUF];
-        short			rlen;
+	unsigned char rbuf[MAX_RBUF];
+	short rlen;
 
-	int			t1_reply_len;
+	int t1_reply_len;
 
 	/* length of a T=0 packet, excl. the header length */
-	unsigned char		t0_data_len;
+	unsigned char t0_data_len;
 
 	/* relative data offset as we proceed through the packet */
-	unsigned char		t0_data_off;
+	unsigned char t0_data_off;
 
 	/* byte 2 of the T=0 header (INS from CLA INS ADR...) */
-	unsigned char		t0_ins;
+	unsigned char t0_ins;
 
 	/* length of T=0 reply we expcet. 2 for a WriteT0, else
 	 * ReadT0 length + 2 (Sw1 Sw2)
 	 */
-	unsigned short		t0_expected_reply_len;
+	unsigned short t0_expected_reply_len;
 
-	int			bInterval;
-	unsigned char		ctrlendp;
-	unsigned char		intendp;
-	unsigned char		card_state;
-	int			flags;
-	int			op;
-	unsigned char		proto;
-        int			ttl, ttl_hi,  //CWT
-	                        bwt, //BWT
-	                        ptsttl; //PTS retry
-	#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
-	 int			open;
-	 int			present;
-	 struct semaphore	sem;
-	 int			minor;
-	#endif				
+	int bInterval;
+	unsigned char ctrlendp;
+	unsigned char intendp;
+	unsigned char card_state;
+	int flags;
+	int op;
+	unsigned char proto;
+	int ttl, ttl_hi,	//CWT
+	 bwt,			//BWT
+	 ptsttl;		//PTS retry
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
+	int open;
+	int present;
+	struct semaphore sem;
+	int minor;
+#endif
 } usb_cardman_t;
-#endif	/* __CM2020__ */
+#endif				/* __CM2020__ */
 
 #ifdef	__CM4000__
 
@@ -186,7 +184,7 @@ typedef struct usb_cardman {
 #define CM4000_IOCPOWERON      _IO (CM_IOC_MAGIC, 254)
 #define CM4000_IOCGIOADDR      _IOW(CM_IOC_MAGIC, 255, int*)
 
-#endif	/* __CM4000__ */
+#endif				/* __CM4000__ */
 
-#endif	/* __KERNEL__ */
-#endif	/* _CARDMAN_H_ */
+#endif				/* __KERNEL__ */
+#endif				/* _CARDMAN_H_ */

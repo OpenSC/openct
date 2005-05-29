@@ -16,7 +16,7 @@
 #include <openct/conf.h>
 #include <openct/buffer.h>
 
-struct ct_config	ct_config = {
+struct ct_config ct_config = {
 	0,			/* debug */
 	1,			/* autoload */
 	1,			/* hotplug */
@@ -39,28 +39,27 @@ enum {
 	END_OF_FILE = -1
 };
 
-static const char *	config_filename = NULL;
-static ct_buf_t		config_buf;
-static int		config_fd = -1;
-static int		config_line = 0;
-static ifd_conf_node_t	config_top;
+static const char *config_filename = NULL;
+static ct_buf_t config_buf;
+static int config_fd = -1;
+static int config_line = 0;
+static ifd_conf_node_t config_top;
 
-static int		conf_parse_group(ifd_conf_node_t *, char);
-static void		conf_dump(ifd_conf_node_t *, int);
+static int conf_parse_group(ifd_conf_node_t *, char);
+static void conf_dump(ifd_conf_node_t *, int);
 static ifd_conf_node_t *conf_add_node(ifd_conf_node_t *, const char *);
 
-static int		get_token(char **);
-static int		skipws(void);
-static int		ateof(void);
+static int get_token(char **);
+static int skipws(void);
+static int ateof(void);
 
 /*
  * Parse the ifd config file
  */
-int
-ifd_config_parse(const char *filename)
+int ifd_config_parse(const char *filename)
 {
-	char	buffer[512];
-	int	rc;
+	char buffer[512];
+	int rc;
 
 	if ((config_filename = filename) == NULL)
 		config_filename = OPENCT_CONF_PATH;
@@ -92,20 +91,18 @@ ifd_config_parse(const char *filename)
 /*
  * Parse list of statements
  */
-int
-conf_parse_group(ifd_conf_node_t *group, char closing)
+int conf_parse_group(ifd_conf_node_t * group, char closing)
 {
 	ifd_conf_node_t *node;
-	char	*token;
-	int	rc = 0;
+	char *token;
+	int rc = 0;
 
 	while (1) {
 		if (ateof()) {
-			if (closing == (char) END_OF_FILE)
+			if (closing == (char)END_OF_FILE)
 				break;
 			ct_error("%s:%u: unexpected end of file",
-					config_filename, 
-					config_line);
+				 config_filename, config_line);
 			return -1;
 		}
 
@@ -142,11 +139,10 @@ conf_parse_group(ifd_conf_node_t *group, char closing)
 			/* Get the next token */
 			if ((rc = get_token(&token)) < 0)
 				break;
-		} else 
-		if (*token == GROUP_BEGIN || *token == COMMA) {
+		} else if (*token == GROUP_BEGIN || *token == COMMA) {
 			/* Do-nothing cases:
-			 *	name { ... }
-			 *	foo, bar, baz, ...
+			 *      name { ... }
+			 *      foo, bar, baz, ...
 			 */
 		} else {
 			/* everything else illegal here */
@@ -157,7 +153,7 @@ conf_parse_group(ifd_conf_node_t *group, char closing)
 			/* Parse the group, then get the next
 			 * token */
 			if ((rc = conf_parse_group(node, GROUP_END)) < 0
-			 || (rc = get_token(&token)) < 0)
+			    || (rc = get_token(&token)) < 0)
 				break;
 		}
 
@@ -167,17 +163,16 @@ conf_parse_group(ifd_conf_node_t *group, char closing)
 
 	return rc;
 
-unexpected:
+      unexpected:
 	ct_error("%s: line %d: unexpected token \"%s\"",
-		config_filename, config_line, token);
+		 config_filename, config_line, token);
 	return -1;
 }
 
 /*
  * Debugging - dump the config tree
  */
-void
-conf_dump(ifd_conf_node_t *node, int indent)
+void conf_dump(ifd_conf_node_t * node, int indent)
 {
 	for (; node; node = node->next) {
 		printf("%*.*s%s", indent, indent, "", node->name);
@@ -188,7 +183,7 @@ conf_dump(ifd_conf_node_t *node, int indent)
 		}
 		if (node->children) {
 			printf(" %c\n", GROUP_BEGIN);
-			conf_dump(node->children, indent+2);
+			conf_dump(node->children, indent + 2);
 			printf("%*.*s%c", indent, indent, "", GROUP_END);
 		} else {
 			printf("%c", SEMICOLON);
@@ -200,25 +195,22 @@ conf_dump(ifd_conf_node_t *node, int indent)
 /*
  * Config node handling
  */
-ifd_conf_node_t *
-conf_add_node(ifd_conf_node_t *parent, const char *name)
+ifd_conf_node_t *conf_add_node(ifd_conf_node_t * parent, const char *name)
 {
-	ifd_conf_node_t	**p, *node;
+	ifd_conf_node_t **p, *node;
 
 	node = (ifd_conf_node_t *) calloc(1, sizeof(*node));
 	node->name = strdup(name);
 
-	for (p = &parent->children; *p; p = &(*p)->next)
-		;
+	for (p = &parent->children; *p; p = &(*p)->next) ;
 	*p = node;
 
 	return node;
 }
 
-static ifd_conf_node_t *
-conf_find_node(ifd_conf_node_t *node, const char *name)
+static ifd_conf_node_t *conf_find_node(ifd_conf_node_t * node, const char *name)
 {
-	unsigned int	len;
+	unsigned int len;
 
 	if (!name)
 		return node;
@@ -228,53 +220,47 @@ conf_find_node(ifd_conf_node_t *node, const char *name)
 		return node;
 
 	len = strcspn(name, ".");
-	
+
 	for (node = node->children; node; node = node->next) {
 		if (!strncmp(node->name, name, len)
-		 && node->name[len] == '\0')
+		    && node->name[len] == '\0')
 			return conf_find_node(node, name + len);
 	}
 
 	return NULL;
 }
 
-int
-ifd_conf_get_string(const char *name, char **result)
+int ifd_conf_get_string(const char *name, char **result)
 {
 	return ifd_conf_node_get_string(&config_top, name, result);
 }
 
-int
-ifd_conf_get_bool(const char *name, unsigned int*result)
+int ifd_conf_get_bool(const char *name, unsigned int *result)
 {
 	return ifd_conf_node_get_bool(&config_top, name, result);
 }
 
-int
-ifd_conf_get_integer(const char *name, unsigned int*result)
+int ifd_conf_get_integer(const char *name, unsigned int *result)
 {
 	return ifd_conf_node_get_integer(&config_top, name, result);
 }
 
-int
-ifd_conf_get_string_list(const char *name, char **list, size_t max)
+int ifd_conf_get_string_list(const char *name, char **list, size_t max)
 {
 	return ifd_conf_node_get_string_list(&config_top, name, list, max);
 }
 
-int
-ifd_conf_get_nodes(const char *name, ifd_conf_node_t **list, size_t max)
+int ifd_conf_get_nodes(const char *name, ifd_conf_node_t ** list, size_t max)
 {
 	return ifd_conf_node_get_nodes(&config_top, name, list, max);
 }
 
-
 int
-ifd_conf_node_get_string(ifd_conf_node_t *node,
-		const char *name, char **result)
+ifd_conf_node_get_string(ifd_conf_node_t * node,
+			 const char *name, char **result)
 {
 	if (!(node = conf_find_node(node, name))
-	 || !node->value)
+	    || !node->value)
 		return -1;
 
 	*result = node->value;
@@ -282,11 +268,11 @@ ifd_conf_node_get_string(ifd_conf_node_t *node,
 }
 
 int
-ifd_conf_node_get_integer(ifd_conf_node_t *node,
-		const char *name, unsigned int *result)
+ifd_conf_node_get_integer(ifd_conf_node_t * node,
+			  const char *name, unsigned int *result)
 {
 	if (!(node = conf_find_node(node, name))
-	 || !node->value)
+	    || !node->value)
 		return -1;
 
 	*result = strtoul(node->value, 0, 0);
@@ -294,23 +280,22 @@ ifd_conf_node_get_integer(ifd_conf_node_t *node,
 }
 
 int
-ifd_conf_node_get_bool(ifd_conf_node_t *node,
-		const char *name, unsigned int *result)
+ifd_conf_node_get_bool(ifd_conf_node_t * node,
+		       const char *name, unsigned int *result)
 {
-	const char	*v;
+	const char *v;
 
 	if (!(node = conf_find_node(node, name))
-	 || !(v = node->value))
+	    || !(v = node->value))
 		return -1;
 
 	if (!strcmp(v, "0")
-	 || !strcmp(v, "off")
-	 || !strcmp(v, "no")) {
+	    || !strcmp(v, "off")
+	    || !strcmp(v, "no")) {
 		*result = 0;
-	} else
-	if (!strcmp(v, "1")
-	 || !strcmp(v, "on")
-	 || !strcmp(v, "yes")) {
+	} else if (!strcmp(v, "1")
+		   || !strcmp(v, "on")
+		   || !strcmp(v, "yes")) {
 		*result = 1;
 	} else {
 		return -1;
@@ -320,10 +305,10 @@ ifd_conf_node_get_bool(ifd_conf_node_t *node,
 }
 
 int
-ifd_conf_node_get_string_list(ifd_conf_node_t *node,
-		const char *name, char **list, size_t max)
+ifd_conf_node_get_string_list(ifd_conf_node_t * node,
+			      const char *name, char **list, size_t max)
 {
-	unsigned int	j = 0;
+	unsigned int j = 0;
 
 	if (!(node = conf_find_node(node, name)))
 		return -1;
@@ -338,10 +323,10 @@ ifd_conf_node_get_string_list(ifd_conf_node_t *node,
 }
 
 int
-ifd_conf_node_get_nodes(ifd_conf_node_t *node,
-		const char *name, ifd_conf_node_t **list, size_t max)
+ifd_conf_node_get_nodes(ifd_conf_node_t * node,
+			const char *name, ifd_conf_node_t ** list, size_t max)
 {
-	unsigned int	j = 0;
+	unsigned int j = 0;
 
 	for (node = node->children; node; node = node->next) {
 		if (strcmp(node->name, name))
@@ -357,25 +342,24 @@ ifd_conf_node_get_nodes(ifd_conf_node_t *node,
 /*
  * Tokenizer
  */
-int
-get_token(char **tok)
+int get_token(char **tok)
 {
-	static char	buffer[512];
-	unsigned int	m, n, copy, retry = 1;
-	char		*s;
+	static char buffer[512];
+	unsigned int m, n, copy, retry = 1;
+	char *s;
 
 	/* consume initial white space */
 	if (skipws() < 0)
 		return -1;
 
-again:	s = (char *) ct_buf_head(&config_buf);
+      again:s = (char *)ct_buf_head(&config_buf);
 	n = ct_buf_avail(&config_buf);
 
 	if (n && issepa(*s)) {
 		m = 1;
 	} else {
-		for (m = 0; !isspace((int) s[m]) && !issepa(s[m]) && m < n; m++)
-			;
+		for (m = 0; !isspace((int)s[m]) && !issepa(s[m]) && m < n;
+		     m++) ;
 	}
 
 	/* If we hit the end of the buffer while scanning
@@ -384,7 +368,7 @@ again:	s = (char *) ct_buf_head(&config_buf);
 	if (m >= n && retry) {
 		if (ct_buf_read(&config_buf, config_fd) < 0) {
 			ct_error("%s: error while reading file: %m",
-					config_filename);
+				 config_filename);
 			return -1;
 		}
 		retry = 0;
@@ -395,7 +379,7 @@ again:	s = (char *) ct_buf_head(&config_buf);
 		return -1;
 
 	if ((copy = m) >= sizeof(buffer))
-		copy = sizeof(buffer)-1;
+		copy = sizeof(buffer) - 1;
 	memcpy(buffer, s, copy);
 	buffer[copy] = '\0';
 	ct_buf_get(&config_buf, NULL, m);
@@ -409,12 +393,11 @@ again:	s = (char *) ct_buf_head(&config_buf);
 /*
  * Check if we're at the end of the file
  */
-int
-ateof(void)
+int ateof(void)
 {
-	int	retry = 1;
+	int retry = 1;
 
-again:
+      again:
 	if (skipws() < 0)
 		return -1;
 
@@ -424,7 +407,7 @@ again:
 
 		if (ct_buf_read(&config_buf, config_fd) < 0) {
 			ct_error("%s: error while reading file: %m",
-					config_filename);
+				 config_filename);
 			return -1;
 		}
 		retry = 0;
@@ -437,20 +420,19 @@ again:
 /*
  * Eat initial white space from buffer
  */
-int
-skipws(void)
+int skipws(void)
 {
-	unsigned int	m, n, in_comment = 0;
-	char		*s;
+	unsigned int m, n, in_comment = 0;
+	char *s;
 
-again:
-	s = (char *) ct_buf_head(&config_buf);
+      again:
+	s = (char *)ct_buf_head(&config_buf);
 	n = ct_buf_avail(&config_buf);
 
 	for (m = 0; m < n; m++, s++) {
 		if (*s == '#') {
 			in_comment = 1;
-		} else if (!in_comment && !isspace((int) *s)) {
+		} else if (!in_comment && !isspace((int)*s)) {
 			break;
 		} else if (*s == '\n') {
 			config_line++;
@@ -462,7 +444,7 @@ again:
 	if (in_comment) {
 		if (ct_buf_read(&config_buf, config_fd) < 0) {
 			ct_error("%s: error while reading file: %m",
-					config_filename);
+				 config_filename);
 			return -1;
 		}
 		goto again;

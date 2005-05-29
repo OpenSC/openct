@@ -10,11 +10,10 @@
 /*
  * Check the APDU type and length
  */
-static int
-__ifd_apdu_check(const void *sbuf, size_t len, ifd_iso_apdu_t *iso)
+static int __ifd_apdu_check(const void *sbuf, size_t len, ifd_iso_apdu_t * iso)
 {
-	unsigned char	*data = (unsigned char *) sbuf;
-	unsigned int	b;
+	unsigned char *data = (unsigned char *)sbuf;
+	unsigned int b;
 
 	memset(iso, 0, sizeof(*iso));
 	if (len < 5) {
@@ -28,7 +27,7 @@ __ifd_apdu_check(const void *sbuf, size_t len, ifd_iso_apdu_t *iso)
 	/* APDU + Le */
 	if (len == 0) {
 		iso->cse = IFD_APDU_CASE_2S;
-		iso->le = b? b : 256;
+		iso->le = b ? b : 256;
 		return 0;
 	}
 
@@ -49,7 +48,7 @@ __ifd_apdu_check(const void *sbuf, size_t len, ifd_iso_apdu_t *iso)
 	/* APDU + Lc + data + Le */
 	if (len == b + 1) {
 		iso->cse = IFD_APDU_CASE_4S;
-		iso->le = data[b]? data[b] : 256;
+		iso->le = data[b] ? data[b] : 256;
 		iso->len--;
 		return 0;
 	}
@@ -57,8 +56,7 @@ __ifd_apdu_check(const void *sbuf, size_t len, ifd_iso_apdu_t *iso)
 	return -1;
 }
 
-int
-ifd_apdu_case(const void *buf, size_t len)
+int ifd_apdu_case(const void *buf, size_t len)
 {
 	ifd_iso_apdu_t iso;
 
@@ -70,10 +68,9 @@ ifd_apdu_case(const void *buf, size_t len)
 /*
  * Convert internal APDU type to an ISO-7816-4 APDU
  */
-int
-ifd_iso_apdu_parse(const void *data, size_t len, ifd_iso_apdu_t *iso)
+int ifd_iso_apdu_parse(const void *data, size_t len, ifd_iso_apdu_t * iso)
 {
-	unsigned char	*p;
+	unsigned char *p;
 
 	if (len < 4)
 		return -1;
@@ -81,11 +78,11 @@ ifd_iso_apdu_parse(const void *data, size_t len, ifd_iso_apdu_t *iso)
 	if (__ifd_apdu_check(data, len, iso) < 0)
 		return -1;
 
-	p = (unsigned char *) data;
+	p = (unsigned char *)data;
 	iso->cla = *p++;
 	iso->ins = *p++;
-	iso->p1  = *p++;
-	iso->p2  = *p++;
+	iso->p1 = *p++;
+	iso->p2 = *p++;
 
 	return 0;
 }

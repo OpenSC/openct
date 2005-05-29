@@ -56,10 +56,9 @@ static unsigned short crctab[256] = {
 /*
  * Returns LRC of data.
  */
-unsigned int
-csum_lrc_compute(const uint8_t *in, size_t len, unsigned char *rc)
+unsigned int csum_lrc_compute(const uint8_t * in, size_t len, unsigned char *rc)
 {
-	unsigned char	lrc = 0;
+	unsigned char lrc = 0;
 
 	while (len--)
 		lrc ^= *in++;

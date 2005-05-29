@@ -15,8 +15,8 @@
 /*
  * Start building CTBCS apdu
  */
-void
-ctbcs_begin(ct_buf_t *bp, unsigned int ins, unsigned int p1, unsigned int p2)
+void ctbcs_begin(ct_buf_t * bp, unsigned int ins, unsigned int p1,
+		 unsigned int p2)
 {
 	ct_buf_putc(bp, 0x20);
 	ct_buf_putc(bp, ins);
@@ -28,26 +28,24 @@ ctbcs_begin(ct_buf_t *bp, unsigned int ins, unsigned int p1, unsigned int p2)
 /*
  * Finish CTBCS apdu
  */
-int
-ctbcs_finish(ct_buf_t *bp)
+int ctbcs_finish(ct_buf_t * bp)
 {
-	unsigned int	len;
+	unsigned int len;
 
 	if (ct_buf_overrun(bp))
 		return IFD_ERROR_BUFFER_TOO_SMALL;
 
 	len = ct_buf_avail(bp);
-	bp->base[4] = len - 5; /* lc */
+	bp->base[4] = len - 5;	/* lc */
 	return len;
 }
 
 /*
  * Output a string to the display
  */
-int
-ctbcs_build_output(unsigned char *cmd, size_t size, const char *message)
+int ctbcs_build_output(unsigned char *cmd, size_t size, const char *message)
 {
-	ct_buf_t	buf;
+	ct_buf_t buf;
 
 	if (message == NULL)
 		return IFD_ERROR_INVALID_ARG;
@@ -61,13 +59,12 @@ ctbcs_build_output(unsigned char *cmd, size_t size, const char *message)
 /*
  * Generic Verify APDU
  */
-int
-ctbcs_build_verify_apdu(unsigned char *cmd, size_t size,
-			unsigned char ins, unsigned char p1,
-		       	const char *prompt, unsigned int timeout,
-			const unsigned char *data, size_t data_len)
+int ctbcs_build_verify_apdu(unsigned char *cmd, size_t size, unsigned char ins,
+			    unsigned char p1, const char *prompt,
+			    unsigned int timeout, const unsigned char *data,
+			    size_t data_len)
 {
-	ct_buf_t	buf;
+	ct_buf_t buf;
 
 	if (!data || !data_len)
 		return IFD_ERROR_INVALID_ARG;
@@ -90,42 +87,39 @@ ctbcs_build_verify_apdu(unsigned char *cmd, size_t size,
 	if (ct_buf_overrun(&buf))
 		return IFD_ERROR_BUFFER_TOO_SMALL;
 
-	cmd[4] = ct_buf_avail(&buf) - 5; /* lc */
+	cmd[4] = ct_buf_avail(&buf) - 5;	/* lc */
 	return ct_buf_avail(&buf);
 }
 
 /*
  * Build Perform Verify APDU
  */
-int
-ctbcs_build_perform_verify_apdu(unsigned char *cmd, size_t size,
-			unsigned int p1, const char *prompt,
-			unsigned int timeout,
-			const unsigned char *data, size_t data_len)
+int ctbcs_build_perform_verify_apdu(unsigned char *cmd, size_t size,
+				    unsigned int p1, const char *prompt,
+				    unsigned int timeout,
+				    const unsigned char *data, size_t data_len)
 {
 	return ctbcs_build_verify_apdu(cmd, size, 0x18, p1,
-			prompt, timeout, data, data_len);
+				       prompt, timeout, data, data_len);
 }
 
 /*
  * Build Modify Verify APDU
  */
-int
-ctbcs_build_modify_verify_apdu(unsigned char *cmd, size_t size,
-			unsigned int p1, const char *prompt,
-			unsigned int timeout,
-			const unsigned char *data, size_t data_len)
+int ctbcs_build_modify_verify_apdu(unsigned char *cmd, size_t size,
+				   unsigned int p1, const char *prompt,
+				   unsigned int timeout,
+				   const unsigned char *data, size_t data_len)
 {
 	return ctbcs_build_verify_apdu(cmd, size, 0x19, p1,
-			prompt, timeout, data, data_len);
+				       prompt, timeout, data, data_len);
 }
 
 /*
  * Helper function add message/timeout arguments to command
  * buffer
  */
-int
-ctbcs_add_timeout(ct_buf_t *bp, unsigned int timeout)
+int ctbcs_add_timeout(ct_buf_t * bp, unsigned int timeout)
 {
 	if (!timeout)
 		return 0;
@@ -135,10 +129,9 @@ ctbcs_add_timeout(ct_buf_t *bp, unsigned int timeout)
 	return ct_buf_avail(bp);
 }
 
-int
-ctbcs_add_message(ct_buf_t *bp, const char *message)
+int ctbcs_add_message(ct_buf_t * bp, const char *message)
 {
-	int	n;
+	int n;
 
 	if (!message || !strcmp(message, "@"))
 		return 0;

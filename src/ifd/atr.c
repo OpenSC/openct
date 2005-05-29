@@ -8,10 +8,9 @@
 #include "internal.h"
 #include "atr.h"
 
-int
-ifd_atr_parse(ifd_atr_info_t *info, const unsigned char *atr, size_t len)
+int ifd_atr_parse(ifd_atr_info_t * info, const unsigned char *atr, size_t len)
 {
-	unsigned int	m, n, k;
+	unsigned int m, n, k;
 
 	ifd_debug(1, "atr=%s", ct_hexdump(atr, len));
 
@@ -31,16 +30,16 @@ ifd_atr_parse(ifd_atr_info_t *info, const unsigned char *atr, size_t len)
 	len -= atr[1] & 0x0f;
 
 	for (m = 0, n = 2; n < len; m++) {
-		unsigned int	TDi;
+		unsigned int TDi;
 
 		/* TA1, TA2, TA3, TA4 are legal, TA5 wouldn't be */
 		if (m > 3)
 			return IFD_ERROR_INVALID_ATR;
 
-		TDi = atr[n-1];
+		TDi = atr[n - 1];
 		if (n != 2) {
-			int	prot;
-			
+			int prot;
+
 			prot = TDi & 0x0f;
 			if (info->default_protocol < 0)
 				info->default_protocol = prot;
@@ -63,7 +62,7 @@ ifd_atr_parse(ifd_atr_info_t *info, const unsigned char *atr, size_t len)
 			 * For now, simply chop it off. Later we may
 			 * want to verify it.
 			 */
-		        if (info->supported_protocols & ~ 0x1) 
+			if (info->supported_protocols & ~0x1)
 				len--;
 			if (n < len)
 				return IFD_ERROR_INVALID_ATR;
@@ -80,8 +79,7 @@ ifd_atr_parse(ifd_atr_info_t *info, const unsigned char *atr, size_t len)
 	}
 
 	ifd_debug(1, "supported protocols=0x%x, default protocol=%d",
-			info->supported_protocols,
-			info->default_protocol);
+		  info->supported_protocols, info->default_protocol);
 	return 0;
 }
 
@@ -89,12 +87,11 @@ ifd_atr_parse(ifd_atr_info_t *info, const unsigned char *atr, size_t len)
  * Given the ATR info and a selected protocol, build the PTS
  * string.
  */
-int
-ifd_build_pts(const ifd_atr_info_t *info,
-		int protocol, unsigned char *buf, size_t len)
+int ifd_build_pts(const ifd_atr_info_t * info, int protocol, unsigned char *buf,
+		  size_t len)
 {
-	unsigned char	ptsbuf[7], pck;
-	size_t		n, ptslen = 0;
+	unsigned char ptsbuf[7], pck;
+	size_t n, ptslen = 0;
 
 	/* IFD_PROTOCOL_Tn is just n, so we take it easy here */
 	if (!(info->supported_protocols & (1 << protocol))) {
