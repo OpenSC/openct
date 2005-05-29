@@ -92,12 +92,11 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	if (optind < argc - 2 || optind > argc - 1)
+	if (optind != argc - 2)
 		usage(1);
 
 	driver = argv[optind++];
-	if (optind < argc)
-		device = argv[optind++];
+	device = argv[optind++];
 
 	ct_config.debug = opt_debug;
 
@@ -401,7 +400,7 @@ void version(void)
 void usage(int exval)
 {
 	fprintf(exval ? stderr : stdout,
-		"usage: ifdhandler [-Hds] [-r reader] driver [device]\n"
+		"usage: ifdhandler [-Hds] [-r reader] driver device\n"
 		"  -r   specify index of reader\n"
 		"  -F   stay in foreground\n"
 		"  -H   hotplug device, monitor for detach\n"
