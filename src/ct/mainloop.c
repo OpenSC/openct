@@ -22,11 +22,10 @@
 
 #define IFD_MAX_SOCKETS	256
 
-static ct_socket_t	sock_head;
-static int		leave_mainloop;
+static ct_socket_t sock_head;
+static int leave_mainloop;
 
-void
-ct_mainloop_add_socket(ct_socket_t *sock)
+void ct_mainloop_add_socket(ct_socket_t * sock)
 {
 	if (sock)
 		ct_socket_link(&sock_head, sock);
@@ -35,17 +34,16 @@ ct_mainloop_add_socket(ct_socket_t *sock)
 /*
  * Main loop
  */
-void
-ct_mainloop(void)
+void ct_mainloop(void)
 {
 	leave_mainloop = 0;
 	while (!leave_mainloop) {
-		struct pollfd	pfd[IFD_MAX_SOCKETS + 1];
-		ct_socket_t	*poll_socket[IFD_MAX_SOCKETS];
-		ct_socket_t	*sock, *next;
-		unsigned int	nsockets = 0, npoll = 0;
-		unsigned int	n = 0, listening;
-		int		rc;
+		struct pollfd pfd[IFD_MAX_SOCKETS + 1];
+		ct_socket_t *poll_socket[IFD_MAX_SOCKETS];
+		ct_socket_t *sock, *next;
+		unsigned int nsockets = 0, npoll = 0;
+		unsigned int n = 0, listening;
+		int rc;
 
 		/* Zap poll structure */
 		memset(pfd, 0, sizeof(pfd));
@@ -61,7 +59,7 @@ ct_mainloop(void)
 				nsockets++;
 			}
 		}
-		listening = (nsockets < IFD_MAX_SOCKETS)?  POLLIN : 0;
+		listening = (nsockets < IFD_MAX_SOCKETS) ? POLLIN : 0;
 
 		/* Now loop over all sockets and set up the poll structs */
 		for (sock = sock_head.next; sock; sock = sock->next) {
@@ -116,8 +114,7 @@ ct_mainloop(void)
 	}
 }
 
-void
-ct_mainloop_leave(void)
+void ct_mainloop_leave(void)
 {
 	leave_mainloop = 1;
 }

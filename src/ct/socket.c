@@ -27,35 +27,32 @@
 #include <openct/socket.h>
 #include <openct/error.h>
 
+static unsigned int ifd_xid = 1;
+static int ifd_reuse_addr = 0;
 
-static unsigned int	ifd_xid = 1;
-static int		ifd_reuse_addr = 0;
-
-static inline unsigned int
-min(unsigned int a, unsigned int b)
+static inline unsigned int min(unsigned int a, unsigned int b)
 {
-	return (a < b)? a : b;
+	return (a < b) ? a : b;
 }
 
-static int	ct_socket_default_recv_cb(ct_socket_t *);
-static int	ct_socket_default_send_cb(ct_socket_t *);
-static int	ct_socket_getcreds(ct_socket_t *);
+static int ct_socket_default_recv_cb(ct_socket_t *);
+static int ct_socket_default_send_cb(ct_socket_t *);
+static int ct_socket_getcreds(ct_socket_t *);
 
 /*
  * Create a socket object
  */
-ct_socket_t *
-ct_socket_new(unsigned int bufsize)
+ct_socket_t *ct_socket_new(unsigned int bufsize)
 {
-	ct_socket_t	*sock;
-	unsigned char	*p;
+	ct_socket_t *sock;
+	unsigned char *p;
 
 	sock = (ct_socket_t *) calloc(1, sizeof(*sock) + 2 * bufsize);
 	if (sock == NULL)
 		return NULL;
 
 	/* Initialize socket buffer */
-	p = (unsigned char *) (sock + 1);
+	p = (unsigned char *)(sock + 1);
 	ct_buf_init(&sock->rbuf, p, bufsize);
 	ct_buf_init(&sock->sbuf, p + bufsize, bufsize);
 	sock->recv = ct_socket_default_recv_cb;
@@ -68,8 +65,7 @@ ct_socket_new(unsigned int bufsize)
 /*
  * Free a socket object
  */
-void
-ct_socket_free(ct_socket_t *sock)
+void ct_socket_free(ct_socket_t * sock)
 {
 	ct_socket_unlink(sock);
 	if (sock->close)
@@ -78,8 +74,7 @@ ct_socket_free(ct_socket_t *sock)
 	free(sock);
 }
 
-void
-ct_socket_reuseaddr(int n)
+void ct_socket_reuseaddr(int n)
 {
 	ifd_reuse_addr = n;
 }
@@ -90,11 +85,10 @@ ct_socket_reuseaddr(int n)
  */
 enum { CT_MAKESOCK_BIND, CT_MAKESOCK_CONNECT };
 
-static int
-__ct_socket_make(ct_socket_t *sock, int op,
-			const struct sockaddr *sa, socklen_t salen)
+static int __ct_socket_make(ct_socket_t * sock, int op,
+			    const struct sockaddr *sa, socklen_t salen)
 {
-	int	fd, oerrno;
+	int fd, oerrno;
 
 	if ((fd = socket(sa->sa_family, SOCK_STREAM, 0)) < 0)
 		return -1;
@@ -117,15 +111,14 @@ __ct_socket_make(ct_socket_t *sock, int op,
 			int val = 1;
 
 			setsockopt(fd, SOL_IPV6, IPV6_V6ONLY,
-					&val, sizeof(val));
+				   &val, sizeof(val));
 		}
 #endif
 		if (ifd_reuse_addr) {
 			int val = 1;
 
 			setsockopt(fd, SOL_SOCKET,
-					SO_REUSEADDR,
-					&val, sizeof(val));
+				   SO_REUSEADDR, &val, sizeof(val));
 		}
 		if (bind(fd, sa, salen) >= 0) {
 			sock->fd = fd;
@@ -144,7 +137,7 @@ __ct_socket_make(ct_socket_t *sock, int op,
 		errno = EINVAL;
 	}
 
-failed:
+      failed:
 	oerrno = errno;
 	close(fd);
 
@@ -152,19 +145,18 @@ failed:
 	return -1;
 }
 
-static int
-ct_socket_make(ct_socket_t *sock, int op, const char *addr)
+static int ct_socket_make(ct_socket_t * sock, int op, const char *addr)
 {
 	union {
-	    struct sockaddr a;
-	    struct sockaddr_in in;
-	    struct sockaddr_in6 ix;
-	    struct sockaddr_un un;
+		struct sockaddr a;
+		struct sockaddr_in in;
+		struct sockaddr_in6 ix;
+		struct sockaddr_un un;
 	} s;
-	struct addrinfo	*res, *ai;
-	char		addrbuf[1024], *port;
-	unsigned int	portnum = 6666;
-	int		fd;
+	struct addrinfo *res, *ai;
+	char addrbuf[1024], *port;
+	unsigned int portnum = 6666;
+	int fd;
 
 	memset(&s, 0, sizeof(s));
 
@@ -180,14 +172,14 @@ ct_socket_make(ct_socket_t *sock, int op, const char *addr)
 	}
 
 	memset(addrbuf, 0, sizeof(addrbuf));
-	strncpy(addrbuf, addr, sizeof(addrbuf)-1);
+	strncpy(addrbuf, addr, sizeof(addrbuf) - 1);
 
 	addr = addrbuf;
 	if ((port = strchr(addrbuf, ';')) != NULL) {
 		*port++ = '\0';
 	} else
-	if ((port = strchr(addrbuf, ':')) != NULL
-	 && (strchr(port + 1, ':')) == NULL) {
+	    if ((port = strchr(addrbuf, ':')) != NULL
+		&& (strchr(port + 1, ':')) == NULL) {
 		*port++ = '\0';
 	}
 
@@ -218,9 +210,10 @@ ct_socket_make(ct_socket_t *sock, int op, const char *addr)
 	fd = -1;
 	for (ai = res; ai; ai = ai->ai_next) {
 		if (ai->ai_family == AF_INET)
-			((struct sockaddr_in *) ai->ai_addr)->sin_port = portnum;
+			((struct sockaddr_in *)ai->ai_addr)->sin_port = portnum;
 		else if (ai->ai_family == AF_INET6)
-			((struct sockaddr_in6 *) ai->ai_addr)->sin6_port = portnum;
+			((struct sockaddr_in6 *)ai->ai_addr)->sin6_port =
+			    portnum;
 		fd = __ct_socket_make(sock, op, ai->ai_addr, ai->ai_addrlen);
 		if (fd >= 0)
 			break;
@@ -233,8 +226,7 @@ ct_socket_make(ct_socket_t *sock, int op, const char *addr)
 /*
  * Create a client socket
  */
-int
-ct_socket_connect(ct_socket_t *sock, const char *addr)
+int ct_socket_connect(ct_socket_t * sock, const char *addr)
 {
 	ct_socket_close(sock);
 	if (ct_socket_make(sock, CT_MAKESOCK_CONNECT, addr) < 0)
@@ -246,8 +238,7 @@ ct_socket_connect(ct_socket_t *sock, const char *addr)
 /*
  * Listen on a socket
  */
-int
-ct_socket_listen(ct_socket_t *sock, const char *addr, int mode)
+int ct_socket_listen(ct_socket_t * sock, const char *addr, int mode)
 {
 	ct_socket_close(sock);
 	if (ct_socket_make(sock, CT_MAKESOCK_BIND, addr) < 0)
@@ -268,11 +259,10 @@ ct_socket_listen(ct_socket_t *sock, const char *addr, int mode)
 /*
  * Accept incoming connection
  */
-ct_socket_t *
-ct_socket_accept(ct_socket_t *sock)
+ct_socket_t *ct_socket_accept(ct_socket_t * sock)
 {
-	ct_socket_t	*svc;
-	int		fd;
+	ct_socket_t *svc;
+	int fd;
 
 	if (!(svc = ct_socket_new(CT_SOCKET_BUFSIZ)))
 		return NULL;
@@ -300,12 +290,11 @@ ct_socket_accept(ct_socket_t *sock)
  * Get client credentials
  * Should move this to a platform specific file
  */
-int
-ct_socket_getcreds(ct_socket_t *sock)
+int ct_socket_getcreds(ct_socket_t * sock)
 {
 #ifdef SO_PEERCRED
-	struct ucred	creds;
-	socklen_t	len;
+	struct ucred creds;
+	socklen_t len;
 
 	len = sizeof(creds);
 	if (getsockopt(sock->fd, SOL_SOCKET, SO_PEERCRED, &creds, &len) < 0)
@@ -318,23 +307,20 @@ ct_socket_getcreds(ct_socket_t *sock)
 /*
  * Get the peer name
  */
-int
-ct_socket_getpeername(ct_socket_t *sock, char *buf, size_t len)
+int ct_socket_getpeername(ct_socket_t * sock, char *buf, size_t len)
 {
 	struct sockaddr_storage ss;
-	socklen_t	slen = sizeof(struct sockaddr_storage);
+	socklen_t slen = sizeof(struct sockaddr_storage);
 
-	getpeername(sock->fd, (struct sockaddr *) &ss, &slen);
+	getpeername(sock->fd, (struct sockaddr *)&ss, &slen);
 	switch (ss.ss_family) {
 	case AF_INET:
 		inet_ntop(AF_INET,
-			&((struct sockaddr_in *) &ss)->sin_addr,
-			buf, len);
+			  &((struct sockaddr_in *)&ss)->sin_addr, buf, len);
 		break;
 	case AF_INET6:
 		inet_ntop(AF_INET6,
-			&((struct sockaddr_in6 *) &ss)->sin6_addr,
-			buf, len);
+			  &((struct sockaddr_in6 *)&ss)->sin6_addr, buf, len);
 		break;
 	case AF_UNIX:
 		snprintf(buf, len, "<local process>");
@@ -350,8 +336,7 @@ ct_socket_getpeername(ct_socket_t *sock, char *buf, size_t len)
 /*
  * Close socket
  */
-void
-ct_socket_close(ct_socket_t *sock)
+void ct_socket_close(ct_socket_t * sock)
 {
 	ct_buf_clear(&sock->rbuf);
 	ct_buf_clear(&sock->sbuf);
@@ -363,13 +348,12 @@ ct_socket_close(ct_socket_t *sock)
 /*
  * Transmit a call and receive the response
  */
-int
-ct_socket_call(ct_socket_t *sock, ct_buf_t *args, ct_buf_t *resp)
+int ct_socket_call(ct_socket_t * sock, ct_buf_t * args, ct_buf_t * resp)
 {
-	ct_buf_t	data;
-	unsigned int	xid, avail;
-	header_t	header;
-	int		rc;
+	ct_buf_t data;
+	unsigned int xid, avail;
+	header_t header;
+	int rc;
 
 	/* Compact send buffer */
 	ct_buf_compact(&sock->sbuf);
@@ -380,13 +364,13 @@ ct_socket_call(ct_socket_t *sock, ct_buf_t *args, ct_buf_t *resp)
 	/* Build header - note there's no need to convert
 	 * integers to network byte order: everything happens
 	 * on the same host, so there's no byte order issue */
-	header.xid   = xid;
+	header.xid = xid;
 	header.count = ct_buf_avail(args);
-	header.dest  = 0;
+	header.dest = 0;
 
 	/* Put everything into send buffer and transmit */
 	if ((rc = ct_socket_put_packet(sock, &header, args)) < 0
-	 || (rc = ct_socket_flsbuf(sock, 1)) < 0)
+	    || (rc = ct_socket_flsbuf(sock, 1)) < 0)
 		return rc;
 
 	/* Return right now if we don't expect a response */
@@ -403,7 +387,7 @@ ct_socket_call(ct_socket_t *sock, ct_buf_t *args, ct_buf_t *resp)
 		ct_buf_clear(resp);
 		if ((rc = ct_socket_get_packet(sock, &header, &data)) < 0)
 			return rc;
-	}  while (rc == 0 || header.xid != xid);
+	} while (rc == 0 || header.xid != xid);
 
 	if (header.error)
 		return header.error;
@@ -411,7 +395,7 @@ ct_socket_call(ct_socket_t *sock, ct_buf_t *args, ct_buf_t *resp)
 	avail = ct_buf_avail(&data);
 	if (avail > ct_buf_tailroom(resp)) {
 		ct_error("received truncated reply (%u out of %u bytes)",
-				rc, header.count);
+			 rc, header.count);
 		return IFD_ERROR_BUFFER_TOO_SMALL;
 	}
 
@@ -422,15 +406,14 @@ ct_socket_call(ct_socket_t *sock, ct_buf_t *args, ct_buf_t *resp)
 /*
  * Put packet into send buffer
  */
-int
-ct_socket_put_packet(ct_socket_t *sock, header_t *hdr, ct_buf_t *data)
+int ct_socket_put_packet(ct_socket_t * sock, header_t * hdr, ct_buf_t * data)
 {
-	header_t	hcopy;
-	ct_buf_t	*bp = &sock->sbuf;
-	size_t		count;
-	int		rc;
+	header_t hcopy;
+	ct_buf_t *bp = &sock->sbuf;
+	size_t count;
+	int rc;
 
-	count = sizeof(*hdr) + (data? ct_buf_avail(data) : 0);
+	count = sizeof(*hdr) + (data ? ct_buf_avail(data) : 0);
 	if (ct_buf_tailroom(bp) < count) {
 		if ((rc = ct_socket_flsbuf(sock, 1)) < 0)
 			return rc;
@@ -441,7 +424,7 @@ ct_socket_put_packet(ct_socket_t *sock, header_t *hdr, ct_buf_t *data)
 		}
 	}
 
-	hdr->count = data? ct_buf_avail(data) : 0;
+	hdr->count = data ? ct_buf_avail(data) : 0;
 
 	hcopy = *hdr;
 	if (sock->use_network_byte_order) {
@@ -457,10 +440,9 @@ ct_socket_put_packet(ct_socket_t *sock, header_t *hdr, ct_buf_t *data)
 	return 0;
 }
 
-int
-ct_socket_puts(ct_socket_t *sock, const char *string)
+int ct_socket_puts(ct_socket_t * sock, const char *string)
 {
-	ct_buf_t	*bp = &sock->sbuf;
+	ct_buf_t *bp = &sock->sbuf;
 
 	ct_buf_clear(bp);
 	if (ct_buf_puts(bp, string) < 0) {
@@ -475,12 +457,11 @@ ct_socket_puts(ct_socket_t *sock, const char *string)
 /*
  * Get packet from buffer
  */
-int
-ct_socket_get_packet(ct_socket_t *sock, header_t *hdr, ct_buf_t *data)
+int ct_socket_get_packet(ct_socket_t * sock, header_t * hdr, ct_buf_t * data)
 {
-	ct_buf_t	*bp = &sock->rbuf;
-	unsigned int	avail;
-	header_t	th;
+	ct_buf_t *bp = &sock->rbuf;
+	unsigned int avail;
+	header_t th;
 
 	avail = ct_buf_avail(bp);
 	if (avail < sizeof(header_t))
@@ -515,8 +496,7 @@ ct_socket_get_packet(ct_socket_t *sock, header_t *hdr, ct_buf_t *data)
 	return 0;
 }
 
-int
-ct_socket_gets(ct_socket_t *sock, char *buffer, size_t size)
+int ct_socket_gets(ct_socket_t * sock, char *buffer, size_t size)
 {
 	return ct_buf_gets(&sock->rbuf, buffer, size);
 }
@@ -524,12 +504,11 @@ ct_socket_gets(ct_socket_t *sock, char *buffer, size_t size)
 /*
  * Read some data from socket and put it into buffer
  */
-int
-ct_socket_filbuf(ct_socket_t *sock, long timeout)
+int ct_socket_filbuf(ct_socket_t * sock, long timeout)
 {
-	ct_buf_t	*bp = &sock->rbuf;
-	unsigned int	count;
-	int		n;
+	ct_buf_t *bp = &sock->rbuf;
+	unsigned int count;
+	int n;
 
 	if (!(count = ct_buf_tailroom(bp))) {
 		ct_buf_compact(bp);
@@ -540,7 +519,7 @@ ct_socket_filbuf(ct_socket_t *sock, long timeout)
 	}
 
 	if (timeout >= 0) {
-		struct pollfd	pfd;
+		struct pollfd pfd;
 
 		pfd.fd = sock->fd;
 		pfd.events = POLLIN;
@@ -579,12 +558,11 @@ ct_socket_filbuf(ct_socket_t *sock, long timeout)
 /*
  * Flush data from buffer to socket
  */
-int
-ct_socket_flsbuf(ct_socket_t *sock, int all)
+int ct_socket_flsbuf(ct_socket_t * sock, int all)
 {
 	struct sigaction act;
-	ct_buf_t	*bp = &sock->sbuf;
-	int		n, rc = 0;
+	ct_buf_t *bp = &sock->sbuf;
+	int n, rc = 0;
 
 	/* Ignore SIGPIPE while writing to socket */
 	memset(&act, 0, sizeof(act));
@@ -624,13 +602,12 @@ ct_socket_flsbuf(ct_socket_t *sock, int all)
 /*
  * Default send/receive handlers
  */
-int
-ct_socket_default_recv_cb(ct_socket_t *sock)
+int ct_socket_default_recv_cb(ct_socket_t * sock)
 {
-	char		buffer[CT_SOCKET_BUFSIZ+64];
-	header_t	header;
-	ct_buf_t	args, resp;
-	int		rc;
+	char buffer[CT_SOCKET_BUFSIZ + 64];
+	header_t header;
+	ct_buf_t args, resp;
+	int rc;
 
 	/* Error or client closed connection? */
 	if ((rc = ct_socket_filbuf(sock, -1)) <= 0)
@@ -676,8 +653,7 @@ ct_socket_default_recv_cb(ct_socket_t *sock)
 	return 0;
 }
 
-int
-ct_socket_default_send_cb(ct_socket_t *sock)
+int ct_socket_default_send_cb(ct_socket_t * sock)
 {
 	return ct_socket_flsbuf(sock, 0);
 }
@@ -685,29 +661,26 @@ ct_socket_default_send_cb(ct_socket_t *sock)
 /*
  * Send/receive request
  */
-int
-ct_socket_send(ct_socket_t *sock, header_t *hdr, ct_buf_t *data)
+int ct_socket_send(ct_socket_t * sock, header_t * hdr, ct_buf_t * data)
 {
-	header_t	hcopy = *hdr;
+	header_t hcopy = *hdr;
 
 	if (sock->use_network_byte_order) {
 		hcopy.error = htons(hcopy.error);
 		hcopy.count = htons(hcopy.count);
 	}
 	if (ct_socket_write(sock, &hcopy, sizeof(hcopy)) < 0
-	 || ct_socket_write(sock, ct_buf_head(data), hdr->count) < 0)
+	    || ct_socket_write(sock, ct_buf_head(data), hdr->count) < 0)
 		return -1;
 	return 0;
 }
 
-int
-ct_socket_recv(ct_socket_t *sock, header_t *hdr, ct_buf_t *resp)
+int ct_socket_recv(ct_socket_t * sock, header_t * hdr, ct_buf_t * resp)
 {
-	header_t	hcopy = *hdr;
-	unsigned int	left, count, n;
-	unsigned char	c;
-	int		rc;
-
+	header_t hcopy = *hdr;
+	unsigned int left, count, n;
+	unsigned char c;
+	int rc;
 
 	if (sock->use_network_byte_order) {
 		hcopy.error = htons(hcopy.error);
@@ -749,13 +722,12 @@ ct_socket_recv(ct_socket_t *sock, header_t *hdr, ct_buf_t *resp)
 /*
  * Socket read/write routines
  */
-int
-ct_socket_write(ct_socket_t *sock, void *ptr, size_t len)
+int ct_socket_write(ct_socket_t * sock, void *ptr, size_t len)
 {
 	struct sigaction act;
-	unsigned int	count = 0;
-	int		rc;
-	caddr_t		p = (caddr_t) ptr;
+	unsigned int count = 0;
+	int rc;
+	caddr_t p = (caddr_t) ptr;
 
 	if (sock->fd < 0)
 		return -1;
@@ -766,7 +738,7 @@ ct_socket_write(ct_socket_t *sock, void *ptr, size_t len)
 	sigaction(SIGPIPE, &act, &act);
 
 	while (count < len) {
-		rc = write(sock->fd, (const void *) p, len);
+		rc = write(sock->fd, (const void *)p, len);
 		if (rc < 0) {
 			ct_error("send error: %m");
 			goto done;
@@ -776,23 +748,22 @@ ct_socket_write(ct_socket_t *sock, void *ptr, size_t len)
 	}
 	rc = count;
 
-done:	/* Restore old signal handler */
+      done:			/* Restore old signal handler */
 	sigaction(SIGPIPE, &act, &act);
 	return rc;
 }
 
-int
-ct_socket_read(ct_socket_t *sock, void *ptr, size_t size)
+int ct_socket_read(ct_socket_t * sock, void *ptr, size_t size)
 {
-	unsigned int	count = 0;
-	int		rc;
-	caddr_t		p = (caddr_t) ptr;
+	unsigned int count = 0;
+	int rc;
+	caddr_t p = (caddr_t) ptr;
 
 	if (sock->fd < 0)
 		return -1;
 
 	while (count < size) {
-		rc = read(sock->fd, (void *) p, size - count);
+		rc = read(sock->fd, (void *)p, size - count);
 		if (rc < 0) {
 			ct_error("recv error: %m");
 			goto done;
@@ -807,16 +778,15 @@ ct_socket_read(ct_socket_t *sock, void *ptr, size_t size)
 	}
 	rc = count;
 
-done:	return rc;
+      done:return rc;
 }
 
 /*
  * Link/unlink socket
  */
-void
-ct_socket_link(ct_socket_t *prev, ct_socket_t *sock)
+void ct_socket_link(ct_socket_t * prev, ct_socket_t * sock)
 {
-	ct_socket_t	*next = prev->next;
+	ct_socket_t *next = prev->next;
 
 	if (next)
 		next->prev = sock;
@@ -826,11 +796,9 @@ ct_socket_link(ct_socket_t *prev, ct_socket_t *sock)
 	sock->next = next;
 }
 
-void
-ct_socket_unlink(ct_socket_t *sock)
+void ct_socket_unlink(ct_socket_t * sock)
 {
-	ct_socket_t	*next = sock->next,
-			*prev = sock->prev;
+	ct_socket_t *next = sock->next, *prev = sock->prev;
 
 	if (next)
 		next->prev = prev;

@@ -21,23 +21,22 @@
 #include <openct/openct.h>
 #include <openct/logging.h>
 
-static int		ct_status_lock(void);
-static void		ct_status_unlock(void);
+static int ct_status_lock(void);
+static void ct_status_unlock(void);
 
-static void *
-ct_map_status(int flags, size_t *size)
+static void *ct_map_status(int flags, size_t * size)
 {
-	struct stat	stb;
-	int		fd, prot;
-	void		*addr = NULL;
-	char		status_path[1024];
+	struct stat stb;
+	int fd, prot;
+	void *addr = NULL;
+	char status_path[1024];
 
 #if defined (sunray) || defined (sunrayclient)
-	char		*utdevroot=getenv("UTDEVROOT");
+	char *utdevroot = getenv("UTDEVROOT");
 
-	if(utdevroot)
+	if (utdevroot)
 		snprintf(status_path, sizeof(status_path),
-			"%s/openct/status", utdevroot);
+			 "%s/openct/status", utdevroot);
 	else
 		snprintf(status_path, sizeof(status_path), OPENCT_STATUS_PATH);
 #else
@@ -58,34 +57,33 @@ ct_map_status(int flags, size_t *size)
 	prot = PROT_READ;
 	if ((flags & O_ACCMODE) == O_RDWR)
 		prot |= PROT_WRITE;
-	
+
 	addr = mmap(0, *size, prot, MAP_SHARED, fd, 0);
 
-done:	close(fd);
+      done:close(fd);
 	return addr;
 }
 
-int
-ct_status_clear(unsigned int count)
+int ct_status_clear(unsigned int count)
 {
-	int	fd;
-	char	status_path[1024];
+	int fd;
+	char status_path[1024];
 
 #if defined (sunray) || defined (sunrayclient)
-	char	*utdevroot=getenv("UTDEVROOT");
+	char *utdevroot = getenv("UTDEVROOT");
 
-	if(utdevroot)
+	if (utdevroot)
 		snprintf(status_path, sizeof(status_path),
-			"%s/openct/status", utdevroot);
+			 "%s/openct/status", utdevroot);
 	else
 		snprintf(status_path, sizeof(status_path), OPENCT_STATUS_PATH);
 #else
 	snprintf(status_path, sizeof(status_path), OPENCT_STATUS_PATH);
 #endif
 	unlink(status_path);
-	if ((fd = open(status_path, O_RDWR|O_CREAT, 0644)) < 0
-	 || ftruncate(fd, count * sizeof(ct_info_t)) < 0
-	 || fchmod(fd, 0644) < 0) {
+	if ((fd = open(status_path, O_RDWR | O_CREAT, 0644)) < 0
+	    || ftruncate(fd, count * sizeof(ct_info_t)) < 0
+	    || fchmod(fd, 0644) < 0) {
 		ct_error("cannot create %s: %m", status_path);
 		unlink(status_path);
 		if (fd >= 0)
@@ -96,14 +94,13 @@ ct_status_clear(unsigned int count)
 	return 0;
 }
 
-int
-ct_status(const ct_info_t **result)
+int ct_status(const ct_info_t ** result)
 {
 	static const ct_info_t *reader_status;
-	static unsigned int	num_status;
+	static unsigned int num_status;
 
 	if (reader_status == NULL) {
-		size_t	size;
+		size_t size;
 
 		reader_status = (ct_info_t *) ct_map_status(O_RDONLY, &size);
 		if (reader_status == NULL)
@@ -115,20 +112,19 @@ ct_status(const ct_info_t **result)
 	return num_status;
 }
 
-ct_info_t *
-ct_status_alloc_slot(unsigned int *num)
+ct_info_t *ct_status_alloc_slot(unsigned int *num)
 {
-	ct_info_t	*info;
-	size_t		size;
-	unsigned int	n, max;
+	ct_info_t *info;
+	size_t size;
+	unsigned int n, max;
 
 	info = (ct_info_t *) ct_map_status(O_RDWR, &size);
 	if (info == NULL)
 		return NULL;
 
 	max = size / sizeof(ct_info_t);
-	if (*num == (unsigned int) -1) {
-		sigset_t	sigset;
+	if (*num == (unsigned int)-1) {
+		sigset_t sigset;
 
 		/* Block all signals while holding the lock */
 		sigfillset(&sigset);
@@ -140,7 +136,8 @@ ct_status_alloc_slot(unsigned int *num)
 		/* find a free slot */
 		for (n = 0; n < max; n++, info) {
 			if (info[n].ct_pid == 0
-			 || (kill(info[n].ct_pid, 0) < 0 && errno == ESRCH)) {
+			    || (kill(info[n].ct_pid, 0) < 0
+				&& errno == ESRCH)) {
 				*num = n;
 				break;
 			}
@@ -152,24 +149,22 @@ ct_status_alloc_slot(unsigned int *num)
 		/* unblock signals */
 		sigprocmask(SIG_SETMASK, &sigset, NULL);
 	} else if (*num >= max) {
-		munmap((void *) info, size);
+		munmap((void *)info, size);
 		return NULL;
 	}
 
 	memset(&info[*num], 0, sizeof(ct_info_t));
 	info[*num].ct_pid = getpid();
-	
-	msync((void *) info, size, MS_SYNC);
+
+	msync((void *)info, size, MS_SYNC);
 	return info + *num;
 }
 
-
 #define ALIGN(x, size)	(((caddr_t) (x)) - ((unsigned long) (x) % (size)))
-int
-ct_status_update(ct_info_t *status)
+int ct_status_update(ct_info_t * status)
 {
-	size_t	size;
-	caddr_t	page;
+	size_t size;
+	caddr_t page;
 
 	/* get the page this piece of data is sitting on */
 	size = getpagesize();
@@ -190,30 +185,29 @@ ct_status_update(ct_info_t *status)
 /*
  * Lock file handling
  */
-int
-ct_status_lock(void)
+int ct_status_lock(void)
 {
-	int	fd, retries = 10;
-	char	status_lock_path[1024];
-	char	locktemp[1024];
+	int fd, retries = 10;
+	char status_lock_path[1024];
+	char locktemp[1024];
 
 #if defined (sunray) || defined (sunrayclient)
-	char	*utdevroot=getenv("UTDEVROOT");
+	char *utdevroot = getenv("UTDEVROOT");
 
-	if(utdevroot)
+	if (utdevroot)
 		snprintf(status_lock_path, sizeof(status_lock_path),
-			"%s/openct/status.lock", utdevroot);
+			 "%s/openct/status.lock", utdevroot);
 	else
 		snprintf(status_lock_path, sizeof(status_lock_path),
-			OPENCT_STATUS_PATH ".lock");
+			 OPENCT_STATUS_PATH ".lock");
 #else
 	snprintf(status_lock_path, sizeof(status_lock_path),
-		OPENCT_STATUS_PATH ".lock");
+		 OPENCT_STATUS_PATH ".lock");
 #endif
 	snprintf(locktemp, sizeof(locktemp),
-		"%s.%u", status_lock_path, (unsigned int) getpid());
+		 "%s.%u", status_lock_path, (unsigned int)getpid());
 
-	if ((fd = open(locktemp, O_CREAT|O_RDWR, 0600)) < 0)
+	if ((fd = open(locktemp, O_CREAT | O_RDWR, 0600)) < 0)
 		return -1;
 
 	while (retries--) {
@@ -227,23 +221,22 @@ ct_status_lock(void)
 	return -1;
 }
 
-void
-ct_status_unlock(void)
+void ct_status_unlock(void)
 {
-	char	status_lock_path[1024];
+	char status_lock_path[1024];
 
 #if defined (sunray) || defined (sunrayclient)
-	char	*utdevroot=getenv("UTDEVROOT");
+	char *utdevroot = getenv("UTDEVROOT");
 
-	if(utdevroot)
+	if (utdevroot)
 		snprintf(status_lock_path, sizeof(status_lock_path),
-			"%s/openct/status.lock", utdevroot);
+			 "%s/openct/status.lock", utdevroot);
 	else
 		snprintf(status_lock_path, sizeof(status_lock_path),
-			OPENCT_STATUS_PATH ".lock");
+			 OPENCT_STATUS_PATH ".lock");
 #else
 	snprintf(status_lock_path, sizeof(status_lock_path),
-		OPENCT_STATUS_PATH ".lock");
+		 OPENCT_STATUS_PATH ".lock");
 #endif
 	unlink(status_lock_path);
 }

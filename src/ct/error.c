@@ -19,11 +19,10 @@ enum {
 	DST_SYSLOG
 };
 
-static int	log_open = 0;
-static int	log_dest = DST_STDERR;
+static int log_open = 0;
+static int log_dest = DST_STDERR;
 
-static void
-ct_log_init(void)
+static void ct_log_init(void)
 {
 	if (!log_open) {
 		openlog("ifdhandler", LOG_PID, LOG_DAEMON);
@@ -31,8 +30,7 @@ ct_log_init(void)
 	}
 }
 
-void
-ct_log_destination(const char *dest)
+void ct_log_destination(const char *dest)
 {
 	ct_log_init();
 	if (!strcmp(dest, "@stderr")) {
@@ -45,17 +43,16 @@ ct_log_destination(const char *dest)
 	}
 }
 
-void
-ct_error(const char *fmt, ...)
+void ct_error(const char *fmt, ...)
 {
-	va_list	ap;
-	int	n;
+	va_list ap;
+	int n;
 
 	va_start(ap, fmt);
 	if (log_dest == DST_STDERR) {
 		fprintf(stderr, "Error: ");
 		vfprintf(stderr, fmt, ap);
-		if (!(n = strlen(fmt)) || fmt[n-1] != '\n')
+		if (!(n = strlen(fmt)) || fmt[n - 1] != '\n')
 			fprintf(stderr, "\n");
 	} else {
 		vsyslog(LOG_WARNING, fmt, ap);
@@ -63,10 +60,9 @@ ct_error(const char *fmt, ...)
 	va_end(ap);
 }
 
-void
-ct_debug(const char *fmt, ...)
+void ct_debug(const char *fmt, ...)
 {
-	va_list	ap;
+	va_list ap;
 
 	va_start(ap, fmt);
 	if (log_dest == DST_STDERR) {
@@ -79,12 +75,11 @@ ct_debug(const char *fmt, ...)
 	va_end(ap);
 }
 
-const char *
-ct_hexdump(const void *data, size_t len)
+const char *ct_hexdump(const void *data, size_t len)
 {
-	static char	string[1024];
-	unsigned char	*d = (unsigned char *) data;
-	unsigned int	i, left;
+	static char string[1024];
+	unsigned char *d = (unsigned char *)data;
+	unsigned int i, left;
 
 	string[0] = '\0';
 	left = sizeof(string);
@@ -158,7 +153,7 @@ const char *ct_strerror(int rc)
 	if (error >= count || count == 0) {
 		msg = message;
 		snprintf(message, sizeof(message),
-			"Unknown OpenCT error %d", -rc);
+			 "Unknown OpenCT error %d", -rc);
 	} else {
 		msg = errors[error];
 	}

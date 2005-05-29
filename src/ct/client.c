@@ -19,33 +19,31 @@
 #include <openct/protocol.h>
 
 struct ct_handle {
-	ct_socket_t *		sock;
-	unsigned int		index;			/* reader index */
-	unsigned int		card[OPENCT_MAX_SLOTS];	/* card seq */
-	const ct_info_t *	info;
+	ct_socket_t *sock;
+	unsigned int index;	/* reader index */
+	unsigned int card[OPENCT_MAX_SLOTS];	/* card seq */
+	const ct_info_t *info;
 };
 
-static void	ct_args_int(ct_buf_t *, ifd_tag_t, unsigned int);
-static void	ct_args_string(ct_buf_t *, ifd_tag_t, const char *);
-static void	ct_args_opaque(ct_buf_t *, ifd_tag_t,
-				const unsigned char *, size_t);
+static void ct_args_int(ct_buf_t *, ifd_tag_t, unsigned int);
+static void ct_args_string(ct_buf_t *, ifd_tag_t, const char *);
+static void ct_args_opaque(ct_buf_t *, ifd_tag_t,
+			   const unsigned char *, size_t);
 
 /*
  * Get reader info
  */
-int
-ct_reader_info(unsigned int reader, ct_info_t *result)
+int ct_reader_info(unsigned int reader, ct_info_t * result)
 {
-	const ct_info_t	*info;
-	int		rc;
+	const ct_info_t *info;
+	int rc;
 
-	if ((rc = ct_status(&info)) < 0
-	 || reader > (unsigned int) rc)
+	if ((rc = ct_status(&info)) < 0 || reader > (unsigned int)rc)
 		return -1;
 
 	/* Make sure the server process is alive */
 	if (info[reader].ct_pid == 0
-	 || (kill(info[reader].ct_pid, 0) < 0 && errno == ESRCH))
+	    || (kill(info[reader].ct_pid, 0) < 0 && errno == ESRCH))
 		return -1;
 
 	*result = info[reader];
@@ -55,16 +53,14 @@ ct_reader_info(unsigned int reader, ct_info_t *result)
 /*
  * Connect to a reader manager
  */
-ct_handle *
-ct_reader_connect(unsigned int reader)
+ct_handle *ct_reader_connect(unsigned int reader)
 {
-	const ct_info_t	*info;
-	char		path[1024];
-	ct_handle	*h;
-	int		rc;
+	const ct_info_t *info;
+	char path[1024];
+	ct_handle *h;
+	int rc;
 
-	if ((rc = ct_status(&info)) < 0
-	 || reader > (unsigned int) rc)
+	if ((rc = ct_status(&info)) < 0 || reader > (unsigned int)rc)
 		return NULL;
 
 	if (!(h = (ct_handle *) calloc(1, sizeof(*h))))
@@ -74,16 +70,15 @@ ct_reader_connect(unsigned int reader)
 		free(h);
 		return NULL;
 	}
-
 #if defined (sunray) || defined (sunrayclient)
 	{
-		char *utdevroot=getenv("UTDEVROOT");
-		if(utdevroot)
+		char *utdevroot = getenv("UTDEVROOT");
+		if (utdevroot)
 			snprintf(path, sizeof(path),
-				"%s/openct/%u", utdevroot, reader);
+				 "%s/openct/%u", utdevroot, reader);
 		else
 			snprintf(path, sizeof(path),
-				OPENCT_SOCKET_PATH "/%u", reader);
+				 OPENCT_SOCKET_PATH "/%u", reader);
 	}
 #else
 	snprintf(path, sizeof(path), OPENCT_SOCKET_PATH "/%u", reader);
@@ -100,8 +95,7 @@ ct_reader_connect(unsigned int reader)
 /*
  * Disconnect from reader manager
  */
-void
-ct_reader_disconnect(ct_handle *h)
+void ct_reader_disconnect(ct_handle * h)
 {
 	if (h->sock)
 		ct_socket_free(h->sock);
@@ -112,8 +106,7 @@ ct_reader_disconnect(ct_handle *h)
 /*
  * Retrieve reader status
  */
-int
-ct_reader_status(ct_handle *h, ct_info_t *info)
+int ct_reader_status(ct_handle * h, ct_info_t * info)
 {
 	*info = *h->info;
 	return 0;
@@ -122,11 +115,10 @@ ct_reader_status(ct_handle *h, ct_info_t *info)
 /*
  * Print something to the reader's display
  */
-int
-ct_reader_output(ct_handle *h, const char *message)
+int ct_reader_output(ct_handle * h, const char *message)
 {
-	unsigned char	buffer[256];
-	ct_buf_t	args, resp;
+	unsigned char buffer[256];
+	ct_buf_t args, resp;
 
 	ct_buf_init(&args, buffer, sizeof(buffer));
 	ct_buf_init(&resp, buffer, sizeof(buffer));
@@ -144,14 +136,13 @@ ct_reader_output(ct_handle *h, const char *message)
 /*
  * Get card status
  */
-int
-ct_card_status(ct_handle *h, unsigned int slot, int *status)
+int ct_card_status(ct_handle * h, unsigned int slot, int *status)
 {
-	const ct_info_t	*info;
-	unsigned int	seq;
+	const ct_info_t *info;
+	unsigned int seq;
 
 	info = h->info;
-	if (slot > info->ct_slots) 
+	if (slot > info->ct_slots)
 		return IFD_ERROR_INVALID_ARG;
 
 	seq = info->ct_card[slot];
@@ -170,21 +161,19 @@ ct_card_status(ct_handle *h, unsigned int slot, int *status)
 /*
  * Reset the card - this is the same as "request icc" without parameters
  */
-int
-ct_card_reset(ct_handle *h, unsigned int slot, void *atr, size_t atr_len)
+int ct_card_reset(ct_handle * h, unsigned int slot, void *atr, size_t atr_len)
 {
 	return ct_card_request(h, slot, 0, NULL, atr, atr_len);
 }
 
-int
-ct_card_request(ct_handle *h, unsigned int slot,
-		unsigned int timeout, const char *message,
-		void *atr, size_t atr_len)
+int ct_card_request(ct_handle * h, unsigned int slot,
+		    unsigned int timeout, const char *message,
+		    void *atr, size_t atr_len)
 {
 	ct_tlv_parser_t tlv;
-	unsigned char	buffer[256];
-	ct_buf_t	args, resp;
-	int		rc;
+	unsigned char buffer[256];
+	ct_buf_t args, resp;
+	int rc;
 
 	ct_buf_init(&args, buffer, sizeof(buffer));
 	ct_buf_init(&resp, buffer, sizeof(buffer));
@@ -213,12 +202,11 @@ ct_card_request(ct_handle *h, unsigned int slot,
 	return rc;
 }
 
-int
-ct_card_eject(ct_handle *h, unsigned int slot,
-		unsigned int timeout, const char *message)
+int ct_card_eject(ct_handle * h, unsigned int slot,
+		  unsigned int timeout, const char *message)
 {
-	unsigned char	buffer[256];
-	ct_buf_t	args, resp;
+	unsigned char buffer[256];
+	ct_buf_t args, resp;
 
 	ct_buf_init(&args, buffer, sizeof(buffer));
 	ct_buf_init(&resp, buffer, sizeof(buffer));
@@ -235,34 +223,32 @@ ct_card_eject(ct_handle *h, unsigned int slot,
 	return ct_socket_call(h->sock, &args, &resp);
 }
 
-int 
-ct_card_set_protocol(ct_handle *h, unsigned int slot, unsigned int protocol)
+int ct_card_set_protocol(ct_handle * h, unsigned int slot,
+			 unsigned int protocol)
 {
-	unsigned char   buffer[256];
-        ct_buf_t        args, resp;
-                                                                                                                             
-        ct_buf_init(&args, buffer, sizeof(buffer));
-        ct_buf_init(&resp, buffer, sizeof(buffer));
-                                                                                                                             
-        ct_buf_putc(&args, CT_CMD_SET_PROTOCOL);
-        ct_buf_putc(&args, slot);
-	ct_args_int(&args, CT_TAG_PROTOCOL, protocol);
-        return ct_socket_call(h->sock, &args, &resp);
-}
+	unsigned char buffer[256];
+	ct_buf_t args, resp;
 
+	ct_buf_init(&args, buffer, sizeof(buffer));
+	ct_buf_init(&resp, buffer, sizeof(buffer));
+
+	ct_buf_putc(&args, CT_CMD_SET_PROTOCOL);
+	ct_buf_putc(&args, slot);
+	ct_args_int(&args, CT_TAG_PROTOCOL, protocol);
+	return ct_socket_call(h->sock, &args, &resp);
+}
 
 /*
  * Transceive an APDU
  */
-int
-ct_card_transact(ct_handle *h, unsigned int slot,
-			const void *send_data, size_t send_len,
-			void *recv_buf, size_t recv_size)
+int ct_card_transact(ct_handle * h, unsigned int slot,
+		     const void *send_data, size_t send_len,
+		     void *recv_buf, size_t recv_size)
 {
 	ct_tlv_parser_t tlv;
-	unsigned char	buffer[CT_SOCKET_BUFSIZ];
-	ct_buf_t	args, resp;
-	int		rc;
+	unsigned char buffer[CT_SOCKET_BUFSIZ];
+	ct_buf_t args, resp;
+	int rc;
 
 	ct_buf_init(&args, buffer, sizeof(buffer));
 	ct_buf_init(&resp, buffer, sizeof(buffer));
@@ -270,7 +256,8 @@ ct_card_transact(ct_handle *h, unsigned int slot,
 	ct_buf_putc(&args, CT_CMD_TRANSACT);
 	ct_buf_putc(&args, slot);
 
-	ct_args_opaque(&args, CT_TAG_CARD_REQUEST, (const unsigned char *) send_data, send_len);
+	ct_args_opaque(&args, CT_TAG_CARD_REQUEST,
+		       (const unsigned char *)send_data, send_len);
 
 	rc = ct_socket_call(h->sock, &args, &resp);
 	if (rc < 0)
@@ -281,21 +268,19 @@ ct_card_transact(ct_handle *h, unsigned int slot,
 
 	/* Get the ATR */
 	return ct_tlv_get_bytes(&tlv, CT_TAG_CARD_RESPONSE,
-			recv_buf, recv_size);
+				recv_buf, recv_size);
 }
 
 /*
  * Read from a synchronous card
  */
-int
-ct_card_read_memory(ct_handle *h, unsigned int slot,
-			unsigned short address,
-			void *recv_buf, size_t recv_len)
+int ct_card_read_memory(ct_handle * h, unsigned int slot,
+			unsigned short address, void *recv_buf, size_t recv_len)
 {
 	ct_tlv_parser_t tlv;
-	unsigned char	buffer[CT_SOCKET_BUFSIZ];
-	ct_buf_t	args, resp;
-	int		rc;
+	unsigned char buffer[CT_SOCKET_BUFSIZ];
+	ct_buf_t args, resp;
+	int rc;
 
 	ct_buf_init(&args, buffer, sizeof(buffer));
 	ct_buf_init(&resp, buffer, sizeof(buffer));
@@ -316,14 +301,13 @@ ct_card_read_memory(ct_handle *h, unsigned int slot,
 	return ct_tlv_get_bytes(&tlv, CT_TAG_DATA, recv_buf, recv_len);
 }
 
-int
-ct_card_write_memory(ct_handle *h, unsigned int slot,
-			unsigned short address,
-			const void *send_buf, size_t send_len)
+int ct_card_write_memory(ct_handle * h, unsigned int slot,
+			 unsigned short address,
+			 const void *send_buf, size_t send_len)
 {
-	unsigned char	buffer[CT_SOCKET_BUFSIZ];
-	ct_buf_t	args, resp;
-	int		rc;
+	unsigned char buffer[CT_SOCKET_BUFSIZ];
+	ct_buf_t args, resp;
+	int rc;
 
 	ct_buf_init(&args, buffer, sizeof(buffer));
 	ct_buf_init(&resp, buffer, sizeof(buffer));
@@ -332,7 +316,8 @@ ct_card_write_memory(ct_handle *h, unsigned int slot,
 	ct_buf_putc(&args, slot);
 
 	ct_args_int(&args, CT_TAG_ADDRESS, address);
-	ct_args_opaque(&args, CT_TAG_DATA, (const unsigned char *) send_buf, send_len);
+	ct_args_opaque(&args, CT_TAG_DATA, (const unsigned char *)send_buf,
+		       send_len);
 
 	rc = ct_socket_call(h->sock, &args, &resp);
 	if (rc < 0)
@@ -344,21 +329,20 @@ ct_card_write_memory(ct_handle *h, unsigned int slot,
 /*
  * Verify PIN
  */
-int
-ct_card_verify(ct_handle *h, unsigned int slot,
-			unsigned int timeout, const char *prompt,
-			unsigned int pin_encoding,
-			unsigned int pin_length,
-			unsigned int pin_offset,
-			const void *send_buf, size_t send_len,
-			void *recv_buf, size_t recv_len)
+int ct_card_verify(ct_handle * h, unsigned int slot,
+		   unsigned int timeout, const char *prompt,
+		   unsigned int pin_encoding,
+		   unsigned int pin_length,
+		   unsigned int pin_offset,
+		   const void *send_buf, size_t send_len,
+		   void *recv_buf, size_t recv_len)
 {
-	unsigned char	buffer[256];
-	ct_buf_t	args, resp;
+	unsigned char buffer[256];
+	ct_buf_t args, resp;
 	ct_tlv_builder_t builder;
 	ct_tlv_parser_t parser;
-	unsigned char	control = 0x00;
-	int		rc;
+	unsigned char control = 0x00;
+	int rc;
 
 	ct_buf_init(&args, buffer, sizeof(buffer));
 	ct_buf_init(&resp, recv_buf, recv_len);
@@ -385,7 +369,7 @@ ct_card_verify(ct_handle *h, unsigned int slot,
 
 	/* Offset is 1 based */
 	ct_tlv_add_byte(&builder, pin_offset + 1);
-	ct_tlv_add_bytes(&builder, (const unsigned char *) send_buf, send_len);
+	ct_tlv_add_bytes(&builder, (const unsigned char *)send_buf, send_len);
 
 	rc = ct_socket_call(h->sock, &args, &resp);
 	if (rc < 0)
@@ -396,19 +380,19 @@ ct_card_verify(ct_handle *h, unsigned int slot,
 
 	/* Get the ATR */
 	return ct_tlv_get_bytes(&parser,
-			CT_TAG_CARD_RESPONSE, recv_buf, recv_len);
+				CT_TAG_CARD_RESPONSE, recv_buf, recv_len);
 }
 
 /*
  * Lock/unlock a card
  */
-int
-ct_card_lock(ct_handle *h, unsigned int slot, int type, ct_lock_handle *res)
+int ct_card_lock(ct_handle * h, unsigned int slot, int type,
+		 ct_lock_handle * res)
 {
 	ct_tlv_parser_t tlv;
-	unsigned char	buffer[256];
-	ct_buf_t	args, resp;
-	int		rc;
+	unsigned char buffer[256];
+	ct_buf_t args, resp;
+	int rc;
 
 	ct_buf_init(&args, buffer, sizeof(buffer));
 	ct_buf_init(&resp, buffer, sizeof(buffer));
@@ -431,11 +415,10 @@ ct_card_lock(ct_handle *h, unsigned int slot, int type, ct_lock_handle *res)
 	return 0;
 }
 
-int
-ct_card_unlock(ct_handle *h, unsigned int slot, ct_lock_handle lock)
+int ct_card_unlock(ct_handle * h, unsigned int slot, ct_lock_handle lock)
 {
-	unsigned char	buffer[256];
-	ct_buf_t	args, resp;
+	unsigned char buffer[256];
+	ct_buf_t args, resp;
 
 	ct_buf_init(&args, buffer, sizeof(buffer));
 	ct_buf_init(&resp, buffer, sizeof(buffer));
@@ -451,8 +434,7 @@ ct_card_unlock(ct_handle *h, unsigned int slot, ct_lock_handle lock)
 /*
  * Add arguments when calling a resource manager function
  */
-void
-ct_args_int(ct_buf_t *bp, ifd_tag_t tag, unsigned int value)
+void ct_args_int(ct_buf_t * bp, ifd_tag_t tag, unsigned int value)
 {
 	ct_tlv_builder_t builder;
 
@@ -460,8 +442,7 @@ ct_args_int(ct_buf_t *bp, ifd_tag_t tag, unsigned int value)
 	ct_tlv_put_int(&builder, tag, value);
 }
 
-void
-ct_args_string(ct_buf_t *bp, ifd_tag_t tag, const char *value)
+void ct_args_string(ct_buf_t * bp, ifd_tag_t tag, const char *value)
 {
 	ct_tlv_builder_t builder;
 
@@ -469,9 +450,8 @@ ct_args_string(ct_buf_t *bp, ifd_tag_t tag, const char *value)
 	ct_tlv_put_string(&builder, tag, value);
 }
 
-void
-ct_args_opaque(ct_buf_t *bp, ifd_tag_t tag,
-		const unsigned char *value, size_t len)
+void ct_args_opaque(ct_buf_t * bp, ifd_tag_t tag, const unsigned char *value,
+		    size_t len)
 {
 	ct_tlv_builder_t builder;
 

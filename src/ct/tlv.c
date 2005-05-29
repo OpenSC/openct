@@ -21,22 +21,21 @@
 /*
  * Parse TLV data
  */
-int
-ct_tlv_parse(ct_tlv_parser_t *parser, ct_buf_t *bp)
+int ct_tlv_parse(ct_tlv_parser_t * parser, ct_buf_t * bp)
 {
-	unsigned int	avail, len;
-	unsigned char	*p, tag;
+	unsigned int avail, len;
+	unsigned char *p, tag;
 
 	/* Code below relies on it */
-	assert(((ifd_tag_t) -1) == 255);
+	assert(((ifd_tag_t) - 1) == 255);
 
 	while ((avail = ct_buf_avail(bp)) != 0) {
-		unsigned int	header = 2;
+		unsigned int header = 2;
 
 		if (avail < 2)
 			return -1;
 
-		p = (unsigned char *) ct_buf_head(bp);
+		p = (unsigned char *)ct_buf_head(bp);
 		tag = p[0];
 		len = p[1];
 
@@ -63,12 +62,11 @@ ct_tlv_parse(ct_tlv_parser_t *parser, ct_buf_t *bp)
 /*
  * Extract TLV encoded items as strings, integers, etc.
  */
-int
-ct_tlv_get_string(ct_tlv_parser_t *parser, ifd_tag_t tag,
-			char *buf, size_t size)
+int ct_tlv_get_string(ct_tlv_parser_t * parser, ifd_tag_t tag, char *buf,
+		      size_t size)
 {
-	unsigned char	*p;
-	unsigned int	len;
+	unsigned char *p;
+	unsigned int len;
 
 	if (!(p = parser->val[tag]))
 		return 0;
@@ -76,17 +74,15 @@ ct_tlv_get_string(ct_tlv_parser_t *parser, ifd_tag_t tag,
 	len = parser->len[tag];
 	if (len > size - 1)
 		len = size - 1;
-	strncpy(buf, (const char *) p, len);
+	strncpy(buf, (const char *)p, len);
 	buf[len] = '\0';
 	return 1;
 }
 
-int
-ct_tlv_get_int(ct_tlv_parser_t *parser, ifd_tag_t tag,
-			unsigned int *value)
+int ct_tlv_get_int(ct_tlv_parser_t * parser, ifd_tag_t tag, unsigned int *value)
 {
-	unsigned char	*p;
-	unsigned int	len;
+	unsigned char *p;
+	unsigned int len;
 
 	*value = 0;
 	if (!(p = parser->val[tag]))
@@ -101,11 +97,10 @@ ct_tlv_get_int(ct_tlv_parser_t *parser, ifd_tag_t tag,
 	return 1;
 }
 
-int
-ct_tlv_get_opaque(ct_tlv_parser_t *parser, ifd_tag_t tag,
-			unsigned char **data, size_t *lenp)
+int ct_tlv_get_opaque(ct_tlv_parser_t * parser, ifd_tag_t tag,
+		      unsigned char **data, size_t * lenp)
 {
-	unsigned char	*p;
+	unsigned char *p;
 
 	*data = NULL;
 	*lenp = 0;
@@ -117,12 +112,11 @@ ct_tlv_get_opaque(ct_tlv_parser_t *parser, ifd_tag_t tag,
 	return 1;
 }
 
-int
-ct_tlv_get_bytes(ct_tlv_parser_t *parser, ifd_tag_t tag,
-			void *buf, size_t size)
+int ct_tlv_get_bytes(ct_tlv_parser_t * parser, ifd_tag_t tag, void *buf,
+		     size_t size)
 {
-	unsigned char	*p;
-	unsigned int	len;
+	unsigned char *p;
+	unsigned int len;
 
 	if (!(p = parser->val[tag]))
 		return 0;
@@ -136,8 +130,8 @@ ct_tlv_get_bytes(ct_tlv_parser_t *parser, ifd_tag_t tag,
 /*
  * Initialize a TLV data builder
  */
-void
-ct_tlv_builder_init(ct_tlv_builder_t *builder, ct_buf_t *bp, int large_tags)
+void ct_tlv_builder_init(ct_tlv_builder_t * builder, ct_buf_t * bp,
+			 int large_tags)
 {
 	memset(builder, 0, sizeof(*builder));
 	builder->use_large_tags = large_tags;
@@ -147,17 +141,15 @@ ct_tlv_builder_init(ct_tlv_builder_t *builder, ct_buf_t *bp, int large_tags)
 /*
  * TLV encode objects
  */
-void
-ct_tlv_put_int(ct_tlv_builder_t *builder, ifd_tag_t tag,
-		unsigned int value)
+void ct_tlv_put_int(ct_tlv_builder_t * builder, ifd_tag_t tag,
+		    unsigned int value)
 {
-	int	n;
+	int n;
 
 	if (builder->error)
 		return;
 	ct_tlv_put_tag(builder, tag);
-	for (n = 0; (value >> (n + 8)) != 0; n += 8)
-		;
+	for (n = 0; (value >> (n + 8)) != 0; n += 8) ;
 	do {
 		ct_tlv_add_byte(builder, value >> n);
 		n -= 8;
@@ -166,22 +158,21 @@ ct_tlv_put_int(ct_tlv_builder_t *builder, ifd_tag_t tag,
 	builder->lenp = NULL;
 }
 
-void
-ct_tlv_put_string(ct_tlv_builder_t *builder, ifd_tag_t tag,
-		const char *string)
+void ct_tlv_put_string(ct_tlv_builder_t * builder, ifd_tag_t tag,
+		       const char *string)
 {
 	if (builder->error)
 		return;
 
 	ct_tlv_put_tag(builder, tag);
-	ct_tlv_add_bytes(builder, (const unsigned char *) string, strlen(string));
+	ct_tlv_add_bytes(builder, (const unsigned char *)string,
+			 strlen(string));
 
 	builder->lenp = NULL;
 }
 
-void
-ct_tlv_put_opaque(ct_tlv_builder_t *builder, ifd_tag_t tag,
-		  const unsigned char *data, size_t len)
+void ct_tlv_put_opaque(ct_tlv_builder_t * builder, ifd_tag_t tag,
+		       const unsigned char *data, size_t len)
 {
 	if (builder->error)
 		return;
@@ -192,10 +183,9 @@ ct_tlv_put_opaque(ct_tlv_builder_t *builder, ifd_tag_t tag,
 	builder->lenp = NULL;
 }
 
-void
-ct_tlv_put_tag(ct_tlv_builder_t *builder, ifd_tag_t tag)
+void ct_tlv_put_tag(ct_tlv_builder_t * builder, ifd_tag_t tag)
 {
-	ct_buf_t	*bp = builder->buf;
+	ct_buf_t *bp = builder->buf;
 
 	if (builder->error < 0)
 		return;
@@ -204,26 +194,24 @@ ct_tlv_put_tag(ct_tlv_builder_t *builder, ifd_tag_t tag)
 	if (ct_buf_putc(bp, tag) < 0)
 		goto err;
 	builder->len = 0;
-	builder->lenp = (unsigned char *) ct_buf_tail(bp);
+	builder->lenp = (unsigned char *)ct_buf_tail(bp);
 	if (ct_buf_putc(bp, 0) < 0
-	 || (builder->use_large_tags && ct_buf_putc(bp, 0) < 0))
+	    || (builder->use_large_tags && ct_buf_putc(bp, 0) < 0))
 		goto err;
 	return;
 
-err:	builder->error = -1;
+      err:builder->error = -1;
 }
 
-void
-ct_tlv_add_byte(ct_tlv_builder_t *builder, unsigned char byte)
+void ct_tlv_add_byte(ct_tlv_builder_t * builder, unsigned char byte)
 {
 	ct_tlv_add_bytes(builder, &byte, 1);
 }
 
-void
-ct_tlv_add_bytes(ct_tlv_builder_t *builder,
-			const unsigned char *data, size_t num)
+void ct_tlv_add_bytes(ct_tlv_builder_t * builder, const unsigned char *data,
+		      size_t num)
 {
-	ct_buf_t	*bp = builder->buf;
+	ct_buf_t *bp = builder->buf;
 
 	if (builder->error < 0)
 		return;
@@ -247,6 +235,7 @@ ct_tlv_add_bytes(ct_tlv_builder_t *builder,
 	}
 	return;
 
-error:	builder->error = -1;
+      error:
+	builder->error = -1;
 	return;
 }
