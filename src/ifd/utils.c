@@ -27,8 +27,7 @@ void ifd_debug(int level, const char *fmt, ...)
 }
 #endif
 
-unsigned int
-ifd_count_bits(unsigned int word)
+unsigned int ifd_count_bits(unsigned int word)
 {
 	static unsigned int bcount[16] = {
 		0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4
@@ -40,8 +39,7 @@ ifd_count_bits(unsigned int word)
 	return num;
 }
 
-void
-ifd_revert_bits(unsigned char *data, size_t len)
+void ifd_revert_bits(unsigned char *data, size_t len)
 {
 	unsigned char j, k, c, d;
 
@@ -67,10 +65,9 @@ ifd_revert_bits(unsigned char *data, size_t len)
   } while (0)
 #endif
 
-long
-ifd_time_elapsed(struct timeval *then)
+long ifd_time_elapsed(struct timeval *then)
 {
-	struct timeval	now, delta;
+	struct timeval now, delta;
 
 	gettimeofday(&now, NULL);
 	timersub(&now, then, &delta);
@@ -80,16 +77,14 @@ ifd_time_elapsed(struct timeval *then)
 /*
  * Spawn an ifdhandler
  */
-int
-ifd_spawn_handler(const char *driver, const char *device, int idx)
+int ifd_spawn_handler(const char *driver, const char *device, int idx)
 {
-	const char	*argv[16];
-	char		reader[16], debug[10];
-	int		argc, n;
-	pid_t		pid;
+	const char *argv[16];
+	char reader[16], debug[10];
+	int argc, n;
+	pid_t pid;
 
-	ifd_debug(1, "driver=%s, device=%s, index=%d",
-			driver, device, idx);
+	ifd_debug(1, "driver=%s, device=%s, index=%d", driver, device, idx);
 
 	if ((pid = fork()) < 0) {
 		ct_error("fork failed: %m");
@@ -119,9 +114,9 @@ ifd_spawn_handler(const char *driver, const char *device, int idx)
 	if (ct_config.debug) {
 		if ((n = ct_config.debug) > 6)
 			n = 6;
-		debug[n+1] = '\0';
+		debug[n + 1] = '\0';
 		while (n--)
-			debug[n+1] = 'd';
+			debug[n + 1] = 'd';
 		debug[0] = '-';
 		argv[argc++] = debug;
 	}
@@ -135,7 +130,7 @@ ifd_spawn_handler(const char *driver, const char *device, int idx)
 	while (--n > 2)
 		close(n);
 
-	execv(ct_config.ifdhandler, (char **) argv);
+	execv(ct_config.ifdhandler, (char **)argv);
 	ct_error("failed to execute %s: %m", ct_config.ifdhandler);
 	exit(1);
 }
@@ -144,8 +139,7 @@ ifd_spawn_handler(const char *driver, const char *device, int idx)
  * Replacement for the BSD daemon() function
  */
 #ifndef HAVE_DAEMON
-int
-daemon(int nochdir, int noclose)
+int daemon(int nochdir, int noclose)
 {
 	pid_t pid;
 
@@ -188,4 +182,3 @@ daemon(int nochdir, int noclose)
 	return 0;
 }
 #endif
-
