@@ -29,13 +29,12 @@
 #define RIA_SEND_CHUNK	128
 #define RIA_DEFAULT_TIMEOUT	4000
 
-static void	ifd_remote_close(ifd_device_t *);
+static void ifd_remote_close(ifd_device_t *);
 
-ria_client_t *
-ria_connect(const char *address)
+ria_client_t *ria_connect(const char *address)
 {
-	ria_client_t	*clnt;
-	int		rc;
+	ria_client_t *clnt;
+	int rc;
 
 	clnt = (ria_client_t *) calloc(1, sizeof(*clnt) + RIA_QUEUE_LEN);
 	ct_buf_init(&clnt->data, (clnt + 1), RIA_QUEUE_LEN);
@@ -43,7 +42,7 @@ ria_connect(const char *address)
 	clnt->sock = ct_socket_new(1024);
 	if ((rc = ct_socket_connect(clnt->sock, address)) < 0) {
 		ct_error("Failed to connect to RIA server \"%s\": %s",
-				address, ct_strerror(rc));
+			 address, ct_strerror(rc));
 		ria_free(clnt);
 		return NULL;
 	}
@@ -51,22 +50,20 @@ ria_connect(const char *address)
 	return clnt;
 }
 
-void
-ria_free(ria_client_t *clnt)
+void ria_free(ria_client_t * clnt)
 {
 	if (clnt->sock)
 		ct_socket_free(clnt->sock);
 	free(clnt);
 }
 
-int
-ria_send(ria_client_t *clnt, unsigned char cmd,
-		const void *arg_buf, size_t arg_len)
+int ria_send(ria_client_t * clnt, unsigned char cmd, const void *arg_buf,
+	     size_t arg_len)
 {
-	unsigned char	buffer[512];
-	ct_buf_t	args;
-	header_t	header;
-	int		rc;
+	unsigned char buffer[512];
+	ct_buf_t args;
+	header_t header;
+	int rc;
 
 	ct_buf_init(&args, buffer, sizeof(buffer));
 	ct_buf_putc(&args, cmd);
@@ -87,17 +84,15 @@ ria_send(ria_client_t *clnt, unsigned char cmd,
 	return 0;
 }
 
-int
-ria_recv(ria_client_t *clnt, unsigned char expect, uint32_t xid,
-		void *res_buf, size_t res_len,
-		long timeout)
+int ria_recv(ria_client_t * clnt, unsigned char expect, uint32_t xid,
+	     void *res_buf, size_t res_len, long timeout)
 {
-	ct_socket_t	*sock = clnt->sock;
-	struct timeval	begin;
-	unsigned char	buffer[512];
-	ct_buf_t	resp;
-	header_t	header;
-	int		rc;
+	ct_socket_t *sock = clnt->sock;
+	struct timeval begin;
+	unsigned char buffer[512];
+	ct_buf_t resp;
+	header_t header;
+	int rc;
 
 	/* Flush out any pending packets */
 	if ((rc = ct_socket_flsbuf(sock, 1)) < 0)
@@ -113,9 +108,9 @@ ria_recv(ria_client_t *clnt, unsigned char expect, uint32_t xid,
 	 * Handle data packets properly */
 	ct_buf_init(&resp, buffer, sizeof(buffer));
 	while (1) {
-		unsigned char	cmd;
-		long		wait = -1;
-		size_t		count;
+		unsigned char cmd;
+		long wait = -1;
+		size_t count;
 
 		ct_buf_clear(&resp);
 		if ((rc = ct_socket_get_packet(sock, &header, &resp)) < 0)
@@ -142,8 +137,7 @@ ria_recv(ria_client_t *clnt, unsigned char expect, uint32_t xid,
 		/* Complete packet. Check type */
 		if (header.dest != 0) {
 			cmd = RIA_RESPONSE;
-		} else
-		if (ct_buf_get(&resp, &cmd, 1) < 0)
+		} else if (ct_buf_get(&resp, &cmd, 1) < 0)
 			continue;
 
 		count = ct_buf_avail(&resp);
@@ -162,16 +156,14 @@ ria_recv(ria_client_t *clnt, unsigned char expect, uint32_t xid,
 			ct_buf_get(&resp, res_buf, res_len);
 			return res_len;
 		}
-	} while (header.xid != xid);
+	}
+	while (header.xid != xid) ;
 }
 
-int
-ria_command(ria_client_t *clnt, unsigned char cmd,
-		const void *arg_buf, size_t arg_len,
-		void *res_buf, size_t res_len,
-		long timeout)
+int ria_command(ria_client_t * clnt, unsigned char cmd, const void *arg_buf,
+		size_t arg_len, void *res_buf, size_t res_len, long timeout)
 {
-	int	rc;
+	int rc;
 
 	if ((rc = ria_send(clnt, cmd, arg_buf, arg_len)) < 0)
 		return rc;
@@ -182,20 +174,18 @@ ria_command(ria_client_t *clnt, unsigned char cmd,
 	return rc;
 }
 
-int
-ria_claim_device(ria_client_t *clnt, const char *name, ria_device_t *info)
+int ria_claim_device(ria_client_t * clnt, const char *name, ria_device_t * info)
 {
 	return ria_command(clnt, RIA_MGR_CLAIM, name, strlen(name),
-				info, sizeof(*info), -1);
+			   info, sizeof(*info), -1);
 }
 
 /*
  * Reset remote device
  */
-static int
-ifd_remote_reset(ifd_device_t *dev)
+static int ifd_remote_reset(ifd_device_t * dev)
 {
-	ria_client_t	*clnt = (ria_client_t *) dev->user_data;
+	ria_client_t *clnt = (ria_client_t *) dev->user_data;
 
 	ifd_debug(2, "called");
 	if (clnt == NULL)
@@ -206,10 +196,10 @@ ifd_remote_reset(ifd_device_t *dev)
 /*
  * Device specific portion of RIA client
  */
-static int
-ifd_remote_get_params(ifd_device_t *dev, ifd_device_params_t *params)
+static int ifd_remote_get_params(ifd_device_t * dev,
+				 ifd_device_params_t * params)
 {
-	ria_client_t	*clnt = (ria_client_t *) dev->user_data;
+	ria_client_t *clnt = (ria_client_t *) dev->user_data;
 
 	ifd_debug(2, "called");
 	if (clnt == NULL)
@@ -217,27 +207,27 @@ ifd_remote_get_params(ifd_device_t *dev, ifd_device_params_t *params)
 
 	if (dev->type == IFD_DEVICE_TYPE_SERIAL) {
 		ria_serial_conf_t rconf;
-		int		rc;
+		int rc;
 
 		rc = ria_command(clnt, RIA_SERIAL_GET_CONFIG,
-				NULL, 0, &rconf, sizeof(rconf), -1);
-		params->serial.speed	= ntohl(rconf.speed);
-		params->serial.bits	= rconf.bits;
-		params->serial.stopbits	= rconf.stopbits;
-		params->serial.parity	= rconf.parity;
-		params->serial.check_parity= rconf.check_parity;
-		params->serial.rts	= rconf.rts;
-		params->serial.dtr	= rconf.dtr;
+				 NULL, 0, &rconf, sizeof(rconf), -1);
+		params->serial.speed = ntohl(rconf.speed);
+		params->serial.bits = rconf.bits;
+		params->serial.stopbits = rconf.stopbits;
+		params->serial.parity = rconf.parity;
+		params->serial.check_parity = rconf.check_parity;
+		params->serial.rts = rconf.rts;
+		params->serial.dtr = rconf.dtr;
 		return 0;
 	}
 
 	return IFD_ERROR_NOT_SUPPORTED;
 }
 
-static int
-ifd_remote_set_params(ifd_device_t *dev, const ifd_device_params_t *params)
+static int ifd_remote_set_params(ifd_device_t * dev,
+				 const ifd_device_params_t * params)
 {
-	ria_client_t	*clnt = (ria_client_t *) dev->user_data;
+	ria_client_t *clnt = (ria_client_t *) dev->user_data;
 
 	ifd_debug(2, "called");
 	if (clnt == NULL)
@@ -246,24 +236,23 @@ ifd_remote_set_params(ifd_device_t *dev, const ifd_device_params_t *params)
 	if (dev->type == IFD_DEVICE_TYPE_SERIAL) {
 		ria_serial_conf_t rconf;
 
-		rconf.speed	= htonl(params->serial.speed);
-		rconf.bits	= params->serial.bits;
-		rconf.stopbits	= params->serial.stopbits;
-		rconf.parity	= params->serial.parity;
-		rconf.check_parity= params->serial.check_parity;
-		rconf.rts	= params->serial.rts;
-		rconf.dtr	= params->serial.dtr;
+		rconf.speed = htonl(params->serial.speed);
+		rconf.bits = params->serial.bits;
+		rconf.stopbits = params->serial.stopbits;
+		rconf.parity = params->serial.parity;
+		rconf.check_parity = params->serial.check_parity;
+		rconf.rts = params->serial.rts;
+		rconf.dtr = params->serial.dtr;
 		return ria_command(clnt, RIA_SERIAL_SET_CONFIG,
-				&rconf, sizeof(rconf), NULL, 0, -1);
+				   &rconf, sizeof(rconf), NULL, 0, -1);
 	}
 
 	return IFD_ERROR_NOT_SUPPORTED;
 }
 
-static void
-ifd_remote_flush(ifd_device_t *dev)
+static void ifd_remote_flush(ifd_device_t * dev)
 {
-	ria_client_t	*clnt = (ria_client_t *) dev->user_data;
+	ria_client_t *clnt = (ria_client_t *) dev->user_data;
 
 	ifd_debug(2, "called");
 	if (clnt == NULL)
@@ -273,26 +262,25 @@ ifd_remote_flush(ifd_device_t *dev)
 	ct_buf_clear(&clnt->data);
 }
 
-static void
-ifd_remote_send_break(ifd_device_t *dev, unsigned int usec)
+static void ifd_remote_send_break(ifd_device_t * dev, unsigned int usec)
 {
-        ria_client_t    *clnt = (ria_client_t *) dev->user_data;
-	unsigned int 	wait;
-                                                                                                                             
-        ifd_debug(2, "called");
-        if (clnt == NULL)
-                return;
+	ria_client_t *clnt = (ria_client_t *) dev->user_data;
+	unsigned int wait;
+
+	ifd_debug(2, "called");
+	if (clnt == NULL)
+		return;
 	wait = htonl(usec);
-        ria_command(clnt, RIA_SEND_BREAK, &wait, sizeof(wait), NULL, 0, -1);
-        ct_buf_clear(&clnt->data);
+	ria_command(clnt, RIA_SEND_BREAK, &wait, sizeof(wait), NULL, 0, -1);
+	ct_buf_clear(&clnt->data);
 }
 
-static int
-ifd_remote_send(ifd_device_t *dev, const unsigned char *buffer, size_t len)
+static int ifd_remote_send(ifd_device_t * dev, const unsigned char *buffer,
+			   size_t len)
 {
-	ria_client_t	*clnt = (ria_client_t *) dev->user_data;
-	unsigned int	n, count = 0;
-	int		rc;
+	ria_client_t *clnt = (ria_client_t *) dev->user_data;
+	unsigned int n, count = 0;
+	int rc;
 
 	ifd_debug(2, "called, data:%s", ct_hexdump(buffer, len));
 	if (clnt == NULL)
@@ -314,13 +302,13 @@ ifd_remote_send(ifd_device_t *dev, const unsigned char *buffer, size_t len)
 	return count;
 }
 
-static int
-ifd_remote_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeout)
+static int ifd_remote_recv(ifd_device_t * dev, unsigned char *buffer,
+			   size_t len, long timeout)
 {
-	ria_client_t	*clnt = (ria_client_t *) dev->user_data;
-	size_t		total = len;
-	struct timeval	begin;
-	int		n;
+	ria_client_t *clnt = (ria_client_t *) dev->user_data;
+	size_t total = len;
+	struct timeval begin;
+	int n;
 
 	gettimeofday(&begin, NULL);
 	ifd_debug(2, "called, timeout=%ld, len=%u", timeout, len);
@@ -328,7 +316,7 @@ ifd_remote_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeo
 		return IFD_ERROR_DEVICE_DISCONNECTED;
 
 	while (len) {
-		long	wait;
+		long wait;
 
 		/* See if there's any data queued */
 		if ((n = ct_buf_avail(&clnt->data)) != 0) {
@@ -346,11 +334,11 @@ ifd_remote_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeo
 			goto timeout;
 
 		ifd_debug(8, "Need another %u bytes of data, "
-			     "remaining timeout %ld", len, wait);
+			  "remaining timeout %ld", len, wait);
 		n = ria_recv(clnt, RIA_DATA, 0, NULL, 0, wait);
 		if (n < 0) {
 			ct_error("%s: error while waiting for input: %s",
-					dev->name, ct_strerror(n));
+				 dev->name, ct_strerror(n));
 			if (n == IFD_ERROR_NOT_CONNECTED) {
 				ifd_remote_close(dev);
 				return IFD_ERROR_DEVICE_DISCONNECTED;
@@ -361,27 +349,24 @@ ifd_remote_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeo
 
 	return total;
 
-timeout:/* Timeouts are a little special; they may happen e.g.
-	 * when trying to obtain the ATR */
+      timeout:			/* Timeouts are a little special; they may happen e.g.
+				 * when trying to obtain the ATR */
 	if (!ct_config.suppress_errors)
-		ct_error("%s: timed out while waiting for input",
-				dev->name);
+		ct_error("%s: timed out while waiting for input", dev->name);
 	ifd_debug(9, "(%u bytes received so far)", total - len);
 	return IFD_ERROR_TIMEOUT;
 }
 
-static int
-ifd_remote_poll_presence(ifd_device_t *dev, struct pollfd *pfd)
+static int ifd_remote_poll_presence(ifd_device_t * dev, struct pollfd *pfd)
 {
 	if (dev->user_data == NULL)
 		return 0;
 	return IFD_ERROR_NOT_SUPPORTED;
 }
 
-static void
-ifd_remote_close(ifd_device_t *dev)
+static void ifd_remote_close(ifd_device_t * dev)
 {
-	ria_client_t	*clnt = (ria_client_t *) dev->user_data;
+	ria_client_t *clnt = (ria_client_t *) dev->user_data;
 
 	dev->user_data = NULL;
 	if (clnt)
@@ -393,17 +378,16 @@ static struct ifd_device_ops ifd_remote_ops;
 /*
  * Open remote IFD
  */
-ifd_device_t *
-ifd_open_remote(const char *ident)
+ifd_device_t *ifd_open_remote(const char *ident)
 {
-	ria_client_t	*clnt;
-	ria_device_t	devinfo;
-	ifd_device_t	*dev;
-	char		name[256], *addr;
-	int		rc, type;
+	ria_client_t *clnt;
+	ria_device_t devinfo;
+	ifd_device_t *dev;
+	char name[256], *addr;
+	int rc, type;
 
 	strncpy(name, ident, sizeof(name));
-	name[sizeof(name)-1] = '\0';
+	name[sizeof(name) - 1] = '\0';
 
 	if ((addr = strchr(name, '@')) == NULL) {
 		ct_error("remote device name must be handle@host");
@@ -417,7 +401,7 @@ ifd_open_remote(const char *ident)
 
 	if ((rc = ria_claim_device(clnt, name, &devinfo)) < 0) {
 		ct_error("unable to claim device \"%s\": %s",
-				name, ct_strerror(rc));
+			 name, ct_strerror(rc));
 		ria_free(clnt);
 		return NULL;
 	}
@@ -460,15 +444,13 @@ ifd_open_remote(const char *ident)
 /*
  * Debugging aid: print packet
  */
-void
-ria_print_packet(ct_socket_t *sock,
-			int level, const char *func,
-			header_t *hdr, ct_buf_t *args)
+void ria_print_packet(ct_socket_t * sock, int level, const char *func,
+		      header_t * hdr, ct_buf_t * args)
 {
-	ct_buf_t	temp = *args;
-	char		buffer[128], *msg;
-	unsigned char	cmd;
-	unsigned int	len;
+	ct_buf_t temp = *args;
+	char buffer[128], *msg;
+	unsigned char cmd;
+	unsigned int len;
 
 	if (level > ct_config.debug)
 		return;
@@ -479,8 +461,7 @@ ria_print_packet(ct_socket_t *sock,
 		msg = "RESP";
 		if (err) {
 			snprintf(buffer, sizeof(buffer),
-					"RESP, err=%d (%s)",
-					err, ct_strerror(err));
+				 "RESP, err=%d (%s)", err, ct_strerror(err));
 			msg = buffer;
 		}
 	} else if (ct_buf_get(&temp, &cmd, 1) < 0) {
@@ -488,28 +469,37 @@ ria_print_packet(ct_socket_t *sock,
 	} else {
 		switch (cmd) {
 		case RIA_MGR_LIST:
-			msg = "LIST"; break;
+			msg = "LIST";
+			break;
 		case RIA_MGR_INFO:
-			msg = "INFO"; break;
+			msg = "INFO";
+			break;
 		case RIA_MGR_CLAIM:
-			msg = "CLAIM"; break;
+			msg = "CLAIM";
+			break;
 		case RIA_MGR_REGISTER:
-			msg = "REGISTER"; break;
+			msg = "REGISTER";
+			break;
 		case RIA_RESET_DEVICE:
-			msg = "RESET_DEVICE"; break;
+			msg = "RESET_DEVICE";
+			break;
 		case RIA_FLUSH_DEVICE:
-			msg = "FLUSH_DEVICE"; break;
+			msg = "FLUSH_DEVICE";
+			break;
 		case RIA_SEND_BREAK:
-			msg = "SEND_BREAK"; break;
+			msg = "SEND_BREAK";
+			break;
 		case RIA_SERIAL_GET_CONFIG:
-			msg = "SERIAL_GET_CONFIG"; break;
+			msg = "SERIAL_GET_CONFIG";
+			break;
 		case RIA_SERIAL_SET_CONFIG:
-			msg = "SERIAL_SET_CONFIG"; break;
+			msg = "SERIAL_SET_CONFIG";
+			break;
 		case RIA_DATA:
-			msg = "DATA"; break;
+			msg = "DATA";
+			break;
 		default:
-			snprintf(buffer, sizeof(buffer),
-					"CALL%u", cmd);
+			snprintf(buffer, sizeof(buffer), "CALL%u", cmd);
 			msg = buffer;
 		}
 	}
@@ -519,11 +509,10 @@ ria_print_packet(ct_socket_t *sock,
 		ct_debug("%s: [%08x] %s", func, hdr->xid, msg);
 	} else if (len < 16) {
 		ct_debug("%s: [%08x] %s, args%s", func, hdr->xid, msg,
-				ct_hexdump(ct_buf_head(&temp), len));
+			 ct_hexdump(ct_buf_head(&temp), len));
 	} else {
 		ct_debug("%s: [%08x] %s, args%s ... (%u bytes total)",
-				func, hdr->xid, msg,
-				ct_hexdump(ct_buf_head(&temp), 16),
-				len);
+			 func, hdr->xid, msg,
+			 ct_hexdump(ct_buf_head(&temp), 16), len);
 	}
 }

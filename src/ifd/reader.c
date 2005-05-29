@@ -10,29 +10,26 @@
 #include <signal.h>
 #include <time.h>
 
-static int		ifd_recv_atr(ifd_device_t *, ct_buf_t *,
-				unsigned int, int);
+static int ifd_recv_atr(ifd_device_t *, ct_buf_t *, unsigned int, int);
 
 /*
  * Initialize a reader and open the device
  */
-ifd_reader_t *
-ifd_open(const char *driver_name, const char *device_name)
+ifd_reader_t *ifd_open(const char *driver_name, const char *device_name)
 {
 	const ifd_driver_t *driver;
-	ifd_reader_t	*reader;
+	ifd_reader_t *reader;
 
 	ifd_debug(1, "trying to open %s@%s", driver_name, device_name);
 	if (!driver_name || !strcmp(driver_name, "auto")) {
-		char	pnp_id[64];
+		char pnp_id[64];
 
-		if (ifd_device_identify(device_name, pnp_id, sizeof(pnp_id)) < 0) {
+		if (ifd_device_identify(device_name, pnp_id, sizeof(pnp_id)) <
+		    0) {
 			ct_error("%s: unable to identify device, "
-			      "please specify driver",
-			      device_name);
+				 "please specify driver", device_name);
 			return NULL;
 		}
-
 #if 1
 		/* Currently not supported */
 		ct_error("%s: plug and play not supported", device_name);
@@ -40,16 +37,15 @@ ifd_open(const char *driver_name, const char *device_name)
 #else
 		if (!(driver_name = ifd_driver_for_id(pnp_id))) {
 			ct_error("%s: no driver for ID %s, "
-			      "please specify driver",
-			      device_name, pnp_id);
+				 "please specify driver", device_name, pnp_id);
 			return NULL;
 		}
 
 		driver = ifd_driver_get(driver_name);
 		if (driver == NULL) {
 			ct_error("%s: driver \"%s\" not available "
-				  "(identified as %s)",
-				   device_name, driver_name, pnp_id);
+				 "(identified as %s)",
+				 device_name, driver_name, pnp_id);
 			return NULL;
 		}
 #endif
@@ -64,10 +60,9 @@ ifd_open(const char *driver_name, const char *device_name)
 	reader = (ifd_reader_t *) calloc(1, sizeof(*reader));
 	reader->driver = driver;
 
-	if (driver->ops->open
-	 && driver->ops->open(reader, device_name) < 0) {
+	if (driver->ops->open && driver->ops->open(reader, device_name) < 0) {
 		ct_error("%s: initialization failed (driver %s)",
-				device_name, driver->name);
+			 device_name, driver->name);
 		free(reader);
 		return NULL;
 	}
@@ -78,8 +73,7 @@ ifd_open(const char *driver_name, const char *device_name)
 /*
  * Select a different protocol for this reader
  */
-int
-ifd_set_protocol(ifd_reader_t *reader, unsigned int idx, int prot)
+int ifd_set_protocol(ifd_reader_t * reader, unsigned int idx, int prot)
 {
 	const ifd_driver_t *drv = reader->driver;
 	ifd_slot_t *slot;
@@ -114,11 +108,10 @@ ifd_set_protocol(ifd_reader_t *reader, unsigned int idx, int prot)
  * Set the serial speed at which we communicate with the
  * reader
  */
-int
-ifd_set_speed(ifd_reader_t *reader, unsigned int speed)
+int ifd_set_speed(ifd_reader_t * reader, unsigned int speed)
 {
 	const ifd_driver_t *drv = reader->driver;
-	int		rc = 0;
+	int rc = 0;
 
 	if (drv && drv->ops && drv->ops->change_speed)
 		rc = drv->ops->change_speed(reader, speed);
@@ -130,11 +123,10 @@ ifd_set_speed(ifd_reader_t *reader, unsigned int speed)
 /*
  * Activate/Deactivate the reader
  */
-int
-ifd_activate(ifd_reader_t *reader)
+int ifd_activate(ifd_reader_t * reader)
 {
 	const ifd_driver_t *drv = reader->driver;
-	int		rc = 0;
+	int rc = 0;
 
 	if (drv && drv->ops && drv->ops->activate)
 		rc = drv->ops->activate(reader);
@@ -142,11 +134,10 @@ ifd_activate(ifd_reader_t *reader)
 	return rc;
 }
 
-int
-ifd_deactivate(ifd_reader_t *reader)
+int ifd_deactivate(ifd_reader_t * reader)
 {
 	const ifd_driver_t *drv = reader->driver;
-	int		rc = 0;
+	int rc = 0;
 
 	if (drv && drv->ops && drv->ops->deactivate)
 		rc = drv->ops->deactivate(reader);
@@ -157,8 +148,7 @@ ifd_deactivate(ifd_reader_t *reader)
 /*
  * Output to reader's display
  */
-int
-ifd_output(ifd_reader_t *reader, const char *message)
+int ifd_output(ifd_reader_t * reader, const char *message)
 {
 	const ifd_driver_t *drv = reader->driver;
 
@@ -171,11 +161,10 @@ ifd_output(ifd_reader_t *reader, const char *message)
 /*
  * Detect card status
  */
-int
-ifd_card_status(ifd_reader_t *reader, unsigned int idx, int *status)
+int ifd_card_status(ifd_reader_t * reader, unsigned int idx, int *status)
 {
 	const ifd_driver_t *drv = reader->driver;
-	int		rc;
+	int rc;
 
 	if (idx > reader->nslots) {
 		ct_error("%s: invalid slot number %u", reader->name, idx);
@@ -198,8 +187,8 @@ ifd_card_status(ifd_reader_t *reader, unsigned int idx, int *status)
 /*
  * Reset card and obtain ATR
  */
-int
-ifd_card_reset(ifd_reader_t *reader, unsigned int idx, void *atr, size_t size)
+int ifd_card_reset(ifd_reader_t * reader, unsigned int idx, void *atr,
+		   size_t size)
 {
 	return ifd_card_request(reader, idx, 0, NULL, atr, size);
 }
@@ -207,16 +196,14 @@ ifd_card_reset(ifd_reader_t *reader, unsigned int idx, void *atr, size_t size)
 /*
  * Request ICC
  */
-int
-ifd_card_request(ifd_reader_t *reader, unsigned int idx,
-		time_t timeout, const char *message,
-		void *atr, size_t size)
+int ifd_card_request(ifd_reader_t * reader, unsigned int idx, time_t timeout,
+		     const char *message, void *atr, size_t size)
 {
 	const ifd_driver_t *drv = reader->driver;
-	ifd_device_t	*dev = reader->device;
-	ifd_slot_t	*slot;
-	unsigned int	count;
-	int		n, parity;
+	ifd_device_t *dev = reader->device;
+	ifd_slot_t *slot;
+	unsigned int count;
+	int n, parity;
 
 	if (idx > reader->nslots) {
 		ct_error("%s: invalid slot number %u", reader->name, idx);
@@ -267,14 +254,14 @@ ifd_card_request(ifd_reader_t *reader, unsigned int idx,
 	 */
 	if (drv->ops->card_request && (timeout || message)) {
 		n = drv->ops->card_request(reader, idx,
-				timeout, message, slot->atr, 
-				sizeof(slot->atr));
+					   timeout, message, slot->atr,
+					   sizeof(slot->atr));
 		if (n <= 0)
 			return n;
 		count = n;
 	} else
-	if (dev->type != IFD_DEVICE_TYPE_SERIAL
-	 || !drv->ops->change_parity) {
+	    if (dev->type != IFD_DEVICE_TYPE_SERIAL
+		|| !drv->ops->change_parity) {
 		n = drv->ops->card_reset(reader, idx,
 					 slot->atr, sizeof(slot->atr));
 		if (n <= 0)
@@ -307,10 +294,10 @@ ifd_card_request(ifd_reader_t *reader, unsigned int idx,
 		/* If we got just the first byte of the (async) ATR,
 		 * get the rest now */
 		if (count == 1) {
-			ct_buf_t	rbuf;
-			unsigned char	c;
-			unsigned int	num, proto = 0;
-			int		revert_bits = 0;
+			ct_buf_t rbuf;
+			unsigned char c;
+			unsigned int num, proto = 0;
+			int revert_bits = 0;
 
 			if (slot->atr[0] == 0x03) {
 				revert_bits = 1;
@@ -326,13 +313,14 @@ ifd_card_request(ifd_reader_t *reader, unsigned int idx,
 			c = rbuf.base[1];
 			while (1) {
 				num = ifd_count_bits(c & 0xF0);
-				if (ifd_recv_atr(dev, &rbuf, num, revert_bits) < 0)
+				if (ifd_recv_atr(dev, &rbuf, num, revert_bits) <
+				    0)
 					return -1;
 
 				if (!(c & 0x80))
 					break;
 
-				c = rbuf.base[rbuf.tail-1];
+				c = rbuf.base[rbuf.tail - 1];
 				proto = c & 0xF;
 			}
 
@@ -343,7 +331,8 @@ ifd_card_request(ifd_reader_t *reader, unsigned int idx,
 
 			/* If a protocol other than T0 was specified,
 			 * read check byte */
-			if (proto && ifd_recv_atr(dev, &rbuf, 1, revert_bits) < 0)
+			if (proto
+			    && ifd_recv_atr(dev, &rbuf, 1, revert_bits) < 0)
 				return -1;
 
 			if (slot->atr[0] == 0x3F)
@@ -375,20 +364,18 @@ ifd_card_request(ifd_reader_t *reader, unsigned int idx,
 	return count;
 }
 
-int
-ifd_recv_atr(ifd_device_t *dev, ct_buf_t *bp,
-		unsigned int count,
-		int revert_bits)
+int ifd_recv_atr(ifd_device_t * dev, ct_buf_t * bp, unsigned int count,
+		 int revert_bits)
 {
-	unsigned char	*buf;
-	unsigned int	n;
+	unsigned char *buf;
+	unsigned int n;
 
 	if (count > ct_buf_tailroom(bp)) {
 		ct_error("ATR buffer too small");
 		return -1;
 	}
 
-	buf = (unsigned char *) ct_buf_tail(bp);
+	buf = (unsigned char *)ct_buf_tail(bp);
 	for (n = 0; n < count; n++) {
 		if (ifd_device_recv(dev, buf + n, 1, 1000) < 0) {
 			ct_error("failed to receive ATR");
@@ -407,16 +394,15 @@ ifd_recv_atr(ifd_device_t *dev, ct_buf_t *bp,
 /*
  * Check ATR for completeness
  */
-int
-ifd_atr_complete(const unsigned char *atr, size_t len)
+int ifd_atr_complete(const unsigned char *atr, size_t len)
 {
-	unsigned int	j = 2, c;
-	int		proto = 0;
+	unsigned int j = 2, c;
+	int proto = 0;
 
 	do {
 		if (j > len)
 			return 0;
-		c = atr[j-1];
+		c = atr[j - 1];
 		if (j > 2)
 			proto = c & 0xF;
 		j += ifd_count_bits(c & 0xF0);
@@ -437,9 +423,8 @@ ifd_atr_complete(const unsigned char *atr, size_t len)
 /*
  * Eject the card
  */
-int
-ifd_card_eject(ifd_reader_t *reader, unsigned int idx,
-		time_t timeout, const char *message)
+int ifd_card_eject(ifd_reader_t * reader, unsigned int idx, time_t timeout,
+		   const char *message)
 {
 	const ifd_driver_t *drv = reader->driver;
 
@@ -457,11 +442,10 @@ ifd_card_eject(ifd_reader_t *reader, unsigned int idx,
 /*
  * Perform a PIN verification, using the reader's pin pad
  */
-int
-ifd_card_perform_verify(ifd_reader_t *reader, unsigned int idx,
-		time_t timeout, const char *message,
-		const unsigned char *data, size_t data_len,
-		unsigned char *resp, size_t resp_len)
+int ifd_card_perform_verify(ifd_reader_t * reader, unsigned int idx,
+			    time_t timeout, const char *message,
+			    const unsigned char *data, size_t data_len,
+			    unsigned char *resp, size_t resp_len)
 {
 	const ifd_driver_t *drv = reader->driver;
 
@@ -474,21 +458,16 @@ ifd_card_perform_verify(ifd_reader_t *reader, unsigned int idx,
 		return IFD_ERROR_NOT_SUPPORTED;
 
 	return drv->ops->perform_verify(reader, idx, timeout, message,
-					data, data_len,
-					resp, resp_len);
+					data, data_len, resp, resp_len);
 }
-
-
 
 /*
  * Send/receive APDU to the ICC
  */
-int
-ifd_card_command(ifd_reader_t *reader, unsigned int idx,
-		 const void *sbuf, size_t slen,
-		 void *rbuf, size_t rlen)
+int ifd_card_command(ifd_reader_t * reader, unsigned int idx, const void *sbuf,
+		     size_t slen, void *rbuf, size_t rlen)
 {
-	ifd_slot_t	*slot;
+	ifd_slot_t *slot;
 
 	if (idx > reader->nslots)
 		return -1;
@@ -508,18 +487,16 @@ ifd_card_command(ifd_reader_t *reader, unsigned int idx,
 	slot->next_update = time(NULL) + 1;
 
 	return ifd_protocol_transceive(slot->proto, slot->dad,
-				sbuf, slen, rbuf, rlen);
+				       sbuf, slen, rbuf, rlen);
 }
 
 /*
  * Read/write synchronous ICCs
  */
-int
-ifd_card_read_memory(ifd_reader_t *reader, unsigned int idx,
-		     unsigned short addr,
-		     unsigned char *rbuf, size_t rlen)
+int ifd_card_read_memory(ifd_reader_t * reader, unsigned int idx,
+			 unsigned short addr, unsigned char *rbuf, size_t rlen)
 {
-	ifd_slot_t	*slot;
+	ifd_slot_t *slot;
 
 	if (idx > reader->nslots)
 		return -1;
@@ -535,16 +512,14 @@ ifd_card_read_memory(ifd_reader_t *reader, unsigned int idx,
 	 * things */
 	slot->next_update = time(NULL) + 1;
 
-	return ifd_protocol_read_memory(slot->proto,
-				idx, addr, rbuf, rlen);
+	return ifd_protocol_read_memory(slot->proto, idx, addr, rbuf, rlen);
 }
 
-int
-ifd_card_write_memory(ifd_reader_t *reader, unsigned int idx,
-		      unsigned short addr,
-		      const unsigned char *sbuf, size_t slen)
+int ifd_card_write_memory(ifd_reader_t * reader, unsigned int idx,
+			  unsigned short addr, const unsigned char *sbuf,
+			  size_t slen)
 {
-	ifd_slot_t	*slot;
+	ifd_slot_t *slot;
 
 	if (idx > reader->nslots)
 		return -1;
@@ -560,45 +535,42 @@ ifd_card_write_memory(ifd_reader_t *reader, unsigned int idx,
 	 * things */
 	slot->next_update = time(NULL) + 1;
 
-	return ifd_protocol_write_memory(slot->proto,
-				idx, addr, sbuf, slen);
+	return ifd_protocol_write_memory(slot->proto, idx, addr, sbuf, slen);
 }
 
 /*
  * Transfer/receive APDU using driver specific mechanisms
  * This functions is called from the protocol (T=0,1,...) layer
  */
-int
-ifd_send_command(ifd_protocol_t *prot, const void *buffer, size_t len)
+int ifd_send_command(ifd_protocol_t * prot, const void *buffer, size_t len)
 {
 	const ifd_driver_t *drv;
 
-	if (!prot || !prot->reader
-	 || !(drv = prot->reader->driver)
-	 || !drv->ops || !drv->ops->send)
+	if (!prot || !prot->reader || !(drv = prot->reader->driver)
+	    || !drv->ops || !drv->ops->send)
 		return -1;
 
-	return drv->ops->send(prot->reader, prot->dad, (const unsigned char *) buffer, len);
+	return drv->ops->send(prot->reader, prot->dad,
+			      (const unsigned char *)buffer, len);
 }
 
 int
-ifd_recv_response(ifd_protocol_t *prot, void *buffer, size_t len, long timeout)
+ifd_recv_response(ifd_protocol_t * prot, void *buffer, size_t len, long timeout)
 {
 	const ifd_driver_t *drv;
 
-	if (!prot || !prot->reader
-	 || !(drv = prot->reader->driver)
-	 || !drv->ops || !drv->ops->recv)
+	if (!prot || !prot->reader || !(drv = prot->reader->driver)
+	    || !drv->ops || !drv->ops->recv)
 		return -1;
 
-	return drv->ops->recv(prot->reader, prot->dad, (unsigned char *) buffer, len, timeout);
+	return drv->ops->recv(prot->reader, prot->dad, (unsigned char *)buffer,
+			      len, timeout);
 }
 
 /*
  * Shut down reader
  */
-void
-ifd_close(ifd_reader_t *reader)
+void ifd_close(ifd_reader_t * reader)
 {
 	ifd_detach(reader);
 
