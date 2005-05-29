@@ -13,8 +13,7 @@
 #include <stdio.h>
 #include <openct/driver.h>
 
-int
-ifd_sysdep_device_type(const char *name)
+int ifd_sysdep_device_type(const char *name)
 {
 	return -1;
 }
@@ -22,8 +21,7 @@ ifd_sysdep_device_type(const char *name)
 /*
  * USB handling
  */
-int
-ifd_sysdep_usb_poll_presence(ifd_device_t *dev, struct pollfd *pfd)
+int ifd_sysdep_usb_poll_presence(ifd_device_t * dev, struct pollfd *pfd)
 {
 #if 0
 	if (pfd->revents & POLLHUP)
@@ -36,80 +34,66 @@ ifd_sysdep_usb_poll_presence(ifd_device_t *dev, struct pollfd *pfd)
 #endif
 }
 
-int
-ifd_sysdep_usb_control(ifd_device_t *dev,
-		unsigned int requesttype,
-		unsigned int request,
-		unsigned int value,
-		unsigned int index,
-		void *data, size_t len, long timeout)
+int ifd_sysdep_usb_control(ifd_device_t * dev, unsigned int requesttype,
+			   unsigned int request, unsigned int value,
+			   unsigned int index, void *data, size_t len,
+			   long timeout)
 {
 	return -1;
 }
 
-int
-ifd_sysdep_usb_set_configuration(ifd_device_t *dev, int config) 
+int ifd_sysdep_usb_set_configuration(ifd_device_t * dev, int config)
 {
-     return -1;
+	return -1;
 }
 
-int
-ifd_sysdep_usb_set_interface(ifd_device_t *dev, int ifc, int alt) 
+int ifd_sysdep_usb_set_interface(ifd_device_t * dev, int ifc, int alt)
 {
-     return -1;
+	return -1;
 }
 
-int
-ifd_sysdep_usb_claim_interface(ifd_device_t *dev, int interface) 
+int ifd_sysdep_usb_claim_interface(ifd_device_t * dev, int interface)
 {
-     return -1;
+	return -1;
 }
 
-int
-ifd_sysdep_usb_release_interface(ifd_device_t *dev, int interface) 
+int ifd_sysdep_usb_release_interface(ifd_device_t * dev, int interface)
 {
-     return -1;
+	return -1;
 }
 
 /*
  * USB bulk transfer
  */
-int
-ifd_sysdep_usb_bulk(ifd_device_t *dev, int ep, void *buffer, size_t len,
-		    long timeout) 
+int ifd_sysdep_usb_bulk(ifd_device_t * dev, int ep, void *buffer, size_t len,
+			long timeout)
 {
-     return -1;
+	return -1;
 }
 
 /*
  * USB URB capture
  */
 struct ifd_usb_capture {
-	int		type;
-	int		endpoint;
-	size_t		maxpacket;
-	unsigned int	interface;
+	int type;
+	int endpoint;
+	size_t maxpacket;
+	unsigned int interface;
 };
 
-int
-ifd_sysdep_usb_begin_capture(ifd_device_t *dev,
-		int type, int endpoint, size_t maxpacket,
-	       	ifd_usb_capture_t **capret)
+int ifd_sysdep_usb_begin_capture(ifd_device_t * dev, int type, int endpoint,
+				 size_t maxpacket, ifd_usb_capture_t ** capret)
 {
 	return -1;
 }
 
-int
-ifd_sysdep_usb_capture(ifd_device_t *dev,
-		ifd_usb_capture_t *cap,
-		void *buffer, size_t len,
-		long timeout)
+int ifd_sysdep_usb_capture(ifd_device_t * dev, ifd_usb_capture_t * cap,
+			   void *buffer, size_t len, long timeout)
 {
 	return -1;
 }
 
-int
-ifd_sysdep_usb_end_capture(ifd_device_t *dev, ifd_usb_capture_t *cap)
+int ifd_sysdep_usb_end_capture(ifd_device_t * dev, ifd_usb_capture_t * cap)
 {
 	return -1;
 }
@@ -117,8 +101,7 @@ ifd_sysdep_usb_end_capture(ifd_device_t *dev, ifd_usb_capture_t *cap)
 /*
  * Scan all usb devices to see if there is one we support
  */
-int
-ifd_scan_usb(void)
+int ifd_scan_usb(void)
 {
 	return 0;
 }

@@ -29,8 +29,7 @@
 #endif
 #include <openct/driver.h>
 
-int
-ifd_sysdep_device_type(const char *name)
+int ifd_sysdep_device_type(const char *name)
 {
 	struct stat stb;
 
@@ -48,9 +47,10 @@ ifd_sysdep_device_type(const char *name)
 		int minor = minor(stb.st_rdev);
 
 		if (major == TTY_MAJOR
-		 || major == PTY_SLAVE_MAJOR
-		 || (UNIX98_PTY_SLAVE_MAJOR <= major
-		  && major < UNIX98_PTY_SLAVE_MAJOR + UNIX98_PTY_MAJOR_COUNT))
+		    || major == PTY_SLAVE_MAJOR
+		    || (UNIX98_PTY_SLAVE_MAJOR <= major
+			&& major <
+			UNIX98_PTY_SLAVE_MAJOR + UNIX98_PTY_MAJOR_COUNT))
 			return IFD_DEVICE_TYPE_SERIAL;
 
 		if (major == MISC_MAJOR && minor == 1)
@@ -63,8 +63,7 @@ ifd_sysdep_device_type(const char *name)
 /*
  * Poll for presence of USB device
  */
-int
-ifd_sysdep_usb_poll_presence(ifd_device_t *dev, struct pollfd *pfd)
+int ifd_sysdep_usb_poll_presence(ifd_device_t * dev, struct pollfd *pfd)
 {
 	if (pfd->revents & POLLHUP)
 		return 0;
@@ -76,16 +75,13 @@ ifd_sysdep_usb_poll_presence(ifd_device_t *dev, struct pollfd *pfd)
 /*
  * USB control command
  */
-int
-ifd_sysdep_usb_control(ifd_device_t *dev,
-		unsigned int requesttype,
-		unsigned int request,
-		unsigned int value,
-		unsigned int index,
-		void *data, size_t len, long timeout)
+int ifd_sysdep_usb_control(ifd_device_t * dev, unsigned int requesttype,
+			   unsigned int request, unsigned int value,
+			   unsigned int index, void *data, size_t len,
+			   long timeout)
 {
 	struct usbdevfs_ctrltransfer ctrl;
-	int		rc;
+	int rc;
 
 #ifdef LINUX_NEWUSB
 	ctrl.bRequestType = requesttype;
@@ -113,8 +109,7 @@ ifd_sysdep_usb_control(ifd_device_t *dev,
 	return rc;
 }
 
-int
-ifd_sysdep_usb_set_configuration(ifd_device_t *dev, int config) 
+int ifd_sysdep_usb_set_configuration(ifd_device_t * dev, int config)
 {
 	if (ioctl(dev->fd, USBDEVFS_SETCONFIGURATION, &config) < 0) {
 		ct_error("usb_setconfig failed: %m");
@@ -123,8 +118,7 @@ ifd_sysdep_usb_set_configuration(ifd_device_t *dev, int config)
 	return 0;
 }
 
-int
-ifd_sysdep_usb_set_interface(ifd_device_t *dev, int ifc, int alt) 
+int ifd_sysdep_usb_set_interface(ifd_device_t * dev, int ifc, int alt)
 {
 	struct usbdevfs_setinterface set;
 
@@ -137,8 +131,7 @@ ifd_sysdep_usb_set_interface(ifd_device_t *dev, int ifc, int alt)
 	return 0;
 }
 
-int
-ifd_sysdep_usb_claim_interface(ifd_device_t *dev, int interface) 
+int ifd_sysdep_usb_claim_interface(ifd_device_t * dev, int interface)
 {
 	if (ioctl(dev->fd, USBDEVFS_CLAIMINTERFACE, &interface) < 0) {
 		ct_error("usb_claiminterface failed: %m");
@@ -147,8 +140,7 @@ ifd_sysdep_usb_claim_interface(ifd_device_t *dev, int interface)
 	return 0;
 }
 
-int
-ifd_sysdep_usb_release_interface(ifd_device_t *dev, int interface) 
+int ifd_sysdep_usb_release_interface(ifd_device_t * dev, int interface)
 {
 	if (ioctl(dev->fd, USBDEVFS_RELEASEINTERFACE, &interface) < 0) {
 		ct_error("usb_releaseinterface failed: %m");
@@ -160,9 +152,8 @@ ifd_sysdep_usb_release_interface(ifd_device_t *dev, int interface)
 /*
  * USB bulk transfer
  */
-int
-ifd_sysdep_usb_bulk(ifd_device_t *dev, int ep, void *buffer, size_t len,
-		       long timeout) 
+int ifd_sysdep_usb_bulk(ifd_device_t * dev, int ep, void *buffer, size_t len,
+			long timeout)
 {
 	struct usbdevfs_bulktransfer bulk;
 	int rc;
@@ -184,13 +175,12 @@ ifd_sysdep_usb_bulk(ifd_device_t *dev, int ep, void *buffer, size_t len,
  */
 struct ifd_usb_capture {
 	struct usbdevfs_urb urb;
-	int		type;
-	int		endpoint;
-	size_t		maxpacket;
+	int type;
+	int endpoint;
+	size_t maxpacket;
 };
 
-static int
-usb_submit_urb(int fd, struct ifd_usb_capture *cap)
+static int usb_submit_urb(int fd, struct ifd_usb_capture *cap)
 {
 	/* Fill in the URB details */
 	ifd_debug(6, "submit urb %p", &cap->urb);
@@ -202,12 +192,10 @@ usb_submit_urb(int fd, struct ifd_usb_capture *cap)
 	return ioctl(fd, USBDEVFS_SUBMITURB, &cap->urb);
 }
 
-int
-ifd_sysdep_usb_begin_capture(ifd_device_t *dev,
-		int type, int endpoint, size_t maxpacket,
-	       	ifd_usb_capture_t **capret)
+int ifd_sysdep_usb_begin_capture(ifd_device_t * dev, int type, int endpoint,
+				 size_t maxpacket, ifd_usb_capture_t ** capret)
 {
-	ifd_usb_capture_t	*cap;
+	ifd_usb_capture_t *cap;
 
 	cap = (ifd_usb_capture_t *) calloc(1, sizeof(*cap) + maxpacket);
 
@@ -225,24 +213,21 @@ ifd_sysdep_usb_begin_capture(ifd_device_t *dev,
 	return 0;
 }
 
-int
-ifd_sysdep_usb_capture(ifd_device_t *dev,
-		ifd_usb_capture_t *cap,
-		void *buffer, size_t len,
-		long timeout)
+int ifd_sysdep_usb_capture(ifd_device_t * dev, ifd_usb_capture_t * cap,
+			   void *buffer, size_t len, long timeout)
 {
-	struct usbdevfs_urb	*purb;
-	struct timeval		begin;
-	size_t			copied;
-	int			rc = 0;
+	struct usbdevfs_urb *purb;
+	struct timeval begin;
+	size_t copied;
+	int rc = 0;
 
 	/* Loop until we've reaped the response to the
 	 * URB we sent */
 	copied = 0;
 	gettimeofday(&begin, NULL);
 	do {
-		struct pollfd	pfd;
-		long		wait;
+		struct pollfd pfd;
+		long wait;
 
 		if ((wait = timeout - ifd_time_elapsed(&begin)) <= 0)
 			return IFD_ERROR_TIMEOUT;
@@ -267,7 +252,8 @@ ifd_sysdep_usb_capture(ifd_device_t *dev,
 		}
 
 		if (purb->actual_length) {
-			ifd_debug(6, "usb reapurb: len=%u", purb->actual_length);
+			ifd_debug(6, "usb reapurb: len=%u",
+				  purb->actual_length);
 			if ((copied = purb->actual_length) > len)
 				copied = len;
 			if (copied && buffer)
@@ -283,12 +269,12 @@ ifd_sysdep_usb_capture(ifd_device_t *dev,
 	return copied;
 }
 
-int
-ifd_sysdep_usb_end_capture(ifd_device_t *dev, ifd_usb_capture_t *cap)
+int ifd_sysdep_usb_end_capture(ifd_device_t * dev, ifd_usb_capture_t * cap)
 {
-	int	rc = 0;
+	int rc = 0;
 
-	if (ioctl(dev->fd, USBDEVFS_DISCARDURB, &cap->urb) < 0 && errno != EINVAL) {
+	if (ioctl(dev->fd, USBDEVFS_DISCARDURB, &cap->urb) < 0
+	    && errno != EINVAL) {
 		ct_error("usb_discardurb failed: %m");
 		rc = IFD_ERROR_COMM_ERROR;
 	}
@@ -297,26 +283,24 @@ ifd_sysdep_usb_end_capture(ifd_device_t *dev, ifd_usb_capture_t *cap)
 	 * URB now, the next call to REAPURB will return this one,
 	 * clobbering random memory.
 	 */
-	(void) ioctl(dev->fd, USBDEVFS_REAPURBNDELAY, &cap->urb);
+	(void)ioctl(dev->fd, USBDEVFS_REAPURBNDELAY, &cap->urb);
 	free(cap);
 	return rc;
 }
 
-int
-ifd_sysdep_usb_open(char *device, int flags)
+int ifd_sysdep_usb_open(char *device, int flags)
 {
-    return open(device, O_EXCL | O_RDWR);
+	return open(device, O_EXCL | O_RDWR);
 }
 
 /*
  * Scan all usb devices to see if there is one we support
  */
-int
-ifd_scan_usb(void)
+int ifd_scan_usb(void)
 {
 #ifdef HAVE_LIBUSB
-	ifd_devid_t	id;
-	struct usb_bus	*bus;
+	ifd_devid_t id;
+	struct usb_bus *bus;
 	struct usb_device *dev;
 
 	usb_init();
@@ -324,11 +308,11 @@ ifd_scan_usb(void)
 	usb_find_devices();
 
 	id.type = IFD_DEVICE_TYPE_USB;
-	id.num  = 2;
+	id.num = 2;
 	for (bus = usb_busses; bus; bus = bus->next) {
 		for (dev = bus->devices; dev; dev = dev->next) {
-			const char	*driver;
-			char		device[PATH_MAX];
+			const char *driver;
+			char device[PATH_MAX];
 
 			id.val[0] = dev->descriptor.idVendor;
 			id.val[1] = dev->descriptor.idProduct;
@@ -337,9 +321,8 @@ ifd_scan_usb(void)
 				continue;
 
 			snprintf(device, sizeof(device),
-				"/proc/bus/usb/%s/%s",
-				bus->dirname,
-				dev->filename);
+				 "/proc/bus/usb/%s/%s",
+				 bus->dirname, dev->filename);
 
 			ifd_spawn_handler(driver, device, -1);
 		}
@@ -348,4 +331,4 @@ ifd_scan_usb(void)
 	return 0;
 }
 
-#endif /* __linux__ */
+#endif				/* __linux__ */
