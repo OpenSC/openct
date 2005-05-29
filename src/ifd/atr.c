@@ -33,7 +33,7 @@ int ifd_atr_parse(ifd_atr_info_t * info, const unsigned char *atr, size_t len)
 		unsigned int TDi;
 
 		/* TA1, TA2, TA3, TA4 are legal, TA5 wouldn't be */
-		if (m > 3)
+		if (m > 2)
 			return IFD_ERROR_INVALID_ATR;
 
 		TDi = atr[n - 1];
