@@ -18,17 +18,16 @@
 /*
  * Input/output routines
  */
-static int
-ifd_pcmcia_send(ifd_device_t *dev, const unsigned char *buffer, size_t len)
+static int ifd_pcmcia_send(ifd_device_t * dev, const unsigned char *buffer,
+			   size_t len)
 {
-	size_t		total = len;
-	int		n;
+	size_t total = len;
+	int n;
 
 	while (len) {
 		n = write(dev->fd, buffer, len);
 		if (n < 0) {
-			ct_error("Error writing to %s: %m",
-					dev->name);
+			ct_error("Error writing to %s: %m", dev->name);
 			return -1;
 		}
 		buffer += n;
@@ -38,12 +37,12 @@ ifd_pcmcia_send(ifd_device_t *dev, const unsigned char *buffer, size_t len)
 	return total;
 }
 
-static int
-ifd_pcmcia_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeout)
+static int ifd_pcmcia_recv(ifd_device_t * dev, unsigned char *buffer,
+			   size_t len, long timeout)
 {
-	size_t		total = len, to_read;
-	struct timeval	begin;
-	int		n, last_ff = 0;
+	size_t total = len, to_read;
+	struct timeval begin;
+	int n, last_ff = 0;
 
 	gettimeofday(&begin, NULL);
 
@@ -59,7 +58,7 @@ ifd_pcmcia_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeo
 		n = poll(&pfd, 1, wait);
 		if (n < 0) {
 			ct_error("%s: error while waiting for input: %m",
-					dev->name);
+				 dev->name);
 			return -1;
 		}
 		if (n == 0)
@@ -70,7 +69,7 @@ ifd_pcmcia_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeo
 		n = read(dev->fd, buffer, to_read);
 		if (n < 0) {
 			ct_error("%s: failed to read from device: %m",
-					dev->name);
+				 dev->name);
 			return -1;
 		}
 		if (ct_config.debug >= 9)
@@ -81,11 +80,10 @@ ifd_pcmcia_recv(ifd_device_t *dev, unsigned char *buffer, size_t len, long timeo
 
 	return total;
 
-timeout:/* Timeouts are a little special; they may happen e.g.
-	 * when trying to obtain the ATR */
+      timeout:			/* Timeouts are a little special; they may happen e.g.
+				 * when trying to obtain the ATR */
 	if (!ct_config.suppress_errors)
-		ct_error("%s: timed out while waiting for input",
-				dev->name);
+		ct_error("%s: timed out while waiting for input", dev->name);
 	ifd_debug(9, "(%u bytes received so far)", total - len);
 	return IFD_ERROR_TIMEOUT;
 }
@@ -93,8 +91,7 @@ timeout:/* Timeouts are a little special; they may happen e.g.
 /*
  * Close the device
  */
-static void
-ifd_pcmcia_close(ifd_device_t *dev)
+static void ifd_pcmcia_close(ifd_device_t * dev)
 {
 	if (dev->fd >= 0)
 		close(dev->fd);
@@ -106,12 +103,11 @@ static struct ifd_device_ops ifd_pcmcia_ops;
 /*
  * Open serial device
  */
-ifd_device_t *
-ifd_open_pcmcia(const char *name)
+ifd_device_t *ifd_open_pcmcia(const char *name)
 {
 	ifd_device_params_t params;
-	ifd_device_t	*dev;
-	int		fd;
+	ifd_device_t *dev;
+	int fd;
 
 	if ((fd = open(name, O_RDWR)) < 0) {
 		ct_error("Unable to open %s: %m", name);
@@ -123,10 +119,9 @@ ifd_open_pcmcia(const char *name)
 	ifd_pcmcia_ops.close = ifd_pcmcia_close;
 
 	dev = ifd_device_new(name, &ifd_pcmcia_ops, sizeof(*dev));
-	dev->timeout = 1000; /* acceptable? */
+	dev->timeout = 1000;	/* acceptable? */
 	dev->type = IFD_DEVICE_TYPE_PCMCIA;
 	dev->fd = fd;
 
 	return dev;
 }
-

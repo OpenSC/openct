@@ -10,32 +10,29 @@
 
 struct ifd_protocol_info {
 	struct ifd_protocol_info *next;
-	struct ifd_protocol_ops	*ops;
+	struct ifd_protocol_ops *ops;
 };
 
-static struct ifd_protocol_info	*list = NULL;
+static struct ifd_protocol_info *list = NULL;
 
 /*
  * Register a protocol
  */
-void
-ifd_protocol_register(struct ifd_protocol_ops *ops)
+void ifd_protocol_register(struct ifd_protocol_ops *ops)
 {
 	struct ifd_protocol_info *info, **ptr;
 
-	info = (struct ifd_protocol_info *) calloc(1, sizeof(*info));
+	info = (struct ifd_protocol_info *)calloc(1, sizeof(*info));
 	info->ops = ops;
 
-	for (ptr = &list; *ptr; ptr = &(*ptr)->next)
-		;
+	for (ptr = &list; *ptr; ptr = &(*ptr)->next) ;
 	*ptr = info;
 }
 
 /*
  * Look up protocol based on its ID
  */
-static struct ifd_protocol_ops *
-ifd_protocol_by_id(int id)
+static struct ifd_protocol_ops *ifd_protocol_by_id(int id)
 {
 	struct ifd_protocol_info *info;
 
@@ -52,14 +49,14 @@ ifd_protocol_by_id(int id)
 /*
  * Select a protocol
  */
-ifd_protocol_t *
-ifd_protocol_select(ifd_reader_t *reader, int nslot, int preferred)
+ifd_protocol_t *ifd_protocol_select(ifd_reader_t * reader, int nslot,
+				    int preferred)
 {
 	const ifd_driver_t *drv;
-	ifd_slot_t	*slot = &reader->slot[nslot];
-	unsigned char	*atr, TDi;
-	unsigned int	supported = 0;
-	int		def_proto = -1, n, len;
+	ifd_slot_t *slot = &reader->slot[nslot];
+	unsigned char *atr, TDi;
+	unsigned int supported = 0;
+	int def_proto = -1, n, len;
 
 	ifd_debug(1, "atr=%s", ct_hexdump(slot->atr, slot->atr_len));
 
@@ -74,7 +71,7 @@ ifd_protocol_select(ifd_reader_t *reader, int nslot, int preferred)
 
 	n = 2;
 	do {
-		int	prot;
+		int prot;
 
 		TDi = atr[n - 1];
 		if (n != 2) {
@@ -93,11 +90,10 @@ ifd_protocol_select(ifd_reader_t *reader, int nslot, int preferred)
 		def_proto = IFD_PROTOCOL_T0;
 
 	ifd_debug(1, "default T=%d, supported protocols=0x%x",
-			def_proto, supported);
+		  def_proto, supported);
 
 	if (preferred >= 0
-	 && preferred != def_proto
-	 && (supported & (1 << preferred))) {
+	    && preferred != def_proto && (supported & (1 << preferred))) {
 		/* XXX perform PTS */
 		ifd_debug(1, "protocol selection not supported");
 	}
@@ -115,8 +111,7 @@ ifd_protocol_select(ifd_reader_t *reader, int nslot, int preferred)
 /*
  * Force the protocol driver to resynchronize
  */
-int
-ifd_protocol_resynchronize(ifd_protocol_t *p, int nad)
+int ifd_protocol_resynchronize(ifd_protocol_t * p, int nad)
 {
 	ifd_debug(1, "called.");
 	if (!p || !p->ops || !p->ops->resynchronize)
@@ -128,12 +123,10 @@ ifd_protocol_resynchronize(ifd_protocol_t *p, int nad)
 /*
  * Protocol transceive
  */
-int
-ifd_protocol_transceive(ifd_protocol_t *p, int dad,
-			const void *sbuf, size_t slen,
-			void *rbuf, size_t rlen)
+int ifd_protocol_transceive(ifd_protocol_t * p, int dad, const void *sbuf,
+			    size_t slen, void *rbuf, size_t rlen)
 {
-	int	rc;
+	int rc;
 
 	if (!p || !p->ops || !p->ops->transceive)
 		return IFD_ERROR_NOT_SUPPORTED;
@@ -152,17 +145,16 @@ ifd_protocol_transceive(ifd_protocol_t *p, int dad,
 /*
  * Read/write synchronous ICCs
  */
-int
-ifd_protocol_read_memory(ifd_protocol_t *p, int slot,
-			 unsigned short addr,
-			 unsigned char *rbuf, size_t rlen)
+int ifd_protocol_read_memory(ifd_protocol_t * p, int slot, unsigned short addr,
+			     unsigned char *rbuf, size_t rlen)
 {
-	int	rc;
+	int rc;
 
 	if (!p || !p->ops || !p->ops->sync_read)
 		return IFD_ERROR_NOT_SUPPORTED;
 
-	ifd_debug(1, "read %u@%04x (%s)", (unsigned int) rlen, addr, p->ops->name);
+	ifd_debug(1, "read %u@%04x (%s)", (unsigned int)rlen, addr,
+		  p->ops->name);
 	rc = p->ops->sync_read(p, slot, addr, rbuf, rlen);
 
 	if (rc >= 0)
@@ -171,20 +163,17 @@ ifd_protocol_read_memory(ifd_protocol_t *p, int slot,
 	return rc;
 }
 
-int
-ifd_protocol_write_memory(ifd_protocol_t *p, int slot,
-			  unsigned short addr,
-			  const unsigned char *sbuf, size_t slen)
+int ifd_protocol_write_memory(ifd_protocol_t * p, int slot, unsigned short addr,
+			      const unsigned char *sbuf, size_t slen)
 {
-	int	rc;
+	int rc;
 
 	if (!p || !p->ops || !p->ops->sync_write)
 		return IFD_ERROR_NOT_SUPPORTED;
 
 	ifd_debug(1, "write %u@%04x (%s):%s",
-			(unsigned int) slen, addr,
-			p->ops->name,
-			ct_hexdump(sbuf, slen));
+		  (unsigned int)slen, addr,
+		  p->ops->name, ct_hexdump(sbuf, slen));
 	rc = p->ops->sync_write(p, slot, addr, sbuf, slen);
 
 	ifd_debug(1, "resp = %d", rc);
@@ -194,15 +183,15 @@ ifd_protocol_write_memory(ifd_protocol_t *p, int slot,
 /*
  * Create new protocol object
  */
-ifd_protocol_t *
-ifd_protocol_new(int id, ifd_reader_t *reader, unsigned int dad)
+ifd_protocol_t *ifd_protocol_new(int id, ifd_reader_t * reader,
+				 unsigned int dad)
 {
 	struct ifd_protocol_ops *ops;
 	ifd_protocol_t *p;
 
 	if (reader == NULL)
 		return NULL;
-	
+
 	if (!(ops = ifd_protocol_by_id(id))) {
 		ct_error("unknown protocol id %d", id);
 		return NULL;
@@ -225,16 +214,14 @@ ifd_protocol_new(int id, ifd_reader_t *reader, unsigned int dad)
 /*
  * Set a protocol specific parameter
  */
-int
-ifd_protocol_set_parameter(ifd_protocol_t *p, int type, long value)
+int ifd_protocol_set_parameter(ifd_protocol_t * p, int type, long value)
 {
 	if (!p || !p->ops || !p->ops->set_param)
 		return -1;
 	return p->ops->set_param(p, type, value);
 }
 
-int
-ifd_protocol_get_parameter(ifd_protocol_t *p, int type, long *value)
+int ifd_protocol_get_parameter(ifd_protocol_t * p, int type, long *value)
 {
 	if (!p || !p->ops || !p->ops->get_param)
 		return -1;
@@ -244,8 +231,7 @@ ifd_protocol_get_parameter(ifd_protocol_t *p, int type, long *value)
 /*
  * Free protocol object
  */
-void
-ifd_protocol_free(ifd_protocol_t *p)
+void ifd_protocol_free(ifd_protocol_t * p)
 {
 	if (p->ops) {
 		if (p->ops->release)
@@ -260,11 +246,10 @@ ifd_protocol_free(ifd_protocol_t *p)
 /*
  * List available protocols
  */
-unsigned int
-ifd_protocols_list(const char **names, unsigned int max)
+unsigned int ifd_protocols_list(const char **names, unsigned int max)
 {
 	struct ifd_protocol_info *info;
-	unsigned int	n;
+	unsigned int n;
 
 	for (info = list, n = 0; info && n < max; info = info->next, n++) {
 		names[n] = info->ops->name;

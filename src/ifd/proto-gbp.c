@@ -17,14 +17,14 @@
 #include <string.h>
 
 typedef struct {
-	ifd_protocol_t	base;
-	int		state;
-	int		block_oriented;
+	ifd_protocol_t base;
+	int state;
+	int block_oriented;
 
-	unsigned char	ns;
+	unsigned char ns;
 
-	unsigned int	timeout, wtx;
-	unsigned int	retries;
+	unsigned int timeout, wtx;
+	unsigned int retries;
 } gbp_state_t;
 
 #define GBP_I_BLOCK		0x00
@@ -58,36 +58,33 @@ enum {
 	ALIVE, RESYNCH, DEAD
 };
 
-static unsigned	int	gbp_block_type(unsigned char);
-static unsigned int	gbp_seq(unsigned char);
-static unsigned	int	gbp_build(gbp_state_t *, unsigned char *,
-				unsigned char, ct_buf_t *);
-static unsigned int	gbp_compute_checksum(gbp_state_t *,
-				unsigned char *, size_t);
-static int		gbp_verify_checksum(gbp_state_t *, unsigned char *,
-				size_t);
-static int		gbp_xcv(gbp_state_t *, unsigned char *, size_t, size_t);
+static unsigned int gbp_block_type(unsigned char);
+static unsigned int gbp_seq(unsigned char);
+static unsigned int gbp_build(gbp_state_t *, unsigned char *,
+			      unsigned char, ct_buf_t *);
+static unsigned int gbp_compute_checksum(gbp_state_t *,
+					 unsigned char *, size_t);
+static int gbp_verify_checksum(gbp_state_t *, unsigned char *, size_t);
+static int gbp_xcv(gbp_state_t *, unsigned char *, size_t, size_t);
 
 /*
  * Set default GBP protocol parameters
  */
-static void
-gbp_set_defaults(gbp_state_t *gp)
+static void gbp_set_defaults(gbp_state_t * gp)
 {
-	gp->retries  = 3;
+	gp->retries = 3;
 	/* This timeout is rather insane, but we need this right now
 	 * to support cryptoflex keygen */
-	gp->timeout  = 20000;
-	gp->ns	     = 0;
+	gp->timeout = 20000;
+	gp->ns = 0;
 }
 
 /*
  * Attach GBP protocol
  */
-static int
-gbp_init(ifd_protocol_t *prot)
+static int gbp_init(ifd_protocol_t * prot)
 {
-	gbp_state_t	*gp = (gbp_state_t *) prot;
+	gbp_state_t *gp = (gbp_state_t *) prot;
 
 	gbp_set_defaults(gp);
 
@@ -101,8 +98,7 @@ gbp_init(ifd_protocol_t *prot)
 /*
  * Detach gp protocol
  */
-static void
-gbp_release(ifd_protocol_t *prot)
+static void gbp_release(ifd_protocol_t * prot)
 {
 	/* NOP */
 }
@@ -110,10 +106,9 @@ gbp_release(ifd_protocol_t *prot)
 /*
  * Get/set parmaters for T1 protocol
  */
-static int
-gbp_set_param(ifd_protocol_t *prot, int type, long value)
+static int gbp_set_param(ifd_protocol_t * prot, int type, long value)
 {
-	gbp_state_t	*gp = (gbp_state_t *) prot;
+	gbp_state_t *gp = (gbp_state_t *) prot;
 
 	switch (type) {
 	case IFD_PROTOCOL_RECV_TIMEOUT:
@@ -130,10 +125,9 @@ gbp_set_param(ifd_protocol_t *prot, int type, long value)
 	return 0;
 }
 
-static int
-gbp_get_param(ifd_protocol_t *prot, int type, long *result)
+static int gbp_get_param(ifd_protocol_t * prot, int type, long *result)
 {
-	gbp_state_t	*gp = (gbp_state_t *) prot;
+	gbp_state_t *gp = (gbp_state_t *) prot;
 	long value;
 
 	switch (type) {
@@ -157,16 +151,14 @@ gbp_get_param(ifd_protocol_t *prot, int type, long *result)
 /*
  * Send an APDU through GBP
  */
-static int
-gbp_transceive(ifd_protocol_t *prot, int dad,
-		const void *snd_buf, size_t snd_len,
-		void *rcv_buf, size_t rcv_len)
+static int gbp_transceive(ifd_protocol_t * prot, int dad, const void *snd_buf,
+			  size_t snd_len, void *rcv_buf, size_t rcv_len)
 {
-	gbp_state_t	*gp = (gbp_state_t *) prot;
-	ct_buf_t	sbuf, rbuf;
-	unsigned char	sdata[GBP_BUFFER_SIZE];
-	unsigned int	slen, retries, resyncs;
-	unsigned char	send_seq;
+	gbp_state_t *gp = (gbp_state_t *) prot;
+	ct_buf_t sbuf, rbuf;
+	unsigned char sdata[GBP_BUFFER_SIZE];
+	unsigned int slen, retries, resyncs;
+	unsigned char send_seq;
 
 	if (snd_len == 0 || snd_len > 255) {
 		ct_error("GBP: invalid packet length %u\n", snd_len);
@@ -177,7 +169,7 @@ gbp_transceive(ifd_protocol_t *prot, int dad,
 	resyncs = 3;
 
 	/* Initialize send/recv buffer */
-	ct_buf_set(&sbuf, (void *) snd_buf, snd_len);
+	ct_buf_set(&sbuf, (void *)snd_buf, snd_len);
 	ct_buf_init(&rbuf, rcv_buf, rcv_len);
 
 	/* Send the first block */
@@ -186,13 +178,13 @@ gbp_transceive(ifd_protocol_t *prot, int dad,
 	send_seq = gp->ns;
 	if (gp->state == DEAD) {
 		gp->ns = 0;
-		slen = gbp_build(gp, sdata, GBP_S_BLOCK|GBP_S_RESYNC, NULL);
+		slen = gbp_build(gp, sdata, GBP_S_BLOCK | GBP_S_RESYNC, NULL);
 		gp->state = RESYNCH;
 	}
 
 	while (1) {
-		unsigned char	pcb;
-		int		n;
+		unsigned char pcb;
+		int n;
 
 		if (retries-- == 0)
 			goto resync;
@@ -205,7 +197,9 @@ gbp_transceive(ifd_protocol_t *prot, int dad,
 
 		if (!gbp_verify_checksum(gp, sdata, n)) {
 			ifd_debug(1, "checksum failed");
-			slen = gbp_build(gp, sdata, GBP_R_BLOCK | GBP_EDC_ERROR, NULL);
+			slen =
+			    gbp_build(gp, sdata, GBP_R_BLOCK | GBP_EDC_ERROR,
+				      NULL);
 			continue;
 		}
 
@@ -219,8 +213,8 @@ gbp_transceive(ifd_protocol_t *prot, int dad,
 				 * what we expected it to send, reply with
 				 * an R block */
 				slen = gbp_build(gp, sdata,
-						GBP_R_BLOCK | GBP_OTHER_ERROR,
-						NULL);
+						 GBP_R_BLOCK | GBP_OTHER_ERROR,
+						 NULL);
 				continue;
 			}
 
@@ -235,15 +229,15 @@ gbp_transceive(ifd_protocol_t *prot, int dad,
 			/* R-Block means "Repeat" */
 			if (gbp_seq(pcb) != gp->ns) {
 				slen = gbp_build(gp, sdata,
-						GBP_R_BLOCK | GBP_OTHER_ERROR,
-						NULL);
+						 GBP_R_BLOCK | GBP_OTHER_ERROR,
+						 NULL);
 				continue;
 			}
 
 			ifd_debug(1, "received R block%s%s",
-				     (pcb & GBP_EDC_ERROR)? ", EDC error" : "",
-				     (pcb & GBP_OTHER_ERROR)? ", other error" : "");
-
+				  (pcb & GBP_EDC_ERROR) ? ", EDC error" : "",
+				  (pcb & GBP_OTHER_ERROR) ? ", other error" :
+				  "");
 
 			/* Retransmit block */
 			slen = gbp_build(gp, sdata, GBP_I_BLOCK, &sbuf);
@@ -266,29 +260,28 @@ gbp_transceive(ifd_protocol_t *prot, int dad,
 		retries = gp->retries;
 		continue;
 
-resync:
+	      resync:
 		/* the number or resyncs is limited, too */
 		if (resyncs == 0)
 			goto error;
 		resyncs--;
 		gp->ns = 0;
-		slen = gbp_build(gp, sdata, GBP_S_BLOCK|GBP_S_RESYNC, NULL);
+		slen = gbp_build(gp, sdata, GBP_S_BLOCK | GBP_S_RESYNC, NULL);
 		gp->state = RESYNCH;
 		continue;
 	}
 
-done:	return ct_buf_avail(&rbuf);
+      done:return ct_buf_avail(&rbuf);
 
-error:	gp->state = DEAD;
+      error:gp->state = DEAD;
 	return -1;
 }
 
-static int
-gbp_resynchronize(ifd_protocol_t *p, int nad)
+static int gbp_resynchronize(ifd_protocol_t * p, int nad)
 {
-	gbp_state_t	*gp = (gbp_state_t *) p;
-	unsigned char	block[4];
-	unsigned int	retries = 3;
+	gbp_state_t *gp = (gbp_state_t *) p;
+	unsigned char block[4];
+	unsigned int retries = 3;
 
 	if (p->reader && p->reader->device)
 		ifd_device_flush(p->reader->device);
@@ -297,7 +290,7 @@ gbp_resynchronize(ifd_protocol_t *p, int nad)
 		gp->ns = 0;
 
 		block[0] = nad;
-		block[1] = GBP_S_BLOCK|GBP_S_RESYNC;
+		block[1] = GBP_S_BLOCK | GBP_S_RESYNC;
 		block[2] = 0;
 		gbp_compute_checksum(gp, block, 3);
 
@@ -321,8 +314,7 @@ gbp_resynchronize(ifd_protocol_t *p, int nad)
 	return -1;
 }
 
-static unsigned
-gbp_block_type(unsigned char pcb)
+static unsigned gbp_block_type(unsigned char pcb)
 {
 	switch (pcb & 0xC0) {
 	case GBP_R_BLOCK:
@@ -334,8 +326,7 @@ gbp_block_type(unsigned char pcb)
 	}
 }
 
-static unsigned int
-gbp_seq(unsigned char pcb)
+static unsigned int gbp_seq(unsigned char pcb)
 {
 	switch (pcb & 0xC0) {
 	case GBP_R_BLOCK:
@@ -347,13 +338,12 @@ gbp_seq(unsigned char pcb)
 	}
 }
 
-unsigned int
-gbp_build(gbp_state_t *gp, unsigned char *block,
-		unsigned char pcb, ct_buf_t *bp)
+unsigned int gbp_build(gbp_state_t * gp, unsigned char *block,
+		       unsigned char pcb, ct_buf_t * bp)
 {
-	unsigned int	len;
+	unsigned int len;
 
-	len = bp? ct_buf_avail(bp) : 0;
+	len = bp ? ct_buf_avail(bp) : 0;
 
 	/* Add the sequence number */
 	switch (gbp_block_type(pcb)) {
@@ -378,7 +368,7 @@ gbp_build(gbp_state_t *gp, unsigned char *block,
 /*
  * Protocol struct
  */
-struct ifd_protocol_ops	ifd_protocol_gbp = {
+struct ifd_protocol_ops ifd_protocol_gbp = {
 	IFD_PROTOCOL_GBP,	/* id */
 	"GBP",			/* name */
 	sizeof(gbp_state_t),	/* size */
@@ -395,17 +385,16 @@ struct ifd_protocol_ops	ifd_protocol_gbp = {
 /*
  * Build/verify checksum
  */
-unsigned int
-gbp_compute_checksum(gbp_state_t *gp, unsigned char *data, size_t len)
+unsigned int gbp_compute_checksum(gbp_state_t * gp, unsigned char *data,
+				  size_t len)
 {
 	csum_lrc_compute(data, len, data + len);
 	return len + 1;
 }
 
-int
-gbp_verify_checksum(gbp_state_t *gp, unsigned char *rbuf, size_t len)
+int gbp_verify_checksum(gbp_state_t * gp, unsigned char *rbuf, size_t len)
 {
-	unsigned char	csum;
+	unsigned char csum;
 
 	csum_lrc_compute(rbuf, len, &csum);
 	return csum == 0;
@@ -414,13 +403,12 @@ gbp_verify_checksum(gbp_state_t *gp, unsigned char *rbuf, size_t len)
 /*
  * Send/receive block
  */
-int
-gbp_xcv(gbp_state_t *gp, unsigned char *block, size_t slen, size_t rmax)
+int gbp_xcv(gbp_state_t * gp, unsigned char *block, size_t slen, size_t rmax)
 {
-	ifd_protocol_t	*prot = &gp->base;
-	ifd_device_t	*dev = prot->reader->device;
-	unsigned int	rlen, timeout;
-	int		n, m;
+	ifd_protocol_t *prot = &gp->base;
+	ifd_device_t *dev = prot->reader->device;
+	unsigned int rlen, timeout;
+	int n, m;
 
 	if (ct_config.debug >= 3)
 		ifd_debug(3, "sending %s", ct_hexdump(block, slen));
@@ -472,4 +460,3 @@ gbp_xcv(gbp_state_t *gp, unsigned char *block, size_t slen, size_t rmax)
 
 	return n;
 }
-

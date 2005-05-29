@@ -11,21 +11,21 @@
 #include <string.h>
 
 typedef struct {
-	ifd_protocol_t	base;
-	int		state;
-	int		block_oriented;
+	ifd_protocol_t base;
+	int state;
+	int block_oriented;
 
-	unsigned char	ns;
-	unsigned char	nr;
-	unsigned int	ifsc;
-	unsigned int	ifsd;
+	unsigned char ns;
+	unsigned char nr;
+	unsigned int ifsc;
+	unsigned int ifsd;
 
-	unsigned int	timeout, wtx;
-	unsigned int	retries;
-	unsigned int	rc_bytes;
+	unsigned int timeout, wtx;
+	unsigned int retries;
+	unsigned int rc_bytes;
 
-	unsigned int	(*checksum)(const unsigned char *,
-					size_t, unsigned char *);
+	unsigned int (*checksum) (const unsigned char *,
+				  size_t, unsigned char *);
 } t1_state_t;
 
 /* T=1 protocol constants */
@@ -60,37 +60,33 @@ enum {
 	SENDING, RECEIVING, RESYNCH, DEAD
 };
 
-static void		t1_set_checksum(t1_state_t *, int);
-static unsigned	int	t1_block_type(unsigned char);
-static unsigned int	t1_seq(unsigned char);
-static unsigned	int	t1_build(t1_state_t *, unsigned char *,
-				unsigned char, unsigned char,
-				ct_buf_t *, size_t *);
-static unsigned int	t1_compute_checksum(t1_state_t *,
-				unsigned char *, size_t);
-static int		t1_verify_checksum(t1_state_t *, unsigned char *,
-				size_t);
-static int		t1_xcv(t1_state_t *, unsigned char *, size_t, size_t);
+static void t1_set_checksum(t1_state_t *, int);
+static unsigned int t1_block_type(unsigned char);
+static unsigned int t1_seq(unsigned char);
+static unsigned int t1_build(t1_state_t *, unsigned char *,
+			     unsigned char, unsigned char,
+			     ct_buf_t *, size_t *);
+static unsigned int t1_compute_checksum(t1_state_t *, unsigned char *, size_t);
+static int t1_verify_checksum(t1_state_t *, unsigned char *, size_t);
+static int t1_xcv(t1_state_t *, unsigned char *, size_t, size_t);
 
 /*
  * Set default T=1 protocol parameters
  */
-static void
-t1_set_defaults(t1_state_t *t1)
+static void t1_set_defaults(t1_state_t * t1)
 {
-	t1->retries  = 3;
+	t1->retries = 3;
 	/* This timeout is rather insane, but we need this right now
 	 * to support cryptoflex keygen */
-	t1->timeout  = 20000;
-	t1->ifsc     = 32;
-	t1->ifsd     = 32;
-	t1->nr	     = 0;
-	t1->ns	     = 0;
-	t1->wtx	     = 0;
+	t1->timeout = 20000;
+	t1->ifsc = 32;
+	t1->ifsd = 32;
+	t1->nr = 0;
+	t1->ns = 0;
+	t1->wtx = 0;
 }
 
-void
-t1_set_checksum(t1_state_t *t1, int csum)
+void t1_set_checksum(t1_state_t * t1, int csum)
 {
 	switch (csum) {
 	case IFD_PROTOCOL_T1_CHECKSUM_LRC:
@@ -107,10 +103,9 @@ t1_set_checksum(t1_state_t *t1, int csum)
 /*
  * Attach t1 protocol
  */
-static int
-t1_init(ifd_protocol_t *prot)
+static int t1_init(ifd_protocol_t * prot)
 {
-	t1_state_t	*t1 = (t1_state_t *) prot;
+	t1_state_t *t1 = (t1_state_t *) prot;
 
 	t1_set_defaults(t1);
 	t1_set_checksum(t1, IFD_PROTOCOL_T1_CHECKSUM_LRC);
@@ -125,8 +120,7 @@ t1_init(ifd_protocol_t *prot)
 /*
  * Detach t1 protocol
  */
-static void
-t1_release(ifd_protocol_t *prot)
+static void t1_release(ifd_protocol_t * prot)
 {
 	/* NOP */
 }
@@ -134,10 +128,9 @@ t1_release(ifd_protocol_t *prot)
 /*
  * Get/set parmaters for T1 protocol
  */
-static int
-t1_set_param(ifd_protocol_t *prot, int type, long value)
+static int t1_set_param(ifd_protocol_t * prot, int type, long value)
 {
-	t1_state_t	*t1 = (t1_state_t *) prot;
+	t1_state_t *t1 = (t1_state_t *) prot;
 
 	switch (type) {
 	case IFD_PROTOCOL_RECV_TIMEOUT:
@@ -164,10 +157,9 @@ t1_set_param(ifd_protocol_t *prot, int type, long value)
 	return 0;
 }
 
-static int
-t1_get_param(ifd_protocol_t *prot, int type, long *result)
+static int t1_get_param(ifd_protocol_t * prot, int type, long *result)
 {
-	t1_state_t	*t1 = (t1_state_t *) prot;
+	t1_state_t *t1 = (t1_state_t *) prot;
 	long value;
 
 	switch (type) {
@@ -191,16 +183,14 @@ t1_get_param(ifd_protocol_t *prot, int type, long *result)
 /*
  * Send an APDU through T=1
  */
-static int
-t1_transceive(ifd_protocol_t *prot, int dad,
-		const void *snd_buf, size_t snd_len,
-		void *rcv_buf, size_t rcv_len)
+static int t1_transceive(ifd_protocol_t * prot, int dad, const void *snd_buf,
+			 size_t snd_len, void *rcv_buf, size_t rcv_len)
 {
-	t1_state_t	*t1 = (t1_state_t *) prot;
-	ct_buf_t	sbuf, rbuf, tbuf;
-	unsigned char	sdata[T1_BUFFER_SIZE], sblk[5];
-	unsigned int	slen, retries, resyncs, sent_length = 0;
-	size_t		last_send = 0;
+	t1_state_t *t1 = (t1_state_t *) prot;
+	ct_buf_t sbuf, rbuf, tbuf;
+	unsigned char sdata[T1_BUFFER_SIZE], sblk[5];
+	unsigned int slen, retries, resyncs, sent_length = 0;
+	size_t last_send = 0;
 
 	if (snd_len == 0)
 		return -1;
@@ -214,15 +204,15 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 	resyncs = 3;
 
 	/* Initialize send/recv buffer */
-	ct_buf_set(&sbuf, (void *) snd_buf, snd_len);
+	ct_buf_set(&sbuf, (void *)snd_buf, snd_len);
 	ct_buf_init(&rbuf, rcv_buf, rcv_len);
 
 	/* Send the first block */
 	slen = t1_build(t1, sdata, dad, T1_I_BLOCK, &sbuf, &last_send);
 
 	while (1) {
-		unsigned char	pcb;
-		int		n;
+		unsigned char pcb;
+		int n;
 
 		retries--;
 
@@ -247,14 +237,13 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 		case T1_R_BLOCK:
 			if (T1_IS_ERROR(pcb)) {
 				ifd_debug(1, "received error block, err=%d",
-					     T1_IS_ERROR(pcb));
+					  T1_IS_ERROR(pcb));
 				goto resync;
 			}
 
 			if (t1->state == RECEIVING) {
 				slen = t1_build(t1, sdata,
-						dad, T1_R_BLOCK,
-						NULL, NULL);
+						dad, T1_R_BLOCK, NULL, NULL);
 				break;
 			}
 
@@ -312,7 +301,7 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 		case T1_S_BLOCK:
 			if (T1_S_IS_RESPONSE(pcb) && t1->state == RESYNCH) {
 				t1->state = SENDING;
-				sent_length =0;
+				sent_length = 0;
 				last_send = 0;
 				resyncs = 3;
 				retries = t1->retries;
@@ -336,8 +325,9 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 				ifd_debug(1, "abort requested");
 				goto resync;
 			case T1_S_IFS:
-				ifd_debug(1, "CT sent S-block with ifs=%u", sdata[3]);
-				if (sdata[3] == 0) 
+				ifd_debug(1, "CT sent S-block with ifs=%u",
+					  sdata[3]);
+				if (sdata[3] == 0)
 					goto resync;
 				t1->ifsc = sdata[3];
 				ct_buf_putc(&tbuf, sdata[3]);
@@ -345,49 +335,52 @@ t1_transceive(ifd_protocol_t *prot, int dad,
 			case T1_S_WTX:
 				/* We don't handle the wait time extension
 				 * yet */
-				ifd_debug(1, "CT sent S-block with wtx=%u", sdata[3]);
+				ifd_debug(1, "CT sent S-block with wtx=%u",
+					  sdata[3]);
 				t1->wtx = sdata[3];
 				ct_buf_putc(&tbuf, sdata[3]);
 				break;
 			default:
-				ct_error("T=1: Unknown S block type 0x%02x", T1_S_TYPE(pcb));
+				ct_error("T=1: Unknown S block type 0x%02x",
+					 T1_S_TYPE(pcb));
 				goto resync;
 			}
 
 			slen = t1_build(t1, sdata, dad,
-				T1_S_BLOCK | T1_S_RESPONSE | T1_S_TYPE(pcb),
-				&tbuf, NULL);
+					T1_S_BLOCK | T1_S_RESPONSE |
+					T1_S_TYPE(pcb), &tbuf, NULL);
 		}
 
 		/* Everything went just splendid */
 		retries = t1->retries;
 		continue;
 
-resync:
+	      resync:
 		/* the number or resyncs is limited, too */
 		if (resyncs == 0)
 			goto error;
 		resyncs--;
 		t1->ns = 0;
 		t1->nr = 0;
-		slen = t1_build(t1, sdata, dad, T1_S_BLOCK|T1_S_RESYNC, NULL,
+		slen = t1_build(t1, sdata, dad, T1_S_BLOCK | T1_S_RESYNC, NULL,
 				NULL);
 		t1->state = RESYNCH;
 		continue;
 	}
 
-done:	return ct_buf_avail(&rbuf);
+done:
+	return ct_buf_avail(&rbuf);
 
-error:	t1->state = DEAD;
+error:
+	t1->state = DEAD;
 	return -1;
 }
 
-static int
-t1_resynchronize(ifd_protocol_t *p, int nad)
+static int t1_resynchronize(ifd_protocol_t * p, int nad)
 {
-	t1_state_t	*t1 = (t1_state_t *) p;
-	unsigned char	block[4];
-	unsigned int	retries = 3;
+	t1_state_t *t1 = (t1_state_t *) p;
+	unsigned char block[4];
+	unsigned int retries = 3;
 
 	if (p->reader && p->reader->device)
 		ifd_device_flush(p->reader->device);
@@ -397,7 +390,7 @@ t1_resynchronize(ifd_protocol_t *p, int nad)
 		t1->nr = 0;
 
 		block[0] = nad;
-		block[1] = T1_S_BLOCK|T1_S_RESYNC;
+		block[1] = T1_S_BLOCK | T1_S_RESYNC;
 		block[2] = 0;
 		t1_compute_checksum(t1, block, 3);
 
@@ -419,8 +412,7 @@ t1_resynchronize(ifd_protocol_t *p, int nad)
 	return -1;
 }
 
-static unsigned
-t1_block_type(unsigned char pcb)
+static unsigned t1_block_type(unsigned char pcb)
 {
 	switch (pcb & 0xC0) {
 	case T1_R_BLOCK:
@@ -432,8 +424,7 @@ t1_block_type(unsigned char pcb)
 	}
 }
 
-static unsigned int
-t1_seq(unsigned char pcb)
+static unsigned int t1_seq(unsigned char pcb)
 {
 	switch (pcb & 0xC0) {
 	case T1_R_BLOCK:
@@ -446,13 +437,12 @@ t1_seq(unsigned char pcb)
 }
 
 unsigned int
-t1_build(t1_state_t *t1, unsigned char *block,
-		unsigned char dad, unsigned char pcb,
-		ct_buf_t *bp, size_t *lenp)
+t1_build(t1_state_t * t1, unsigned char *block,
+	 unsigned char dad, unsigned char pcb, ct_buf_t * bp, size_t * lenp)
 {
-	unsigned int	len;
+	unsigned int len;
 
-	len = bp? ct_buf_avail(bp) : 0;
+	len = bp ? ct_buf_avail(bp) : 0;
 	if (len > t1->ifsc) {
 		pcb |= T1_MORE_BLOCKS;
 		len = t1->ifsc;
@@ -483,7 +473,7 @@ t1_build(t1_state_t *t1, unsigned char *block,
 /*
  * Protocol struct
  */
-struct ifd_protocol_ops	ifd_protocol_t1 = {
+struct ifd_protocol_ops ifd_protocol_t1 = {
 	IFD_PROTOCOL_T1,	/* id */
 	"T=1",			/* name */
 	sizeof(t1_state_t),	/* size */
@@ -500,17 +490,16 @@ struct ifd_protocol_ops	ifd_protocol_t1 = {
 /*
  * Build/verify checksum
  */
-unsigned int
-t1_compute_checksum(t1_state_t *t1, unsigned char *data, size_t len)
+unsigned int t1_compute_checksum(t1_state_t * t1, unsigned char *data,
+				 size_t len)
 {
 	return len + t1->checksum(data, len, data + len);
 }
 
-int
-t1_verify_checksum(t1_state_t *t1, unsigned char *rbuf, size_t len)
+int t1_verify_checksum(t1_state_t * t1, unsigned char *rbuf, size_t len)
 {
-	unsigned char	csum[2];
-	int		m, n;
+	unsigned char csum[2];
+	int m, n;
 
 	m = len - t1->rc_bytes;
 	n = t1->rc_bytes;
@@ -528,12 +517,11 @@ t1_verify_checksum(t1_state_t *t1, unsigned char *rbuf, size_t len)
 /*
  * Send/receive block
  */
-int
-t1_xcv(t1_state_t *t1, unsigned char *block, size_t slen, size_t rmax)
+int t1_xcv(t1_state_t * t1, unsigned char *block, size_t slen, size_t rmax)
 {
-	ifd_protocol_t	*prot = &t1->base;
-	unsigned int	rlen, timeout;
-	int		n, m;
+	ifd_protocol_t *prot = &t1->base;
+	unsigned int rlen, timeout;
+	int n, m;
 
 	if (ct_config.debug >= 3)
 		ifd_debug(3, "sending %s", ct_hexdump(block, slen));
@@ -588,4 +576,3 @@ t1_xcv(t1_state_t *t1, unsigned char *block, size_t slen, size_t rmax)
 
 	return n;
 }
-

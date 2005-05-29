@@ -11,30 +11,27 @@
 #include <string.h>
 
 typedef struct {
-	ifd_protocol_t	base;
+	ifd_protocol_t base;
 
-	int		state;
-	long		timeout;
-	unsigned int	block_oriented;
-	unsigned int	max_nulls;
+	int state;
+	long timeout;
+	unsigned int block_oriented;
+	unsigned int max_nulls;
 } t0_state_t;
 
 enum {
 	IDLE, SENDING, RECEIVING, CONFUSED
 };
 
-static int	t0_xcv(ifd_protocol_t *,
-			const void *, size_t,
-			void *, size_t);
-static int	t0_send(ifd_protocol_t *, ct_buf_t *, int);
-static int	t0_recv(ifd_protocol_t *, ct_buf_t *, int, long);
-static int	t0_resynch(t0_state_t *);
+static int t0_xcv(ifd_protocol_t *, const void *, size_t, void *, size_t);
+static int t0_send(ifd_protocol_t *, ct_buf_t *, int);
+static int t0_recv(ifd_protocol_t *, ct_buf_t *, int, long);
+static int t0_resynch(t0_state_t *);
 
 /*
  * Set default T=1 protocol parameters
  */
-static void
-t0_set_defaults(t0_state_t *t0)
+static void t0_set_defaults(t0_state_t * t0)
 {
 	t0->state = IDLE;
 	t0->timeout = 2000;
@@ -44,8 +41,7 @@ t0_set_defaults(t0_state_t *t0)
 /*
  * Attach t0 protocol
  */
-static int
-t0_init(ifd_protocol_t *prot)
+static int t0_init(ifd_protocol_t * prot)
 {
 	t0_set_defaults((t0_state_t *) prot);
 	return 0;
@@ -54,8 +50,7 @@ t0_init(ifd_protocol_t *prot)
 /*
  * Detach t0 protocol
  */
-static void
-t0_release(ifd_protocol_t *prot)
+static void t0_release(ifd_protocol_t * prot)
 {
 	/* NOP */
 }
@@ -63,10 +58,9 @@ t0_release(ifd_protocol_t *prot)
 /*
  * Get/set parmaters for T1 protocol
  */
-static int
-t0_set_param(ifd_protocol_t *prot, int type, long value)
+static int t0_set_param(ifd_protocol_t * prot, int type, long value)
 {
-	t0_state_t	*t0 = (t0_state_t *) prot;
+	t0_state_t *t0 = (t0_state_t *) prot;
 
 	switch (type) {
 	case IFD_PROTOCOL_RECV_TIMEOUT:
@@ -83,11 +77,10 @@ t0_set_param(ifd_protocol_t *prot, int type, long value)
 	return 0;
 }
 
-static int
-t0_get_param(ifd_protocol_t *prot, int type, long *result)
+static int t0_get_param(ifd_protocol_t * prot, int type, long *result)
 {
-	t0_state_t	*t0 = (t0_state_t *) prot;
-	long		value;
+	t0_state_t *t0 = (t0_state_t *) prot;
+	long value;
 
 	switch (type) {
 	case IFD_PROTOCOL_RECV_TIMEOUT:
@@ -110,16 +103,14 @@ t0_get_param(ifd_protocol_t *prot, int type, long *result)
 /*
  * Send an APDU through T=0
  */
-static int
-t0_transceive(ifd_protocol_t *prot, int dad,
-			const void *sbuf, size_t slen,
-			void *rbuf, size_t rlen)
+static int t0_transceive(ifd_protocol_t * prot, int dad, const void *sbuf,
+			 size_t slen, void *rbuf, size_t rlen)
 {
-	t0_state_t	*t0 = (t0_state_t *) prot;
-	ifd_iso_apdu_t	iso;
-	unsigned char	sdata[5];
-	unsigned int	cla, cse, lc, le;
-	int		rc;
+	t0_state_t *t0 = (t0_state_t *) prot;
+	ifd_iso_apdu_t iso;
+	unsigned char sdata[5];
+	unsigned int cla, cse, lc, le;
+	int rc;
 
 	if (t0->state != IDLE) {
 		if (t0_resynch(t0) < 0)
@@ -136,8 +127,8 @@ t0_transceive(ifd_protocol_t *prot, int dad,
 
 	cse = iso.cse;
 	cla = iso.cla;
-	lc  = iso.lc;
-	le  = iso.le;
+	lc = iso.lc;
+	le = iso.le;
 
 	switch (cse) {
 	case IFD_APDU_CASE_1:
@@ -160,10 +151,10 @@ t0_transceive(ifd_protocol_t *prot, int dad,
 	}
 
 	/*
-	if (le + 2 > slen) {
-		ct_error("t0_transceive: recv buffer too small");
-		return -1;
-	}
+	   if (le + 2 > slen) {
+	   ct_error("t0_transceive: recv buffer too small");
+	   return -1;
+	   }
 	 */
 
 	if (lc) {
@@ -178,9 +169,9 @@ t0_transceive(ifd_protocol_t *prot, int dad,
 		/* Case 4 APDU - check whether we should
 		 * try to get the response */
 		if (cse == IFD_APDU_CASE_4S) {
-			unsigned char	*sw;
+			unsigned char *sw;
 
-			sw = (unsigned char *) rbuf;
+			sw = (unsigned char *)rbuf;
 
 			if (sw[0] == 0x61) {
 				/* additional length info */
@@ -208,23 +199,21 @@ t0_transceive(ifd_protocol_t *prot, int dad,
 		rc = t0_xcv(prot, sbuf, slen, rbuf, le + 2);
 	}
 
-done:	t0->state = IDLE;
+      done:t0->state = IDLE;
 	return rc;
 }
 
-static int
-t0_xcv(ifd_protocol_t *prot,
-			const void *sdata, size_t slen,
-			void *rdata, size_t rlen)
+static int t0_xcv(ifd_protocol_t * prot, const void *sdata, size_t slen,
+		  void *rdata, size_t rlen)
 {
-	t0_state_t	*t0 = (t0_state_t *) prot;
-	ct_buf_t	sbuf, rbuf;
-	unsigned int	null_count = 0;
-	unsigned int	ins;
+	t0_state_t *t0 = (t0_state_t *) prot;
+	ct_buf_t sbuf, rbuf;
+	unsigned int null_count = 0;
+	unsigned int ins;
 
 	/* Let the driver handle any chunking etc */
 	if (t0->block_oriented) {
-		int	rc;
+		int rc;
 
 		if ((rc = ifd_send_command(prot, sdata, slen)) >= 0)
 			rc = ifd_recv_response(prot, rdata, rlen, t0->timeout);
@@ -232,7 +221,7 @@ t0_xcv(ifd_protocol_t *prot,
 	}
 
 	/* Set up the send buffer */
-	ct_buf_set(&sbuf, (void *) sdata, slen);
+	ct_buf_set(&sbuf, (void *)sdata, slen);
 	ct_buf_init(&rbuf, rdata, rlen);
 
 	/* Get the INS */
@@ -242,8 +231,8 @@ t0_xcv(ifd_protocol_t *prot,
 		goto failed;
 
 	while (1) {
-		unsigned char	byte;
-		int		count;
+		unsigned char byte;
+		int count;
 
 		if (ifd_recv_response(prot, &byte, 1, t0->timeout) < 0)
 			goto failed;
@@ -260,7 +249,7 @@ t0_xcv(ifd_protocol_t *prot,
 		if ((byte & 0xF0) == 0x60 || (byte & 0xF0) == 0x90) {
 			/* Store SW1, then get SW2 and store it */
 			if (ct_buf_put(&rbuf, &byte, 1) < 0
-			 || t0_recv(prot, &rbuf, 1, t0->timeout) < 0)
+			    || t0_recv(prot, &rbuf, 1, t0->timeout) < 0)
 				goto failed;
 
 			break;
@@ -296,14 +285,13 @@ t0_xcv(ifd_protocol_t *prot,
 
 	return ct_buf_avail(&rbuf);
 
-failed:	t0->state = CONFUSED;
+      failed:t0->state = CONFUSED;
 	return -1;
 }
 
-int
-t0_send(ifd_protocol_t *prot, ct_buf_t *bp, int count)
+int t0_send(ifd_protocol_t * prot, ct_buf_t * bp, int count)
 {
-	int	n, avail;
+	int n, avail;
 
 	avail = ct_buf_avail(bp);
 	if (count < 0)
@@ -316,10 +304,9 @@ t0_send(ifd_protocol_t *prot, ct_buf_t *bp, int count)
 	return n;
 }
 
-int
-t0_recv(ifd_protocol_t *prot, ct_buf_t *bp, int count, long timeout)
+int t0_recv(ifd_protocol_t * prot, ct_buf_t * bp, int count, long timeout)
 {
-	int	n;
+	int n;
 
 	if (count < 0)
 		count = ct_buf_tailroom(bp);
@@ -329,8 +316,7 @@ t0_recv(ifd_protocol_t *prot, ct_buf_t *bp, int count, long timeout)
 	return n;
 }
 
-int
-t0_resynch(t0_state_t *t0)
+int t0_resynch(t0_state_t * t0)
 {
 	return -1;
 }
@@ -338,7 +324,7 @@ t0_resynch(t0_state_t *t0)
 /*
  * Protocol struct
  */
-struct ifd_protocol_ops	ifd_protocol_t0 = {
+struct ifd_protocol_ops ifd_protocol_t0 = {
 	IFD_PROTOCOL_T0,	/* id */
 	"T=0",			/* name */
 	sizeof(t0_state_t),	/* size */

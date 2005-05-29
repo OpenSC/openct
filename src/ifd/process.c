@@ -25,26 +25,25 @@ static struct cmd_name {
 	unsigned int value;
 	const char *str;
 } cmd_name[] = {
-	{ CT_CMD_STATUS, "CT_CMD_STATUS" },
-	{ CT_CMD_LOCK, "CT_CMD_LOCK" },
-	{ CT_CMD_UNLOCK, "CT_CMD_UNLOCK" },
-	{ CT_CMD_RESET, "CT_CMD_RESET" },
-	{ CT_CMD_REQUEST_ICC, "CT_CMD_REQUEST_ICC" },
-	{ CT_CMD_EJECT_ICC, "CT_CMD_EJECT_ICC" },
-	{ CT_CMD_OUTPUT, "CT_CMD_OUTPUT" },
-	{ CT_CMD_INPUT, "CT_CMD_INPUT" },
-	{ CT_CMD_PERFORM_VERIFY, "CT_CMD_PERFORM_VERIFY" },
-	{ CT_CMD_CHANGE_PIN, "CT_CMD_CHANGE_PIN" },
-	{ CT_CMD_MEMORY_READ, "CT_CMD_MEMORY_READ" },
-	{ CT_CMD_MEMORY_WRITE, "CT_CMD_MEMORY_WRITE" },
-	{ CT_CMD_TRANSACT_OLD, "CT_CMD_TRANSACT_OLD" },
-	{ CT_CMD_TRANSACT, "CT_CMD_TRANSACT" },
-	{ CT_CMD_SET_PROTOCOL, "CT_CMD_SET_PROTOCOL" },
-	{ 0, NULL },
-};
+	{
+	CT_CMD_STATUS, "CT_CMD_STATUS"}, {
+	CT_CMD_LOCK, "CT_CMD_LOCK"}, {
+	CT_CMD_UNLOCK, "CT_CMD_UNLOCK"}, {
+	CT_CMD_RESET, "CT_CMD_RESET"}, {
+	CT_CMD_REQUEST_ICC, "CT_CMD_REQUEST_ICC"}, {
+	CT_CMD_EJECT_ICC, "CT_CMD_EJECT_ICC"}, {
+	CT_CMD_OUTPUT, "CT_CMD_OUTPUT"}, {
+	CT_CMD_INPUT, "CT_CMD_INPUT"}, {
+	CT_CMD_PERFORM_VERIFY, "CT_CMD_PERFORM_VERIFY"}, {
+	CT_CMD_CHANGE_PIN, "CT_CMD_CHANGE_PIN"}, {
+	CT_CMD_MEMORY_READ, "CT_CMD_MEMORY_READ"}, {
+	CT_CMD_MEMORY_WRITE, "CT_CMD_MEMORY_WRITE"}, {
+	CT_CMD_TRANSACT_OLD, "CT_CMD_TRANSACT_OLD"}, {
+	CT_CMD_TRANSACT, "CT_CMD_TRANSACT"}, {
+	CT_CMD_SET_PROTOCOL, "CT_CMD_SET_PROTOCOL"}, {
+0, NULL},};
 
-static const char *
-get_cmd_name(unsigned int cmd)
+static const char *get_cmd_name(unsigned int cmd)
 {
 	struct cmd_name *c;
 
@@ -56,53 +55,49 @@ get_cmd_name(unsigned int cmd)
 }
 
 static int do_status(ifd_reader_t *, int,
-			ct_tlv_parser_t *, ct_tlv_builder_t *);
+		     ct_tlv_parser_t *, ct_tlv_builder_t *);
 static int do_output(ifd_reader_t *, int,
-			ct_tlv_parser_t *, ct_tlv_builder_t *);
+		     ct_tlv_parser_t *, ct_tlv_builder_t *);
 static int do_lock(ct_socket_t *, ifd_reader_t *, int,
-			ct_tlv_parser_t *, ct_tlv_builder_t *);
+		   ct_tlv_parser_t *, ct_tlv_builder_t *);
 static int do_unlock(ct_socket_t *, ifd_reader_t *, int,
-			ct_tlv_parser_t *, ct_tlv_builder_t *);
-static int do_reset(ifd_reader_t *, int,
-			ct_tlv_parser_t *, ct_tlv_builder_t *);
-static int do_eject(ifd_reader_t *, int,
-			ct_tlv_parser_t *, ct_tlv_builder_t *);
+		     ct_tlv_parser_t *, ct_tlv_builder_t *);
+static int do_reset(ifd_reader_t *, int, ct_tlv_parser_t *, ct_tlv_builder_t *);
+static int do_eject(ifd_reader_t *, int, ct_tlv_parser_t *, ct_tlv_builder_t *);
 static int do_verify(ifd_reader_t *, int,
-			ct_tlv_parser_t *, ct_tlv_builder_t *);
+		     ct_tlv_parser_t *, ct_tlv_builder_t *);
 static int do_transact(ifd_reader_t *, int,
-			ct_tlv_parser_t *, ct_tlv_builder_t *);
+		       ct_tlv_parser_t *, ct_tlv_builder_t *);
 static int do_memory_read(ifd_reader_t *, int,
-			ct_tlv_parser_t *, ct_tlv_builder_t *);
+			  ct_tlv_parser_t *, ct_tlv_builder_t *);
 static int do_memory_write(ifd_reader_t *, int,
-			ct_tlv_parser_t *, ct_tlv_builder_t *);
-static int do_transact_old(ifd_reader_t *, int,
-			ct_buf_t *, ct_buf_t *);
+			   ct_tlv_parser_t *, ct_tlv_builder_t *);
+static int do_transact_old(ifd_reader_t *, int, ct_buf_t *, ct_buf_t *);
 static int do_set_protocol(ifd_reader_t *, int,
-			ct_tlv_parser_t *, ct_tlv_builder_t *);
+			   ct_tlv_parser_t *, ct_tlv_builder_t *);
 
-int
-ifdhandler_process(ct_socket_t *sock, ifd_reader_t *reader,
-		ct_buf_t *argbuf, ct_buf_t *resbuf)
+int ifdhandler_process(ct_socket_t * sock, ifd_reader_t * reader,
+		       ct_buf_t * argbuf, ct_buf_t * resbuf)
 {
-	unsigned char		cmd, unit;
-	ct_tlv_parser_t		args;
-	ct_tlv_builder_t	resp;
-	int			rc;
+	unsigned char cmd, unit;
+	ct_tlv_parser_t args;
+	ct_tlv_builder_t resp;
+	int rc;
 
 	/* Get command and target unit */
-	if (ct_buf_get(argbuf, &cmd, 1) < 0
-	 || ct_buf_get(argbuf, &unit, 1) < 0)
+	if (ct_buf_get(argbuf, &cmd, 1) < 0 || ct_buf_get(argbuf, &unit, 1) < 0)
 		return IFD_ERROR_INVALID_MSG;
 
 	ifd_debug(1, "ifdhandler_process(cmd=%s, unit=%u)",
-			get_cmd_name(cmd), unit);
+		  get_cmd_name(cmd), unit);
 
 	/* First, handle commands that don't do TLV encoded
 	 * arguments - currently this is only CT_CMD_TRANSACT. */
 	if (cmd == CT_CMD_TRANSACT_OLD) {
 		/* Security - deny any APDUs if there's an
 		 * exclusive lock held by some other client. */
-		if ((rc = ifdhandler_check_lock(sock, unit, IFD_LOCK_EXCLUSIVE)) < 0)
+		if ((rc =
+		     ifdhandler_check_lock(sock, unit, IFD_LOCK_EXCLUSIVE)) < 0)
 			return rc;
 		return do_transact_old(reader, unit, argbuf, resbuf);
 	}
@@ -157,8 +152,8 @@ ifdhandler_process(ct_socket_t *sock, ifd_reader_t *reader,
 		rc = do_transact(reader, unit, &args, &resp);
 		break;
 	case CT_CMD_SET_PROTOCOL:
-                rc = do_set_protocol(reader, unit, &args, &resp);
-                break;
+		rc = do_set_protocol(reader, unit, &args, &resp);
+		break;
 	default:
 		return IFD_ERROR_INVALID_CMD;
 	}
@@ -172,11 +167,10 @@ ifdhandler_process(ct_socket_t *sock, ifd_reader_t *reader,
 /*
  * Status query
  */
-int
-do_status(ifd_reader_t *reader, int unit,
-		ct_tlv_parser_t *args, ct_tlv_builder_t *resp)
+int do_status(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
+	      ct_tlv_builder_t * resp)
 {
-	int	n, rc, status;
+	int n, rc, status;
 
 	switch (unit) {
 	case CT_UNIT_READER:
@@ -187,16 +181,16 @@ do_status(ifd_reader_t *reader, int unit,
 			ct_tlv_add_byte(resp, n);
 
 		if (reader->flags & IFD_READER_DISPLAY)
-			ct_tlv_add_byte(resp,  CT_UNIT_DISPLAY);
+			ct_tlv_add_byte(resp, CT_UNIT_DISPLAY);
 		if (reader->flags & IFD_READER_KEYPAD)
-			ct_tlv_add_byte(resp,  CT_UNIT_KEYPAD);
+			ct_tlv_add_byte(resp, CT_UNIT_KEYPAD);
 		break;
 
 	default:
 		if (unit > reader->nslots)
 			return IFD_ERROR_INVALID_SLOT;
 		if ((rc = ifd_activate(reader)) < 0
-		 || (rc = ifd_card_status(reader, unit, &status)) < 0)
+		    || (rc = ifd_card_status(reader, unit, &status)) < 0)
 			return rc;
 		ct_tlv_put_int(resp, CT_TAG_CARD_STATUS, status);
 		break;
@@ -208,12 +202,11 @@ do_status(ifd_reader_t *reader, int unit,
 /*
  * Output string to reader's display
  */
-int
-do_output(ifd_reader_t *reader, int unit,
-		ct_tlv_parser_t *args, ct_tlv_builder_t *resp)
+int do_output(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
+	      ct_tlv_builder_t * resp)
 {
-	char		msgbuf[128];
-	const char	*message = NULL;
+	char msgbuf[128];
+	const char *message = NULL;
 
 	if (unit > CT_UNIT_READER)
 		return IFD_ERROR_INVALID_ARG;
@@ -228,13 +221,12 @@ do_output(ifd_reader_t *reader, int unit,
 /*
  * Lock/unlock card
  */
-int
-do_lock(ct_socket_t *sock, ifd_reader_t *reader, int unit,
-		ct_tlv_parser_t *args, ct_tlv_builder_t *resp)
+int do_lock(ct_socket_t * sock, ifd_reader_t * reader, int unit,
+	    ct_tlv_parser_t * args, ct_tlv_builder_t * resp)
 {
-	unsigned int	lock_type;
-	ct_lock_handle	lock;
-	int		rc;
+	unsigned int lock_type;
+	ct_lock_handle lock;
+	int rc;
 
 	if (unit > reader->nslots)
 		return IFD_ERROR_INVALID_SLOT;
@@ -250,12 +242,11 @@ do_lock(ct_socket_t *sock, ifd_reader_t *reader, int unit,
 	return 0;
 }
 
-int
-do_unlock(ct_socket_t *sock, ifd_reader_t *reader, int unit,
-		ct_tlv_parser_t *args, ct_tlv_builder_t *resp)
+int do_unlock(ct_socket_t * sock, ifd_reader_t * reader, int unit,
+	      ct_tlv_parser_t * args, ct_tlv_builder_t * resp)
 {
-	ct_lock_handle	lock;
-	int		rc;
+	ct_lock_handle lock;
+	int rc;
 
 	if (unit > reader->nslots)
 		return IFD_ERROR_INVALID_SLOT;
@@ -272,15 +263,14 @@ do_unlock(ct_socket_t *sock, ifd_reader_t *reader, int unit,
 /*
  * Reset card
  */
-int
-do_reset(ifd_reader_t *reader, int unit,
-		ct_tlv_parser_t *args, ct_tlv_builder_t *resp)
+int do_reset(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
+	     ct_tlv_builder_t * resp)
 {
-	unsigned char	atr[64];
-	char		msgbuf[128];
-	const char	*message = NULL;
-	unsigned int	timeout = 0;
-	int		rc;
+	unsigned char atr[64];
+	char msgbuf[128];
+	const char *message = NULL;
+	unsigned int timeout = 0;
+	int rc;
 
 	if (unit > reader->nslots)
 		return IFD_ERROR_INVALID_SLOT;
@@ -306,14 +296,13 @@ do_reset(ifd_reader_t *reader, int unit,
 /*
  * Eject card
  */
-int
-do_eject(ifd_reader_t *reader, int unit,
-		ct_tlv_parser_t *args, ct_tlv_builder_t *resp)
+int do_eject(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
+	     ct_tlv_builder_t * resp)
 {
-	char		msgbuf[128];
-	const char	*message = NULL;
-	unsigned int	timeout = 0;
-	int		rc;
+	char msgbuf[128];
+	const char *message = NULL;
+	unsigned int timeout = 0;
+	int rc;
 
 	if (unit > reader->nslots)
 		return IFD_ERROR_INVALID_SLOT;
@@ -333,16 +322,15 @@ do_eject(ifd_reader_t *reader, int unit,
 /*
  * Request PIN through key pad and have card verify it
  */
-int
-do_verify(ifd_reader_t *reader, int unit,
-		ct_tlv_parser_t *args, ct_tlv_builder_t *resp)
+int do_verify(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
+	      ct_tlv_builder_t * resp)
 {
-	char		msgbuf[128];
-	unsigned char	*data;
-	size_t		data_len;
-	const char	*message = NULL;
-	unsigned int	timeout = 0;
-	int		rc;
+	char msgbuf[128];
+	unsigned char *data;
+	size_t data_len;
+	const char *message = NULL;
+	unsigned int timeout = 0;
+	int rc;
 
 	if (unit > reader->nslots)
 		return IFD_ERROR_INVALID_SLOT;
@@ -355,30 +343,27 @@ do_verify(ifd_reader_t *reader, int unit,
 		return IFD_ERROR_MISSING_ARG;
 
 	rc = ifd_card_perform_verify(reader, unit, timeout, message,
-					data, data_len,
-					(unsigned char *) msgbuf, sizeof(msgbuf));
+				     data, data_len,
+				     (unsigned char *)msgbuf, sizeof(msgbuf));
 	if (rc < 0)
 		return rc;
 
 	ct_tlv_put_tag(resp, CT_TAG_CARD_RESPONSE);
-	ct_tlv_add_bytes(resp, (const unsigned char *) msgbuf, rc);
+	ct_tlv_add_bytes(resp, (const unsigned char *)msgbuf, rc);
 	return 0;
 }
-
-
 
 /*
  * Transceive APDU
  */
-int
-do_transact(ifd_reader_t *reader, int unit,
-		ct_tlv_parser_t *args, ct_tlv_builder_t *resp)
+int do_transact(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
+		ct_tlv_builder_t * resp)
 {
-	unsigned char	replybuf[258];
-	unsigned char	*data;
-	size_t		data_len;
-	unsigned int	timeout = 0;
-	int		rc;
+	unsigned char replybuf[258];
+	unsigned char *data;
+	size_t data_len;
+	unsigned int timeout = 0;
+	int rc;
 
 	if (unit > reader->nslots)
 		return IFD_ERROR_INVALID_SLOT;
@@ -388,7 +373,7 @@ do_transact(ifd_reader_t *reader, int unit,
 		return IFD_ERROR_MISSING_ARG;
 
 	rc = ifd_card_command(reader, unit, data, data_len,
-			replybuf, sizeof(replybuf));
+			      replybuf, sizeof(replybuf));
 	if (rc < 0)
 		return rc;
 
@@ -397,14 +382,14 @@ do_transact(ifd_reader_t *reader, int unit,
 	return 0;
 }
 
-int
-do_transact_old(ifd_reader_t *reader, int unit, ct_buf_t *args, ct_buf_t *resp)
+int do_transact_old(ifd_reader_t * reader, int unit, ct_buf_t * args,
+		    ct_buf_t * resp)
 {
-	int	rc;
+	int rc;
 
 	rc = ifd_card_command(reader, unit,
-			ct_buf_head(args), ct_buf_avail(args),
-			ct_buf_tail(resp), ct_buf_tailroom(resp));
+			      ct_buf_head(args), ct_buf_avail(args),
+			      ct_buf_tail(resp), ct_buf_tailroom(resp));
 	if (rc < 0)
 		return rc;
 
@@ -412,43 +397,40 @@ do_transact_old(ifd_reader_t *reader, int unit, ct_buf_t *args, ct_buf_t *resp)
 	return 0;
 }
 
-int
-do_set_protocol(ifd_reader_t *reader, int unit,
-                ct_tlv_parser_t *args, ct_tlv_builder_t *resp)
+int do_set_protocol(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
+		    ct_tlv_builder_t * resp)
 {
-        unsigned int    protocol = 0xFF;
-        int             rc;
-                                                                                                                             
-        if (unit > reader->nslots)
-                return IFD_ERROR_INVALID_SLOT;
-                                                                                                                             
-        ct_tlv_get_int(args, CT_TAG_PROTOCOL, &protocol);
-                                                                                                                             
-        rc = ifd_set_protocol(reader, unit, protocol);
-        if (rc < 0)
-                return rc;
-                                                                                                                             
-        return 0;
-}
+	unsigned int protocol = 0xFF;
+	int rc;
 
+	if (unit > reader->nslots)
+		return IFD_ERROR_INVALID_SLOT;
+
+	ct_tlv_get_int(args, CT_TAG_PROTOCOL, &protocol);
+
+	rc = ifd_set_protocol(reader, unit, protocol);
+	if (rc < 0)
+		return rc;
+
+	return 0;
+}
 
 /*
  * Synchronous ICC read/write
  */
-int
-do_memory_write(ifd_reader_t *reader, int unit,
-		ct_tlv_parser_t *args, ct_tlv_builder_t *resp)
+int do_memory_write(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
+		    ct_tlv_builder_t * resp)
 {
-	unsigned char	*data;
-	size_t		data_len;
-	unsigned int	address;
-	int		rc;
+	unsigned char *data;
+	size_t data_len;
+	unsigned int address;
+	int rc;
 
 	if (unit > reader->nslots)
 		return IFD_ERROR_INVALID_SLOT;
 
 	if (!ct_tlv_get_int(args, CT_TAG_ADDRESS, &address)
-	 || !ct_tlv_get_opaque(args, CT_TAG_DATA, &data, &data_len))
+	    || !ct_tlv_get_opaque(args, CT_TAG_DATA, &data, &data_len))
 		return IFD_ERROR_MISSING_ARG;
 
 	rc = ifd_card_write_memory(reader, unit, address, data, data_len);
@@ -458,20 +440,19 @@ do_memory_write(ifd_reader_t *reader, int unit,
 	return 0;
 }
 
-int
-do_memory_read(ifd_reader_t *reader, int unit,
-		ct_tlv_parser_t *args, ct_tlv_builder_t *resp)
+int do_memory_read(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
+		   ct_tlv_builder_t * resp)
 {
-	unsigned char	data[CT_SOCKET_BUFSIZ];
-	size_t		data_len;
-	unsigned int	address;
-	int		rc;
+	unsigned char data[CT_SOCKET_BUFSIZ];
+	size_t data_len;
+	unsigned int address;
+	int rc;
 
 	if (unit > reader->nslots)
 		return IFD_ERROR_INVALID_SLOT;
 
 	if (!ct_tlv_get_int(args, CT_TAG_ADDRESS, &address)
-	 || !ct_tlv_get_int(args, CT_TAG_COUNT, (unsigned int *) &data_len))
+	    || !ct_tlv_get_int(args, CT_TAG_COUNT, (unsigned int *)&data_len))
 		return IFD_ERROR_MISSING_ARG;
 
 	if (data_len > sizeof(data))
