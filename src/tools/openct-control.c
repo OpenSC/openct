@@ -112,6 +112,10 @@ int mgr_init(int argc, char **argv)
 		int i;
 
 		nodes = (ifd_conf_node_t **) calloc(n, sizeof(*nodes));
+		if (!nodes) {
+			ct_error("out of memory");
+			return 1;
+		}
 		n = ifd_conf_get_nodes("reader", nodes, n);
 		for (i = 0; i < n; i++)
 			configure_reader(nodes[i]);
