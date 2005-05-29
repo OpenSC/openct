@@ -482,7 +482,7 @@ static int twt_sync_write_buffer(ifd_reader_t * reader, int slot, int proto,
 	int r;
 
 	while (total < len) {
-		unsigned char cmd[TWT_PAGESIZE + 1];
+		unsigned char cmd[TWT_PAGESIZE + 2];
 		size_t cnt;
 
 		if ((cnt = len - total) > TWT_PAGESIZE)
