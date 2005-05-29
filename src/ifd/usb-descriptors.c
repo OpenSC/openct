@@ -14,397 +14,421 @@
 #include <string.h>
 #include "usb-descriptors.h"
 
-static int
-ifd_usb_parse_endpoint(struct ifd_usb_endpoint_descriptor *endpoint,
-			unsigned char *buffer, int size)
+static int ifd_usb_parse_endpoint(struct ifd_usb_endpoint_descriptor *endpoint,
+				  unsigned char *buffer, int size)
 {
-  struct ifd_usb_descriptor_header *header;
-  unsigned char *begin;
-  int parsed = 0, len, numskipped;
+	struct ifd_usb_descriptor_header *header;
+	unsigned char *begin;
+	int parsed = 0, len, numskipped;
 
-  header = (struct ifd_usb_descriptor_header *)buffer;
+	header = (struct ifd_usb_descriptor_header *)buffer;
 
-  /* Everything should be fine being passed into here, but we sanity */
-  /*  check JIC */
-  if (header->bLength > size) {
-       ct_debug("ran out of descriptors parsing");
-    return -1;
-  }
-                
-  if (header->bDescriptorType != IFD_USB_DT_ENDPOINT) {
-       ct_debug("unexpected descriptor 0x%X, expecting endpoint descriptor, type 0x%X",
-         endpoint->bDescriptorType, IFD_USB_DT_ENDPOINT);
-    return parsed;
-  }
-  if (header->bLength == IFD_USB_DT_ENDPOINT_AUDIO_SIZE)
-    memcpy(endpoint, buffer, IFD_USB_DT_ENDPOINT_AUDIO_SIZE);
-  else
-    memcpy(endpoint, buffer, IFD_USB_DT_ENDPOINT_SIZE);
-        
-  IFD_USB_LE16_TO_CPU(endpoint->wMaxPacketSize);
+	/* Everything should be fine being passed into here, but we sanity */
+	/*  check JIC */
+	if (header->bLength > size) {
+		ct_debug("ran out of descriptors parsing");
+		return -1;
+	}
 
-  buffer += header->bLength;
-  size -= header->bLength;
-  parsed += header->bLength;
+	if (header->bDescriptorType != IFD_USB_DT_ENDPOINT) {
+		ct_debug
+		    ("unexpected descriptor 0x%X, expecting endpoint descriptor, type 0x%X",
+		     endpoint->bDescriptorType, IFD_USB_DT_ENDPOINT);
+		return parsed;
+	}
+	if (header->bLength == IFD_USB_DT_ENDPOINT_AUDIO_SIZE)
+		memcpy(endpoint, buffer, IFD_USB_DT_ENDPOINT_AUDIO_SIZE);
+	else
+		memcpy(endpoint, buffer, IFD_USB_DT_ENDPOINT_SIZE);
 
-  /* Skip over the rest of the Class Specific or Vendor Specific */
-  /*  descriptors */
-  begin = buffer;
-  numskipped = 0;
-  while (size >= sizeof(struct ifd_usb_descriptor_header)) {
-    header = (struct ifd_usb_descriptor_header *)buffer;
+	IFD_USB_LE16_TO_CPU(endpoint->wMaxPacketSize);
 
-    if (header->bLength < 2) {
-	 ct_debug("invalid descriptor length of %d", header->bLength);
-      return -1;
-    }
+	buffer += header->bLength;
+	size -= header->bLength;
+	parsed += header->bLength;
 
-    /* If we find another "proper" descriptor then we're done  */
-    if ((header->bDescriptorType == IFD_USB_DT_ENDPOINT) ||
-        (header->bDescriptorType == IFD_USB_DT_INTERFACE) ||
-        (header->bDescriptorType == IFD_USB_DT_CONFIG) ||
-        (header->bDescriptorType == IFD_USB_DT_DEVICE))
-      break;
+	/* Skip over the rest of the Class Specific or Vendor Specific */
+	/*  descriptors */
+	begin = buffer;
+	numskipped = 0;
+	while (size >= sizeof(struct ifd_usb_descriptor_header)) {
+		header = (struct ifd_usb_descriptor_header *)buffer;
 
-    ct_debug("skipping descriptor 0x%X", header->bDescriptorType);
-    numskipped++;
+		if (header->bLength < 2) {
+			ct_debug("invalid descriptor length of %d",
+				 header->bLength);
+			return -1;
+		}
 
-    buffer += header->bLength;
-    size -= header->bLength;
-    parsed += header->bLength;
-  }
+		/* If we find another "proper" descriptor then we're done  */
+		if ((header->bDescriptorType == IFD_USB_DT_ENDPOINT) ||
+		    (header->bDescriptorType == IFD_USB_DT_INTERFACE) ||
+		    (header->bDescriptorType == IFD_USB_DT_CONFIG) ||
+		    (header->bDescriptorType == IFD_USB_DT_DEVICE))
+			break;
 
-  if (numskipped)
-       ct_debug("skipped %d class/vendor specific endpoint descriptors", numskipped);
+		ct_debug("skipping descriptor 0x%X", header->bDescriptorType);
+		numskipped++;
 
-  /* Copy any unknown descriptors into a storage area for drivers */
-  /*  to later parse */
-  len = (int)(buffer - begin);
-  if (!len) {
-    endpoint->extra = NULL;
-    endpoint->extralen = 0;
-    return parsed;
-  }
+		buffer += header->bLength;
+		size -= header->bLength;
+		parsed += header->bLength;
+	}
 
-  endpoint->extra = (unsigned char *) malloc(len);
-  if (!endpoint->extra) {
-       ct_debug("couldn't allocate memory for endpoint extra descriptors");
-    endpoint->extralen = 0;
-    return parsed;
-  }
+	if (numskipped)
+		ct_debug
+		    ("skipped %d class/vendor specific endpoint descriptors",
+		     numskipped);
 
-  memcpy(endpoint->extra, begin, len);
-  endpoint->extralen = len;
+	/* Copy any unknown descriptors into a storage area for drivers */
+	/*  to later parse */
+	len = (int)(buffer - begin);
+	if (!len) {
+		endpoint->extra = NULL;
+		endpoint->extralen = 0;
+		return parsed;
+	}
 
-  return parsed;
+	endpoint->extra = (unsigned char *)malloc(len);
+	if (!endpoint->extra) {
+		ct_debug
+		    ("couldn't allocate memory for endpoint extra descriptors");
+		endpoint->extralen = 0;
+		return parsed;
+	}
+
+	memcpy(endpoint->extra, begin, len);
+	endpoint->extralen = len;
+
+	return parsed;
 }
 
-static int ifd_usb_parse_interface(struct ifd_usb_interface *interface, unsigned char *buffer, int size)
+static int ifd_usb_parse_interface(struct ifd_usb_interface *interface,
+				   unsigned char *buffer, int size)
 {
-  int i, len, numskipped, retval, parsed = 0;
-  struct ifd_usb_descriptor_header *header;
-  struct ifd_usb_interface_descriptor *ifp;
-  unsigned char *begin;
+	int i, len, numskipped, retval, parsed = 0;
+	struct ifd_usb_descriptor_header *header;
+	struct ifd_usb_interface_descriptor *ifp;
+	unsigned char *begin;
 
-  interface->num_altsetting = 0;
+	interface->num_altsetting = 0;
 
-  while (size > 0) {
-    interface->altsetting = (struct ifd_usb_interface_descriptor *) realloc(interface->altsetting,
-    			sizeof(struct ifd_usb_interface_descriptor) * (interface->num_altsetting + 1));
-    if (!interface->altsetting) {
-	 ct_debug("couldn't malloc interface->altsetting");
-      return -1;
-    }
+	while (size > 0) {
+		interface->altsetting = (struct ifd_usb_interface_descriptor *)
+			realloc(interface->altsetting,
+ 				sizeof(struct ifd_usb_interface_descriptor)
+ 				* (interface-> num_altsetting + 1)
+			);
+		if (!interface->altsetting) {
+			ct_debug("couldn't malloc interface->altsetting");
+			return -1;
+		}
 
-    ifp = interface->altsetting + interface->num_altsetting;
-    interface->num_altsetting++;
+		ifp = interface->altsetting + interface->num_altsetting;
+		interface->num_altsetting++;
 
-    memcpy(ifp, buffer, IFD_USB_DT_INTERFACE_SIZE);
+		memcpy(ifp, buffer, IFD_USB_DT_INTERFACE_SIZE);
 
-    /* Skip over the interface */
-    buffer += ifp->bLength;
-    parsed += ifp->bLength;
-    size -= ifp->bLength;
+		/* Skip over the interface */
+		buffer += ifp->bLength;
+		parsed += ifp->bLength;
+		size -= ifp->bLength;
 
-    begin = buffer;
-    numskipped = 0;
+		begin = buffer;
+		numskipped = 0;
 
-    /* Skip over any interface, class or vendor descriptors */
-    while (size >= sizeof(struct ifd_usb_descriptor_header)) {
-      header = (struct ifd_usb_descriptor_header *)buffer;
+		/* Skip over any interface, class or vendor descriptors */
+		while (size >= sizeof(struct ifd_usb_descriptor_header)) {
+			header = (struct ifd_usb_descriptor_header *)buffer;
 
-      if (header->bLength < 2) {
-	   ct_debug("invalid descriptor length of %d", header->bLength);        return -1;
-      }
+			if (header->bLength < 2) {
+				ct_debug("invalid descriptor length of %d",
+					 header->bLength);
+				return -1;
+			}
 
-      /* If we find another "proper" descriptor then we're done */
-      if ((header->bDescriptorType == IFD_USB_DT_INTERFACE) ||
-          (header->bDescriptorType == IFD_USB_DT_ENDPOINT) ||
-          (header->bDescriptorType == IFD_USB_DT_CONFIG) ||
-          (header->bDescriptorType == IFD_USB_DT_DEVICE))
-        break;
+			/* If we find another "proper" descriptor then we're done */
+			if ((header->bDescriptorType == IFD_USB_DT_INTERFACE) ||
+			    (header->bDescriptorType == IFD_USB_DT_ENDPOINT) ||
+			    (header->bDescriptorType == IFD_USB_DT_CONFIG) ||
+			    (header->bDescriptorType == IFD_USB_DT_DEVICE))
+				break;
 
-      numskipped++;
+			numskipped++;
 
-      buffer += header->bLength;
-      parsed += header->bLength;
-      size -= header->bLength;
-    }
+			buffer += header->bLength;
+			parsed += header->bLength;
+			size -= header->bLength;
+		}
 
-    if (numskipped)
-      ct_debug("skipped %d class/vendor specific interface descriptors", numskipped);
+		if (numskipped)
+			ct_debug
+			    ("skipped %d class/vendor specific interface descriptors",
+			     numskipped);
 
-    /* Copy any unknown descriptors into a storage area for */
-    /*  drivers to later parse */
-    len = (int)(buffer - begin);
-    if (!len) {
-      ifp->extra = NULL;
-      ifp->extralen = 0;
-    } else {
-      ifp->extra = (unsigned char *) malloc(len);
-      if (!ifp->extra) {
-	   ct_debug("couldn't allocate memory for interface extra descriptors");
-        ifp->extralen = 0;
-        return -1;
-      }
-      memcpy(ifp->extra, begin, len);
-      ifp->extralen = len;
-    }
+		/* Copy any unknown descriptors into a storage area for */
+		/*  drivers to later parse */
+		len = (int)(buffer - begin);
+		if (!len) {
+			ifp->extra = NULL;
+			ifp->extralen = 0;
+		} else {
+			ifp->extra = (unsigned char *)malloc(len);
+			if (!ifp->extra) {
+				ct_debug
+				    ("couldn't allocate memory for interface extra descriptors");
+				ifp->extralen = 0;
+				return -1;
+			}
+			memcpy(ifp->extra, begin, len);
+			ifp->extralen = len;
+		}
 
-    /* Did we hit an unexpected descriptor? */
-    header = (struct ifd_usb_descriptor_header *)buffer;
-    if ((size >= sizeof(struct ifd_usb_descriptor_header)) &&
-        ((header->bDescriptorType == IFD_USB_DT_CONFIG) ||
-        (header->bDescriptorType == IFD_USB_DT_DEVICE)))
-      return parsed;
+		/* Did we hit an unexpected descriptor? */
+		header = (struct ifd_usb_descriptor_header *)buffer;
+		if ((size >= sizeof(struct ifd_usb_descriptor_header)) &&
+		    ((header->bDescriptorType == IFD_USB_DT_CONFIG) ||
+		     (header->bDescriptorType == IFD_USB_DT_DEVICE)))
+			return parsed;
 
-    if (ifp->bNumEndpoints > IFD_USB_MAXENDPOINTS) {
-	 ct_debug("too many endpoints");
-      return -1;
-    }
+		if (ifp->bNumEndpoints > IFD_USB_MAXENDPOINTS) {
+			ct_debug("too many endpoints");
+			return -1;
+		}
 
-    ifp->endpoint = (struct ifd_usb_endpoint_descriptor *)
-                     malloc(ifp->bNumEndpoints *
-                     sizeof(struct ifd_usb_endpoint_descriptor));
-    if (!ifp->endpoint) {
-	 ct_debug("couldn't allocate memory for ifp->endpoint");
-      return -1;      
-    }
+		ifp->endpoint = (struct ifd_usb_endpoint_descriptor *)
+		    malloc(ifp->bNumEndpoints *
+			   sizeof(struct ifd_usb_endpoint_descriptor));
+		if (!ifp->endpoint) {
+			ct_debug("couldn't allocate memory for ifp->endpoint");
+			return -1;
+		}
 
-    memset(ifp->endpoint, 0, ifp->bNumEndpoints *
-           sizeof(struct ifd_usb_endpoint_descriptor));
+		memset(ifp->endpoint, 0, ifp->bNumEndpoints *
+		       sizeof(struct ifd_usb_endpoint_descriptor));
 
-    for (i = 0; i < ifp->bNumEndpoints; i++) {
-      header = (struct ifd_usb_descriptor_header *)buffer;
+		for (i = 0; i < ifp->bNumEndpoints; i++) {
+			header = (struct ifd_usb_descriptor_header *)buffer;
 
-      if (header->bLength > size) {
-	   ct_debug("ran out of descriptors parsing");
-        return -1;
-      }
-                
-      retval = ifd_usb_parse_endpoint(ifp->endpoint + i, buffer, size);
-      if (retval < 0)
-        return retval;
+			if (header->bLength > size) {
+				ct_debug("ran out of descriptors parsing");
+				return -1;
+			}
 
-      buffer += retval;
-      parsed += retval;
-      size -= retval;
-    }
+			retval =
+			    ifd_usb_parse_endpoint(ifp->endpoint + i, buffer,
+						   size);
+			if (retval < 0)
+				return retval;
 
-    /* We check to see if it's an alternate to this one */
-    ifp = (struct ifd_usb_interface_descriptor *)buffer;
-    if (size < IFD_USB_DT_INTERFACE_SIZE ||
-        ifp->bDescriptorType != IFD_USB_DT_INTERFACE ||
-        !ifp->bAlternateSetting)
-      return parsed;
-  }
+			buffer += retval;
+			parsed += retval;
+			size -= retval;
+		}
 
-  return parsed;
+		/* We check to see if it's an alternate to this one */
+		ifp = (struct ifd_usb_interface_descriptor *)buffer;
+		if (size < IFD_USB_DT_INTERFACE_SIZE ||
+		    ifp->bDescriptorType != IFD_USB_DT_INTERFACE ||
+		    !ifp->bAlternateSetting)
+			return parsed;
+	}
+
+	return parsed;
 }
 
-int ifd_usb_parse_configuration(struct ifd_usb_config_descriptor *config, unsigned char *buffer)
+int ifd_usb_parse_configuration(struct ifd_usb_config_descriptor *config,
+				unsigned char *buffer)
 {
-  int i, retval, size;
-  struct ifd_usb_descriptor_header *header;
+	int i, retval, size;
+	struct ifd_usb_descriptor_header *header;
 
-  memcpy(config, buffer, IFD_USB_DT_CONFIG_SIZE);
-  IFD_USB_LE16_TO_CPU(config->wTotalLength);
-  size = config->wTotalLength;
+	memcpy(config, buffer, IFD_USB_DT_CONFIG_SIZE);
+	IFD_USB_LE16_TO_CPU(config->wTotalLength);
+	size = config->wTotalLength;
 
-  if (config->bNumInterfaces > IFD_USB_MAXINTERFACES) {
-       ct_debug("too many interfaces");
-    return -1;
-  }
+	if (config->bNumInterfaces > IFD_USB_MAXINTERFACES) {
+		ct_debug("too many interfaces");
+		return -1;
+	}
 
-  config->interface = (struct ifd_usb_interface *)
-                       malloc(config->bNumInterfaces *
-                       sizeof(struct ifd_usb_interface));
-  if (!config->interface) {
-       ct_debug("out of memory");
-    return -1;      
-  }
+	config->interface = (struct ifd_usb_interface *)
+	    malloc(config->bNumInterfaces * sizeof(struct ifd_usb_interface));
+	if (!config->interface) {
+		ct_debug("out of memory");
+		return -1;
+	}
 
-  memset(config->interface, 0, config->bNumInterfaces * sizeof(struct ifd_usb_interface));
+	memset(config->interface, 0,
+	       config->bNumInterfaces * sizeof(struct ifd_usb_interface));
 
-  buffer += config->bLength;
-  size -= config->bLength;
-        
-  config->extra = NULL;
-  config->extralen = 0;
+	buffer += config->bLength;
+	size -= config->bLength;
 
-  for (i = 0; i < config->bNumInterfaces; i++) {
-    int numskipped, len;
-    unsigned char *begin;
+	config->extra = NULL;
+	config->extralen = 0;
 
-    /* Skip over the rest of the Class Specific or Vendor */
-    /*  Specific descriptors */
-    begin = buffer;
-    numskipped = 0;
-    while (size >= sizeof(struct ifd_usb_descriptor_header)) {
-      header = (struct ifd_usb_descriptor_header *)buffer;
+	for (i = 0; i < config->bNumInterfaces; i++) {
+		int numskipped, len;
+		unsigned char *begin;
 
-      if ((header->bLength > size) || (header->bLength < 2)) {
-	   ct_debug("invalid descriptor length of %d", header->bLength);
-        return -1;
-      }
+		/* Skip over the rest of the Class Specific or Vendor */
+		/*  Specific descriptors */
+		begin = buffer;
+		numskipped = 0;
+		while (size >= sizeof(struct ifd_usb_descriptor_header)) {
+			header = (struct ifd_usb_descriptor_header *)buffer;
 
-      /* If we find another "proper" descriptor then we're done */
-      if ((header->bDescriptorType == IFD_USB_DT_ENDPOINT) ||
-          (header->bDescriptorType == IFD_USB_DT_INTERFACE) ||
-          (header->bDescriptorType == IFD_USB_DT_CONFIG) ||
-          (header->bDescriptorType == IFD_USB_DT_DEVICE))
-        break;
+			if ((header->bLength > size) || (header->bLength < 2)) {
+				ct_debug("invalid descriptor length of %d",
+					 header->bLength);
+				return -1;
+			}
 
-      ct_debug("skipping descriptor 0x%X", header->bDescriptorType);
-      numskipped++;
+			/* If we find another "proper" descriptor then we're done */
+			if ((header->bDescriptorType == IFD_USB_DT_ENDPOINT) ||
+			    (header->bDescriptorType == IFD_USB_DT_INTERFACE) ||
+			    (header->bDescriptorType == IFD_USB_DT_CONFIG) ||
+			    (header->bDescriptorType == IFD_USB_DT_DEVICE))
+				break;
 
-      buffer += header->bLength;
-      size -= header->bLength;
-    }
+			ct_debug("skipping descriptor 0x%X",
+				 header->bDescriptorType);
+			numskipped++;
 
-    if (numskipped)
-      ct_debug("skipped %d class/vendor specific endpoint descriptors", numskipped);
+			buffer += header->bLength;
+			size -= header->bLength;
+		}
 
-    /* Copy any unknown descriptors into a storage area for */
-    /*  drivers to later parse */
-    len = (int)(buffer - begin);
-    if (len) {
-      /* FIXME: We should realloc and append here */
-      if (!config->extralen) {
-        config->extra = (unsigned char *) malloc(len);
-        if (!config->extra) {
-	     ct_debug("couldn't allocate memory for config extra descriptors");
-          config->extralen = 0;
-          return -1;
-        }
+		if (numskipped)
+			ct_debug
+			    ("skipped %d class/vendor specific endpoint descriptors",
+			     numskipped);
 
-        memcpy(config->extra, begin, len);
-        config->extralen = len;
-      }
-    }
+		/* Copy any unknown descriptors into a storage area for */
+		/*  drivers to later parse */
+		len = (int)(buffer - begin);
+		if (len) {
+			/* FIXME: We should realloc and append here */
+			if (!config->extralen) {
+				config->extra = (unsigned char *)malloc(len);
+				if (!config->extra) {
+					ct_debug
+					    ("couldn't allocate memory for config extra descriptors");
+					config->extralen = 0;
+					return -1;
+				}
 
-    retval = ifd_usb_parse_interface(config->interface + i, buffer, size);
-    if (retval < 0)
-      return retval;
+				memcpy(config->extra, begin, len);
+				config->extralen = len;
+			}
+		}
 
-    buffer += retval;
-    size -= retval;
-  }
+		retval =
+		    ifd_usb_parse_interface(config->interface + i, buffer,
+					    size);
+		if (retval < 0)
+			return retval;
 
-  return size;
+		buffer += retval;
+		size -= retval;
+	}
+
+	return size;
 }
 
-int ifd_usb_get_device(ifd_device_t *dev,  struct ifd_usb_device_descriptor *d) {
-     unsigned char devd[18];
-     int r;
+int ifd_usb_get_device(ifd_device_t * dev, struct ifd_usb_device_descriptor *d)
+{
+	unsigned char devd[18];
+	int r;
 
-     /* 0x6  == USB_REQ_GET_DESCRIPTOR
-      * 0x1  == USB_DT_DEVICE
-     */
-     r=ifd_usb_control(dev, 0x80, 0x6, 0x100, 0, devd, 18, 10000);
-     if (r <= 0) {
-	  ct_error("cannot get descriptors");
-	  return 1;
-     }
-     memcpy(d, devd, sizeof(devd));
-     d->bcdUSB=devd[3] <<8 | devd[2];
-     d->idVendor=devd[9] <<8 | devd[8];
-     d->idProduct=devd[11] <<8 | devd[10];
-     d->bcdDevice=devd[13] <<8 | devd[12];
-     
-    return 0;
+	/* 0x6  == USB_REQ_GET_DESCRIPTOR
+	 * 0x1  == USB_DT_DEVICE
+	 */
+	r = ifd_usb_control(dev, 0x80, 0x6, 0x100, 0, devd, 18, 10000);
+	if (r <= 0) {
+		ct_error("cannot get descriptors");
+		return 1;
+	}
+	memcpy(d, devd, sizeof(devd));
+	d->bcdUSB = devd[3] << 8 | devd[2];
+	d->idVendor = devd[9] << 8 | devd[8];
+	d->idProduct = devd[11] << 8 | devd[10];
+	d->bcdDevice = devd[13] << 8 | devd[12];
+
+	return 0;
 }
 
-int
-ifd_usb_get_config(ifd_device_t *dev, int n, 
-		   struct ifd_usb_config_descriptor *ret) {
-     unsigned char *b;
-     unsigned short len;
-     int r;
-     memset(ret,0,sizeof(struct ifd_usb_config_descriptor));
-     
-     /* 0x6  == USB_REQ_GET_DESCRIPTOR
-      * 0x2  == USB_DT_CONFIG
-      */
-     r=ifd_usb_control(dev, 0x80, 0x6, 0x200 | n, 0, ret, 8, 1000);
-     if (r <= 0) {
-	  ct_error("cannot get descriptors");
-	  return 1;
-     }
-     
-     IFD_USB_LE16_TO_CPU(ret->wTotalLength);
-     len=ret->wTotalLength;
-     b=(unsigned char *) malloc(len);
-     if (!b) {
-	  ct_error("cannot malloc descriptor buffer");
-	  return 1;
-     }
-     
-     r=ifd_usb_control(dev, 0x80, 0x6, 0x200 | n, 0, b, len, 1000);
-     if (r < len) {
-	  ct_error("cannot get descriptors");
-	  free(b);
-	  return 1;
-     }
-     r=ifd_usb_parse_configuration(ret, b);
-     free(b);
-     if (r < 0) {
-	  return 1;
-     }
-     return 0;
+int ifd_usb_get_config(ifd_device_t * dev, int n,
+		       struct ifd_usb_config_descriptor *ret)
+{
+	unsigned char *b;
+	unsigned short len;
+	int r;
+	memset(ret, 0, sizeof(struct ifd_usb_config_descriptor));
+
+	/* 0x6  == USB_REQ_GET_DESCRIPTOR
+	 * 0x2  == USB_DT_CONFIG
+	 */
+	r = ifd_usb_control(dev, 0x80, 0x6, 0x200 | n, 0, ret, 8, 1000);
+	if (r <= 0) {
+		ct_error("cannot get descriptors");
+		return 1;
+	}
+
+	IFD_USB_LE16_TO_CPU(ret->wTotalLength);
+	len = ret->wTotalLength;
+	b = (unsigned char *)malloc(len);
+	if (!b) {
+		ct_error("cannot malloc descriptor buffer");
+		return 1;
+	}
+
+	r = ifd_usb_control(dev, 0x80, 0x6, 0x200 | n, 0, b, len, 1000);
+	if (r < len) {
+		ct_error("cannot get descriptors");
+		free(b);
+		return 1;
+	}
+	r = ifd_usb_parse_configuration(ret, b);
+	free(b);
+	if (r < 0) {
+		return 1;
+	}
+	return 0;
 }
 
-void ifd_usb_free_configuration(struct ifd_usb_config_descriptor *cf) {
-     int i, j, k;
-     if (!cf->interface)
-	  return;
-     
-     for (i = 0; i < cf->bNumInterfaces; i++) {
-	  struct ifd_usb_interface *ifp = &cf->interface[i];
-	  
-	  if (!ifp->altsetting)
-	       break;
-	  
-	  for (j = 0; j < ifp->num_altsetting; j++) {
-	       struct ifd_usb_interface_descriptor *as = &ifp->altsetting[j];
-	       
-	       if (as->extra)
-		    free(as->extra);
-	       
-	       if (!as->endpoint)
-		    break;
-	       
-	       for (k = 0; k < as->bNumEndpoints; k++) {
-		    if (as->endpoint[k].extra)
-			 free(as->endpoint[k].extra);
-	       }       
-	       free(as->endpoint);
-	  }
-	  
-	  free(ifp->altsetting);
-     }
-     
-     free(cf->interface);
+void ifd_usb_free_configuration(struct ifd_usb_config_descriptor *cf)
+{
+	int i, j, k;
+	if (!cf->interface)
+		return;
+
+	for (i = 0; i < cf->bNumInterfaces; i++) {
+		struct ifd_usb_interface *ifp = &cf->interface[i];
+
+		if (!ifp->altsetting)
+			break;
+
+		for (j = 0; j < ifp->num_altsetting; j++) {
+			struct ifd_usb_interface_descriptor *as =
+			    &ifp->altsetting[j];
+
+			if (as->extra)
+				free(as->extra);
+
+			if (!as->endpoint)
+				break;
+
+			for (k = 0; k < as->bNumEndpoints; k++) {
+				if (as->endpoint[k].extra)
+					free(as->endpoint[k].extra);
+			}
+			free(as->endpoint);
+		}
+
+		free(ifp->altsetting);
+	}
+
+	free(cf->interface);
 }
-
-

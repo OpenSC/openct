@@ -13,16 +13,11 @@
 /*
  * Send/receive USB control block
  */
-int
-ifd_usb_control(ifd_device_t *dev,
-		unsigned int requesttype,
-		unsigned int request,
-		unsigned int value,
-		unsigned int index,
-		void *buffer, size_t len,
-		long timeout)
+int ifd_usb_control(ifd_device_t * dev, unsigned int requesttype,
+		    unsigned int request, unsigned int value,
+		    unsigned int index, void *buffer, size_t len, long timeout)
 {
-	int		n;
+	int n;
 
 	if (dev->type != IFD_DEVICE_TYPE_USB)
 		return -1;
@@ -30,26 +25,20 @@ ifd_usb_control(ifd_device_t *dev,
 		timeout = 10000;
 
 	if ((ct_config.debug >= 3) && !(requesttype & 0x80)) {
-		ifd_debug(4, "usb req type=x%02x req=x%02x val=x%04x ind=x%04x len=%u",
-				requesttype,
-				request,
-				value,
-				index,
-				len);
+		ifd_debug(4,
+			  "usb req type=x%02x req=x%02x val=x%04x ind=x%04x len=%u",
+			  requesttype, request, value, index, len);
 		if (len)
 			ifd_debug(4, "send %s", ct_hexdump(buffer, len));
 	}
 
 	n = ifd_sysdep_usb_control(dev, requesttype, request, value, index,
-				buffer, len, timeout);
+				   buffer, len, timeout);
 
 	if ((ct_config.debug >= 3) && (requesttype & 0x80)) {
-		ifd_debug(4, "usb req type=x%02x req=x%02x val=x%04x ind=x%04x len=%d",
-				requesttype,
-				request,
-				value,
-				index,
-				n);
+		ifd_debug(4,
+			  "usb req type=x%02x req=x%02x val=x%04x ind=x%04x len=%d",
+			  requesttype, request, value, index, n);
 		if (n > 0)
 			ifd_debug(4, "recv %s", ct_hexdump(buffer, n));
 	}
@@ -60,24 +49,23 @@ ifd_usb_control(ifd_device_t *dev,
 /*
  * USB frame capture
  */
-int
-ifd_usb_begin_capture(ifd_device_t *dev, int type, int endpoint,
-			size_t maxpacket, ifd_usb_capture_t **capret)
+int ifd_usb_begin_capture(ifd_device_t * dev, int type, int endpoint,
+			  size_t maxpacket, ifd_usb_capture_t ** capret)
 {
 	if (dev->type != IFD_DEVICE_TYPE_USB)
 		return -1;
 
 	if (ct_config.debug >= 5)
 		ifd_debug(5, "usb capture type=%d ep=x%x maxpacket=%u",
-				type, endpoint, maxpacket);
-	return ifd_sysdep_usb_begin_capture(dev, type, endpoint, maxpacket, capret);
+			  type, endpoint, maxpacket);
+	return ifd_sysdep_usb_begin_capture(dev, type, endpoint, maxpacket,
+					    capret);
 }
 
-int
-ifd_usb_capture(ifd_device_t *dev, ifd_usb_capture_t *cap,
-	       	void *buffer, size_t len, long timeout)
+int ifd_usb_capture(ifd_device_t * dev, ifd_usb_capture_t * cap, void *buffer,
+		    size_t len, long timeout)
 {
-	int	rc;
+	int rc;
 
 	if (dev->type != IFD_DEVICE_TYPE_USB)
 		return -1;
@@ -88,15 +76,15 @@ ifd_usb_capture(ifd_device_t *dev, ifd_usb_capture_t *cap,
 		if (rc < 0)
 			ifd_debug(1, "usb capture: %s", ct_strerror(rc));
 		if (rc > 0)
-			ifd_debug(5, "usb capture: recv %s", ct_hexdump(buffer, rc));
+			ifd_debug(5, "usb capture: recv %s",
+				  ct_hexdump(buffer, rc));
 		if (rc == 0)
 			ifd_debug(5, "usb capture: rc=%d (timeout?)", rc);
 	}
 	return rc;
 }
 
-int
-ifd_usb_end_capture(ifd_device_t *dev, ifd_usb_capture_t *cap)
+int ifd_usb_end_capture(ifd_device_t * dev, ifd_usb_capture_t * cap)
 {
 	if (dev->type != IFD_DEVICE_TYPE_USB)
 		return -1;
@@ -106,45 +94,45 @@ ifd_usb_end_capture(ifd_device_t *dev, ifd_usb_capture_t *cap)
 /*
  * Set usb params (for now, endpoint for transceive)
  */
-static int
-usb_set_params(ifd_device_t *dev, const ifd_device_params_t *params)
+static int usb_set_params(ifd_device_t * dev,
+			  const ifd_device_params_t * params)
 {
 
 	ifd_debug(1, "called. config x%02x ifc x%02x eps x%02x/x%02x",
-			params->usb.configuration, params->usb.interface, 
-			params->usb.ep_o, params->usb.ep_i);
-        if (params->usb.interface != -1 && params->usb.interface > 255)
+		  params->usb.configuration, params->usb.interface,
+		  params->usb.ep_o, params->usb.ep_i);
+	if (params->usb.interface != -1 && params->usb.interface > 255)
 		return IFD_ERROR_INVALID_ARG;
-        if (params->usb.ep_o != -1 && (params->usb.ep_o & ~0x7F))
+	if (params->usb.ep_o != -1 && (params->usb.ep_o & ~0x7F))
 		return IFD_ERROR_INVALID_ARG;
-        if ((params->usb.ep_i != -1 && (params->usb.ep_i & ~0xFF))
-	 || !(params->usb.ep_i & 0x80))
+	if ((params->usb.ep_i != -1 && (params->usb.ep_i & ~0xFF))
+	    || !(params->usb.ep_i & 0x80))
 		return IFD_ERROR_INVALID_ARG;
 
 	if (dev->settings.usb.interface != -1)
-		ifd_sysdep_usb_release_interface(dev, 
-					      dev->settings.usb.interface);
+		ifd_sysdep_usb_release_interface(dev,
+						 dev->settings.usb.interface);
 
 	if (params->usb.configuration != -1
-	 && ifd_sysdep_usb_set_configuration(dev, params->usb.configuration))
+	    && ifd_sysdep_usb_set_configuration(dev, params->usb.configuration))
 		return -1;
 
 	if (params->usb.interface != -1) {
 		if (ifd_sysdep_usb_claim_interface(dev, params->usb.interface))
 			return -1;
 		if (params->usb.altsetting != -1
-		 && ifd_sysdep_usb_set_interface(dev, 
-					    params->usb.interface,
-					    params->usb.altsetting))
+		    && ifd_sysdep_usb_set_interface(dev,
+						    params->usb.interface,
+						    params->usb.altsetting))
 			return -1;
 	}
 
-        dev->settings = *params;
-        return 0;
+	dev->settings = *params;
+	return 0;
 }
 
-static int 
-usb_send(ifd_device_t *dev, const unsigned char *send, size_t sendlen)
+static int usb_send(ifd_device_t * dev, const unsigned char *send,
+		    size_t sendlen)
 {
 	if (dev->settings.usb.ep_o == -1)
 		return IFD_ERROR_NOT_SUPPORTED;
@@ -155,21 +143,20 @@ usb_send(ifd_device_t *dev, const unsigned char *send, size_t sendlen)
 	}
 
 	return ifd_sysdep_usb_bulk(dev,
-			dev->settings.usb.ep_o, 
-			(unsigned char *) send, sendlen, 10000);
+				   dev->settings.usb.ep_o,
+				   (unsigned char *)send, sendlen, 10000);
 }
 
-
-static int 
-usb_recv(ifd_device_t *dev, unsigned char *recv, size_t recvlen, long timeout)
+static int usb_recv(ifd_device_t * dev, unsigned char *recv, size_t recvlen,
+		    long timeout)
 {
-	int	rc;
+	int rc;
 
 	if (dev->settings.usb.ep_i == -1)
 		return IFD_ERROR_NOT_SUPPORTED;
 
-	rc = ifd_sysdep_usb_bulk(dev, dev->settings.usb.ep_i, 
-			recv, recvlen, timeout);
+	rc = ifd_sysdep_usb_bulk(dev, dev->settings.usb.ep_i,
+				 recv, recvlen, timeout);
 	if (rc >= 0 && ct_config.debug >= 4) {
 		ifd_debug(4, "usb recv from=x%02x", dev->settings.usb.ep_i);
 		if (rc > 0)
@@ -179,16 +166,15 @@ usb_recv(ifd_device_t *dev, unsigned char *recv, size_t recvlen, long timeout)
 	return rc;
 }
 
-static struct ifd_device_ops	ifd_usb_ops;
+static struct ifd_device_ops ifd_usb_ops;
 
 /*
  * Open USB device
  */
-ifd_device_t *
-ifd_open_usb(const char *device)
+ifd_device_t *ifd_open_usb(const char *device)
 {
-	ifd_device_t	*dev;
-	int		fd;
+	ifd_device_t *dev;
+	int fd;
 
 	if ((fd = ifd_sysdep_usb_open(device, O_EXCL | O_RDWR)) < 0) {
 		ct_error("Unable to open USB device %s: %m", device);
