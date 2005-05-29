@@ -123,13 +123,9 @@ int ria_recv(ria_client_t * clnt, unsigned char expect, uint32_t xid,
 		/* If there's no complete packet in the receive
 		 * buffer, we need to wait for input. */
 		if (rc == 0) {
-			if (timeout == 0) {
-				wait = 0;
-			} else if (timeout > 0) {
-				wait = timeout - ifd_time_elapsed(&begin);
-				if (wait < 0)
-					return IFD_ERROR_TIMEOUT;
-			}
+			wait = timeout - ifd_time_elapsed(&begin);
+			if (wait < 0)
+				return IFD_ERROR_TIMEOUT;
 
 			if ((rc = ct_socket_filbuf(sock, wait)) < 0)
 				return rc;
