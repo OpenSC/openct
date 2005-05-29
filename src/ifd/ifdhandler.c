@@ -29,29 +29,28 @@
 
 #include "ifdhandler.h"
 
-static int	opt_debug = 0;
-static int	opt_hotplug = 0;
-static int	opt_foreground = 0;
-static int	opt_info = 0;
-static unsigned int	opt_reader = -1;
+static int opt_debug = 0;
+static int opt_hotplug = 0;
+static int opt_foreground = 0;
+static int opt_info = 0;
+static unsigned int opt_reader = -1;
 
-static void	usage(int exval);
-static void	version(void);
-static void	ifdhandler_run(ifd_reader_t *);
-static int	ifdhandler_poll_presence(ct_socket_t *, struct pollfd *);
-static int	ifdhandler_accept(ct_socket_t *);
-static int	ifdhandler_recv(ct_socket_t *);
-static int	ifdhandler_send(ct_socket_t *);
-static void	ifdhandler_close(ct_socket_t *);
-static void	print_info(void);
+static void usage(int exval);
+static void version(void);
+static void ifdhandler_run(ifd_reader_t *);
+static int ifdhandler_poll_presence(ct_socket_t *, struct pollfd *);
+static int ifdhandler_accept(ct_socket_t *);
+static int ifdhandler_recv(ct_socket_t *);
+static int ifdhandler_send(ct_socket_t *);
+static void ifdhandler_close(ct_socket_t *);
+static void print_info(void);
 
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
-	const char	*device = NULL, *driver;
-	ifd_reader_t	*reader;
-	ct_info_t	*status;
-	int		c;
+	const char *device = NULL, *driver;
+	ifd_reader_t *reader;
+	ct_info_t *status;
+	int c;
 
 	/* Make sure the mask is good */
 	umask(033);
@@ -118,8 +117,8 @@ main(int argc, char **argv)
 	/* Become a daemon if needed - we do this after allocating the
 	 * slot so openct-control can synchronize slot allocation */
 	if (!opt_foreground) {
-		pid_t	pid;
-		int	fd;
+		pid_t pid;
+		int fd;
 
 		if ((pid = fork()) < 0) {
 			ct_error("fork: %m");
@@ -151,7 +150,7 @@ main(int argc, char **argv)
 	ifd_device_set_hotplug(reader->device, opt_hotplug);
 
 	reader->status = status;
-	strncpy(status->ct_name, reader->name, sizeof(status->ct_name)-1);
+	strncpy(status->ct_name, reader->name, sizeof(status->ct_name) - 1);
 	status->ct_slots = reader->nslots;
 	if (reader->flags & IFD_READER_DISPLAY)
 		status->ct_display = 1;
@@ -165,12 +164,11 @@ main(int argc, char **argv)
 /*
  * Spawn a new ifd handler thread
  */
-void
-ifdhandler_run(ifd_reader_t *reader)
+void ifdhandler_run(ifd_reader_t * reader)
 {
-	char		socket_name[1024];
-	ct_socket_t	*sock;
-	int		rc;
+	char socket_name[1024];
+	ct_socket_t *sock;
+	int rc;
 
 	/* Activate reader */
 	if ((rc = ifd_activate(reader)) < 0) {
@@ -181,10 +179,10 @@ ifdhandler_run(ifd_reader_t *reader)
 	sock = ct_socket_new(0);
 #if defined (sunray)
 	snprintf(socket_name, sizeof(socket_name),
-			"%s/openct/%u", getenv("UTDEVROOT"), opt_reader);
+		 "%s/openct/%u", getenv("UTDEVROOT"), opt_reader);
 #else
 	snprintf(socket_name, sizeof(socket_name),
-			"%s/%u", OPENCT_SOCKET_PATH, opt_reader);
+		 "%s/%u", OPENCT_SOCKET_PATH, opt_reader);
 #endif
 	if (ct_socket_listen(sock, socket_name, 0666) < 0) {
 		ct_error("Failed to create server socket");
@@ -210,20 +208,19 @@ ifdhandler_run(ifd_reader_t *reader)
 /*
  * Poll for presence of hotplug device
  */
-int
-ifdhandler_poll_presence(ct_socket_t *sock, struct pollfd *pfd)
+int ifdhandler_poll_presence(ct_socket_t * sock, struct pollfd *pfd)
 {
-	ifd_reader_t	*reader = (ifd_reader_t *) sock->user_data;
-	ifd_device_t	*dev = reader->device;
-	unsigned int	n;
+	ifd_reader_t *reader = (ifd_reader_t *) sock->user_data;
+	ifd_device_t *dev = reader->device;
+	unsigned int n;
 
 	/* Check if the card status changed */
 	for (n = 0; n < reader->nslots; n++) {
-		static unsigned int	card_seq = 1;
-		unsigned int		prev_seq, new_seq;
-		ct_info_t		*info;
-		time_t			now;
-		int			rc, status;
+		static unsigned int card_seq = 1;
+		unsigned int prev_seq, new_seq;
+		ct_info_t *info;
+		time_t now;
+		int rc, status;
 
 		time(&now);
 		if (now < reader->slot[n].next_update)
@@ -236,8 +233,8 @@ ifdhandler_poll_presence(ct_socket_t *sock, struct pollfd *pfd)
 		if ((rc = ifd_card_status(reader, n, &status)) < 0) {
 			/* Don't return error; let the hotplug test
 			 * pick up the detach
-			if (rc == IFD_ERROR_DEVICE_DISCONNECTED)
-				return rc;
+			 if (rc == IFD_ERROR_DEVICE_DISCONNECTED)
+			 return rc;
 			 */
 			continue;
 		}
@@ -246,14 +243,13 @@ ifdhandler_poll_presence(ct_socket_t *sock, struct pollfd *pfd)
 		new_seq = prev_seq = info->ct_card[n];
 		if (!(status & IFD_CARD_PRESENT))
 			new_seq = 0;
-		else
-		if (!prev_seq || (status & IFD_CARD_STATUS_CHANGED)) {
+		else if (!prev_seq || (status & IFD_CARD_STATUS_CHANGED)) {
 			new_seq = card_seq++;
 		}
 
 		if (prev_seq != new_seq) {
 			ifd_debug(1, "card status change: %u -> %u",
-				prev_seq, new_seq);
+				  prev_seq, new_seq);
 			info->ct_card[n] = new_seq;
 			ct_status_update(info);
 		}
@@ -268,14 +264,12 @@ ifdhandler_poll_presence(ct_socket_t *sock, struct pollfd *pfd)
 	return 1;
 }
 
-
 /*
  * Handle connection request from client
  */
-static int
-ifdhandler_accept(ct_socket_t *listener)
+static int ifdhandler_accept(ct_socket_t * listener)
 {
-	ct_socket_t	*sock;
+	ct_socket_t *sock;
 
 	if (!(sock = ct_socket_accept(listener)))
 		return 0;
@@ -290,14 +284,13 @@ ifdhandler_accept(ct_socket_t *listener)
 /*
  * Receive data from client
  */
-int
-ifdhandler_recv(ct_socket_t *sock)
+int ifdhandler_recv(ct_socket_t * sock)
 {
-	ifd_reader_t	*reader;
-	char		buffer[CT_SOCKET_BUFSIZ+64];
-	header_t	header;
-	ct_buf_t	args, resp;
-	int		rc;
+	ifd_reader_t *reader;
+	char buffer[CT_SOCKET_BUFSIZ + 64];
+	header_t header;
+	ct_buf_t args, resp;
+	int rc;
 
 	/* Error or client closed connection? */
 	if ((rc = ct_socket_filbuf(sock, -1)) <= 0)
@@ -329,8 +322,7 @@ ifdhandler_recv(ct_socket_t *sock)
 /*
  * Transmit data to client
  */
-int
-ifdhandler_send(ct_socket_t *sock)
+int ifdhandler_send(ct_socket_t * sock)
 {
 	return ct_socket_flsbuf(sock, 0);
 }
@@ -339,8 +331,7 @@ ifdhandler_send(ct_socket_t *sock)
  * Socket is closed - for whatever reason
  * Release any locks held by this client
  */
-void
-ifdhandler_close(ct_socket_t *sock)
+void ifdhandler_close(ct_socket_t * sock)
 {
 	ifdhandler_unlock_all(sock);
 }
@@ -348,10 +339,9 @@ ifdhandler_close(ct_socket_t *sock)
 /*
  * Display ifdhandler configuration stuff
  */
-static void
-print_list(const char **names, unsigned int n)
+static void print_list(const char **names, unsigned int n)
 {
-	unsigned int	i, width = 0, len;
+	unsigned int i, width = 0, len;
 
 	for (i = 0; i < n; i++) {
 		len = 1 + strlen(names[i]);
@@ -374,11 +364,10 @@ print_list(const char **names, unsigned int n)
 		printf("\n");
 }
 
-void
-print_info(void)
+void print_info(void)
 {
-	const char	*names[64];
-	unsigned int	n;
+	const char *names[64];
+	unsigned int n;
 
 	n = ifd_drivers_list(names, 64);
 	if (n == 0) {
@@ -400,8 +389,7 @@ print_info(void)
 /*
  * Display version
  */
-void
-version(void)
+void version(void)
 {
 	fprintf(stdout, "OpenCT " VERSION "\n");
 	exit(0);
@@ -410,20 +398,17 @@ version(void)
 /*
  * Usage message
  */
-void
-usage(int exval)
+void usage(int exval)
 {
 	fprintf(exval ? stderr : stdout,
-"usage: ifdhandler [-Hds] [-r reader] driver [device]\n"
-"  -r   specify index of reader\n"
-"  -F   stay in foreground\n"
-"  -H   hotplug device, monitor for detach\n"
-"  -s   send error and debug messages to syslog\n"
-"  -d   enable debugging; repeat to increase verbosity\n"
-"  -i   display list of available drivers and protocols\n"
-"  -h   display this message\n"
-"  -v   display version and exit\n"
-);
+		"usage: ifdhandler [-Hds] [-r reader] driver [device]\n"
+		"  -r   specify index of reader\n"
+		"  -F   stay in foreground\n"
+		"  -H   hotplug device, monitor for detach\n"
+		"  -s   send error and debug messages to syslog\n"
+		"  -d   enable debugging; repeat to increase verbosity\n"
+		"  -i   display list of available drivers and protocols\n"
+		"  -h   display this message\n"
+		"  -v   display version and exit\n");
 	exit(exval);
 }
-

@@ -33,25 +33,24 @@
 
 #define DEFAULT_SERVER_PATH	OPENCT_SOCKET_PATH "/proxy"
 
-static int		opt_foreground = 0;
-static char *		opt_config = NULL;
-static const char *	opt_device_port = ":6666";
-static const char *	opt_server_port = OPENCT_SOCKET_PATH "/proxy";
-static const char *	opt_chroot = NULL;
-static const char *	opt_user = NULL;
+static int opt_foreground = 0;
+static char *opt_config = NULL;
+static const char *opt_device_port = ":6666";
+static const char *opt_server_port = OPENCT_SOCKET_PATH "/proxy";
+static const char *opt_chroot = NULL;
+static const char *opt_user = NULL;
 
-static int		get_ports(void);
-static int		run_server(int, char **);
-static int		run_client(int, char **);
-static int		list_devices(int, char **);
-static void		usage(int);
-static void		version(void);
+static int get_ports(void);
+static int run_server(int, char **);
+static int run_client(int, char **);
+static int list_devices(int, char **);
+static void usage(int);
+static void version(void);
 
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
-	char	*command;
-	int	c;
+	char *command;
+	int c;
 
 	if (argc < 2)
 		usage(1);
@@ -95,14 +94,11 @@ main(int argc, char **argv)
 
 	if (!strcmp(command, "server")) {
 		run_server(argc - optind, argv + optind);
-	} else
-	if (!strcmp(command, "export")) {
+	} else if (!strcmp(command, "export")) {
 		run_client(argc - optind, argv + optind);
-	} else
-	if (!strcmp(command, "list")) {
+	} else if (!strcmp(command, "list")) {
 		list_devices(argc - optind, argv + optind);
-	}else
-	if (!strcmp(command, "version")) {
+	} else if (!strcmp(command, "version")) {
 		version();
 	} else {
 		ct_error("Unknown command `%s'\n", command);
@@ -112,10 +108,9 @@ main(int argc, char **argv)
 	return 0;
 }
 
-static void
-enter_jail(void)
+static void enter_jail(void)
 {
-	struct passwd	*pw = NULL;
+	struct passwd *pw = NULL;
 
 	if (opt_chroot && !opt_user)
 		opt_user = "nobody";
@@ -128,8 +123,7 @@ enter_jail(void)
 	}
 
 	if (opt_chroot) {
-		if (chroot(opt_chroot) < 0
-		 || chdir("/") < 0) {
+		if (chroot(opt_chroot) < 0 || chdir("/") < 0) {
 			ct_error("chroot(%s) failed: %m", opt_chroot);
 			exit(1);
 		}
@@ -137,18 +131,16 @@ enter_jail(void)
 
 	if (pw) {
 		if (setgroups(0, NULL) < 0
-		 || setgid(pw->pw_gid) < 0
-		 || setuid(pw->pw_uid) < 0) {
+		    || setgid(pw->pw_gid) < 0 || setuid(pw->pw_uid) < 0) {
 			ct_error("Failed to drop privileges: %m");
 			exit(1);
 		}
 	}
 }
 
-static void
-background_process(void)
+static void background_process(void)
 {
-	int	fd;
+	int fd;
 
 	if (daemon(0, 0) < 0) {
 		ct_error("failed to background process: %m");
@@ -167,11 +159,10 @@ background_process(void)
 	setsid();
 }
 
-static int
-get_ports(void)
+static int get_ports(void)
 {
-	char	*address;
-	int	rc;
+	char *address;
+	int rc;
 
 	if ((rc = ifd_conf_get_string("ifdproxy.device-port", &address)) >= 0)
 		opt_device_port = address;
@@ -180,10 +171,9 @@ get_ports(void)
 	return 0;
 }
 
-int
-run_server(int argc, char **argv)
+int run_server(int argc, char **argv)
 {
-	int	rc;
+	int rc;
 
 	if (argc != 0)
 		usage(1);
@@ -192,12 +182,12 @@ run_server(int argc, char **argv)
 
 	if ((rc = ria_svc_listen(opt_server_port, 1)) < 0) {
 		ct_error("Cannot bind to server port \"%s\": %s\n",
-				opt_server_port, ct_strerror(rc));
+			 opt_server_port, ct_strerror(rc));
 		return rc;
 	}
 	if ((rc = ria_svc_listen(opt_device_port, 0)) < 0) {
 		ct_error("Cannot bind to device port \"%s\": %s\n",
-				opt_device_port, ct_strerror(rc));
+			 opt_device_port, ct_strerror(rc));
 		return rc;
 	}
 
@@ -209,28 +199,26 @@ run_server(int argc, char **argv)
 	return 0;
 }
 
-int
-run_client(int argc, char **argv)
+int run_client(int argc, char **argv)
 {
-	const char	*name, *device, *address;
-	ria_client_t	*ria;
-	int		rc;
+	const char *name, *device, *address;
+	ria_client_t *ria;
+	int rc;
 
 	/* Initialize IFD library */
 	ifd_init();
 
 	if (argc != 2 && argc != 3)
 		usage(1);
-	name    = argv[0];
-	device  = argv[1];
-	address = argc == 3? argv[2] : opt_device_port;
+	name = argv[0];
+	device = argv[1];
+	address = argc == 3 ? argv[2] : opt_device_port;
 
 	ria = ria_export_device(address, device);
 
 	ifd_debug(1, "About to register device as \"%s\"", name);
 	if ((rc = ria_register_device(ria, name)) < 0) {
-		ct_error("Unable to register device: %s\n",
-				ct_strerror(rc));
+		ct_error("Unable to register device: %s\n", ct_strerror(rc));
 		exit(1);
 	}
 
@@ -242,14 +230,13 @@ run_client(int argc, char **argv)
 	return 0;
 }
 
-int
-list_devices(int argc, char **argv)
+int list_devices(int argc, char **argv)
 {
-	unsigned char	buffer[8192];
-	ria_device_t	*info;
-	ria_client_t	*clnt;
-	unsigned int	n, count;
-	int		rc;
+	unsigned char buffer[8192];
+	ria_device_t *info;
+	ria_client_t *clnt;
+	unsigned int n, count;
+	int rc;
 
 	if (argc == 1)
 		opt_server_port = argv[0];
@@ -258,10 +245,11 @@ list_devices(int argc, char **argv)
 
 	if (!(clnt = ria_connect(opt_server_port)))
 		exit(1);
-	rc = ria_command(clnt, RIA_MGR_LIST, NULL, 0, buffer, sizeof(buffer), -1);
+	rc = ria_command(clnt, RIA_MGR_LIST, NULL, 0, buffer, sizeof(buffer),
+			 -1);
 	if (rc < 0) {
 		ct_error("Failed to list exported devices: %s",
-				ct_strerror(rc));
+			 ct_strerror(rc));
 		return 1;
 	}
 
@@ -274,30 +262,24 @@ list_devices(int argc, char **argv)
 	printf("Exported devices\n");
 	for (info = (ria_device_t *) buffer, n = 0; n < count; info++, n++) {
 		printf("  %-16s %-30s %s\n",
-				info->handle,
-				info->address,
-				info->name);
+		       info->handle, info->address, info->name);
 	}
 
 	return 0;
 }
 
-void
-version()
+void version()
 {
 	fprintf(stderr, "OpenCT " VERSION "\n");
 	exit(0);
 }
 
-void
-usage(int exval)
+void usage(int exval)
 {
 	fprintf(exval ? stderr : stdout,
-	"Usage:\n"
-	"ifdproxy server [-dF]\n"
-	"ifdproxy export [-dF] name device address\n"
-	"ifdproxy list [-dF] address\n"
-	"ifdproxy version\n"
-	       );
+		"Usage:\n"
+		"ifdproxy server [-dF]\n"
+		"ifdproxy export [-dF] name device address\n"
+		"ifdproxy list [-dF] address\n" "ifdproxy version\n");
 	exit(exval);
 }
