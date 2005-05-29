@@ -58,6 +58,10 @@ ifd_reader_t *ifd_open(const char *driver_name, const char *device_name)
 	}
 
 	reader = (ifd_reader_t *) calloc(1, sizeof(*reader));
+	if (!reader) {
+		ct_error("out of memory");
+		return NULL;
+	}
 	reader->driver = driver;
 
 	if (driver->ops->open && driver->ops->open(reader, device_name) < 0) {
@@ -85,7 +89,7 @@ int ifd_set_protocol(ifd_reader_t * reader, unsigned int idx, int prot)
 	if (drv && drv->ops && drv->ops->set_protocol)
 		return drv->ops->set_protocol(reader, idx, prot);
 
-	if (prot == IFD_PROTOCOL_DEFAULT)
+	if (drv && drv->ops && prot == IFD_PROTOCOL_DEFAULT)
 		prot = drv->ops->default_protocol;
 
 	slot = &reader->slot[idx];
