@@ -33,23 +33,22 @@
 #include <unistd.h>
 #include "ctbcs.h"
 
-static int	smartboard_reset_ct(ifd_reader_t *reader);
-static int	smartboard_command(ifd_reader_t *,
-				unsigned char, const unsigned char *, size_t,
-				unsigned char *, void *, size_t);
-static int	__smartboard_cmd(ifd_reader_t *, unsigned char, const void *, size_t);
-static int	__smartboard_rsp(ifd_reader_t *, unsigned char *, void *, size_t);
-
+static int smartboard_reset_ct(ifd_reader_t * reader);
+static int smartboard_command(ifd_reader_t *,
+			      unsigned char, const unsigned char *, size_t,
+			      unsigned char *, void *, size_t);
+static int __smartboard_cmd(ifd_reader_t *, unsigned char, const void *,
+			    size_t);
+static int __smartboard_rsp(ifd_reader_t *, unsigned char *, void *, size_t);
 
 /*
  * Initialize the device
  */
-static int
-smartboard_open(ifd_reader_t *reader, const char *device_name)
+static int smartboard_open(ifd_reader_t * reader, const char *device_name)
 {
 	ifd_device_params_t params;
-	ifd_device_t	*dev;
-	int		res;
+	ifd_device_t *dev;
+	int res;
 
 	reader->name = "Cherry Smartboard";
 	reader->nslots = 1;
@@ -94,7 +93,7 @@ smartboard_open(ifd_reader_t *reader, const char *device_name)
 		usleep(100000);
 	}
 
-	ifd_serial_send_break(dev,500000);
+	ifd_serial_send_break(dev, 500000);
 	ifd_device_flush(dev);
 
 	reader->device = dev;
@@ -109,11 +108,10 @@ smartboard_open(ifd_reader_t *reader, const char *device_name)
 /*
  * Reset the card reader
  */
-int
-smartboard_reset_ct(ifd_reader_t *reader)
+int smartboard_reset_ct(ifd_reader_t * reader)
 {
-	unsigned char	buffer[128], code;
-	int		rc;
+	unsigned char buffer[128], code;
+	int rc;
 
 #if 1
 	/* shutdown reader - occasionally needed before we can init it */
@@ -123,11 +121,13 @@ smartboard_reset_ct(ifd_reader_t *reader)
 #endif
 
 	/* init reader */
-	rc = smartboard_command(reader, 0x60, NULL, 0, &code, buffer, sizeof(buffer));
+	rc = smartboard_command(reader, 0x60, NULL, 0, &code, buffer,
+				sizeof(buffer));
 	if (rc < 0)
 		return rc;
 	if (code != 0x60) {
-		ct_error("smartboard_reset_ct, expected status 0x60, got 0x%x", code);
+		ct_error("smartboard_reset_ct, expected status 0x60, got 0x%x",
+			 code);
 		return -1;
 	}
 	ifd_debug(1, "Detected %.*s", rc, buffer);
@@ -137,15 +137,13 @@ smartboard_reset_ct(ifd_reader_t *reader)
 /*
  * Power up the reader
  */
-static int
-smartboard_activate(ifd_reader_t *reader)
+static int smartboard_activate(ifd_reader_t * reader)
 {
 	ifd_debug(1, "called.");
 	return 0;
 }
 
-static int
-smartboard_deactivate(ifd_reader_t *reader)
+static int smartboard_deactivate(ifd_reader_t * reader)
 {
 	ifd_debug(1, "called.");
 	return 0;
@@ -154,14 +152,14 @@ smartboard_deactivate(ifd_reader_t *reader)
 /*
  * Get the card status
  */
-static int
-smartboard_card_status(ifd_reader_t *reader, int idx, int *status)
+static int smartboard_card_status(ifd_reader_t * reader, int idx, int *status)
 {
-	unsigned char	code, buffer[16];
-	int		rc;
+	unsigned char code, buffer[16];
+	int rc;
 
 	ifd_debug(1, "slot=%d", idx);
-	rc = smartboard_command(reader, 0x65, NULL, 0, &code, buffer, sizeof(buffer));
+	rc = smartboard_command(reader, 0x65, NULL, 0, &code, buffer,
+				sizeof(buffer));
 	if (rc < 0)
 		return rc;
 
@@ -184,7 +182,8 @@ smartboard_card_status(ifd_reader_t *reader, int idx, int *status)
 		*status = IFD_CARD_STATUS_CHANGED;
 		break;
 	default:
-		ct_error("smartboard_card_status: unexpected status code 0x%x", code);
+		ct_error("smartboard_card_status: unexpected status code 0x%x",
+			 code);
 		return -1;
 	}
 
@@ -194,11 +193,11 @@ smartboard_card_status(ifd_reader_t *reader, int idx, int *status)
 /*
  * Reset card and get ATR
  */
-static int
-smartboard_card_reset(ifd_reader_t *reader, int slot, void *result, size_t size)
+static int smartboard_card_reset(ifd_reader_t * reader, int slot, void *result,
+				 size_t size)
 {
-	unsigned char	code;
-	int		rc;
+	unsigned char code;
+	int rc;
 
 	rc = smartboard_command(reader, 0x65, NULL, 0, &code, result, size);
 	if (rc < 0)
@@ -209,7 +208,9 @@ smartboard_card_reset(ifd_reader_t *reader, int slot, void *result, size_t size)
 		return rc;
 
 	if (code != 0x64) {
-		ct_error("smartboard_card_reset: expected status code 0x62, got 0x%x", code);
+		ct_error
+		    ("smartboard_card_reset: expected status code 0x62, got 0x%x",
+		     code);
 		return -1;
 	}
 	return rc;
@@ -220,14 +221,13 @@ smartboard_card_reset(ifd_reader_t *reader, int slot, void *result, size_t size)
  * We cannot use the T=0 driver directly, because it thinks it can
  * talk over the wire.
  */
-static int
-smartboard_set_protocol(ifd_reader_t *reader, int nslot, int proto)
+static int smartboard_set_protocol(ifd_reader_t * reader, int nslot, int proto)
 {
-	unsigned char	cmd_t0[5] = { 0x00, 0x00, 0x0a, 0x00, 0x10 };
-	unsigned char	cmd_t1[5] = { 0x10, 0x00, 0x00, 0x75, 0x10 };
-	unsigned char	*args, code;
-	ifd_slot_t	*slot;
-	int		rc;
+	unsigned char cmd_t0[5] = { 0x00, 0x00, 0x0a, 0x00, 0x10 };
+	unsigned char cmd_t1[5] = { 0x10, 0x00, 0x00, 0x75, 0x10 };
+	unsigned char *args, code;
+	ifd_slot_t *slot;
+	int rc;
 
 	slot = &reader->slot[nslot];
 	if (proto == IFD_PROTOCOL_T0) {
@@ -239,7 +239,8 @@ smartboard_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 		return -1;
 	}
 
-	if ((rc = smartboard_command(reader, 0x61, args, 5, &code, NULL, 0)) < 0)
+	if ((rc =
+	     smartboard_command(reader, 0x61, args, 5, &code, NULL, 0)) < 0)
 		return rc;
 	if (code != 0x62) {
 		ct_error("smartboard: unexpected status code 0x%x", code);
@@ -262,26 +263,23 @@ smartboard_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 /*
  * Perform a PIN verification
  */
-static int
-smartboard_perform_verify(ifd_reader_t *reader, int nslot,
-		unsigned int timeout, const char *prompt,
-	       	const unsigned char *data, size_t data_len,
-		unsigned char *resp, size_t resp_len)
+static int smartboard_perform_verify(ifd_reader_t * reader, int nslot,
+				     unsigned int timeout, const char *prompt,
+				     const unsigned char *data, size_t data_len,
+				     unsigned char *resp, size_t resp_len)
 {
-	...
-}
+...}
 #endif
-
 
 /*
  * Simple command
  */
-static int
-__smartboard_cmd(ifd_reader_t *reader, unsigned char cmd, const void *arg, size_t arg_len)
+static int __smartboard_cmd(ifd_reader_t * reader, unsigned char cmd,
+			    const void *arg, size_t arg_len)
 {
-	unsigned char	buffer[257];
+	unsigned char buffer[257];
 
-	if (arg_len > sizeof(buffer)-3)
+	if (arg_len > sizeof(buffer) - 3)
 		return -1;
 
 	buffer[0] = 0x00;	/* never seen anything other than this */
@@ -295,15 +293,16 @@ __smartboard_cmd(ifd_reader_t *reader, unsigned char cmd, const void *arg, size_
 	return ifd_device_send(reader->device, buffer, 3 + arg_len);
 }
 
-static int
-__smartboard_rsp(ifd_reader_t *reader, unsigned char *code, void *res, size_t res_len)
+static int __smartboard_rsp(ifd_reader_t * reader, unsigned char *code,
+			    void *res, size_t res_len)
 {
-	unsigned char	buffer[257];
-	unsigned int	rsp_len = 0, total = 2;
-	int		rc;
+	unsigned char buffer[257];
+	unsigned int rsp_len = 0, total = 2;
+	int rc;
 
 	while (rsp_len < total) {
-		rc = ifd_device_recv(reader->device, buffer + rsp_len, total - rsp_len, -1);
+		rc = ifd_device_recv(reader->device, buffer + rsp_len,
+				     total - rsp_len, -1);
 		if (rc < 0)
 			return rc;
 		if (buffer[0] != 0x00)
@@ -331,21 +330,20 @@ __smartboard_rsp(ifd_reader_t *reader, unsigned char *code, void *res, size_t re
 
 	return res_len;
 
-bad_reply:
+      bad_reply:
 	ct_error("smartboard: bad reply from device");
 	return -1;
 }
 
-int
-smartboard_command(ifd_reader_t *reader,
-			unsigned char cmd, const unsigned char *arg, size_t arg_len,
-			unsigned char *code, void *res, size_t res_len)
+int smartboard_command(ifd_reader_t * reader, unsigned char cmd,
+		       const unsigned char *arg, size_t arg_len,
+		       unsigned char *code, void *res, size_t res_len)
 {
-	int	n = 0, rc;
+	int n = 0, rc;
 
 	do {
 		if ((rc = __smartboard_cmd(reader, cmd, arg, arg_len)) < 0
-		 || (rc = __smartboard_rsp(reader, code, res, res_len)) < 0)
+		    || (rc = __smartboard_rsp(reader, code, res, res_len)) < 0)
 			ct_error("smartboard: transceive error");
 	} while (rc >= 0 && *code == 0x67 && n++ < 3);
 
@@ -355,18 +353,18 @@ smartboard_command(ifd_reader_t *reader,
 /*
  * Send/receive APDU
  */
-static int
-smartboard_send(ifd_reader_t *reader, unsigned int dad, const unsigned char *buffer, size_t len)
+static int smartboard_send(ifd_reader_t * reader, unsigned int dad,
+			   const unsigned char *buffer, size_t len)
 {
 	ifd_debug(3, "data:%s", ct_hexdump(buffer, len));
 	return __smartboard_cmd(reader, 0x67, buffer, len);
 }
 
-static int
-smartboard_recv(ifd_reader_t *reader, unsigned int dad, unsigned char *buffer, size_t len, long timeout)
+static int smartboard_recv(ifd_reader_t * reader, unsigned int dad,
+			   unsigned char *buffer, size_t len, long timeout)
 {
-	unsigned char	code;
-	int		rc;
+	unsigned char code;
+	int rc;
 
 	ifd_debug(4, "called.");
 
@@ -390,25 +388,23 @@ smartboard_recv(ifd_reader_t *reader, unsigned int dad, unsigned char *buffer, s
 /*
  * Driver operations
  */
-static struct ifd_driver_ops	smartboard_driver;
+static struct ifd_driver_ops smartboard_driver;
 
 /*
  * Initialize this module
  */
-void
-ifd_smartboard_register(void)
+void ifd_smartboard_register(void)
 {
-	smartboard_driver.open		= smartboard_open,
-	smartboard_driver.activate	= smartboard_activate,
-	smartboard_driver.deactivate	= smartboard_deactivate,
-	smartboard_driver.card_status	= smartboard_card_status,
-	smartboard_driver.card_reset	= smartboard_card_reset,
+	smartboard_driver.open = smartboard_open,
+	    smartboard_driver.activate = smartboard_activate,
+	    smartboard_driver.deactivate = smartboard_deactivate,
+	    smartboard_driver.card_status = smartboard_card_status,
+	    smartboard_driver.card_reset = smartboard_card_reset,
 #ifdef notyet
-	smartboard_driver.perform_verify = smartboard_perform_verify,
+	    smartboard_driver.perform_verify = smartboard_perform_verify,
 #endif
-	smartboard_driver.send		= smartboard_send,
-	smartboard_driver.recv		= smartboard_recv,
-	smartboard_driver.set_protocol	= smartboard_set_protocol,
-
-	ifd_driver_register("smartboard", &smartboard_driver);
+	    smartboard_driver.send = smartboard_send,
+	    smartboard_driver.recv = smartboard_recv,
+	    smartboard_driver.set_protocol = smartboard_set_protocol,
+	    ifd_driver_register("smartboard", &smartboard_driver);
 }

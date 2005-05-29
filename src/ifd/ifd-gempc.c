@@ -11,7 +11,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 #define GPC_ISO_INPUT_MAX	248
 #define GPC_ISO_EXCHANGE_MAX	254
 #define GPC_MODE_ROS		0x08
@@ -19,52 +18,48 @@
 
 typedef struct gpc_status {
 	/* We need a GBP driver to talk to serial readers */
-	ifd_protocol_t	*p;
-	int		icc_proto;
-	int		card_state;
-	unsigned char	cmd_buf[260];
-	size_t		cmd_len;
+	ifd_protocol_t *p;
+	int icc_proto;
+	int card_state;
+	unsigned char cmd_buf[260];
+	size_t cmd_len;
 } gpc_status_t;
 
-static int		gpc_transceive(ifd_reader_t *, unsigned int,
-				const unsigned char *, size_t,
-				unsigned char *, size_t, long);
-static int		gpc_transceive_t0(ifd_reader_t *, unsigned int,
-				const unsigned char *, size_t,
-				unsigned char *, size_t);
-static int		gpc_transceive_t1(ifd_reader_t *, unsigned int,
-				const unsigned char *, size_t,
-				unsigned char *, size_t);
-static int		gpc_iso_output(ifd_reader_t *,
-				const unsigned char *, size_t,
-				unsigned char *, size_t);
-static int		gpc_iso_input(ifd_reader_t *,
-				const unsigned char *, size_t,
-				unsigned char *, size_t);
-static int		gpc_iso_exchange_apdu(ifd_reader_t *,
-				const unsigned char *, size_t,
-				unsigned char *, size_t);
-static int		gpc_set_serial(ifd_reader_t *, unsigned int, int, int);
-static int		gpc_set_mode(ifd_reader_t *, int);
-static int		gpc_get_os_version(ifd_reader_t *, char *, size_t);
-static int		gpc_command(ifd_reader_t *,
-				const void *, size_t,
-				void *, size_t);
-static int		__gpc_command(ifd_reader_t *,
-				const void *, size_t,
-				void *, size_t, int *);
-static const char *	gpc_strerror(int status);
+static int gpc_transceive(ifd_reader_t *, unsigned int,
+			  const unsigned char *, size_t,
+			  unsigned char *, size_t, long);
+static int gpc_transceive_t0(ifd_reader_t *, unsigned int,
+			     const unsigned char *, size_t,
+			     unsigned char *, size_t);
+static int gpc_transceive_t1(ifd_reader_t *, unsigned int,
+			     const unsigned char *, size_t,
+			     unsigned char *, size_t);
+static int gpc_iso_output(ifd_reader_t *,
+			  const unsigned char *, size_t,
+			  unsigned char *, size_t);
+static int gpc_iso_input(ifd_reader_t *,
+			 const unsigned char *, size_t,
+			 unsigned char *, size_t);
+static int gpc_iso_exchange_apdu(ifd_reader_t *,
+				 const unsigned char *, size_t,
+				 unsigned char *, size_t);
+static int gpc_set_serial(ifd_reader_t *, unsigned int, int, int);
+static int gpc_set_mode(ifd_reader_t *, int);
+static int gpc_get_os_version(ifd_reader_t *, char *, size_t);
+static int gpc_command(ifd_reader_t *, const void *, size_t, void *, size_t);
+static int __gpc_command(ifd_reader_t *,
+			 const void *, size_t, void *, size_t, int *);
+static const char *gpc_strerror(int status);
 
 /*
  * Initialize the reader
  */
-static int
-gpc_open(ifd_reader_t *reader, const char *device_name)
+static int gpc_open(ifd_reader_t * reader, const char *device_name)
 {
-	char		buffer[256];
-	gpc_status_t	*st;
-	ifd_device_t	*dev;
-	int		r;
+	char buffer[256];
+	gpc_status_t *st;
+	ifd_device_t *dev;
+	int r;
 
 	ifd_debug(1, "called, device=%s", device_name);
 
@@ -85,7 +80,7 @@ gpc_open(ifd_reader_t *reader, const char *device_name)
 			return IFD_ERROR_GENERIC;
 
 		params.serial.speed = 9600;
-		params.serial.bits  = 8;
+		params.serial.bits = 8;
 		params.serial.stopbits = 1;
 		params.serial.parity = IFD_SERIAL_PARITY_NONE;
 
@@ -121,8 +116,8 @@ gpc_open(ifd_reader_t *reader, const char *device_name)
 		ct_error("USB devices not yet supported for GemPC readers\n");
 		return -1;
 		/*
-		sleep(1);
-		ifd_device_flush(dev);
+		   sleep(1);
+		   ifd_device_flush(dev);
 		 */
 	}
 
@@ -140,8 +135,8 @@ gpc_open(ifd_reader_t *reader, const char *device_name)
 		else if (!strcmp(buffer, "OROS-R2.99-R1.32"))
 			reader->name = "GemPC 413";
 		ifd_debug(1,
-			"OS version \"%s\", reader identified as \"%s\"\n",
-			buffer, reader->name);
+			  "OS version \"%s\", reader identified as \"%s\"\n",
+			  buffer, reader->name);
 	}
 
 	return 0;
@@ -150,21 +145,18 @@ gpc_open(ifd_reader_t *reader, const char *device_name)
 /*
  * Activate the reader
  */
-static int
-gpc_activate(ifd_reader_t *reader)
+static int gpc_activate(ifd_reader_t * reader)
 {
 	ifd_debug(1, "called.");
 	return 0;
 }
 
-static int
-gpc_deactivate(ifd_reader_t *reader)
+static int gpc_deactivate(ifd_reader_t * reader)
 {
 	return 0;
 }
 
-static int
-gpc_close(ifd_reader_t *reader)
+static int gpc_close(ifd_reader_t * reader)
 {
 	return 0;
 }
@@ -172,12 +164,11 @@ gpc_close(ifd_reader_t *reader)
 /*
  * Check card status
  */
-static int
-gpc_card_status(ifd_reader_t *reader, int slot, int *status)
+static int gpc_card_status(ifd_reader_t * reader, int slot, int *status)
 {
-	gpc_status_t	*st = (gpc_status_t *) reader->driver_data;
-	unsigned char	byte;
-	int		r;
+	gpc_status_t *st = (gpc_status_t *) reader->driver_data;
+	unsigned char byte;
+	int r;
 
 	if (slot != 0) {
 		ct_error("gempc: bad slot index %u", slot);
@@ -188,10 +179,10 @@ gpc_card_status(ifd_reader_t *reader, int slot, int *status)
 		return r;
 
 	ifd_debug(4, "card %spresent%s\n",
-			(byte & 0x04)? "" : "not ",
-			(byte & 0x02)? ", powered up" : "");
+		  (byte & 0x04) ? "" : "not ",
+		  (byte & 0x02) ? ", powered up" : "");
 
-	*status = (byte & 0x04)? IFD_CARD_PRESENT : 0;
+	*status = (byte & 0x04) ? IFD_CARD_PRESENT : 0;
 
 	/* A power up/down transition can be used to detect
 	 * a card change. */
@@ -205,14 +196,14 @@ gpc_card_status(ifd_reader_t *reader, int slot, int *status)
 /*
  * Reset the card and get the ATR
  */
-static int
-gpc_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
+static int gpc_card_reset(ifd_reader_t * reader, int slot, void *atr,
+			  size_t size)
 {
 	static unsigned char reset_auto_pps[] = { 0x12, 0x23 };
 	static unsigned char reset_no_pps[] = { 0x12, 0x13 };
 	static unsigned char reset_emv[] = { 0x12 };
 	static unsigned char set_mode[] = { 0x17, 0x00, 0x47 };
-	int	r, status;
+	int r, status;
 
 	ifd_debug(1, "called.");
 
@@ -229,26 +220,26 @@ gpc_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 		return IFD_ERROR_NO_CARD;
 
 	r = __gpc_command(reader, reset_auto_pps, sizeof(reset_auto_pps),
-				atr, size, &status);
+			  atr, size, &status);
 	if (r < 0 || status == 0x00)
 		return r;
 
 	/* Try again without PPS */
 	r = __gpc_command(reader, reset_no_pps, sizeof(reset_no_pps),
-				atr, size, &status);
+			  atr, size, &status);
 	if (r < 0 || status == 0x00)
 		return r;
 
 	/* Try EMV mode */
 	r = __gpc_command(reader, reset_emv, sizeof(reset_emv),
-				atr, size, &status);
+			  atr, size, &status);
 	if (r < 0 || status == 0x00)
 		return r;
 
 	/* Change Operation Mode, and retry EMV reset */
-	(void) gpc_command(reader, set_mode, sizeof(set_mode), NULL, 0);
+	(void)gpc_command(reader, set_mode, sizeof(set_mode), NULL, 0);
 	r = __gpc_command(reader, reset_emv, sizeof(reset_emv),
-				atr, size, &status);
+			  atr, size, &status);
 	if (r < 0 || status == 0x00)
 		return r;
 
@@ -258,11 +249,10 @@ gpc_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 /*
  * Select the card protocol
  */
-static int
-gpc_set_protocol(ifd_reader_t *reader, int nslot, int proto)
+static int gpc_set_protocol(ifd_reader_t * reader, int nslot, int proto)
 {
-	gpc_status_t	*st = (gpc_status_t *) reader->driver_data;
-	ifd_slot_t	*slot;
+	gpc_status_t *st = (gpc_status_t *) reader->driver_data;
+	ifd_slot_t *slot;
 
 	ifd_debug(1, "called, proto=%d", proto);
 
@@ -273,7 +263,7 @@ gpc_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 
 	slot = &reader->slot[nslot];
 	slot->proto = ifd_protocol_new(IFD_PROTOCOL_TRANSPARENT,
-				reader, slot->dad);
+				       reader, slot->dad);
 	if (slot->proto == NULL) {
 		ct_error("%s: internal error", reader->name);
 		return IFD_ERROR_GENERIC;
@@ -282,42 +272,60 @@ gpc_set_protocol(ifd_reader_t *reader, int nslot, int proto)
 	st->icc_proto = proto;
 	return 0;
 }
+
 /*
  * Change the serial speed
  */
-static int
-gpc_set_serial(ifd_reader_t *reader, unsigned int speed, int cs, int parity)
+static int gpc_set_serial(ifd_reader_t * reader, unsigned int speed, int cs,
+			  int parity)
 {
-	unsigned char	cmd[] = { 0x0A, 0x00 };
+	unsigned char cmd[] = { 0x0A, 0x00 };
 
-	ifd_debug(1, "called, speed=%u, cs=%d, parity=%d\n",
-			speed, cs, parity);
+	ifd_debug(1, "called, speed=%u, cs=%d, parity=%d\n", speed, cs, parity);
 
 	if (reader->device->type != IFD_DEVICE_TYPE_SERIAL)
 		return IFD_ERROR_NOT_SUPPORTED;
 
 	switch (speed) {
-	case  1200: cmd[1] = 0x07; break;
-	case  2400: cmd[1] = 0x06; break;
-	case  4800: cmd[1] = 0x05; break;
-	case  9600: cmd[1] = 0x04; break;
-	case 19200: cmd[1] = 0x03; break;
-	case 38400: cmd[1] = 0x02; break;
-	case 76800: cmd[1] = 0x01; break;
+	case 1200:
+		cmd[1] = 0x07;
+		break;
+	case 2400:
+		cmd[1] = 0x06;
+		break;
+	case 4800:
+		cmd[1] = 0x05;
+		break;
+	case 9600:
+		cmd[1] = 0x04;
+		break;
+	case 19200:
+		cmd[1] = 0x03;
+		break;
+	case 38400:
+		cmd[1] = 0x02;
+		break;
+	case 76800:
+		cmd[1] = 0x01;
+		break;
 	default:
 		return IFD_ERROR_NOT_SUPPORTED;
 	}
 
 	switch (cs) {
-	case 7: cmd[1] |= 0x08; break;
-	case 8: break;
+	case 7:
+		cmd[1] |= 0x08;
+		break;
+	case 8:
+		break;
 	default:
 		return IFD_ERROR_NOT_SUPPORTED;
 	}
 
 	switch (parity) {
 	case IFD_SERIAL_PARITY_EVEN:
-		cmd[1] |= 0x10; break;
+		cmd[1] |= 0x10;
+		break;
 	case IFD_SERIAL_PARITY_NONE:
 		break;
 	default:
@@ -330,10 +338,9 @@ gpc_set_serial(ifd_reader_t *reader, unsigned int speed, int cs, int parity)
 /*
  * Set Reader mode
  */
-int
-gpc_set_mode(ifd_reader_t *reader, int mode)
+int gpc_set_mode(ifd_reader_t * reader, int mode)
 {
-	unsigned char	cmd[] = { 0x01, 0x00, 0x00 };
+	unsigned char cmd[] = { 0x01, 0x00, 0x00 };
 
 	cmd[2] = mode;
 	return gpc_command(reader, cmd, sizeof(cmd), NULL, 0);
@@ -345,11 +352,10 @@ gpc_set_mode(ifd_reader_t *reader, int mode)
  * FIXME: we really need a better mechanism at the reader driver
  * API to allow for a "transceive" operation.
  */
-static int
-gpc_send(ifd_reader_t *reader, unsigned int dad,
-		const unsigned char *buffer, size_t len)
+static int gpc_send(ifd_reader_t * reader, unsigned int dad,
+		    const unsigned char *buffer, size_t len)
 {
-	gpc_status_t	*st = (gpc_status_t *) reader->driver_data;
+	gpc_status_t *st = (gpc_status_t *) reader->driver_data;
 
 	ifd_debug(3, "data:%s", ct_hexdump(buffer, len));
 
@@ -360,66 +366,58 @@ gpc_send(ifd_reader_t *reader, unsigned int dad,
 	return 0;
 }
 
-static int
-gpc_recv(ifd_reader_t *reader, unsigned int dad,
-		unsigned char *res_buf, size_t res_len, long timeout)
+static int gpc_recv(ifd_reader_t * reader, unsigned int dad,
+		    unsigned char *res_buf, size_t res_len, long timeout)
 {
-	gpc_status_t	*st = (gpc_status_t *) reader->driver_data;
-	int		rc;
+	gpc_status_t *st = (gpc_status_t *) reader->driver_data;
+	int rc;
 
 	rc = gpc_transceive(reader, dad,
-			st->cmd_buf, st->cmd_len,
-			res_buf, res_len, timeout);
+			    st->cmd_buf, st->cmd_len,
+			    res_buf, res_len, timeout);
 
 	if (rc > 0)
 		ifd_debug(3, "received:%s", ct_hexdump(res_buf, rc));
 	return rc;
 }
 
-static int
-gpc_transparent(ifd_reader_t *reader, int nad,
-		const void *cmd_buf, size_t cmd_len,
-		void *res_buf, size_t res_len)
+static int gpc_transparent(ifd_reader_t * reader, int nad, const void *cmd_buf,
+			   size_t cmd_len, void *res_buf, size_t res_len)
 {
 	return gpc_transceive(reader, nad,
-			(const unsigned char *) cmd_buf, cmd_len,
-			(unsigned char *) res_buf, res_len, 0);
+			      (const unsigned char *)cmd_buf, cmd_len,
+			      (unsigned char *)res_buf, res_len, 0);
 }
-
 
 /*
  * Generic transceive function
  */
-static int
-gpc_transceive(ifd_reader_t *reader, unsigned int dad,
-		const unsigned char *cmd_buf, size_t cmd_len,
-		unsigned char *res_buf, size_t res_len,
-		long timeout)
+static int gpc_transceive(ifd_reader_t * reader, unsigned int dad,
+			  const unsigned char *cmd_buf, size_t cmd_len,
+			  unsigned char *res_buf, size_t res_len, long timeout)
 {
-	gpc_status_t	*st = (gpc_status_t *) reader->driver_data;
-	ifd_protocol_t	*proto = reader->slot[0].proto;
-	long		orig_timeout = 0;
-	int		rc;
+	gpc_status_t *st = (gpc_status_t *) reader->driver_data;
+	ifd_protocol_t *proto = reader->slot[0].proto;
+	long orig_timeout = 0;
+	int rc;
 
 	if (timeout) {
 		ifd_protocol_get_parameter(proto,
-				IFD_PROTOCOL_RECV_TIMEOUT,
-				&orig_timeout);
+					   IFD_PROTOCOL_RECV_TIMEOUT,
+					   &orig_timeout);
 		ifd_protocol_set_parameter(proto,
-				IFD_PROTOCOL_RECV_TIMEOUT,
-				timeout * 1000);
+					   IFD_PROTOCOL_RECV_TIMEOUT,
+					   timeout * 1000);
 	}
 
 	switch (st->icc_proto) {
 	case IFD_PROTOCOL_T0:
 		rc = gpc_transceive_t0(reader, dad,
-				cmd_buf, cmd_len,
-				res_buf, res_len);
+				       cmd_buf, cmd_len, res_buf, res_len);
 		break;
 	case IFD_PROTOCOL_T1:
 		rc = gpc_transceive_t1(reader, dad,
-				cmd_buf, cmd_len,
-				res_buf, res_len);
+				       cmd_buf, cmd_len, res_buf, res_len);
 		break;
 	default:
 		ct_error("protocol not supported\n");
@@ -428,20 +426,19 @@ gpc_transceive(ifd_reader_t *reader, unsigned int dad,
 
 	if (orig_timeout) {
 		ifd_protocol_set_parameter(proto,
-				IFD_PROTOCOL_RECV_TIMEOUT,
-				orig_timeout);
+					   IFD_PROTOCOL_RECV_TIMEOUT,
+					   orig_timeout);
 	}
 
 	return rc;
 }
 
-static int
-gpc_transceive_t0(ifd_reader_t *reader, unsigned int dad,
-		const unsigned char *cmd_buf, size_t cmd_len,
-		unsigned char *res_buf, size_t res_len)
+static int gpc_transceive_t0(ifd_reader_t * reader, unsigned int dad,
+			     const unsigned char *cmd_buf, size_t cmd_len,
+			     unsigned char *res_buf, size_t res_len)
 {
-	ifd_iso_apdu_t	iso;
-	int		rc;
+	ifd_iso_apdu_t iso;
+	int rc;
 
 	if ((rc = ifd_iso_apdu_parse(cmd_buf, cmd_len, &iso)) < 0)
 		return rc;
@@ -449,12 +446,10 @@ gpc_transceive_t0(ifd_reader_t *reader, unsigned int dad,
 	switch (iso.cse) {
 	case IFD_APDU_CASE_1:
 	case IFD_APDU_CASE_3S:
-		rc = gpc_iso_input(reader, cmd_buf, cmd_len,
-					   res_buf, res_len);
+		rc = gpc_iso_input(reader, cmd_buf, cmd_len, res_buf, res_len);
 		break;
 	case IFD_APDU_CASE_2S:
-		rc = gpc_iso_output(reader, cmd_buf, cmd_len,
-					    res_buf, res_len);
+		rc = gpc_iso_output(reader, cmd_buf, cmd_len, res_buf, res_len);
 		break;
 	case IFD_APDU_CASE_4S:
 		/* The PC/SC IFD driver does an ISO EXCHANGE APDU here,
@@ -462,34 +457,33 @@ gpc_transceive_t0(ifd_reader_t *reader, unsigned int dad,
 		 * for T=1 cards.
 		 * However, we shouldn't get here anyway for T=1, as the
 		 * T=0 protocol driver splits case 4 APDUs. */
-	         rc = gpc_iso_exchange_apdu(reader, cmd_buf, cmd_len,
-				                    res_buf, res_len);
-		 break;
+		rc = gpc_iso_exchange_apdu(reader, cmd_buf, cmd_len,
+					   res_buf, res_len);
+		break;
 	default:
-		ifd_debug(1, "Bad APDU (case %d unknown or unsupported)\n", iso.cse);
+		ifd_debug(1, "Bad APDU (case %d unknown or unsupported)\n",
+			  iso.cse);
 		return IFD_ERROR_INVALID_ARG;
 	}
 
 	return rc;
 }
 
-static int
-gpc_transceive_t1(ifd_reader_t *reader, unsigned int dad,
-		const unsigned char *cmd_buf, size_t cmd_len,
-		unsigned char *res_buf, size_t res_len)
+static int gpc_transceive_t1(ifd_reader_t * reader, unsigned int dad,
+			     const unsigned char *cmd_buf, size_t cmd_len,
+			     unsigned char *res_buf, size_t res_len)
 {
 	return gpc_iso_exchange_apdu(reader, cmd_buf, cmd_len,
-				res_buf, res_len);
+				     res_buf, res_len);
 }
 
 /*
  * Send partial APDU to the card
  */
-static int
-gpc_iso_send_frag(ifd_reader_t *reader, unsigned char cmd,
-		const unsigned char *cmd_buf, size_t cmd_len)
+static int gpc_iso_send_frag(ifd_reader_t * reader, unsigned char cmd,
+			     const unsigned char *cmd_buf, size_t cmd_len)
 {
-	unsigned char	buffer[256];
+	unsigned char buffer[256];
 
 	ifd_debug(4, "called, len=%u", cmd_len);
 	if (cmd_len > sizeof(buffer) - 6)
@@ -501,28 +495,26 @@ gpc_iso_send_frag(ifd_reader_t *reader, unsigned char cmd,
 	buffer[3] = 0xFF;
 	buffer[4] = 0xFF;
 	buffer[5] = cmd_len;
-	memcpy(buffer+6, cmd_buf, cmd_len);
+	memcpy(buffer + 6, cmd_buf, cmd_len);
 
-	return gpc_command(reader, buffer, 6 + cmd_len,
-				   buffer, sizeof(buffer));
+	return gpc_command(reader, buffer, 6 + cmd_len, buffer, sizeof(buffer));
 }
 
 /*
  * Receive (potentially fragmented) response from the card
  */
-static int
-gpc_iso_recv_frag(ifd_reader_t *reader, unsigned char cmd,
-		const unsigned char *data, size_t data_len,
-		ct_buf_t *bp)
+static int gpc_iso_recv_frag(ifd_reader_t * reader, unsigned char cmd,
+			     const unsigned char *data, size_t data_len,
+			     ct_buf_t * bp)
 {
 	static unsigned char more_data[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-	unsigned char	buffer[256];
-	int		rc, status;
+	unsigned char buffer[256];
+	int rc, status;
 
 	if (!data) {
 		data = more_data;
 		data_len = sizeof(more_data);
-	} else if (data_len > sizeof(buffer)-1) {
+	} else if (data_len > sizeof(buffer) - 1) {
 		return IFD_ERROR_BUFFER_TOO_SMALL;
 	}
 
@@ -530,17 +522,17 @@ gpc_iso_recv_frag(ifd_reader_t *reader, unsigned char cmd,
 	memcpy(buffer + 1, data, data_len);
 
 	rc = __gpc_command(reader, buffer, 1 + data_len,
-				   buffer, sizeof(buffer), &status);
+			   buffer, sizeof(buffer), &status);
 	if (rc < 0)
 		return rc;
 
 	ct_buf_put(bp, buffer, rc);
 	if (status != 0x00	/* success */
-	 && status != 0xE7	/* not 9000 */
-	 && status != 0xE5	/* not 9000 */
-	 && status != 0x1B) {	/* more data */
+	    && status != 0xE7	/* not 9000 */
+	    && status != 0xE5	/* not 9000 */
+	    && status != 0x1B) {	/* more data */
 		ct_error("error 0x%02x in ISO OUPUT/EXCHANGE APDU (%s)",
-				status, gpc_strerror(status));
+			 status, gpc_strerror(status));
 		return IFD_ERROR_COMM_ERROR;
 	}
 
@@ -556,28 +548,26 @@ gpc_iso_recv_frag(ifd_reader_t *reader, unsigned char cmd,
  * Due to the limitations imposed by GBP, the reader may have
  * to send the response fragmented into several parts.
  */
-static int
-gpc_iso_output(ifd_reader_t *reader,
-		const unsigned char *cmd_buf, size_t cmd_len,
-		unsigned char *res_buf, size_t res_len)
+static int gpc_iso_output(ifd_reader_t * reader, const unsigned char *cmd_buf,
+			  size_t cmd_len, unsigned char *res_buf,
+			  size_t res_len)
 {
-	ct_buf_t	res;
-	size_t		expect = 0;
-	int		rc;
+	ct_buf_t res;
+	size_t expect = 0;
+	int rc;
 
 	ct_buf_init(&res, res_buf, res_len);
 	if (cmd_len > 4) {
 		expect = cmd_buf[4];
 		if (expect == 0)
 			expect = 256;
-		expect += 2; /* for status word */
+		expect += 2;	/* for status word */
 		if (expect > res_len)
 			expect = res_len;
 	}
 
 	while (1) {
-		rc = gpc_iso_recv_frag(reader, 0x13,
-				cmd_buf, cmd_len, &res);
+		rc = gpc_iso_recv_frag(reader, 0x13, cmd_buf, cmd_len, &res);
 		if (rc <= 0 || ct_buf_avail(&res) >= expect)
 			break;
 
@@ -593,16 +583,14 @@ gpc_iso_output(ifd_reader_t *reader,
 /*
  * Send APDU+data to card
  */
-static int
-gpc_iso_input(ifd_reader_t *reader,
-		const unsigned char *cmd_buf, size_t cmd_len,
-		unsigned char *res_buf, size_t res_len)
+static int gpc_iso_input(ifd_reader_t * reader, const unsigned char *cmd_buf,
+			 size_t cmd_len, unsigned char *res_buf, size_t res_len)
 {
-	unsigned char	buffer[GPC_ISO_INPUT_MAX+1];
-	int		rc;
+	unsigned char buffer[GPC_ISO_INPUT_MAX + 1];
+	int rc;
 
 	if (cmd_len > GPC_ISO_INPUT_MAX) {
-		size_t	chunk = cmd_len - GPC_ISO_INPUT_MAX;
+		size_t chunk = cmd_len - GPC_ISO_INPUT_MAX;
 
 		rc = gpc_iso_send_frag(reader, 0x14, cmd_buf + chunk, chunk);
 		if (rc < 0)
@@ -611,35 +599,34 @@ gpc_iso_input(ifd_reader_t *reader,
 	}
 
 	buffer[0] = 0x14;
-	memcpy(buffer+1, cmd_buf, cmd_len);
+	memcpy(buffer + 1, cmd_buf, cmd_len);
 
 	if (cmd_len == 4)
 		buffer[++cmd_len] = 0x00;
-		
-	return gpc_command(reader, buffer, cmd_len+1, res_buf, 2);
+
+	return gpc_command(reader, buffer, cmd_len + 1, res_buf, 2);
 }
 
-static int
-gpc_iso_exchange_apdu(ifd_reader_t *reader,
-		const unsigned char *cmd_buf, size_t cmd_len,
-		unsigned char *res_buf, size_t res_len)
+static int gpc_iso_exchange_apdu(ifd_reader_t * reader,
+				 const unsigned char *cmd_buf, size_t cmd_len,
+				 unsigned char *res_buf, size_t res_len)
 {
-	ct_buf_t	res;
-	size_t		expect = 0;
-	int		rc;
+	ct_buf_t res;
+	size_t expect = 0;
+	int rc;
 
 	ct_buf_init(&res, res_buf, res_len);
 	if (cmd_len > 4) {
 		expect = cmd_buf[4];
 		if (expect == 0)
 			expect = 256;
-		expect += 2; /* for status word */
+		expect += 2;	/* for status word */
 		if (expect > res_len)
 			expect = res_len;
 	}
 
 	if (cmd_len > GPC_ISO_EXCHANGE_MAX) {
-		size_t	chunk = cmd_len - GPC_ISO_EXCHANGE_MAX;
+		size_t chunk = cmd_len - GPC_ISO_EXCHANGE_MAX;
 
 		rc = gpc_iso_send_frag(reader, 0x15, cmd_buf + chunk, chunk);
 		if (rc < 0)
@@ -648,8 +635,7 @@ gpc_iso_exchange_apdu(ifd_reader_t *reader,
 	}
 
 	while (1) {
-		rc = gpc_iso_recv_frag(reader, 0x15,
-				cmd_buf, cmd_len, &res);
+		rc = gpc_iso_recv_frag(reader, 0x15, cmd_buf, cmd_len, &res);
 		if (rc <= 0 || ct_buf_avail(&res) >= expect)
 			break;
 
@@ -669,30 +655,27 @@ gpc_iso_exchange_apdu(ifd_reader_t *reader,
 /*
  * Get the OS version
  */
-int
-gpc_get_os_version(ifd_reader_t *reader, char *buf, size_t len)
+int gpc_get_os_version(ifd_reader_t * reader, char *buf, size_t len)
 {
-	static unsigned char	cmd[] = { 0x22, 0x05, 0x3F, 0xE0, 0x10 };
+	static unsigned char cmd[] = { 0x22, 0x05, 0x3F, 0xE0, 0x10 };
 
 	/* Ensure NUL termination */
 	memset(buf, 0, len);
-	return gpc_command(reader, cmd, sizeof(cmd), buf, len-1);
+	return gpc_command(reader, cmd, sizeof(cmd), buf, len - 1);
 }
 
 /*
  * Helper functions
  */
-int
-__gpc_command(ifd_reader_t *reader,
-		const void *cmd, size_t cmd_len,
-		void *res, size_t res_len, int *gpc_status)
+int __gpc_command(ifd_reader_t * reader, const void *cmd, size_t cmd_len,
+		  void *res, size_t res_len, int *gpc_status)
 {
-	gpc_status_t	*st = (gpc_status_t *) reader->driver_data;
-	unsigned char	buffer[257];
-	size_t		len;
-	int		rc;
+	gpc_status_t *st = (gpc_status_t *) reader->driver_data;
+	unsigned char buffer[257];
+	size_t len;
+	int rc;
 
-	if (res_len > sizeof(buffer)-1)
+	if (res_len > sizeof(buffer) - 1)
 		return IFD_ERROR_GENERIC;
 
 	if (st->p == NULL) {
@@ -704,7 +687,7 @@ __gpc_command(ifd_reader_t *reader,
 		ifd_debug(3, "sending:%s", ct_hexdump(cmd, cmd_len));
 
 	rc = ifd_protocol_transceive(st->p, 0,
-			cmd, cmd_len, buffer, sizeof(buffer));
+				     cmd, cmd_len, buffer, sizeof(buffer));
 	if (rc < 0)
 		return rc;
 	if (rc == 0) {
@@ -718,8 +701,7 @@ __gpc_command(ifd_reader_t *reader,
 	len = rc - 1;
 	if (buffer[0] != 0x00) {
 		ifd_debug(2, "reader reports status 0x%02x (%s)\n",
-				buffer[0],
-				gpc_strerror(buffer[0]));
+			  buffer[0], gpc_strerror(buffer[0]));
 	}
 	if (gpc_status)
 		*gpc_status = buffer[0];
@@ -731,11 +713,10 @@ __gpc_command(ifd_reader_t *reader,
 	return len;
 }
 
-int
-gpc_command(ifd_reader_t *reader, const void *cmd, size_t cmd_len,
+int gpc_command(ifd_reader_t * reader, const void *cmd, size_t cmd_len,
 		void *res, size_t res_len)
 {
-	int		rc, status;
+	int rc, status;
 
 	rc = __gpc_command(reader, cmd, cmd_len, res, res_len, &status);
 	if (rc >= 0 && status == 0x01)
@@ -748,8 +729,7 @@ gpc_command(ifd_reader_t *reader, const void *cmd, size_t cmd_len,
 /*
  * GPC error handling
  */
-static const char *
-gpc_strerror(int status)
+static const char *gpc_strerror(int status)
 {
 	switch (status) {
 	case 0x00:
@@ -799,10 +779,9 @@ gpc_strerror(int status)
 /*
  * Driver operations
  */
-static struct ifd_driver_ops	gempc_driver;
+static struct ifd_driver_ops gempc_driver;
 
-void
-ifd_gempc_register(void)
+void ifd_gempc_register(void)
 {
 	gempc_driver.open = gpc_open;
 	gempc_driver.close = gpc_close;

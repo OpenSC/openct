@@ -13,13 +13,12 @@
 
 #define ET_TIMEOUT	1000
 
-static int	et_magic(ifd_device_t *);
+static int et_magic(ifd_device_t *);
 
 /*
  * Initialize the device
  */
-static int
-et_open(ifd_reader_t *reader, const char *device_name)
+static int et_open(ifd_reader_t * reader, const char *device_name)
 {
 	ifd_device_t *dev;
 
@@ -28,8 +27,7 @@ et_open(ifd_reader_t *reader, const char *device_name)
 	if (!(dev = ifd_device_open(device_name)))
 		return -1;
 	if (ifd_device_type(dev) != IFD_DEVICE_TYPE_USB) {
-		ct_error("etoken: device %s is not a USB device",
-				device_name);
+		ct_error("etoken: device %s is not a USB device", device_name);
 		ifd_device_close(dev);
 		return -1;
 	}
@@ -42,17 +40,17 @@ et_open(ifd_reader_t *reader, const char *device_name)
 /* Some magic incantations copied from Andreas
  * Jellinghaus' eToken driver 
  * */
-static int
-et_magic(ifd_device_t *dev)
+static int et_magic(ifd_device_t * dev)
 {
 	unsigned char cookie[] = { 0x00, 0x00, 0x01, 0x00, 0x88, 0x13 };
 	unsigned char buffer[256];
 
 	if (ifd_usb_control(dev, 0x40, 0x03, 0, 0, NULL, 0, -1) < 0
-	 || ifd_usb_control(dev, 0xc0, 0x83, 0, 0, buffer, 13, -1) != 13
-	 || ifd_usb_control(dev, 0x40, 0x02, 0, 0, cookie, sizeof(cookie), -1) < 0
-	 || ifd_usb_control(dev, 0xc0, 0x82, 0, 0, buffer, 1, -1) != 1
-	 || buffer[0] != 0)
+	    || ifd_usb_control(dev, 0xc0, 0x83, 0, 0, buffer, 13, -1) != 13
+	    || ifd_usb_control(dev, 0x40, 0x02, 0, 0, cookie, sizeof(cookie),
+			       -1) < 0
+	    || ifd_usb_control(dev, 0xc0, 0x82, 0, 0, buffer, 1, -1) != 1
+	    || buffer[0] != 0)
 		return -1;
 
 	return 0;
@@ -61,14 +59,12 @@ et_magic(ifd_device_t *dev)
 /*
  * Power up the reader
  */
-static int
-et_activate(ifd_reader_t *reader)
+static int et_activate(ifd_reader_t * reader)
 {
 	return 0;
 }
 
-static int
-et_deactivate(ifd_reader_t *reader)
+static int et_deactivate(ifd_reader_t * reader)
 {
 	return -1;
 }
@@ -76,8 +72,7 @@ et_deactivate(ifd_reader_t *reader)
 /*
  * Card status - always present
  */
-static int
-et_card_status(ifd_reader_t *reader, int slot, int *status)
+static int et_card_status(ifd_reader_t * reader, int slot, int *status)
 {
 	*status = IFD_CARD_PRESENT;
 	return 0;
@@ -87,12 +82,12 @@ et_card_status(ifd_reader_t *reader, int slot, int *status)
  * Reset - nothing to be done?
  * We should do something to make it come back with all state zapped
  */
-static int
-et_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
+static int et_card_reset(ifd_reader_t * reader, int slot, void *atr,
+			 size_t size)
 {
 	ifd_device_t *dev = reader->device;
-	unsigned char	buffer[256];
-	int		rc, n, atrlen;
+	unsigned char buffer[256];
+	int rc, n, atrlen;
 
 	/* Request the ATR */
 	rc = ifd_usb_control(dev, 0x40, 0x01, 0, 0, NULL, 0, ET_TIMEOUT);
@@ -119,37 +114,36 @@ et_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 		goto failed;
 	return atrlen;
 
-failed:	ct_error("etoken: failed to activate token");
+      failed:ct_error("etoken: failed to activate token");
 	return -1;
 }
 
 /*
  * Send/receive routines
  */
-static int
-et_send(ifd_reader_t *reader, unsigned int dad, const unsigned char *buffer, size_t len)
+static int et_send(ifd_reader_t * reader, unsigned int dad,
+		   const unsigned char *buffer, size_t len)
 {
 	return ifd_usb_control(reader->device, 0x40, 0x06, 0, 0,
-				(void *) buffer, len, -1);
+			       (void *)buffer, len, -1);
 }
 
-static int
-et_recv(ifd_reader_t *reader, unsigned int dad, unsigned char *buffer, size_t len, long timeout)
+static int et_recv(ifd_reader_t * reader, unsigned int dad,
+		   unsigned char *buffer, size_t len, long timeout)
 {
 	return ifd_usb_control(reader->device, 0xc0, 0x86, 0, 0,
-				buffer, len, timeout);
+			       buffer, len, timeout);
 }
 
 /*
  * Driver operations
  */
-static struct ifd_driver_ops	etoken_driver;
+static struct ifd_driver_ops etoken_driver;
 
 /*
  * Initialize this module
  */
-void
-ifd_etoken_register(void)
+void ifd_etoken_register(void)
 {
 	etoken_driver.open = et_open;
 	etoken_driver.activate = et_activate;
