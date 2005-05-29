@@ -71,6 +71,10 @@ static int gpc_open(ifd_reader_t * reader, const char *device_name)
 	reader->device = dev;
 
 	st = (gpc_status_t *) calloc(1, sizeof(*st));
+	if (!st) {
+		ct_error("out of memory");
+		return IFD_ERROR_NO_MEMORY;
+	}
 	reader->driver_data = st;
 
 	if (dev->type == IFD_DEVICE_TYPE_SERIAL) {

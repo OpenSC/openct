@@ -45,6 +45,10 @@ ifd_device_t *ifd_device_new(const char *name, struct ifd_device_ops * ops,
 	ifd_device_t *dev;
 
 	dev = (ifd_device_t *) calloc(1, size);
+	if (!dev) {
+		ct_error("out of memory");
+		return NULL;
+	}
 	dev->name = strdup(name);
 	dev->ops = ops;
 

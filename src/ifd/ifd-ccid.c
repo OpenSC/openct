@@ -558,8 +558,10 @@ ccid_open(ifd_reader_t *reader, const char *device_name)
 	  return -1;
      }
 
-     if ((st = (ccid_status_t *) calloc(1, sizeof(*st))) == NULL)
+     if ((st = (ccid_status_t *) calloc(1, sizeof(*st))) == NULL) {
+	  ct_error("out of memory");
 	  return IFD_ERROR_NO_MEMORY;
+     }
 
      st->usb_interface=intf->bInterfaceNumber;
      memset(st->icc_present, -1, OPENCT_MAX_SLOTS);
@@ -977,9 +979,11 @@ static int ccid_send(ifd_reader_t *reader, unsigned int dad,
 	  st->slen[dad]=0;
      }
 
-     apdu=(unsigned char *) malloc(len);
-     if (!apdu)
+     apdu=(unsigned char *) calloc(1,len);
+     if (!apdu) {
+	  ct_error("out of memory");
 	  return IFD_ERROR_NO_MEMORY;
+     }
      memcpy(apdu, buffer, len);
      st->sbuf[dad]=apdu;
      st->slen[dad]=len;

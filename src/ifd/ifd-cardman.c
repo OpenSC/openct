@@ -58,6 +58,10 @@ static int cm_open(ifd_reader_t * reader, const char *device_name)
 		return -1;
 	}
 	priv = (cm_priv_t *) calloc(1, sizeof(cm_priv_t));
+	if (!priv) {
+		ct_error("out of memory");
+		return IFD_ERROR_NO_MEMORY;
+	}
 
 	reader->driver_data = priv;
 	reader->device = dev;

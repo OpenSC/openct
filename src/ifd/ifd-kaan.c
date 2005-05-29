@@ -86,8 +86,10 @@ static int kaan_open(ifd_reader_t * reader, const char *device_name)
 	}
 
 	reader->device = dev;
-	if ((st = (kaan_status_t *) calloc(1, sizeof(*st))) == NULL)
+	if ((st = (kaan_status_t *) calloc(1, sizeof(*st))) == NULL) {
+		ct_error("out of memory");
 		return IFD_ERROR_NO_MEMORY;
+	}
 	st->reader_type = TYPE_KAAN;
 	st->icc_proto[0] = -1;
 	st->icc_proto[1] = -1;
@@ -169,8 +171,10 @@ static int b1_open(ifd_reader_t * reader, const char *device_name)
 	}
 
 	reader->device = dev;
-	if ((st = (kaan_status_t *) calloc(1, sizeof(*st))) == NULL)
+	if ((st = (kaan_status_t *) calloc(1, sizeof(*st))) == NULL) {
+		ct_error("out of memory");
 		return IFD_ERROR_NO_MEMORY;
+	}
 	st->reader_type = TYPE_B1;
 	st->icc_proto[0] = -1;
 	st->icc_proto[1] = -1;

@@ -198,6 +198,10 @@ int ifd_sysdep_usb_begin_capture(ifd_device_t * dev, int type, int endpoint,
 	ifd_usb_capture_t *cap;
 
 	cap = (ifd_usb_capture_t *) calloc(1, sizeof(*cap) + maxpacket);
+	if (!cap) {
+		ct_error("out of memory");
+		return IFD_ERROR_NO_MEMORY;
+	}
 
 	cap->type = type;
 	cap->endpoint = endpoint;

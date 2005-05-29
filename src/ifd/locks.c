@@ -42,6 +42,10 @@ int ifdhandler_lock(ct_socket_t * sock, int slot, int type,
 
 	/* No conflict - grant lock and record this fact */
 	l = (ct_lock_t *) calloc(1, sizeof(*l));
+	if (!l) {
+		ct_error("out of memory");
+		return IFD_ERROR_NO_MEMORY;
+	}
 	l->exclusive = (type == IFD_LOCK_EXCLUSIVE);
 	l->uid = sock->client_uid;
 	l->handle = lock_handle++;

@@ -37,6 +37,10 @@ ria_client_t *ria_connect(const char *address)
 	int rc;
 
 	clnt = (ria_client_t *) calloc(1, sizeof(*clnt) + RIA_QUEUE_LEN);
+	if (!clnt) {
+		ct_error("out of memory");
+		return NULL;
+	}
 	ct_buf_init(&clnt->data, (clnt + 1), RIA_QUEUE_LEN);
 
 	clnt->sock = ct_socket_new(1024);

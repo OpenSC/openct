@@ -35,6 +35,10 @@ static struct ifd_driver_info *find_by_name(const char *name, int create)
 		return NULL;
 
 	ip = (struct ifd_driver_info *)calloc(1, sizeof(*ip));
+	if (!ip) {
+		ct_error("out of memory");
+		return NULL;
+	}
 	ip->driver.name = strdup(name);
 	ip->next = list;
 	list = ip;
@@ -54,14 +58,21 @@ void ifd_driver_register(const char *name, struct ifd_driver_ops *ops)
 		ip->driver.ops = ops;
 }
 
-void ifd_driver_add_id(const char *id, const char *name)
+int ifd_driver_add_id(const char *id, const char *name)
 {
 	struct ifd_driver_info *ip;
 
 	ifd_debug(3, "ifd_driver_add_id(%s, %s)", id, name);
 	ip = find_by_name(name, 1);
+	if (!ip)
+		return -1;
+
 	ip->id = (ifd_devid_t *) realloc(ip->id,
 					 (ip->nids + 1) * sizeof(ifd_devid_t));
+	if (!ip->id) {
+		ct_error("out of memory");
+		return IFD_ERROR_NO_MEMORY;
+	}
 	if (ifd_device_id_parse(id, &ip->id[ip->nids]) >= 0)
 		ip->nids++;
 }

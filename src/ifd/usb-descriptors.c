@@ -91,8 +91,7 @@ static int ifd_usb_parse_endpoint(struct ifd_usb_endpoint_descriptor *endpoint,
 
 	endpoint->extra = (unsigned char *)malloc(len);
 	if (!endpoint->extra) {
-		ct_debug
-		    ("couldn't allocate memory for endpoint extra descriptors");
+		ct_error("out of memory");
 		endpoint->extralen = 0;
 		return parsed;
 	}
@@ -120,7 +119,7 @@ static int ifd_usb_parse_interface(struct ifd_usb_interface *interface,
  				* (interface-> num_altsetting + 1)
 			);
 		if (!interface->altsetting) {
-			ct_debug("couldn't malloc interface->altsetting");
+			ct_error("out of memory");
 			return -1;
 		}
 
@@ -175,8 +174,7 @@ static int ifd_usb_parse_interface(struct ifd_usb_interface *interface,
 		} else {
 			ifp->extra = (unsigned char *)malloc(len);
 			if (!ifp->extra) {
-				ct_debug
-				    ("couldn't allocate memory for interface extra descriptors");
+				ct_error("out of memory");
 				ifp->extralen = 0;
 				return -1;
 			}

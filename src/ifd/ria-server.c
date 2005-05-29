@@ -259,6 +259,10 @@ ria_peer_t *ria_peer_new(ct_socket_t * sock)
 	ria_peer_t *clnt;
 
 	clnt = (ria_peer_t *) calloc(1, sizeof(ria_peer_t));
+	if (!clnt) {
+		ct_error("out of memory");
+		return NULL;
+	}
 	clnt->sock = sock;
 	ria_svc_link(clnt);
 

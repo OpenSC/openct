@@ -18,15 +18,20 @@ static struct ifd_protocol_info *list = NULL;
 /*
  * Register a protocol
  */
-void ifd_protocol_register(struct ifd_protocol_ops *ops)
+int ifd_protocol_register(struct ifd_protocol_ops *ops)
 {
 	struct ifd_protocol_info *info, **ptr;
 
 	info = (struct ifd_protocol_info *)calloc(1, sizeof(*info));
+	if (!info) {
+		ct_error("out of memory");
+		return IFD_ERROR_NO_MEMORY;
+	}
 	info->ops = ops;
 
 	for (ptr = &list; *ptr; ptr = &(*ptr)->next) ;
 	*ptr = info;
+	return 0;
 }
 
 /*
@@ -198,6 +203,10 @@ ifd_protocol_t *ifd_protocol_new(int id, ifd_reader_t * reader,
 	}
 
 	p = (ifd_protocol_t *) calloc(1, ops->size);
+	if (!p) {
+		ct_error("out of memory");
+		return p;
+	}
 	p->reader = reader;
 	p->ops = ops;
 	p->dad = dad;

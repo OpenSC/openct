@@ -84,11 +84,10 @@ static int open_devstat(char *name)
 	if (!devstat_fd) {
 		char *devstat;
 
-		if ((devstat = malloc(strlen(name) + 2)) == NULL) {
-			ct_error("devstat malloc failed");
-			return -1;
+		if ((devstat = calloc(1,strlen(name) + 2)) == NULL) {
+			ct_error("out of memory");
+			return IFD_ERROR_NO_MEMORY;
 		}
-		memset(devstat, 0, strlen(name) + 2);
 		strcpy(devstat, name);
 		strcpy(devstat + strlen(name) - 6, "devstat");
 
@@ -117,11 +116,10 @@ static int open_cntrl0stat(char *name)
 	if (!cntrl0stat_fd) {
 		char *cntrl0stat;
 
-		if ((cntrl0stat = malloc(strlen(name) + 5)) == NULL) {
-			ct_error("cntrl0stat malloc failed");
+		if ((cntrl0stat = calloc(1, strlen(name) + 5)) == NULL) {
+			ct_error("out of memory");
 			return -1;
 		}
-		memset(cntrl0stat, 0, strlen(name) + 5);
 		strcpy(cntrl0stat, name);
 		strcat(cntrl0stat, "stat");
 
@@ -305,13 +303,12 @@ ifd_sysdep_usb_control(ifd_device_t * dev,
 
 	bytes_to_process = USB_REQUEST_SIZE +
 	    ((requesttype & USB_EP_DIR_MASK) == USB_EP_DIR_OUT ? len : 0);
-	if ((usb_control_req = malloc(bytes_to_process)) == NULL) {
-		ct_error("usb_control_req malloc failed");
+	if ((usb_control_req = calloc(1,bytes_to_process)) == NULL) {
+		ct_error("out of memory");
 		return -1;
 	}
-	memset(usb_control_req, 0, bytes_to_process);
-	if ((recv_data = malloc(len)) == NULL) {
-		ct_error("recv_data malloc failed");
+	if ((recv_data = calloc(1,len)) == NULL) {
+		ct_error("out of memory");
 		free(usb_control_req);
 		return -1;
 	}
@@ -463,7 +460,7 @@ ifd_sysdep_usb_begin_capture(ifd_device_t * dev,
 	int endpoint = (ep & ~USB_EP_DIR_MASK);
 
 	if (!(cap = (ifd_usb_capture_t *) calloc(1, sizeof(*cap) + maxpacket))) {
-		ct_debug("ifd_sysdep_usb_begin_capture: cannot calloc");
+		ct_error("out of memory");
 		return -1;
 	}
 	cap->type = type;

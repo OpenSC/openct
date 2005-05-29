@@ -200,6 +200,10 @@ ifd_conf_node_t *conf_add_node(ifd_conf_node_t * parent, const char *name)
 	ifd_conf_node_t **p, *node;
 
 	node = (ifd_conf_node_t *) calloc(1, sizeof(*node));
+	if (!node) {
+		ct_error("out of memory");
+		return NULL;
+	}
 	node->name = strdup(name);
 
 	for (p = &parent->children; *p; p = &(*p)->next) ;
