@@ -12,27 +12,24 @@
 #include <sys/param.h>
 #include "scdl.h"
 
-static const char *
-ifd_module_path(const char *subdir)
+static const char *ifd_module_path(const char *subdir)
 {
-	static char	path[PATH_MAX];
+	static char path[PATH_MAX];
 
 	if (!ct_config.modules_dir
-	 && !(ct_config.modules_dir = getenv("IFD_MODULES")))
+	    && !(ct_config.modules_dir = getenv("IFD_MODULES")))
 		ct_config.modules_dir = OPENCT_MODULES_PATH;
 
-	snprintf(path, sizeof(path), "%s/%ss",
-			ct_config.modules_dir, subdir);
+	snprintf(path, sizeof(path), "%s/%ss", ct_config.modules_dir, subdir);
 	return path;
 }
 
-int
-ifd_load_module(const char *type, const char *name)
+int ifd_load_module(const char *type, const char *name)
 {
-	const char	*dirname;
-	char		path[PATH_MAX];
-	void		*handle;
-	void		(*init_func)(void);
+	const char *dirname;
+	char path[PATH_MAX];
+	void *handle;
+	void (*init_func) (void);
 
 	if (strstr(name, "..")) {
 		ct_error("Illegal module path \"%s\"", name);
@@ -41,8 +38,7 @@ ifd_load_module(const char *type, const char *name)
 
 	if (!strcmp(type, "driver")) {
 		dirname = ct_config.driver_modules_dir;
-	} else
-	if (!strcmp(type, "protocol")) {
+	} else if (!strcmp(type, "protocol")) {
 		dirname = ct_config.protocol_modules_dir;
 	} else {
 		ct_error("Unknown module type \"%s\"", type);
@@ -66,7 +62,7 @@ ifd_load_module(const char *type, const char *name)
 		return -1;
 	}
 
-	init_func = (void (*)(void)) scdl_get_address(handle, "ifd_init_module");
+	init_func = (void (*)(void))scdl_get_address(handle, "ifd_init_module");
 	if (!init_func) {
 		ct_error("%s: no function called ifd_init_module", path);
 		scdl_close(handle);

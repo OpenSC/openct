@@ -8,14 +8,13 @@
 #include <string.h>
 #include <stdlib.h>
 
-static ifd_reader_t *		ifd_readers[OPENCT_MAX_READERS];
-static unsigned int		ifd_reader_handle = 1;
+static ifd_reader_t *ifd_readers[OPENCT_MAX_READERS];
+static unsigned int ifd_reader_handle = 1;
 
 /*
  * Return number of readers available
  */
-int
-ifd_reader_count()
+int ifd_reader_count()
 {
 	return OPENCT_MAX_READERS;
 }
@@ -23,10 +22,9 @@ ifd_reader_count()
 /*
  * Register a reader
  */
-int
-ifd_attach(ifd_reader_t *reader)
+int ifd_attach(ifd_reader_t * reader)
 {
-	unsigned int	slot;
+	unsigned int slot;
 
 	if (!reader)
 		return -1;
@@ -53,22 +51,20 @@ ifd_attach(ifd_reader_t *reader)
 /*
  * Functions to look up registered readers
  */
-ifd_reader_t *
-ifd_reader_by_handle(unsigned int handle)
+ifd_reader_t *ifd_reader_by_handle(unsigned int handle)
 {
 	ifd_reader_t *reader;
 	unsigned int i;
 
 	for (i = 0; i < OPENCT_MAX_READERS; i++) {
 		if ((reader = ifd_readers[i])
-		 && reader->handle == handle)
+		    && reader->handle == handle)
 			return reader;
 	}
 	return NULL;
 }
 
-ifd_reader_t *
-ifd_reader_by_index(unsigned int index)
+ifd_reader_t *ifd_reader_by_index(unsigned int index)
 {
 	ifd_reader_t *reader;
 
@@ -85,8 +81,7 @@ ifd_reader_by_index(unsigned int index)
 /*
  * Unregister a reader
  */
-void
-ifd_detach(ifd_reader_t *reader)
+void ifd_detach(ifd_reader_t * reader)
 {
 	unsigned int slot;
 
@@ -94,7 +89,7 @@ ifd_detach(ifd_reader_t *reader)
 		return;
 
 	if ((slot = reader->num) >= OPENCT_MAX_READERS
-	 || ifd_readers[slot] != reader) {
+	    || ifd_readers[slot] != reader) {
 		ct_error("ifd_detach: unknown reader");
 		return;
 	}
