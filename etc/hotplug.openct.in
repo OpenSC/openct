@@ -4,5 +4,8 @@ test "$ACTION" = "add" || exit 0
 
 if [ -e /var/run/openct/status ]
 then
+	# race condition in the kernel, $DEVICE might not exist now
+	sleep 1
+	# let's hope 1 second is good enough
 	SBINDIR/openct-control attach $DEVICE usb:$PRODUCT
 fi
