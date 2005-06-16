@@ -6,7 +6,7 @@
  * supported. IFDH_MAX_READERS simultaneous readers are supported.
  *
  * This file was taken and modified from the Unix driver for
- * Towitoko smartcard readers. Used and re-licensed as BSD with
+ * Towitoko smart card readers. Used and re-licensed as BSD with
  * a permission from the author.
  *
  * Copyright (C) 1998-2001, Carlos Prados <cprados@yahoo.com>
