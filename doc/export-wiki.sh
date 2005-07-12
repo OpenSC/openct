@@ -2,8 +2,6 @@
 
 set -e
 
-export PATH=/opt/j2sdk1.4.2/bin:$PATH
-export CLASSPATH=/usr/share/java/xalan2.jar
 export SERVER=http://www.opensc.org
 export WIKI=openct/wiki
 export XSL=export-wiki.xsl
@@ -21,8 +19,7 @@ sed -e /^Trac/d -e /^Wiki/d -e /^TitleIndex/d -e /^RecentChanges/d \
 for A in WikiStart `cat tmp/WikiWords`
 do
 	wget -P tmp $SERVER/$WIKI/$A 
-	java org.apache.xalan.xslt.Process -IN tmp/$A -XSL $XSL \
-		-OUT $A.html
+	xsltproc --output $A.html $XSL tmp/$A
 	sed -e "s#<a href=\"/$WIKI/\([^\"]*\)\"#<a href=\"\1.html\"#g" \
 		-i $A.html
 done
