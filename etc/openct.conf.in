@@ -34,6 +34,11 @@ ifdproxy {
 #	device = pcmcia:/dev/cmm0;
 #};
 
+#reader pertosmart1030 {
+#	driver = pertosmart1030;
+#	device = serial:/dev/ttyS0;
+#};
+
 #
 # Hotplug IDs
 driver	egate {
@@ -45,6 +50,11 @@ driver	etoken {
 	ids = {
 		usb:0529/050c,
 		usb:0529/0514,
+	};
+};
+driver	etoken64 {
+	ids = {
+		usb:0529/0600,
 	};
 };
 driver	eutron {
@@ -82,4 +92,8 @@ driver	ccid {
 		usb:0783/0003,
 	};
 };
-
+driver pertosmart1030 {
+	ids = {
+		usb:072f/0001,
+	};
+};
