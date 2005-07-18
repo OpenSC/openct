@@ -1,14 +1,8 @@
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:html="http://www.w3.org/1999/xhtml">
-<head>
-<title>RemoteAccess - OpenCT - Trac</title>
-<style type="text/css">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:html="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>RemoteAccess - OpenCT - Trac</title><style type="text/css">
            @import url(trac.css);
-          </style>
-</head>
-<body>
-<div class="wikipage">
-    <div id="searchable">
-<h1>Remote Access to smart card readers</h1>
+          </style></head><body><div class="wikipage">
+    <div id="searchable"><h1>Remote Access to smart card readers</h1>
 <p>
 NOTE: This page is completely untested.
 </p>
@@ -31,14 +25,12 @@ here is an example for a serial reader:
         driver = xiring;
         device = serial:/dev/ttyS0;
 };
-</pre>
-<p>
+</pre><p>
 In addition to that you need to start ifdproxy on the machine with the
 reader, and point the proxy to the machine with the software:
 </p>
 <pre class="wiki" xml:space="preserve">root@mwr# ifdproxy export xiring /dev/ttyS0 mws:6666
-</pre>
-<p>
+</pre><p>
 On the machine with the software, you need to edit openct.conf like this:
 </p>
 <pre class="wiki" xml:space="preserve">
@@ -51,21 +43,18 @@ reader xiring {
         driver = xiring;
         device = remote:serial1@/var/run/openct/proxy;
 };
-</pre>
-<p>
+</pre><p>
 and then start openct via the init.d script as normal:
 </p>
 <pre class="wiki" xml:space="preserve">root@mws# /etc/init.d/openct start
 root@mws# ifdproxy server
-</pre>
-<p>
+</pre><p>
 now you should be able to see the remote reader using the ifproxy list command:
 </p>
 <pre class="wiki" xml:space="preserve">root@mws# ifdproxy list
 Exported devices
   serial1          MachineB's_IP                 xiring
-</pre>
-<h2>Adding security</h2>
+</pre><h2>Adding security</h2>
 <p>
 As discussed, the setup above is completely unsecure. But with the openssl
 commands, it can be improved:
@@ -74,12 +63,4 @@ commands, it can be improved:
 TODO
 </p>
 </div>
-   </div>
-<div class="footer">
-<hr/>
-<p>
-<a href="index.html">Back to Index</a>
-</p>
-</div>
-</body>
-</html>
+   </div><div class="footer"><hr></hr><p><a href="index.html">Back to Index</a></p></div></body></html>

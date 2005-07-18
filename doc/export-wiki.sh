@@ -6,24 +6,29 @@ export SERVER=http://www.opensc.org
 export WIKI=openct/wiki
 export XSL=export-wiki.xsl
 
-mkdir tmp
+test -f `basename $0`
 
-wget -P tmp $SERVER/$WIKI/TitleIndex
+rm -rf *.html *.css
 
-grep "\"/$WIKI/[^\"]*\"" tmp/TitleIndex \
+wget $SERVER/$WIKI/TitleIndex -O TitleIndex.tmp
+
+grep "\"/$WIKI/[^\"]*\"" TitleIndex.tmp \
         |sed -e "s#.*\"/$WIKI/\([^\"]*\)\".*#\1#g" \
-	> tmp/WikiWords
+	> WikiWords.tmp
 sed -e /^Trac/d -e /^Wiki/d -e /^TitleIndex/d -e /^RecentChanges/d \
-	-e /^CamelCase/d -e /^SandBox/d -i tmp/WikiWords
+	-e /^CamelCase/d -e /^SandBox/d -i WikiWords.tmp
 
-for A in WikiStart `cat tmp/WikiWords`
+for A in WikiStart `cat WikiWords.tmp`
 do
-	wget -P tmp $SERVER/$WIKI/$A 
-	xsltproc --output $A.html $XSL tmp/$A
+	F=`echo $A|sed -e 's/\//_/g'`
+	wget $SERVER/$WIKI/$A  -O $F.tmp
+	xsltproc --output $F.html $XSL $F.tmp
 	sed -e "s#<a href=\"/$WIKI/\([^\"]*\)\"#<a href=\"\1.html\"#g" \
-		-i $A.html
+		-i $F.html
 done
 
 mv WikiStart.html index.html
 
 wget http://www.opensc.org/trac/css/trac.css
+
+rm *.tmp

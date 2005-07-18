@@ -1,24 +1,17 @@
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:html="http://www.w3.org/1999/xhtml">
-<head>
-<title>QuickStart - OpenCT - Trac</title>
-<style type="text/css">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:html="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>QuickStart - OpenCT - Trac</title><style type="text/css">
            @import url(trac.css);
-          </style>
-</head>
-<body>
-<div class="wikipage">
-    <div id="searchable">
-<h1>A quick installation guide to openct</h1>
+          </style></head><body><div class="wikipage">
+    <div id="searchable"><h1>A quick installation guide to openct</h1>
 <p>
 To install openct, please do as user,
 </p>
 <pre class="wiki" xml:space="preserve">$ wget http://www.opensc.org/files/openct-0.6.4.tar.gz
-$ tar xfvz openct-0.6.2.tar.gz
-$ cd openct-0.6.2.tar.gz
+$ tar xfvz openct-0.6.4.tar.gz
+$ cd openct-0.6.4
 
 $ ./configure --prefix=/usr --sysconfdir=/etc
-</pre>
-<p>
+</pre><p>
 This will install openct in /usr, but put the config file
 into /etc. The configure out put is quite long, with many
 tests for software, versions and so on. At the end a summary
@@ -39,8 +32,7 @@ Libraries:           -lpthread
 
 PC/SC support:       yes
 Libusb used:         yes
-</pre>
-<p>
+</pre><p>
 To use usb tokens and readers, libusb support is highly recommended.
 PC/SC support is only useful, if you want to use openct drivers with
 applications other than opensc, using the pcsc-lite middleware.
@@ -49,20 +41,17 @@ PC/SC support.
 </p>
 <pre class="wiki" xml:space="preserve">$ make
 $ su root
-</pre>
-<p>
+</pre><p>
 and as root
 </p>
 <pre class="wiki" xml:space="preserve"># make install
-</pre>
-<p>
+</pre><p>
 will install all the files. In addition openct will need a directory
 of it's own, where it can save internal files and sockets. To create
 this directory, please do:
 </p>
 <pre class="wiki" xml:space="preserve"># mkdir /var/run/openct
-</pre>
-<p>
+</pre><p>
 At system boot, openct needs to create a status file and
 start a process for every permanent connected reader.
 For this you need to install the init script into /etc/init.d/
@@ -76,8 +65,7 @@ and create startup and shutdown symlinks.
 # ln -s ../init.d/openct /etc/rc4.d/S50openct
 # ln -s ../init.d/openct /etc/rc5.d/S50openct
 # ln -s ../init.d/openct /etc/rc6.d/K20openct
-</pre>
-<p>
+</pre><p>
 Openct also supports hotplugging. This however requires your linux
 kernel to support hot plugging too (CONFIG_HOTPLUG) and to have
 the linux hotplug utils installed. Both should be normal on any
@@ -89,13 +77,11 @@ or removed.
 </p>
 <pre class="wiki" xml:space="preserve"># cp etc/hotplug.openct /etc/hotplug/usb/openct
 # cp etc/openct.usermap /etc/hotplug/usb/openct.usermap
-</pre>
-<p>
+</pre><p>
 Finaly, openct needs a config file to work correctly.
 </p>
 <pre class="wiki" xml:space="preserve"># cp etc/openct.conf /etc/openct.conf
-</pre>
-<p>
+</pre><p>
 if you have serial readers (or anything else, not hotplugged),
 edit /etc/openct.conf and configure your reader. Here is an
 example for a Towitoko reader connected to the first serial
@@ -105,22 +91,19 @@ port:
                driver = towitoko;
                device = serial:/dev/ttyS0;
         };
-</pre>
-<p>
+</pre><p>
 Now attach all those serial readers and start openct. Hotplug readers
 already attached will be found as well, but you can as well attach them
 later.
 </p>
 <pre class="wiki" xml:space="preserve"># /etc/init.d/openct start
-</pre>
-<p>
+</pre><p>
 now you can test it as user:
 </p>
 <pre class="wiki" xml:space="preserve">$ openct-tool list
   0 Towitoko Chipdrive Micro
   1 Schlumberger E-Gate
-</pre>
-<p>
+</pre><p>
 As you can see I have a normal, serial reader (Towitoko Chipdrive Micro)
 and one usb token. If I remove the usb token, it will no longer be listed.
 If I add a new token, the new one will show up:
@@ -128,8 +111,7 @@ If I add a new token, the new one will show up:
 <pre class="wiki" xml:space="preserve">$ openct-tool list
   0 Towitoko Chipdrive Micro
   1 Aladdin eToken PRO
-</pre>
-<p>
+</pre><p>
 I tested this on systems with several usb ports, too. But this "screen shot"
 is from a system with only one usb port, my old laptop.
 </p>
@@ -142,17 +124,8 @@ well to identify a card. Default is reader 0, add "-r 1" to use reader 1.
 Detected Aladdin eToken PRO
 Card present, status changed
 ATR: 3b e2 00 ff c1 10 31 fe 55 c8 02 9c
-</pre>
-<p>
+</pre><p>
 and similar commands. openct is ready.
 </p>
 </div>
-   </div>
-<div class="footer">
-<hr/>
-<p>
-<a href="index.html">Back to Index</a>
-</p>
-</div>
-</body>
-</html>
+   </div><div class="footer"><hr></hr><p><a href="index.html">Back to Index</a></p></div></body></html>
