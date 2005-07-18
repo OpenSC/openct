@@ -17,17 +17,19 @@ int ifd_init(void)
 	int i, n;
 
 	/* Register built-in drivers */
+	ifd_cardman_register();
+	ifd_cm4000_register();
 	ifd_egate_register();
 	ifd_etoken_register();
 	ifd_eutron_register();
+	ifd_gempc_register();
 	ifd_ikey2k_register();
 	ifd_ikey3k_register();
 	ifd_kaan_register();
-	ifd_towitoko_register();
-	ifd_cardman_register();
-	ifd_cm4000_register();
+	ifd_pertosmart_ac1030_register();
 	ifd_smartboard_register();
-	ifd_gempc_register();
+	ifd_towitoko_register();
+	/* ccid last */
 	ifd_ccid_register();
 
 	/* Register all builtin protocols */

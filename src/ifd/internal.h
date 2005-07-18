@@ -129,9 +129,10 @@ extern void ifd_gempc_register(void);
 extern void ifd_ikey2k_register(void);
 extern void ifd_ikey3k_register(void);
 extern void ifd_kaan_register(void);
-extern void ifd_towitoko_register(void);
+extern void ifd_pertosmart_ac1030_register(void);
 extern void ifd_smartboard_register(void);
 extern void ifd_starkey_register(void);
+extern void ifd_towitoko_register(void);
 
 /* reader.c */
 extern int ifd_send_command(ifd_protocol_t *, const void *, size_t);
