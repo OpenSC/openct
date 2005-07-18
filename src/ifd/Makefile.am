@@ -14,8 +14,8 @@ libifd_la_SOURCES = \
 	reader.c serial.c usb.c usb-descriptors.c utils.c \
 	\
 	ifd-cardman.c ifd-ccid.c ifd-cm4000.c ifd-egate.c ifd-etoken.c \
-	ifd-eutron.c ifd-gempc.c ifd-ikey2k.c ifd-ikey3k.c ifd-kaan.c \
-	ifd-pertosmart1030.c ifd-smartboard.c ifd-towitoko.c \
+	ifd-etoken64.c ifd-eutron.c ifd-gempc.c ifd-ikey2k.c ifd-ikey3k.c \
+	ifd-kaan.c ifd-pertosmart1030.c ifd-smartboard.c ifd-towitoko.c \
 	cardman.h \
 	\
 	proto-gbp.c proto-sync.c proto-t0.c proto-t1.c \

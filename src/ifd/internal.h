@@ -124,6 +124,7 @@ extern void ifd_ccid_register(void);
 extern void ifd_cm4000_register(void);
 extern void ifd_egate_register(void);
 extern void ifd_etoken_register(void);
+extern void ifd_etoken64_register(void);
 extern void ifd_eutron_register(void);
 extern void ifd_gempc_register(void);
 extern void ifd_ikey2k_register(void);
