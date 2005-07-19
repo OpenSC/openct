@@ -119,6 +119,7 @@ extern struct ifd_protocol_ops ifd_protocol_2wire;
 extern struct ifd_protocol_ops ifd_protocol_3wire;
 extern struct ifd_protocol_ops ifd_protocol_eurochip;
 
+extern void ifd_acr30u_register(void);
 extern void ifd_cardman_register(void);
 extern void ifd_ccid_register(void);
 extern void ifd_cm4000_register(void);

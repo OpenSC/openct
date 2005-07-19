@@ -17,6 +17,7 @@ int ifd_init(void)
 	int i, n;
 
 	/* Register built-in drivers */
+	ifd_acr30u_register();
 	ifd_cardman_register();
 	ifd_cm4000_register();
 	ifd_egate_register();
