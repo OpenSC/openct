@@ -578,6 +578,9 @@ void ifd_close(ifd_reader_t * reader)
 {
 	ifd_detach(reader);
 
+	if (reader->driver->ops->close)
+		reader->driver->ops->close(reader);
+
 	if (reader->device)
 		ifd_device_close(reader->device);
 
