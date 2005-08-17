@@ -10,23 +10,20 @@ so applications can use it with minimal overhead. OpenCT also has a primitive me
 to export smart card readers to remote machines via tcp/ip.
 </p>
 <p>
-The basic goal was to implement several drivers without reinventing the wheel with
-each new driver. The medium goal was to provide a simple middleware.
+See our <a href="OverView.html" shape="rect">OverView</a> page for more details.
 </p>
 <p>
-OpenCT works on linux, solaris and some BSD flavors. Serial drivers should work fine
-on any unix including Mac OS X. Usb drivers support for Mac OS X is under development.
-Windows is not supported at the moment.
-</p>
-<p>
-OpenCT is licensed under the BSD License in general(see <a href="LicenseText.html" shape="rect">LicenseText</a> and <a href="AuthorsAndCredits.html" shape="rect">AuthorsAndCredits</a>),
-but lately some code from libusb have been imported for better usb support, and that code
-is licensed under LGPL license. Check each sys-*.c file for details.
+OpenCT is licensed under the LGPL license (some parts also under BSD license).
 </p>
 <h2>Readers</h2>
 <p>
-All recent readers are usb readers and should work with the generic <a href="ccid.html" shape="rect">USB CCID</a> driver.
-Here is the full list, most drivers are for readers older than the usb ccid norm or serial readers.
+All recent usb readers most likely implement the CCID specification and thus the generic <a href="ccid.html" shape="rect">USB CCID</a> driver should work.
+Below the full list of all smart card readers supported.
+</p>
+<p>
+Note: you need support for the smart card reader in OpenCT, and you still need some application that supports your specific
+smart card (for example <a class="ext-link" title="http://www.opensc.org/opensc/" href="http://www.opensc.org/opensc/" shape="rect">OpenSC</a>). Usb crypto tokens combine those two features, still you need
+support at both levels.
 </p>
 <p>
 Tested:
@@ -47,15 +44,15 @@ Not well tested:
 </li><li><a href="kaan.html" shape="rect">Kobil Kaan Professional and Telesec B1</a>
 </li><li><a href="smartboard.html" shape="rect">Cherry Smartboard</a>
 </li></ul><h2>Starting Points</h2>
-<ul><li><a href="SupportedReaders.html" shape="rect">SupportedReaders</a> -- A list of all drivers and which readers they support.
-</li><li><a href="RecentResults.html" shape="rect">RecentResults</a> -- Recent results of our testing, as some drivers might be broken.
+<ul><li><a href="OverView.html" shape="rect">OverView</a> -- A short introduction how applications use OpenCT.
 </li><li><a href="OperatingSystems.html" shape="rect">OperatingSystems</a> -- What your operating system needs to have for openct to work.
 </li><li><a href="QuickStart.html" shape="rect">QuickStart</a> -- How to install OpenCT and configure it.
 </li><li><a href="SecureSetup.html" shape="rect">SecureSetup</a> -- How to tighten your OpenCT setup for security.
 </li><li><a href="FilesTools.html" shape="rect">FilesTools</a> -- Files and tools in OpenCT.
 </li><li><a href="TroubleShooting.html" shape="rect">TroubleShooting</a> -- How to debug OpenCT if it doesn't seem to work.
-</li><li><a href="RemoteAccess.html" shape="rect">RemoteAccess</a> - How to setup OpenCT for remote access.
-</li><li><a href="ContactInfo.html" shape="rect">ContactInfo</a> - Our Contact information, mailing lists etc.
+</li><li><a href="RemoteAccess.html" shape="rect">RemoteAccess</a> -- How to setup OpenCT for remote access.
+</li><li><a href="MailingLists.html" shape="rect">MailingLists</a> -- How to contact us.
+</li><li><a href="ResourcesLinks.html" shape="rect">ResourcesLinks</a> -- Standards, Documents, etc.
 </li></ul><h2>Unsupported?</h2>
 <p>
 If your smart card reader isn't listed above, here is a list of websites

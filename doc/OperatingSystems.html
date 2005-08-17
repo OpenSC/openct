@@ -18,7 +18,51 @@ serial device), but usb support on linux has a few requirements:
 </pre></li></ul><p>
 (replace "usbfs" with "usbdevfs" for linux kernel 2.4.* - will work on kernel 2.6.* too)
 </p>
-<h2>BSD</h2>
+<h2>OpenBSD without libusb</h2>
+<p>
+<tt> configure &amp;&amp; gmake &amp;&amp; gmake install </tt> should do what you need. Create /var/run/openct
+and run <tt>openct-control init</tt>. 
+</p>
+<p>
+Currently the BSD code was only written for FreeBSD, so you need to set symlinks to your ugen*.00
+devices: 
+</p>
+<pre class="wiki" xml:space="preserve">cd /dev
+ln -s ugen0.00 ugen0
+ln -s ugen1.00 ugen1
+</pre><p>
+Also edit openct.conf and disable hotplug, as you can't poll ugen devices on OpenBSD to 
+find out whether or not a device was unplugged.
+</p>
+<p>
+Also recompile your kernel with UGEN_DEBUG'ing.
+</p>
+<p>
+Erase and key generation works so far, but openssl does not: the openssl shell 
+exits after the engine load command for some unknown reason. Note you need to specify
+the engine shared object file as *.so.0.0 (on linux it is simply *.so).
+</p>
+<p>
+Also OpenBSC has a hotplugd, but so far it does not support usb devices. So you need to
+run 
+</p>
+<pre class="wiki" xml:space="preserve">openct-control shutdown
+openct-control init
+</pre><p>
+every time you add or remove a usb crypto token.
+</p>
+<p>
+OpenBSD has bash in /usr/local/bin, the OpenSC regression tests search for it in /bin/bash,
+you can solve this with a symlink. 
+</p>
+<p>
+Now OpenBSD Current (2005-07-20) passes all OpenSC regression tests with an Aladdin eToken PRO.
+</p>
+<p>
+Other tokens however did not work, these problems need to be investigated, as well as how to
+get it to work without UGEN_DEBUG.
+</p>
+<h2>other BSD</h2>
 <p>
 OpenCT should work, but this wasn't tested for sometime. Latest OpenCT seems to not find libusb,
 we are working on it.
@@ -55,6 +99,7 @@ please add it.
 </td></tr><tr><td rowspan="1" colspan="1"> Novell/SUSE LINUX Enterprise Server 9 for x86 </td><td rowspan="1" colspan="1"> <a class="ext-link" title="http://www.novell.com/products/linuxpackages/enterpriseserver/i386/openct.html" href="http://www.novell.com/products/linuxpackages/enterpriseserver/i386/openct.html" shape="rect">OpenCT 0.1.0 included</a> 
 </td></tr><tr><td rowspan="1" colspan="1"> OpenPKG </td><td rowspan="1" colspan="1"> <a class="ext-link" title="ftp://ftp.openpkg.org/current/SRC/" href="ftp://ftp.openpkg.org/current/SRC/" shape="rect">not included</a> 
 </td></tr><tr><td rowspan="1" colspan="1"> Rock Linux </td><td rowspan="1" colspan="1"> <a class="ext-link" title="http://www.rocklinux.net/packages/openct.html" href="http://www.rocklinux.net/packages/openct.html" shape="rect">OpenCT 0.6.2 included</a> 
+</td></tr><tr><td rowspan="1" colspan="1"> <a class="missing" href="/openct/wiki/OpenSuse" shape="rect">OpenSuse?</a> 10.0 Beta 1 </td><td rowspan="1" colspan="1"> <a class="ext-link" title="http://ftp.opensuse.org/pub/opensuse/distribution/SL-10.0-OSS-beta1/inst-source/suse/src/" href="http://ftp.opensuse.org/pub/opensuse/distribution/SL-10.0-OSS-beta1/inst-source/suse/src/" shape="rect">OpenCT 0.6.5 included</a> 
 </td></tr><tr><td rowspan="1" colspan="1"> Suse 9.3 </td><td rowspan="1" colspan="1"> <a class="ext-link" title="ftp://ftp.suse.com/pub/suse/i386/9.3/suse/i586/" href="ftp://ftp.suse.com/pub/suse/i386/9.3/suse/i586/" shape="rect">OpenCT 0.6.2 included</a> 
 </td></tr><tr><td rowspan="1" colspan="1"> Suse 9.2 </td><td rowspan="1" colspan="1"> <a class="ext-link" title="ftp://ftp.suse.com/pub/suse/i386/9.2/suse/i586/" href="ftp://ftp.suse.com/pub/suse/i386/9.2/suse/i586/" shape="rect">OpenCT 0.5.0 included</a> 
 </td></tr><tr><td rowspan="1" colspan="1"> Suse 9.1 </td><td rowspan="1" colspan="1"> <a class="ext-link" title="ftp://ftp.suse.com/pub/suse/i386/9.1/suse/i586/" href="ftp://ftp.suse.com/pub/suse/i386/9.1/suse/i586/" shape="rect">OpenCT 0.1.0 included</a> 
@@ -68,7 +113,7 @@ Other operating systems:
 <table class="wiki">
 <tr><td rowspan="1" colspan="1"> NetBSD </td><td rowspan="1" colspan="1"> <a class="ext-link" title="ftp://ftp.netbsd.org/pub/NetBSD/packages/pkgsrc/README-all.html" href="ftp://ftp.netbsd.org/pub/NetBSD/packages/pkgsrc/README-all.html" shape="rect">not included</a> 
 </td></tr><tr><td rowspan="1" colspan="1"> FreeBSD </td><td rowspan="1" colspan="1"> <a class="ext-link" title="http://www.freebsd.org/cgi/cvsweb.cgi/ports/security/openct/" href="http://www.freebsd.org/cgi/cvsweb.cgi/ports/security/openct/" shape="rect">not included</a> 
-</td></tr><tr><td rowspan="1" colspan="1"> OpenBSD </td><td rowspan="1" colspan="1"> not included 
+</td></tr><tr><td rowspan="1" colspan="1"> OpenBSD </td><td rowspan="1" colspan="1"> <a class="ext-link" title="http://www.openbsd.org/cgi-bin/cvsweb/ports/" href="http://www.openbsd.org/cgi-bin/cvsweb/ports/" shape="rect">not included</a> 
 </td></tr><tr><td rowspan="1" colspan="1"> fink / Mac OS X </td><td rowspan="1" colspan="1"> <a class="ext-link" title="http://fink.sourceforge.net/pdb/list.php" href="http://fink.sourceforge.net/pdb/list.php" shape="rect">not included</a> 
 </td></tr></table>
 </div>
