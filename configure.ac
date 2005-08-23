@@ -129,10 +129,20 @@ LIBS="$PTHREAD_LIBS $LIBS"
 CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 CC="$PTHREAD_CC"
 
+dnl use ltdl
+AC_LIBLTDL_INSTALLABLE
+AC_SUBST(LTDLINCL)
+AC_SUBST(LIBLTDL)
+dnl and make sure libtool knows, too
+AC_LIBTOOL_DLOPEN
+
 dnl Add libtool support.
 AM_PROG_LIBTOOL
 dnl Automatically update the libtool script if it becomes out-of-date.
-#AC_SUBST(LIBTOOL_DEPS)
+dnl AC_SUBST(LIBTOOL_DEPS)
+
+dnl configure libltdl
+AC_CONFIG_SUBDIRS(libltdl)
 
 dnl Checks for header files.
 AC_HEADER_STDC
@@ -383,7 +393,6 @@ src/ifd/Makefile
 src/include/Makefile
 src/include/openct/Makefile
 src/pcsc/Makefile
-src/scdl/Makefile
 src/tools/Makefile
 src/tools/openct-tool.1
 ])

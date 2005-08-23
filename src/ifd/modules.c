@@ -10,7 +10,7 @@
 #include <string.h>
 #include <limits.h>
 #include <sys/param.h>
-#include "scdl.h"
+#include <ltdl.h>
 
 static const char *ifd_module_path(const char *subdir)
 {
@@ -28,7 +28,7 @@ int ifd_load_module(const char *type, const char *name)
 {
 	const char *dirname;
 	char path[PATH_MAX];
-	void *handle;
+	lt_dlhandle handle;
 	void (*init_func) (void);
 
 	if (strstr(name, "..")) {
@@ -56,16 +56,16 @@ int ifd_load_module(const char *type, const char *name)
 	snprintf(path, sizeof(path), "%s/%s.so", dirname, name);
 #endif
 
-	handle = scdl_open(path);
+	handle = lt_dlopen(path);
 	if (!handle) {
-		ct_error("Failed to load %s", path);	/* TODO: scdl_error */
+		ct_error("Failed to load %s: %s", path, lt_dlerror());
 		return -1;
 	}
 
-	init_func = (void (*)(void))scdl_get_address(handle, "ifd_init_module");
+	init_func = (void (*)(void))lt_dlsym(handle, "ifd_init_module");
 	if (!init_func) {
 		ct_error("%s: no function called ifd_init_module", path);
-		scdl_close(handle);
+		lt_dlclose(handle);
 		return -1;
 	}
 

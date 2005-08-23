@@ -6,6 +6,7 @@
 
 #include "internal.h"
 #include <stdlib.h>
+#include <ltdl.h>
 
 static int configure_driver(ifd_conf_node_t * cf);
 
@@ -15,6 +16,11 @@ int ifd_init(void)
 	char *sval;
 	ifd_conf_node_t **nodes;
 	int i, n;
+
+	/* initialize ltdl */
+	i = lt_dlinit();
+	if (i != 0) 
+		ct_error("lt_dlinit returned %d",i);
 
 	/* Register built-in drivers */
 	ifd_acr30u_register();
