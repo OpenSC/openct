@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 	if (opt_info) {
 		if (optind != argc)
 			usage(1);
-		if (ifd_init());
+		if (ifd_init())
 			return 1;
 		print_info();
 		return 0;
