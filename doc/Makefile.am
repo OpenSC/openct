@@ -4,7 +4,7 @@ MAINTAINERCLEANFILES = Makefile.in
 
 EXTRA_DIST = README export-wiki.sh export-wiki.xsl $(HTML)
 
-HTML= AuthorsAndCredits.html ContactInfo.html FilesTools.html \
+HTML= AuthorsAndCredits.html ContactInfo.html DriverApi.html FilesTools.html \
 	LicenseText.html MailingLists.html OperatingSystems.html \
 	OverView.html QuickStart.html RemoteAccess.html ResourcesLinks.html \
 	SecureSetup.html TroubleShooting.html cardman.html ccid.html \
