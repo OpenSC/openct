@@ -1,5 +1,15 @@
 NEWS for OpenCT -- History of user visible changes
 
+New in 0.6.6; 2005-??-??; Andreas Jellinghaus
+* updated html documentation.
+* use libltdl instead of scdl.
+* new ident schema: Lident (from linux kernel)
+* new etoken64 driver (completely untested.
+  not supported by opensc.)
+* new pertosmart driver by Carlos Henrique Bauer 
+* new acr30u driver by Laurent Pinchart
+* initiali driver documentation by Laurent Pinchart
+
 New in 0.6.5; 2005-05-16; Andreas Jellinghaus
 * add pcmcia subsystem (Harald Welte)
 * add cm4000 driver (Harald Welte)
