@@ -1,0 +1,7 @@
+OpenCT API documentation
+========================
+
+OpenCT API is documented using Doxygen. html/ has the documentation
+in html format. To update the documentation, run these commands:
+	rm api/html/*
+	doxygen api/doxygen.conf
