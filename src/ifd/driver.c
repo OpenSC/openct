@@ -1,5 +1,6 @@
-/*
- * Generic driver functions
+/**
+ * @file
+ * Generic driver functions.
  *
  * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
  */
@@ -46,8 +47,11 @@ static struct ifd_driver_info *find_by_name(const char *name, int create)
 	return ip;
 }
 
-/*
- * Register a driver
+/**
+ * Register a driver.
+ *
+ * @param name Driver name.
+ * @param ops Driver operations.
  */
 void ifd_driver_register(const char *name, struct ifd_driver_ops *ops)
 {
@@ -58,6 +62,24 @@ void ifd_driver_register(const char *name, struct ifd_driver_ops *ops)
 		ip->driver.ops = ops;
 }
 
+/**
+ * Add a device ID to a driver.
+ *
+ * @param id Device ID.
+ * @param name Driver name.
+ *
+ * Device which support plug-and-play can be mapped to drivers based on the
+ * device ID. This function adds a device ID to a driver, so that the driver
+ * can be looked-up at device detection time. The driver doesn't have to be
+ * registered before calling this function.
+ *
+ * Device IDs start with the device type followed by a semi-colon and by a
+ * device type specific ID. The following device types are supported:
+ *
+ * @li USB usb:vendor_id/device_id
+ *
+ * @return Error code <0 if failure.
+ */
 int ifd_driver_add_id(const char *id, const char *name)
 {
 	struct ifd_driver_info *ip;
@@ -79,6 +101,14 @@ int ifd_driver_add_id(const char *id, const char *name)
 	return 0;
 }
 
+/**
+ * Get the driver name for a given device ID.
+ *
+ * @param id Device ID.
+ *
+ * @sa ifd_driver_add_id
+ * @return Driver name or NULL if no driver is found.
+ */
 const char *ifd_driver_for_id(ifd_devid_t * id)
 {
 	struct ifd_driver_info *ip;
@@ -94,6 +124,16 @@ const char *ifd_driver_for_id(ifd_devid_t * id)
 	return NULL;
 }
 
+/**
+ * Lookup a driver by name.
+ *
+ * @param name Driver name.
+ *
+ * If the configuration parameter @a autoload is set, OpenCT will try to load
+ * an external module for the requested driver.
+ *
+ * @return Pointer the the driver structure, or NULL if no driver is found.
+ */
 const ifd_driver_t *ifd_driver_get(const char *name)
 {
 	struct ifd_driver_info *ip;
@@ -112,6 +152,18 @@ const ifd_driver_t *ifd_driver_get(const char *name)
 	return NULL;
 }
 
+/**
+ * Get a list of registered drivers.
+ * 
+ * @param names Name array.
+ * @param max Size of the name array.
+ *
+ * This function fills the array pointed by @a names with pointers to the
+ * driver names. At most @a max entries are returned. The names must @b not
+ * be freed by the caller.
+ *
+ * @return Number of driver names.
+ */
 unsigned int ifd_drivers_list(const char **names, size_t max)
 {
 	struct ifd_driver_info *ip;
@@ -122,3 +174,4 @@ unsigned int ifd_drivers_list(const char **names, size_t max)
 	}
 	return n;
 }
+

@@ -382,6 +382,7 @@ AC_SUBST(sysincludedir)
 AC_OUTPUT([
 Makefile
 aclocal/Makefile
+api/Makefile
 doc/Makefile
 etc/Makefile
 macos/Makefile

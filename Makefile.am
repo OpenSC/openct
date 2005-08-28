@@ -1,6 +1,6 @@
 # Process this file with automake to create Makefile.in
 
-SUBDIRS = aclocal doc etc libltdl macos src .
+SUBDIRS = aclocal api doc etc libltdl macos src .
 
 EXTRA_DIST = ANNOUNCE NEWS TODO bootstrap depcomp \
 	solaris/Makefile.client solaris/Makefile.server solaris/README \
