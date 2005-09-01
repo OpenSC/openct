@@ -8,3 +8,9 @@ The wiki was transformed to html using the export-wiki shell
 script and xsl style sheet. The original version is at 
 	http://www.twdata.org/trac-howto/
 
+To update the documentation run "make dist" in the top
+directory of the source code. Note: to do so files are
+fetched from the network using wget and xsltproc is needed
+to transform the files. Also the API documentation is
+updated using doxygen. Make sure all these tools are 
+installed.
