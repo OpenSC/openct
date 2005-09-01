@@ -1,6 +1,6 @@
 # Process this file with automake to create Makefile.in
 
-SUBDIRS = aclocal api doc etc libltdl macos src .
+SUBDIRS = . aclocal doc etc macos src 
 
 EXTRA_DIST = ANNOUNCE NEWS TODO bootstrap depcomp \
 	solaris/Makefile.client solaris/Makefile.server solaris/README \
@@ -19,5 +19,6 @@ DEPCLEANFILES = config.log configure
 
 AUTOMAKE_OPTIONS = foreign 1.5
 
-maintainer-clean-local:
-	rm -rf libltdl
+dist-hook:
+	sh $(srcdir)/doc/export-wiki.sh $(srcdir)/doc
+	sh $(srcdir)/doc/generate-api.sh $(srcdir)/doc
