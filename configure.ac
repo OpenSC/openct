@@ -129,9 +129,6 @@ LIBS="$PTHREAD_LIBS $LIBS"
 CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 CC="$PTHREAD_CC"
 
-dnl use ltdl
-AC_CHECK_LIB(ltdl, lt_dlopen,, [AC_MSG_ERROR([libltdl not found])])
-
 dnl Add libtool support.
 AM_PROG_LIBTOOL
 
@@ -158,8 +155,8 @@ if test "$GCC" = "yes"; then
 	CFLAGS="-Wall $CFLAGS"
 fi
 
-AC_SUBST(LIBDL)
-AC_CHECK_LIB(dl, dlopen, [LIBDL="$LIBDL -ldl" ac_cv_func_dlopen_ldl=yes], ac_cv_func_dlopen_ldl=no)
+dnl use ltdl
+AC_LIB_LINKFLAGS(ltdl)
 
 dnl See if socket() is found from libsocket
 AC_CHECK_LIB(socket, socket, [LIBS="$LIBS -lsocket" ac_cv_func_socket_in_lsocket=yes], ac_cv_func_socket_in_lsocket=no)
