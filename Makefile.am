@@ -1,6 +1,7 @@
 # Process this file with automake to create Makefile.in
 
-SUBDIRS = . aclocal doc etc macos src 
+SUBDIRS = . aclocal etc macos src 
+DIST_SUBDIRS = . aclocal doc etc macos src 
 
 EXTRA_DIST = ANNOUNCE NEWS TODO bootstrap depcomp \
 	solaris/Makefile.client solaris/Makefile.server solaris/README \
@@ -18,9 +19,3 @@ MAINTAINERCLEANFILES = \
 DEPCLEANFILES = config.log configure
 
 AUTOMAKE_OPTIONS = foreign 1.5
-
-dist: gendoc
-
-gendoc:
-	sh $(srcdir)/doc/export-wiki.sh $(srcdir)/doc
-	sh $(srcdir)/doc/generate-api.sh $(srcdir)/doc
