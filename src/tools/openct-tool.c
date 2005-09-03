@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 	ct_lock_handle lock;
 	int c, rc;
 
-	while ((c = getopt(argc, argv, "df:r:hv")) != -1) {
+	while ((c = getopt(argc, argv, "df:r:s:hv")) != -1) {
 		switch (c) {
 		case 'd':
 			opt_debug++;
@@ -67,6 +67,9 @@ int main(int argc, char **argv)
 			usage(0);
 		case 'r':
 			opt_reader = atoi(optarg);
+			break;
+		case 's':
+			opt_slot = atoi(optarg);
 			break;
 		default:
 			usage(1);
@@ -148,7 +151,7 @@ int main(int argc, char **argv)
 	printf("Detected ");
 	print_reader(h);
 
-	if ((rc = ct_card_lock(h, 0, IFD_LOCK_SHARED, &lock)) < 0) {
+	if ((rc = ct_card_lock(h, opt_slot, IFD_LOCK_SHARED, &lock)) < 0) {
 		fprintf(stderr, "ct_card_lock: err=%d\n", rc);
 		exit(1);
 	}
@@ -194,6 +197,7 @@ void usage(int exval)
 		"  -d   enable debugging; repeat to increase verbosity\n"
 		"  -f   specify config file (default %s)\n"
 		"  -r   specify index of reader to use\n"
+		"  -s   specify slot of reader to use\n"
 		"  -h   display this message\n"
 		"  -v   display version and exit\n"
 		"\n"
@@ -211,7 +215,7 @@ int do_reset(ct_handle * h, unsigned char *atr, size_t atr_len)
 {
 	int rc, n, status;
 
-	if ((rc = ct_card_status(h, 0, &status)) < 0) {
+	if ((rc = ct_card_status(h, opt_slot, &status)) < 0) {
 		fprintf(stderr, "ct_card_status: err=%d\n", rc);
 		exit(1);
 	}
@@ -221,9 +225,9 @@ int do_reset(ct_handle * h, unsigned char *atr, size_t atr_len)
 	       (status & IFD_CARD_STATUS_CHANGED) ? ", status changed" : "");
 
 	if (status & IFD_CARD_PRESENT) {
-		n = ct_card_reset(h, 0, atr, atr_len);
+		n = ct_card_reset(h, opt_slot, atr, atr_len);
 	} else {
-		n = ct_card_request(h, 0, 5, "Please insert card",
+		n = ct_card_request(h, opt_slot, 5, "Please insert card",
 				    atr, atr_len);
 	}
 
@@ -243,13 +247,13 @@ void do_select_mf(ct_handle * h)
 	ct_lock_handle lock;
 	int rc;
 
-	if ((rc = ct_card_lock(h, 0, IFD_LOCK_EXCLUSIVE, &lock)) < 0) {
+	if ((rc = ct_card_lock(h, opt_slot, IFD_LOCK_EXCLUSIVE, &lock)) < 0) {
 		fprintf(stderr, "ct_card_lock: err=%d\n", rc);
 		exit(1);
 	}
 
       again:
-	rc = ct_card_transact(h, 0, cmd, sizeof(cmd), res, sizeof(res));
+	rc = ct_card_transact(h, opt_slot, cmd, sizeof(cmd), res, sizeof(res));
 	if (rc < 0) {
 		fprintf(stderr, "card communication failure, err=%d\n", rc);
 		return;
