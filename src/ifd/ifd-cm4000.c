@@ -14,15 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 #include <sys/ioctl.h>
-
-typedef struct cm_priv {
-	int icc_proto;
-	unsigned char rbuf[64];
-	unsigned int head, tail;
-} cm_priv_t;
-
-static int cm_set_card_parameters(ifd_device_t *, unsigned int baudRate);
 
 /*
  * Initialize the device
@@ -30,7 +23,6 @@ static int cm_set_card_parameters(ifd_device_t *, unsigned int baudRate);
 static int cm_open(ifd_reader_t * reader, const char *device_name)
 {
 	ifd_device_t *dev;
-	cm_priv_t *priv;
 
 	reader->name = "OMNIKEY CardMan 4000";
 	reader->nslots = 1;
@@ -43,13 +35,7 @@ static int cm_open(ifd_reader_t * reader, const char *device_name)
 		return -1;
 	}
 
-	priv = (cm_priv_t *) calloc(1, sizeof(cm_priv_t));
-	if (!priv) {
-		ct_error("out of memory");
-		return IFD_ERROR_NO_MEMORY;
-	}
-
-	reader->driver_data = priv;
+	reader->driver_data = NULL;
 	reader->device = dev;
 	dev->timeout = 2000;
 
@@ -65,11 +51,6 @@ static int cm_activate(ifd_reader_t * reader)
 	int rc;
 
 	ifd_debug(1, "called.");
-	/* Set async card @9600 bps, 2 stop bits, even parity */
-	if ((rc = cm_set_card_parameters(dev, 0x01)) < 0) {
-		ct_error("cm4000: failed to set card parameters 9600/8E2");
-		return rc;
-	}
 	return 0;
 }
 
@@ -79,40 +60,36 @@ static int cm_deactivate(ifd_reader_t * reader)
 	int rc;
 
 	ifd_debug(1, "called.");
-	if ((rc = ifd_usb_control(dev, 0x42, 0x11, 0, 0, NULL, 0, -1)) < 0) {
-		ct_error("cm4000: failed to deactivate card");
-		return rc;
-	}
 	return 0;
 }
 
-#if 0 
 /*
- * Card status - always present
+ * Card status 
  */
 static int cm_card_status(ifd_reader_t * reader, int slot, int *status)
 {
 	ifd_device_t *dev = reader->device;
-	unsigned char cm_status = 0;
+	unsigned int cm_status = 0;
 	int rc;
 
 	*status = 0;
 
-#if 0
-
-	if ((rc =
-	     cm_usb_int(dev, 0x42, 0x20, 0, 0, NULL, 0, &cm_status, 1, NULL,
-			-1)) < 0) {
-		ct_error("cm4000: failed to get card status");
+	ifd_debug(1, "called.");
+	rc = ioctl(dev->fd, CM_IOCGSTATUS,  &cm_status);
+	if (rc != 0) { 
+		ifd_debug(1, "error during ioctl(CM_IOCGSTATUS): %d=%s",
+			  rc, strerror(errno));
 		return -1;
 	}
-	if (rc == 1 && (cm_status & 0x42))
+
+	if (cm_status & CM_ATR_PRESENT)
 		*status = IFD_CARD_PRESENT;
-#endif
+
+	/* Hardware doesn't tell us about status change */
+
 	ifd_debug(1, "card %spresent", *status ? "" : "not ");
 	return 0;
 }
-#endif
 
 /*
  * Reset
@@ -128,7 +105,7 @@ static int cm_card_reset(ifd_reader_t * reader, int slot, void *atr,
 	/* propriatary driver doesn't check return value here, too */
 
 	// CM_IOCGATR
-	if (ioctl(dev->fd, 0x0C0046301, &cmatr) != 0) {
+	if (ioctl(dev->fd, CM_IOCGATR, &cmatr) != 0) {
 		ifd_debug(1, "error during ioctl(CM_IOCGATR)\n");
 		return -1;
 	}
@@ -164,15 +141,6 @@ static int cm_recv(ifd_reader_t * reader, unsigned int dad,
 }
 
 /*
- * Set the card's baud rate etc
- */
-static int cm_set_card_parameters(ifd_device_t * dev, unsigned int baudrate)
-{
-	/* this is done in kernel driver, nothing we can do about that */
-	return 0;
-}
-
-/*
  * Driver operations
  */
 static struct ifd_driver_ops cm4000_driver;
@@ -186,6 +154,7 @@ void ifd_cm4000_register(void)
 	cm4000_driver.activate = cm_activate;
 	cm4000_driver.deactivate = cm_deactivate;
 	cm4000_driver.card_reset = cm_card_reset;
+	cm4000_driver.card_status = cm_card_status;
 	cm4000_driver.send = cm_send;
 	cm4000_driver.recv = cm_recv;
 
