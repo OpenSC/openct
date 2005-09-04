@@ -26,6 +26,8 @@ ifd_device_t *ifd_device_open(const char *name)
 		return ifd_open_remote(name + 7);
 	if (!strncmp(name, "pcmcia:", 7))
 		return ifd_open_pcmcia(name + 7);
+	if (!strncmp(name, "pcmcia_block:", 13))
+		return ifd_open_pcmcia_block(name + 13);
 
 	switch (ifd_sysdep_device_type(name)) {
 	case IFD_DEVICE_TYPE_SERIAL:
