@@ -34,6 +34,11 @@ ifdproxy {
 #	device = pcmcia:/dev/cmm0;
 #};
 
+#reader cm4040 {
+#	driver = ccid;
+#	device = pcmcia_block:/dev/cmx0;
+#};
+
 #reader pertosmart1030 {
 #	driver = pertosmart1030;
 #	device = serial:/dev/ttyS0;
