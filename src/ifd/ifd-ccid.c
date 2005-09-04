@@ -2,6 +2,9 @@
  * driver for some CCID-compliant devices
  *
  * Copyright 2003, Chaskiel Grundman <cg2v@andrew.cmu.edu>
+ *
+ * 2005-04-20: Harald Welte <laforge@gnumonks.org>
+ * 	Add support for PCMCIA based CCID Device (CardMan 4040)
  */
 
 #include "internal.h"
@@ -383,16 +386,21 @@ static int ccid_abort(ifd_reader_t *reader, int slot)
      ccid_status_t *st=(ccid_status_t *)reader->driver_data;
 
      int r;
-
-     r=ifd_usb_control(reader->device,
-		       0x21 /*USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_INTERFACE*/,
-		       CCID_REQ_ABORT, st->seq << 8 | slot,
-		       st->usb_interface, NULL, 0,
-		       10000);
-     if (r < 0)
-	  return r;
-     r=ccid_simple_wcommand(reader, slot, CCID_CMD_ABORT, NULL, NULL, 0);
-     return r;
+     if (ifd_device_type(reader->device) == IFD_DEVICE_TYPE_USB) {
+         r=ifd_usb_control(reader->device,
+			   0x21 /*USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_INTERFACE*/,
+			   CCID_REQ_ABORT, st->seq << 8 | slot,
+			   st->usb_interface, NULL, 0,
+			   10000);
+         if (r < 0)
+	     return r;
+         r=ccid_simple_wcommand(reader, slot, CCID_CMD_ABORT, NULL, NULL, 0);
+         return r;
+     } else if (ifd_device_type(reader->device == IFD_DEVICE_TYPE_PCMCIA_BLOCK)) {
+	 /* FIXME */
+         return IFD_ERROR_NOT_SUPPORTED;
+     }
+     return IFD_ERROR_NOT_SUPPORTED;
 }
 #endif
 
@@ -416,14 +424,10 @@ static int ccid_exchange(ifd_reader_t *reader, int slot,
      return ccid_extract_data(&recvbuf, r, rbuf, rlen);
 }
 
-/*
- * Initialize the device
- */
 static int
-ccid_open(ifd_reader_t *reader, const char *device_name)
+ccid_open_usb(ifd_device_t *dev, ifd_reader_t *reader)
 {
      ccid_status_t *st;
-     ifd_device_t *dev;
      ifd_device_params_t params;
      int r,i, c, ifc, alt;
      struct ifd_usb_device_descriptor de;
@@ -433,15 +437,6 @@ ccid_open(ifd_reader_t *reader, const char *device_name)
      unsigned char *_class;
      unsigned char *p;
 
-     reader->name = "CCID Compatible";
-     if (!(dev = ifd_device_open(device_name)))
-	  return -1;
-     if (ifd_device_type(dev) != IFD_DEVICE_TYPE_USB) {
-	  ct_error("ccid: device %s is not a USB device",
-		   device_name);
-	  ifd_device_close(dev);
-	  return -1;
-     }
      if (ifd_usb_get_device(dev, &de)) {
 	  ct_error("ccid: device descriptor not found");
 	  ifd_device_close(dev);
@@ -654,6 +649,55 @@ ccid_open(ifd_reader_t *reader, const char *device_name)
      return 0;
 }
 
+static int ccid_open_pcmcia_block(ifd_device_t *dev, ifd_reader_t *reader)
+{
+     ccid_status_t *st;
+     /* unfortunately I know of no sanity checks that we could do with the
+      * hardware to confirm we're actually accessing a real pcmcia/ccid
+      * device -HW */
+
+     if ((st = (ccid_status_t *) calloc(1, sizeof(*st))) == NULL)
+	  return IFD_ERROR_NO_MEMORY;
+
+     /* setup fake ccid_status_t based on totally guessed values */
+     memset(st->icc_present, -1, OPENCT_MAX_SLOTS);
+     st->voltage_support = 0x7;
+     st->proto_support = SUPPORT_T0|SUPPORT_T1;
+     st->reader_type = TYPE_APDU;
+     st->voltage_support |= AUTO_VOLTAGE;
+     st->ifsd=1; // ?
+     st->maxmsg = CCID_MAX_MSG_LEN;
+     st->flags = FLAG_AUTO_ATRPARSE|FLAG_NO_PTS;//|FLAG_NO_SETPARAM;
+
+     reader->driver_data = st;
+     reader->device = dev;
+     reader->nslots = 1;
+
+     return 0;
+}
+
+
+/*
+ * Initialize the device
+ */
+static int ccid_open(ifd_reader_t *reader, const char *device_name)
+{
+     ifd_device_t *dev;
+     reader->name = "CCID Compatible";
+     if (!(dev = ifd_device_open(device_name)))
+	  return -1;
+     if (ifd_device_type(dev) == IFD_DEVICE_TYPE_USB)
+	  return ccid_open_usb(dev, reader);
+     else if (ifd_device_type(dev) == IFD_DEVICE_TYPE_PCMCIA_BLOCK)
+	  return ccid_open_pcmcia_block(dev, reader);
+     else {
+	  ct_error("ccid: device %s is not a supported device",
+		   device_name);
+	  ifd_device_close(dev);
+	  return -1;
+     }
+}
+
 static int ccid_activate(ifd_reader_t *reader)
 {
      ifd_debug(1, "called.");
@@ -669,58 +713,61 @@ static int ccid_deactivate(ifd_reader_t *reader)
 static int ccid_card_status(ifd_reader_t *reader, int slot, int *status)
 {
      ccid_status_t *st=(ccid_status_t *)reader->driver_data;
-     int r;
+     int r, stat;
      unsigned char ret[20];
      unsigned char cmdbuf[10];
-     ifd_usb_capture_t *cap;
-     int any=0;
-     int i,j, bits, stat;
 
-     i=1 + (slot / 4);
-     j=2 * (slot % 4);
-     stat=0;
+     if (ifd_device_type(reader->device) == IFD_DEVICE_TYPE_USB) {
+         ifd_usb_capture_t *cap;
+         int any=0;
+         int i,j, bits, stat;
 
-     r = ifd_usb_begin_capture(reader->device,
-			       IFD_USB_URB_TYPE_INTERRUPT,
-			       reader->device->settings.usb.ep_intr, 8, &cap);
-     if (r < 0) {
-	  ct_error("ccid: begin capture: %d", r);
-	  return r;
-     }
-     /* read any bufferred interrupt pipe messages */
-     while (1) {
-	  r=ifd_usb_capture(reader->device, cap, ret, 8, 100);
-	  if (r < 0)
-	       break;
-	  if (ret[0] != 0x50)
-	       continue;
-	  ifd_debug(3, "status received:%s", ct_hexdump(ret, r));
-	  bits=(ret[i] >> j) & 0x3;
-	  if (bits & 2)
-	       stat |= IFD_CARD_STATUS_CHANGED;
-	  if (bits & 1)
-	       stat |= IFD_CARD_PRESENT;
-	  else
-	       stat &= ~IFD_CARD_PRESENT;
-	  any=1;
-     }
-     ifd_usb_end_capture(reader->device, cap);
-     if (any) {
-	  ifd_debug(1, "polled result: %d", stat );
-	  st->icc_present[slot] = stat & IFD_CARD_PRESENT;
-	  *status=stat;
-	  return 0;
-     }
-     if (st->icc_present[slot] != 0xFF) {
-	  ifd_debug(1, "cached result: %d", st->icc_present[slot]);
-	  *status=st->icc_present[slot];
-	  return 0;
+         i=1 + (slot / 4);
+         j=2 * (slot % 4);
+         stat=0;
+
+         r = ifd_usb_begin_capture(reader->device,
+			           IFD_USB_URB_TYPE_INTERRUPT,
+			           reader->device->settings.usb.ep_intr, 8, &cap);
+         if (r < 0) {
+	     ct_error("ccid: begin capture: %d", r);
+	     return r;
+         }
+         /* read any bufferred interrupt pipe messages */
+         while (1) {
+	     r=ifd_usb_capture(reader->device, cap, ret, 8, 100);
+	     if (r < 0)
+	         break;
+	     if (ret[0] != 0x50)
+	         continue;
+	     ifd_debug(3, "status received:%s", ct_hexdump(ret, r));
+	     bits=(ret[i] >> j) & 0x3;
+	     if (bits & 2)
+	         stat |= IFD_CARD_STATUS_CHANGED;
+	     if (bits & 1)
+	         stat |= IFD_CARD_PRESENT;
+	     else
+	         stat &= ~IFD_CARD_PRESENT;
+	     any=1;
+         }
+         ifd_usb_end_capture(reader->device, cap);
+         if (any) {
+	     ifd_debug(1, "polled result: %d", stat );
+	     st->icc_present[slot] = stat & IFD_CARD_PRESENT;
+	     *status=stat;
+	     return 0;
+         }
+         if (st->icc_present[slot] != 0xFF) {
+	     ifd_debug(1, "cached result: %d", st->icc_present[slot]);
+	     *status=st->icc_present[slot];
+	     return 0;
+         }
      }
      r=ccid_prepare_cmd(reader, cmdbuf, 10, 0, CCID_CMD_GETSLOTSTAT,
 			NULL, NULL, 0);
      if (r < 0)
 	  return r;
-     r=ccid_command(reader, cmdbuf, 10, ret, 20);
+     r=ccid_command(reader, cmdbuf, 10, ret, 10);
      if (r < 0)
 	  return r;
      switch (ret[7] & 3) {
