@@ -10,7 +10,7 @@ sbin_PROGRAMS = ifdhandler ifdproxy
 
 libifd_la_SOURCES = \
 	apdu.c atr.c checksum.c conf.c ctbcs.c device.c driver.c \
-	init.c locks.c manager.c modules.c pcmcia.c process.c protocol.c \
+	init.c locks.c manager.c modules.c pcmcia.c pcmcia-block.c process.c protocol.c \
 	reader.c serial.c usb.c usb-descriptors.c utils.c \
 	\
 	ifd-acr30u.c ifd-cardman.c ifd-ccid.c ifd-cm4000.c ifd-egate.c \

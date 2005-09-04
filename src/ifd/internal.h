@@ -146,6 +146,7 @@ extern const ifd_driver_t *ifd_driver_get(const char *);
 extern unsigned int ifd_drivers_list(const char **, size_t);
 
 /* device.c */
+extern ifd_device_t *ifd_open_pcmcia_block(const char *);
 extern ifd_device_t *ifd_open_pcmcia(const char *);
 extern ifd_device_t *ifd_open_psaux(const char *);
 extern ifd_device_t *ifd_open_remote(const char *);
