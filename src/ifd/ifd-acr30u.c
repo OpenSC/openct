@@ -371,7 +371,6 @@ acr_deactivate(ifd_reader_t *reader)
 static int
 acr_card_status(ifd_reader_t *reader, int slot, int *status)
 {
-	ifd_device_t	*dev = reader->device;
 	unsigned char	acr_status[ACR_STATUS_LENGTH];
 	int		rc;
 
