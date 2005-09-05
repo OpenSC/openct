@@ -160,7 +160,8 @@ AC_LIB_LINKFLAGS(ltdl)
 
 saved_LIBS="$LIBS"
 LIBS="$saved_LIBS $LIBLTDL"
-AC_CHECK_HEADER([ltdl.h])
+AC_CHECK_HEADER([ltdl.h], [ AC_MSG_RESULT "yes" ],
+   [ AC_MSG_ERROR([ltdl.h not found, please install libltdl and/or libtool]) ])
 LIBS="$saved_LIBS"
 
 dnl See if socket() is found from libsocket
