@@ -85,7 +85,7 @@ int configure_driver(ifd_conf_node_t * cf)
 	int j, n;
 
 	if (!(driver = cf->value))
-		return;
+		return 1;
 	if ((n = ifd_conf_node_get_string_list(cf, "ids", NULL, 0)) >= 0) {
 		ids = (char **)calloc(n, sizeof(char *));
 		if (!ids) {
