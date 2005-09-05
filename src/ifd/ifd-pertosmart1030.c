@@ -1531,8 +1531,6 @@ ifd_pertosmart_ac1030_register(void)
 
   static struct ifd_driver_ops perto_smart_driver;
 
-  ct_debug("ifd_pertosmart_ac1030_register: called");
-
   perto_smart_driver.open         = ps_open;
   perto_smart_driver.close        = ps_close;
   perto_smart_driver.activate     = ps_activate;
