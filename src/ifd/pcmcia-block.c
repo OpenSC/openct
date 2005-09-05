@@ -99,7 +99,6 @@ static struct ifd_device_ops ifd_pcmcia_block_ops;
 ifd_device_t *
 ifd_open_pcmcia_block(const char *name)
 {
-	ifd_device_params_t params;
 	ifd_device_t	*dev;
 	int		fd;
 

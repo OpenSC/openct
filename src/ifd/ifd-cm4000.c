@@ -47,18 +47,12 @@ static int cm_open(ifd_reader_t * reader, const char *device_name)
  */
 static int cm_activate(ifd_reader_t * reader)
 {
-	ifd_device_t *dev = reader->device;
-	int rc;
-
 	ifd_debug(1, "called.");
 	return 0;
 }
 
 static int cm_deactivate(ifd_reader_t * reader)
 {
-	ifd_device_t *dev = reader->device;
-	int rc;
-
 	ifd_debug(1, "called.");
 	return 0;
 }
