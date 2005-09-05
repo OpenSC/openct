@@ -158,6 +158,11 @@ fi
 dnl use ltdl
 AC_LIB_LINKFLAGS(ltdl)
 
+saved_LIBS="$LIBS"
+LIBS="$saved_LIBS $LIBLTDL"
+AC_CHECK_HEADER([ltdl.h])
+LIBS="$saved_LIBS"
+
 dnl See if socket() is found from libsocket
 AC_CHECK_LIB(socket, socket, [LIBS="$LIBS -lsocket" ac_cv_func_socket_in_lsocket=yes], ac_cv_func_socket_in_lsocket=no)
 
