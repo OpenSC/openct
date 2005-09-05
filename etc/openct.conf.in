@@ -100,5 +100,6 @@ driver	ccid {
 driver pertosmart1030 {
 	ids = {
 		usb:072f/0001,
+		usb:072f/8009,
 	};
 };
