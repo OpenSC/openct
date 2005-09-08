@@ -19,3 +19,4 @@ MAINTAINERCLEANFILES = \
 DEPCLEANFILES = config.log configure
 
 AUTOMAKE_OPTIONS = foreign 1.5
+ACLOCAL_AMFLAGS = -I aclocal
