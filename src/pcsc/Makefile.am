@@ -1,10 +1,10 @@
 # Process this file with automake to create Makefile.in
 
-bundledir = @BUNDLEDIR@
+bundledir = $(BUNDLEDIR)
 
 MAINTAINERCLEANFILES = Makefile.in
 
-INCLUDES = -I$(top_srcdir)/src/ctapi @CPPFLAGS@ @PCSC_CFLAGS@
+INCLUDES = -I$(top_srcdir)/src/ctapi $(CPPFLAGS) $(PCSC_CFLAGS)
 
 if HAVE_PCSC
 lib_LTLIBRARIES = openct-ifd.la
