@@ -21,7 +21,7 @@ libifd_la_SOURCES = \
 	proto-gbp.c proto-sync.c proto-t0.c proto-t1.c \
 	proto-trans.c \
 	\
-	sys-sunray.c sys-solaris.c sys-bsd.c sys-linux.c sys-null.c \
+	sys-sunray.c sys-solaris.c sys-bsd.c sys-linux.c sys-null.c sys-osx.c \
 	\
 	ria.c
 libifd_la_LIBADD = ../ct/libopenct.la $(LTLIBLTDL) $(LIBUSB)

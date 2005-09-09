@@ -8,7 +8,7 @@
  */
 
 #include "internal.h"
-#if !defined(sun) && !defined (__NetBSD__) && !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__linux__)
+#if !defined(sun) && !defined (__NetBSD__) && !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__linux__) && !defined(__APPLE__)
 #include <sys/types.h>
 #include <stdio.h>
 #include <openct/driver.h>
@@ -96,6 +96,12 @@ int ifd_sysdep_usb_capture(ifd_device_t * dev, ifd_usb_capture_t * cap,
 int ifd_sysdep_usb_end_capture(ifd_device_t * dev, ifd_usb_capture_t * cap)
 {
 	return -1;
+}
+
+
+int ifd_sysdep_usb_open(const char *device, int flags)
+{
+        return -1;
 }
 
 /*
