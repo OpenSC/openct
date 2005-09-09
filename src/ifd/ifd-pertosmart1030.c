@@ -923,9 +923,9 @@ out:
 static int
 ps_transceive_instruction(ifd_reader_t * reader,
                          ps_instruction_t instruction,
-                         const char * sbuf,
+                         const void * sbuf,
                          size_t slen,
-                         char * rbuf,
+                         void * rbuf,
                          size_t rlen)
 {
   int rc;
