@@ -2,7 +2,7 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-INCLUDES = $(CPPFLAGS) $(PCSC_CFLAGS)
+INCLUDES = $(CPPFLAGS) $(PCSC_CFLAGS) $(LIBUSB_CFLAGS)
 
 noinst_LTLIBRARIES = libifd.la
 
@@ -24,7 +24,7 @@ libifd_la_SOURCES = \
 	sys-sunray.c sys-solaris.c sys-bsd.c sys-linux.c sys-null.c sys-osx.c \
 	\
 	ria.c
-libifd_la_LIBADD = ../ct/libopenct.la $(LTLIBLTDL) $(LIBUSB)
+libifd_la_LIBADD = ../ct/libopenct.la $(LTLIBLTDL) $(LIBUSB_LIBS)
 
 ifdhandler_SOURCES = ifdhandler.c
 ifdhandler_LDADD = libifd.la
