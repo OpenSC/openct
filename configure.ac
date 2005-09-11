@@ -200,94 +200,52 @@ fi
 dnl see if poll() is found from libpoll
 AC_CHECK_LIB(poll, poll, [LIBS="$LIBS -lpoll" ac_cv_func_poll_lpoll=yes], ac_cv_func_poll_lpoll=no)
 
-PCSC_MSG=no
-pcsc_path=/usr
-AC_SUBST(PCSC_CFLAGS)
-AC_SUBST(PCSC_LIBS)
+
+PKG_CHECK_MODULES(LIBUSB, [libusb], [
+        LIBUSB_MSG=yes
+        AC_DEFINE(HAVE_LIBUSB, 1, [Have libusb libraries and header files])
+        ], [
+        LIBUSB_MSG=no
+        ])
+AC_SUBST(LIBUSB_CFLAGS)
+AC_SUBST(LIBUSB_LIBS)
 
 case "$host" in
 *-*-darwin*)
-	PCSC_MSG=yes
-	PCSC_CFLAGS=""
-	PCSC_LIBS="-Wl,-framework,PCSC"
-	;;
+        if test -z "$PCSC_LIBS" -a -z "$PCSC_LIBS"
+        then
+                PCSC_MSG=yes
+                PCSC_CFLAGS=""
+                PCSC_LIBS="-Wl,-framework,PCSC"
+
+                # overwrite autoconf cached variables, too.
+                ac_env_PCSC_CFLAGS_set=${PCSC_CFLAGS+set}
+                ac_env_PCSC_CFLAGS_value=$PCSC_CFLAGS
+                ac_cv_env_PCSC_CFLAGS_set=${PCSC_CFLAGS+set}
+                ac_cv_env_PCSC_CFLAGS_value=$PCSC_CFLAGS
+                ac_env_PCSC_LIBS_set=${PCSC_LIBS+set}
+                ac_cv_env_PCSC_LIBS_set=${PCSC_LIBS+set}
+                ac_cv_env_PCSC_LIBS_value=$PCSC_LIBS
+        fi
+        ;;
 esac
 
+PKG_CHECK_MODULES(PCSC, [libpcsclite], [
+        PCSC_MSG=yes
+        AC_DEFINE(HAVE_PCSC, 1, [Have PC/SC implementation])
+        ], [
+        PCSC_MSG=no
+        ])
+AC_SUBST(PCSC_CFLAGS)
+AC_SUBST(PCSC_LIBS)
+
+AM_CONDITIONAL(HAVE_PCSC, test "x$PCSC_MSG" = "xyes")
 saved_LIBS="$LIBS"
 saved_CFLAGS="$CFLAGS"
-saved_LDFLAGS="$LDFLAGS"
-saved_CPPFLAGS="$CPPFLAGS"
-AC_ARG_WITH(pcsclite,
-	AC_HELP_STRING([--with-pcsclite=PATH], [use PC/SC Lite in PATH]),
-	[pcsc_path=$withval])
-if test "x$pcsc_path" = "xno"; then
-	PCSC_MSG="no"
-fi
-if test "x$pcsc_path" != "xno" -a "x$PCSC_MSG" != "xyes"; then
-	PKG_CHECK_MODULES(PCSC, libpcsclite, [
-		PCSC_MSG="yes"
-		AC_MSG_RESULT($PCSC_MSG)
-		],[
-	AC_MSG_CHECKING(for PC/SC Lite support (old style))
-	for pcscdir in "" /PCSC; do
-		CPPFLAGS="$saved_CPPFLAGS"
-		LDFLAGS="$saved_LDFLAGS"
-		LIBS="-lpcsclite $saved_LIBS"
-		PCSC_CFLAGS=""
-
-		for pcsc_libdir in $pcsc_path/lib$pcscdir \
-			      $pcsc_path$pcscdir/lib \
-			      $pcsc_path$pcscdir; do
-			if test -d $pcsc_libdir; then
-				if test -n "${need_dash_r}"; then
-					LDFLAGS="-R${pcsc_libdir}/ ${LDFLAGS}"
-				fi
-				LDFLAGS="-L${pcsc_libdir} ${LDFLAGS}"
-			fi
-		done
-
-		for pcsc_incdir in $pcsc_path/include$pcscdir \
-			      $pcsc_path$pcscdir/include \
-			      $pcsc_path$pcscdir; do
-		      if test -d $pcsc_incdir; then
-				PCSC_CFLAGS="-I${pcsc_incdir}"
-				break;
-		      fi
-		done
-
-		CPPFLAGS="${PCSC_CFLAGS} ${CPPFLAGS}"
-		AC_TRY_LINK([#include <stdlib.h>
-#include <winscard.h>],[SCardEstablishContext(0, NULL, NULL, NULL);], ac_cv_lib_pcsclite_SCardEstablishContext=yes)
-		if test "x$ac_cv_lib_pcsclite_SCardEstablishContext" = "xyes"; then
-			PCSC_MSG=yes
-			break;
-		fi
-		CPPFLAGS="$saved_CPPFLAGS"
-		LDFLAGS="$saved_LDFLAGS"
-		LIBS="$saved_LIBS"
-		PCSC_CFLAGS=""
-	done
-	AC_MSG_RESULT($PCSC_MSG)
-	if test "x$PCSC_MSG" = "xyes" ; then
-		PCSC_LIBS="-lpcsclite"
-		CPPFLAGS="$saved_CPPFLAGS"
-		LIBS="$saved_LIBS"
-	fi
-	])
-fi
-AM_CONDITIONAL(HAVE_PCSC, test "x$PCSC_MSG" = "xyes")
 if test "x$PCSC_MSG" = "xyes"; then
-	AC_DEFINE(HAVE_PCSC, 1, [Have PC/SC implementation])
-else
-	PCSC_LIBS=""
-	PCSC_CFLAGS=""
-fi
-
-if test "x$PCSC_MSG" = "xyes"; then
-	CPPFLAGS="${PCSC_CFLAGS} $saved_CPPFLAGS"
-	CFLAGS="$PCSC_CFLAGS $saved_CFLAGS"
-	LIBS="$PCSC_LIBS $saved_LIBS"
-	AC_TRY_LINK([
+        CFLAGS="${PCSC_CFLAGS} $saved_CFLAGS"
+        LIBS="$PCSC_LIBS $saved_LIBS"
+        AC_TRY_LINK([
 #include <stdlib.h>
 #ifdef __APPLE__
 #include <PCSC/wintypes.h>
@@ -295,40 +253,34 @@ if test "x$PCSC_MSG" = "xyes"; then
 #else
 #include <winscard.h>
 #endif
-	], [
+        ], [
 SCardControl(NULL, NULL, 0, NULL, NULL);
-	], [
-		AC_DEFINE(HAVE_PCSC_OLD, 1, [old version of pc/sc-lite])
-	])
-	CPPFLAGS="$saved_CPPFLAGS"
-	CFLAGS="$saved_CFLAGS"
-	LIBS="$saved_LIBS"
+        ], [
+                AC_DEFINE(HAVE_PCSC_OLD, 1, [old version of pc/sc-lite])
+        ])
 fi
+LIBS="$saved_LIBS"
+CFLAGS="$saved_CFLAGS"
 
-USB_MSG=no
-AC_SUBST(LIBUSB)
-AC_CHECK_LIB(usb, usb_init,
-	[
-	      	LIBUSB="$LIBUSB -lusb"
-		AC_DEFINE(HAVE_LIBUSB,1, [Libusb is available])
-		USB_MSG=yes
-	])
+# check for reader.h
+saved_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS $PCSC_CFLAGS"
+AC_CHECK_HEADER(reader.h,
+        [AC_DEFINE([HAVE_READER_H], 1, [Define if pcsc-lite with reader.h exists])],
+        [AC_MSG_WARN([reader.h not found, install pcsc-lite 1.2.9-beta8 or later, or use PCSC_CFLAGS=... ./configure])],
+        [ #include <reader.h>])
+CFLAGS="$saved_CFLAGS"
 
 BUNDLEDIR="${libdir}"
 AC_ARG_WITH(bundle-dir,
-	AC_HELP_STRING([--with-bundle-dir=PATH], [install MacOS X bundles to PATH [[EPREFIX/lib]]]),
-	[
-		BUNDLEDIR="$withval"
-	]
+        AC_HELP_STRING([--with-bundle-dir=PATH], [install MacOS X bundles to PAT
+H [[EPREFIX/lib]]]),
+        [
+                BUNDLEDIR="$withval"
+        ]
 )
 AC_SUBST(BUNDLEDIR)
-
-if test "x$prefix" = xNONE; then
-  prefix=$ac_default_prefix
-fi
-if test "x$exec_prefix" = xNONE; then
-  exec_prefix='${prefix}'
-fi
+AM_CONDITIONAL(HAVE_BUNDLES, test "x$with_bundles" = "xyes")
 
 dnl Enable/disable debugging messages.
 AC_ARG_ENABLE(debug,
@@ -345,7 +297,13 @@ AC_ARG_ENABLE(sunrayclient,
 	AC_DEFINE(sunrayclient, 1, [Enable sunray client support.]))
 
 CPPFLAGS="-I\${top_builddir}/src/include -I\${top_srcdir}/src/include $CPPFLAGS"
-AM_CONDITIONAL(HAVE_BUNDLES, test "x$with_bundles" = "xyes")
+
+if test "x$prefix" = xNONE; then
+  prefix=$ac_default_prefix
+fi
+if test "x$exec_prefix" = xNONE; then
+  exec_prefix='${prefix}'
+fi
 
 openct_etc_path=`eval echo ${sysconfdir}` ; openct_etc_path=`eval echo ${openct_etc_path}`
 AC_DEFINE_UNQUOTED(OPENCT_ETC_PATH, "$openct_etc_path", [etc path for libopenct])
@@ -416,7 +374,7 @@ echo "Libraries:           ${LIBS}"
 
 echo ""
 echo "PC/SC support:       ${PCSC_MSG}"
-echo "Libusb used:         ${USB_MSG}"
+echo "Libusb used:         ${LIBUSB_MSG}"
 echo ""
 
 if test "${USB_MSG}" != "yes"; then

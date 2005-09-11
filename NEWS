@@ -1,5 +1,8 @@
 NEWS for OpenCT -- History of user visible changes
 
+New in 0.6.7; ????-??-?? 11 Andreas Jellinghaus
+* configure.ac uses now pkg-config.
+
 New in 0.6.6; 2005-09-11 Andreas Jellinghaus
 * updated html documentation. now generated with "make dist".
 * indent'ed with linux kernel Lindet script.
