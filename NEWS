@@ -1,14 +1,15 @@
 NEWS for OpenCT -- History of user visible changes
 
-New in 0.6.6; 2005-??-??; Andreas Jellinghaus
-* updated html documentation.
+New in 0.6.6; 2005-09-11 Andreas Jellinghaus
+* updated html documentation. now generated with "make dist".
+* indent'ed with linux kernel Lindet script.
 * use libltdl instead of scdl.
 * new ident schema: Lident (from linux kernel)
 * new etoken64 driver (completely untested.
   not supported by opensc.)
 * new pertosmart driver by Carlos Henrique Bauer 
 * new acr30u driver by Laurent Pinchart
-* initiail driver documentation by Laurent Pinchart
+* initial driver documentation by Laurent Pinchart
 * ccid driver now supports pcmcia block based devices
   such as the OMNIKEY CardMan 4040 (Harald Welte)
 
