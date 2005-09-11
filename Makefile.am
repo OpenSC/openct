@@ -3,7 +3,7 @@
 SUBDIRS = . aclocal etc macos src 
 DIST_SUBDIRS = . aclocal doc etc macos src 
 
-EXTRA_DIST = ANNOUNCE NEWS TODO bootstrap depcomp \
+EXTRA_DIST = NEWS TODO bootstrap depcomp \
 	solaris/Makefile.client solaris/Makefile.server solaris/README \
 	solaris/checkinstall.in solaris/devices-openct-fabric.xml-dist \
 	solaris/openct-fabric-dist solaris/openct-hotplug-dist \
