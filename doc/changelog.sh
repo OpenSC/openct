@@ -21,8 +21,6 @@ fi
 rm -rf "$SRCDIR"/ChangeLog
 cd "$SRCDIR"/..
 
-doxygen doc/doxygen.conf
-
 svn --verbose --xml log | \
   xsltproc --stringparam linelen 75 \
            --stringparam groupbyday no \
