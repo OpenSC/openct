@@ -1,6 +1,6 @@
 # Process this file with automake to create Makefile.in
 
-MAINTAINERCLEANFILES = Makefile.in $(HTML)
+MAINTAINERCLEANFILES = Makefile.in $(HTML) ChangeLog
 
 EXTRA_DIST = README export-wiki.sh export-wiki.xsl generate-api.sh \
 	$(HTML) index.html ChangeLog
