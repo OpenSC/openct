@@ -231,7 +231,7 @@ int do_lock(ct_socket_t * sock, ifd_reader_t * reader, int unit,
 	if (unit > reader->nslots)
 		return IFD_ERROR_INVALID_SLOT;
 
-	if (ct_tlv_get_int(args, CT_TAG_LOCKTYPE, &lock_type) < 0)
+	if (ct_tlv_get_int(args, CT_TAG_LOCKTYPE, &lock_type) == 0)
 		return IFD_ERROR_MISSING_ARG;
 
 	if ((rc = ifdhandler_lock(sock, unit, lock_type, &lock)) < 0)
@@ -251,7 +251,7 @@ int do_unlock(ct_socket_t * sock, ifd_reader_t * reader, int unit,
 	if (unit > reader->nslots)
 		return IFD_ERROR_INVALID_SLOT;
 
-	if (ct_tlv_get_int(args, CT_TAG_LOCK, &lock) < 0)
+	if (ct_tlv_get_int(args, CT_TAG_LOCK, &lock) == 0)
 		return IFD_ERROR_MISSING_ARG;
 
 	if ((rc = ifdhandler_unlock(sock, unit, lock)) < 0)
@@ -276,7 +276,8 @@ int do_reset(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 		return IFD_ERROR_INVALID_SLOT;
 
 	/* See if we have timeout and/or message parameters */
-	ct_tlv_get_int(args, CT_TAG_TIMEOUT, &timeout);
+	if (ct_tlv_get_int(args, CT_TAG_TIMEOUT, &timeout) == 0)
+		return IFD_ERROR_MISSING_ARG;
 	if (ct_tlv_get_string(args, CT_TAG_MESSAGE, msgbuf, sizeof(msgbuf)) > 0)
 		message = msgbuf;
 
@@ -308,7 +309,8 @@ int do_eject(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 		return IFD_ERROR_INVALID_SLOT;
 
 	/* See if we have timeout and/or message parameters */
-	ct_tlv_get_int(args, CT_TAG_TIMEOUT, &timeout);
+	if (ct_tlv_get_int(args, CT_TAG_TIMEOUT, &timeout) == 0)
+		return IFD_ERROR_MISSING_ARG;
 	if (ct_tlv_get_string(args, CT_TAG_MESSAGE, msgbuf, sizeof(msgbuf)) > 0)
 		message = msgbuf;
 
@@ -336,7 +338,8 @@ int do_verify(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 		return IFD_ERROR_INVALID_SLOT;
 
 	/* See if we have timeout and/or message parameters */
-	ct_tlv_get_int(args, CT_TAG_TIMEOUT, &timeout);
+	if (ct_tlv_get_int(args, CT_TAG_TIMEOUT, &timeout) == 0)
+		return IFD_ERROR_MISSING_ARG;
 	if (ct_tlv_get_string(args, CT_TAG_MESSAGE, msgbuf, sizeof(msgbuf)) > 0)
 		message = msgbuf;
 	if (!ct_tlv_get_opaque(args, CT_TAG_PIN_DATA, &data, &data_len))
@@ -368,7 +371,8 @@ int do_transact(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 	if (unit > reader->nslots)
 		return IFD_ERROR_INVALID_SLOT;
 
-	ct_tlv_get_int(args, CT_TAG_TIMEOUT, &timeout);
+	if (ct_tlv_get_int(args, CT_TAG_TIMEOUT, &timeout) == 0)
+		return IFD_ERROR_MISSING_ARG;
 	if (!ct_tlv_get_opaque(args, CT_TAG_CARD_REQUEST, &data, &data_len))
 		return IFD_ERROR_MISSING_ARG;
 
@@ -406,7 +410,8 @@ int do_set_protocol(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 	if (unit > reader->nslots)
 		return IFD_ERROR_INVALID_SLOT;
 
-	ct_tlv_get_int(args, CT_TAG_PROTOCOL, &protocol);
+	if (ct_tlv_get_int(args, CT_TAG_PROTOCOL, &protocol) == 0)
+		return IFD_ERROR_MISSING_ARG;
 
 	rc = ifd_set_protocol(reader, unit, protocol);
 	if (rc < 0)
@@ -429,7 +434,7 @@ int do_memory_write(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 	if (unit > reader->nslots)
 		return IFD_ERROR_INVALID_SLOT;
 
-	if (!ct_tlv_get_int(args, CT_TAG_ADDRESS, &address)
+	if (ct_tlv_get_int(args, CT_TAG_ADDRESS, &address) == 0
 	    || !ct_tlv_get_opaque(args, CT_TAG_DATA, &data, &data_len))
 		return IFD_ERROR_MISSING_ARG;
 
@@ -451,7 +456,7 @@ int do_memory_read(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 	if (unit > reader->nslots)
 		return IFD_ERROR_INVALID_SLOT;
 
-	if (!ct_tlv_get_int(args, CT_TAG_ADDRESS, &address)
+	if (ct_tlv_get_int(args, CT_TAG_ADDRESS, &address) == 0
 	    || !ct_tlv_get_int(args, CT_TAG_COUNT, (unsigned int *)&data_len))
 		return IFD_ERROR_MISSING_ARG;
 

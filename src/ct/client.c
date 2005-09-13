@@ -409,7 +409,7 @@ int ct_card_lock(ct_handle * h, unsigned int slot, int type,
 	if ((rc = ct_tlv_parse(&tlv, &resp)) < 0)
 		return rc;
 
-	if (ct_tlv_get_int(&tlv, CT_TAG_LOCK, res) < 0)
+	if (ct_tlv_get_int(&tlv, CT_TAG_LOCK, res) == 0)
 		return IFD_ERROR_GENERIC;
 
 	return 0;

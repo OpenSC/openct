@@ -31,12 +31,14 @@ typedef struct ct_tlv_builder {
 } ct_tlv_builder_t;
 
 extern int	ct_tlv_parse(ct_tlv_parser_t *, ct_buf_t *);
+/* ct_tlv_get return 0 == not there, 1 == there */
 extern int	ct_tlv_get_int(ct_tlv_parser_t *,
 				ifd_tag_t, unsigned int *);
 extern int	ct_tlv_get_string(ct_tlv_parser_t *,
 				ifd_tag_t, char *, size_t);
 extern int	ct_tlv_get_opaque(ct_tlv_parser_t *,
 				ifd_tag_t, unsigned char **, size_t *);
+/* or number of bytes */
 extern int	ct_tlv_get_bytes(ct_tlv_parser_t *,
 				ifd_tag_t, void *, size_t);
 
