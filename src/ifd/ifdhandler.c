@@ -162,6 +162,11 @@ int main(int argc, char **argv)
 	return 0;
 }
 
+static void TERMhandler(int signo)
+{
+        ct_mainloop_leave();
+}
+
 /*
  * Spawn a new ifd handler thread
  */
@@ -170,6 +175,7 @@ void ifdhandler_run(ifd_reader_t * reader)
 	char socket_name[1024];
 	ct_socket_t *sock;
 	int rc;
+	struct sigaction act;
 
 	/* Activate reader */
 	if ((rc = ifd_activate(reader)) < 0) {
@@ -194,6 +200,12 @@ void ifdhandler_run(ifd_reader_t * reader)
 	sock->recv = ifdhandler_accept;
 	ct_mainloop_add_socket(sock);
 
+	/* Set an TERM signal handler for clean exit */
+	act.sa_handler = TERMhandler;
+	sigemptyset(&act.sa_mask);
+	act.sa_flags = 0;
+	sigaction(SIGTERM, &act, NULL);
+
 	/* Encapsulate the reader into a socket struct */
 	sock = ct_socket_new(0);
 	sock->fd = 0x7FFFFFFF;
@@ -203,6 +215,12 @@ void ifdhandler_run(ifd_reader_t * reader)
 
 	/* Call the server loop */
 	ct_mainloop();
+	ct_socket_free(sock);
+	unlink(socket_name);
+	memset(reader->status, 0, sizeof(*reader->status));
+	ct_status_update(reader->status);
+	ifd_debug(1, "ifdhandler for reader %s shut down", reader->name);
+
 	exit(0);
 }
 
