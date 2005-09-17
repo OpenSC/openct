@@ -276,8 +276,7 @@ int do_reset(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 		return IFD_ERROR_INVALID_SLOT;
 
 	/* See if we have timeout and/or message parameters */
-	if (ct_tlv_get_int(args, CT_TAG_TIMEOUT, &timeout) == 0)
-		return IFD_ERROR_MISSING_ARG;
+	ct_tlv_get_int(args, CT_TAG_TIMEOUT, &timeout);
 	if (ct_tlv_get_string(args, CT_TAG_MESSAGE, msgbuf, sizeof(msgbuf)) > 0)
 		message = msgbuf;
 
@@ -309,8 +308,7 @@ int do_eject(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 		return IFD_ERROR_INVALID_SLOT;
 
 	/* See if we have timeout and/or message parameters */
-	if (ct_tlv_get_int(args, CT_TAG_TIMEOUT, &timeout) == 0)
-		return IFD_ERROR_MISSING_ARG;
+	ct_tlv_get_int(args, CT_TAG_TIMEOUT, &timeout);
 	if (ct_tlv_get_string(args, CT_TAG_MESSAGE, msgbuf, sizeof(msgbuf)) > 0)
 		message = msgbuf;
 
@@ -338,8 +336,7 @@ int do_verify(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 		return IFD_ERROR_INVALID_SLOT;
 
 	/* See if we have timeout and/or message parameters */
-	if (ct_tlv_get_int(args, CT_TAG_TIMEOUT, &timeout) == 0)
-		return IFD_ERROR_MISSING_ARG;
+	ct_tlv_get_int(args, CT_TAG_TIMEOUT, &timeout);
 	if (ct_tlv_get_string(args, CT_TAG_MESSAGE, msgbuf, sizeof(msgbuf)) > 0)
 		message = msgbuf;
 	if (!ct_tlv_get_opaque(args, CT_TAG_PIN_DATA, &data, &data_len))
@@ -371,8 +368,7 @@ int do_transact(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 	if (unit > reader->nslots)
 		return IFD_ERROR_INVALID_SLOT;
 
-	if (ct_tlv_get_int(args, CT_TAG_TIMEOUT, &timeout) == 0)
-		return IFD_ERROR_MISSING_ARG;
+	ct_tlv_get_int(args, CT_TAG_TIMEOUT, &timeout);
 	if (!ct_tlv_get_opaque(args, CT_TAG_CARD_REQUEST, &data, &data_len))
 		return IFD_ERROR_MISSING_ARG;
 
