@@ -94,6 +94,24 @@ enum {
      TYPE_CHAR
 };
 
+/* Some "ccid" devices have non-compliant descriptors. (perhaps their
+   design predates the approval of the standard?)
+   Attempt to recognize them anyway.
+*/
+static struct force_parse_device_st {
+     unsigned short vendor;
+     unsigned short product;
+} force_parse_devices[] = {
+     { 0x04e6, 0xe003 }, /* SCM SPR 532 */
+     { 0x046a, 0x003e }, /* Cherry SmartTerminal ST-2XXX */
+     { 0x413c, 0x2100 }, /* Dell USB Smartcard Keyboard */
+     { 0x04e6, 0x5120 }, /* SCM SCR331-DI (NTT) */
+     { 0x04e6, 0x5111 }, /* SCM SCR331-DI */
+     { 0x08e6, 0x1359 }, /* Verisign secure storage token */
+     { 0x08e6, 0xACE0 }, /* Verisign secure token */
+     { 0, 0 }
+};
+
 #define SUPPORT_T0	0x1
 #define SUPPORT_T1	0x2
 
@@ -107,10 +125,7 @@ enum {
 #define FLAG_AUTO_ACTIVATE	4
 #define FLAG_AUTO_ATRPARSE	8
 
-#ifndef __GNUC__
-#pragma pack(push,1)
-#pragma pack(1)
-#endif
+#define USB_CCID_DESCRIPTOR_LENGTH 54
 struct usb_ccid_descriptor {
      uint8_t bLength;
      uint8_t bDescriptorType;
@@ -134,35 +149,41 @@ struct usb_ccid_descriptor {
      uint16_t wLcdLayout;
      uint8_t bPINSupport;
      uint8_t bMaxCCIDBusySlots;
-#ifdef __GNUC__
-} __attribute__((packed));
-#else
 };
-#pragma pack()
-#pragma pack(pop,1)
-#endif
+
 
 static int ccid_parse_descriptor(struct usb_ccid_descriptor *ret,
 				 unsigned char *in, size_t inlen)
 {
-     if (inlen < sizeof(struct usb_ccid_descriptor))
+     if (inlen < USB_CCID_DESCRIPTOR_LENGTH)
 	 return 1;
-     if (in[0] < sizeof(struct usb_ccid_descriptor))
+
+     ret->bLength = in[0];
+     if (ret->bLength < USB_CCID_DESCRIPTOR_LENGTH)
 	 return 1;
-     memcpy(ret, in, sizeof(struct usb_ccid_descriptor));
+     ret->bDescriptorType = in[1];
      ret->bcdCCID = in[3] << 8 | in[2];
+     ret->bMaxSlotIndex = in[4];
+     ret->bVoltageSupport = in[5];
      ret->dwProtocols = in[9] << 24 | in[8] << 16 | in[7] << 8 | in[6];
      ret->dwDefaultClock = in[13] << 24 | in[12] << 16 | in[11] << 8 | in[10];
      ret->dwMaximumClock = in[17] << 24 | in[16] << 16 | in[15] << 8 | in[14];
+     ret->bNumClockRatesSupported = in[18];
      ret->dwDataRate = in[22] << 24 | in[21] << 16 | in[20] << 8 | in[19];
      ret->dwMaxDataRate = in[26] << 24 | in[25] << 16 | in[24] << 8 | in[23];
+     ret->bNumDataRatesSupported = in[27];
      ret->dwMaxIFSD = in[31] << 24 | in[30] << 16 | in[29] << 8 | in[28];
      ret->dwSynchProtocols = in[35] << 24 | in[34] << 16 | in[33] << 8 | in[32];
      ret->dwMechanical = in[39] << 24 | in[38] << 16 | in[37] << 8 | in[36];
      ret->dwFeatures = in[43] << 24 | in[42] << 16 | in[41] << 8 | in[40];
      ret->dwMaxCCIDMessageLength = in[47] << 24 | in[46] << 16 |
 	  in[45] << 8 | in[44];
+     ret->bClassGetResponse = in[48];
+     ret->bClassEnvelope = in[49];
      ret->wLcdLayout = in[51] << 8 | in[50];
+     ret->bPINSupport = in[52];
+     ret->bMaxCCIDBusySlots = in[53];
+     
      return 0;
 }
 
@@ -187,11 +208,6 @@ typedef struct ccid_status {
 static int ccid_checkresponse(void *status, int r)
 {
      unsigned char *p=(unsigned char *) status;
-
-     if (r < 9) {
-	  ct_error("short response from reader?!");
-	  return IFD_ERROR_GENERIC;
-     }
 
      if ((p[7]>>6 & 3) == 0)
 	  return 0;
@@ -303,7 +319,7 @@ static int ccid_command(ifd_reader_t *reader, const unsigned char *cmd,
      rc=ifd_device_send(reader->device, cmd, cmd_len);
      if (rc < 0)
 	  return rc;
-     do {
+     while (1) {
 	  rc=ifd_device_recv(reader->device, res, req_len, 10000);
 	  if (rc < 0)
 	       return rc;
@@ -317,16 +333,19 @@ static int ccid_command(ifd_reader_t *reader, const unsigned char *cmd,
 	  if (rc < 9) {
 	       return IFD_ERROR_GENERIC;
 	  }
-	  res_len=rc;
-	  rc=ccid_checkresponse(res, res_len);
-	  if (rc == -300) {
-	       continue;
-	  }
-	  if (rc < 0)
-	       return rc;
-     } while (rc < 0 || cmd[CCID_OFFSET_SLOT] != res[CCID_OFFSET_SLOT] ||
-	      cmd[CCID_OFFSET_SEQ] != res[CCID_OFFSET_SEQ]);
-
+          if (cmd[CCID_OFFSET_SLOT] == res[CCID_OFFSET_SLOT] &&
+	      cmd[CCID_OFFSET_SEQ] == res[CCID_OFFSET_SEQ]) {
+               res_len=rc;
+               rc=ccid_checkresponse(res, res_len);
+               if (rc == -300) {
+                    continue;
+               }
+               if (rc < 0)
+                    return rc;
+               break;
+          }
+          
+     }
      return res_len;
 }
 
@@ -434,6 +453,8 @@ ccid_open_usb(ifd_device_t *dev, ifd_reader_t *reader)
      struct ifd_usb_config_descriptor conf;
      struct ifd_usb_interface_descriptor *intf;
      struct usb_ccid_descriptor ccid;
+     int force_parse;
+     struct force_parse_device_st *force_dev;
      unsigned char *_class;
      unsigned char *p;
 
@@ -441,6 +462,15 @@ ccid_open_usb(ifd_device_t *dev, ifd_reader_t *reader)
 	  ct_error("ccid: device descriptor not found");
 	  ifd_device_close(dev);
 	  return -1;
+     }
+
+     force_parse = 0;
+     for (force_dev = force_parse_devices; force_dev->vendor; force_dev++) {
+          if (de.idVendor == force_dev->vendor &&
+              de.idProduct == force_dev->product) {
+               force_parse = 1;
+               break;
+          }
      }
 
      intf=NULL;
@@ -457,14 +487,20 @@ ccid_open_usb(ifd_device_t *dev, ifd_reader_t *reader)
 
 	  for (ifc=0;ifc < conf.bNumInterfaces;ifc++) {
 	       for (alt=0;alt < conf.interface[ifc].num_altsetting;alt++) {
-		    int ok=0;
+		    int typeok = 0;
+                    int ok = 0;
 		    intf=&conf.interface[ifc].altsetting[alt];
-		    if (intf->bInterfaceClass != 0xb ||
-			intf->bInterfaceSubClass != 0 ||
-			intf->bInterfaceProtocol != 0)
-			 continue;
-		    if (intf->bNumEndpoints != 3)
-			 continue;
+                    if (intf->bInterfaceClass == 0xb ||
+                        intf->bInterfaceSubClass == 0 ||
+                        intf->bInterfaceProtocol == 0)
+                         typeok = 1;
+                    /* accept class 0xFF if force_parse != 0 */
+                    if (force_parse && intf->bInterfaceClass == 0xff)
+                         typeok = 1;
+                    if (typeok == 0)
+                         continue;
+                    if (intf->bNumEndpoints != 3)
+                         continue;
 		    for (i=0;i<3;i++) {
 			 if (((intf->endpoint[i].bmAttributes &
 			       IFD_USB_ENDPOINT_TYPE_MASK) ==
@@ -513,11 +549,16 @@ ccid_open_usb(ifd_device_t *dev, ifd_reader_t *reader)
 	       i=0;
 	       p=_class+i;
 	       /* 0x21 == USB_TYPE_CLASS | 0x1 */
-	       while (i < r && p[0] > 2 && p[1] != 0x21) {
+               /* accept descriptor type 0xFF if force_parse != 0 */
+	       while (i < r && p[0] > 2 && 
+                      (p[1] != 0x21 && 
+                       (force_parse == 0 ||  p[1] != 0xff))) {
 		    i+=p[0];
 		    p=_class+i;
 	       }
-	       if (i >= r || p[0] < 2 || p[1] != 0x21) {
+	       if (i >= r || p[0] < 2 || 
+                   (p[1] != 0x21 && 
+                    (force_parse == 0 || p[1] != 0xff))) {
 		    intf=NULL;
 	       }
 	       if (intf)
@@ -529,7 +570,7 @@ ccid_open_usb(ifd_device_t *dev, ifd_reader_t *reader)
      }
 
      if (!intf) {
-	  ct_error("ccid: matching descriptor not found");
+	  ct_error("ccid: class descriptor not found");
 	  ifd_device_close(dev);
 	  ifd_usb_free_configuration(&conf);
 	  return -1;
@@ -541,7 +582,7 @@ ccid_open_usb(ifd_device_t *dev, ifd_reader_t *reader)
      r=ccid_parse_descriptor(&ccid, p, r-i);
      ifd_usb_free_configuration(&conf);
      if (r) {
-	  ct_error("ccid: descriptor truncated or too short");
+	  ct_error("ccid: class descriptor is invalid");
 	  ifd_device_close(dev);
 	  return -1;
      }
