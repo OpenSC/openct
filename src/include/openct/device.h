@@ -22,7 +22,7 @@ enum {
 	IFD_DEVICE_TYPE_PS2,
 	IFD_DEVICE_TYPE_PCMCIA,
 	IFD_DEVICE_TYPE_PCMCIA_BLOCK,
-	IFD_DEVICE_TYPE_OTHER,
+	IFD_DEVICE_TYPE_OTHER
 };
 
 union ifd_device_params {
@@ -48,7 +48,7 @@ union ifd_device_params {
 enum {
 	IFD_SERIAL_PARITY_NONE = 0,
 	IFD_SERIAL_PARITY_ODD  = 1,
-	IFD_SERIAL_PARITY_EVEN = 2,
+	IFD_SERIAL_PARITY_EVEN = 2
 };
 #define IFD_SERIAL_PARITY_TOGGLE(n)	((n)? ((n) ^ 3) : 0)
 
@@ -68,7 +68,7 @@ enum {
 	IFD_USB_URB_TYPE_ISO = 0,
 	IFD_USB_URB_TYPE_INTERRUPT = 1,
 	IFD_USB_URB_TYPE_CONTROL = 2,
-	IFD_USB_URB_TYPE_BULK = 3,
+	IFD_USB_URB_TYPE_BULK = 3
 };
 typedef struct ifd_usb_capture ifd_usb_capture_t;
 

@@ -45,7 +45,7 @@ typedef struct ct_handle	ct_handle;
 typedef unsigned int	ct_lock_handle;
 enum {
 	IFD_LOCK_SHARED,
-	IFD_LOCK_EXCLUSIVE,
+	IFD_LOCK_EXCLUSIVE
 };
 
 /*
@@ -53,7 +53,7 @@ enum {
  */
 enum {
 	IFD_PIN_ENCODING_BCD,
-	IFD_PIN_ENCODING_ASCII,
+	IFD_PIN_ENCODING_ASCII
 };
 
 extern int		ct_status(const ct_info_t **);

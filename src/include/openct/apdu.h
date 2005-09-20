@@ -32,7 +32,7 @@ enum {
 	IFD_APDU_CASE_3E = 0x20,
 	IFD_APDU_CASE_4E = 0x30,
 
-	IFD_APDU_BAD = -1,
+	IFD_APDU_BAD = -1
 };
 
 #define IFD_APDU_CASE_LC(c)	((c) & 0x02)

@@ -29,7 +29,7 @@ enum {
 	IFD_PROTOCOL_TLP,		/* older Gemplus protocol */
 	IFD_PROTOCOL_GBP,		/* Gemplus block protocol */
 	IFD_PROTOCOL_EUROCHIP,		/* Eurochip Countercard */
-	IFD_PROTOCOL_TRANSPARENT = 128,
+	IFD_PROTOCOL_TRANSPARENT = 128
 };
 
 typedef struct ifd_protocol	ifd_protocol_t;
@@ -91,14 +91,14 @@ enum {
 	IFD_PROTOCOL_T1_IFSC,
 	IFD_PROTOCOL_T1_IFSD,
 	IFD_PROTOCOL_T1_STATE,
-	IFD_PROTOCOL_T1_MORE,
+	IFD_PROTOCOL_T1_MORE
 };
 
 enum {
 	IFD_DAD_HOST = 0,
 	IFD_DAD_IFD,
 	IFD_DAD_ICC1,
-	IFD_DAD_ICC2,
+	IFD_DAD_ICC2
 };
 
 
