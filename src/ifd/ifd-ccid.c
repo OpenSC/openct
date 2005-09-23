@@ -706,9 +706,9 @@ static int ccid_open_pcmcia_block(ifd_device_t *dev, ifd_reader_t *reader)
      st->proto_support = SUPPORT_T0|SUPPORT_T1;
      st->reader_type = TYPE_APDU;
      st->voltage_support |= AUTO_VOLTAGE;
-     st->ifsd=1; // ?
+     st->ifsd=1; /* ? */
      st->maxmsg = CCID_MAX_MSG_LEN;
-     st->flags = FLAG_AUTO_ATRPARSE|FLAG_NO_PTS;//|FLAG_NO_SETPARAM;
+     st->flags = FLAG_AUTO_ATRPARSE|FLAG_NO_PTS; /*|FLAG_NO_SETPARAM; */
 
      reader->driver_data = st;
      reader->device = dev;

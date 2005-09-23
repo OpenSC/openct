@@ -131,7 +131,7 @@ typedef struct usb_cardman {
 	unsigned char atr_csum;
 	unsigned char atr_len;
 	unsigned char bIFSD, bIFSC;
-	unsigned char ta1;	// TA(1) specifies Fi over b8 to b5, Di over b4 to b1
+	unsigned char ta1;	/* TA(1) specifies Fi over b8 to b5, Di over b4 to b1 */
 	unsigned char pts[4];
 
 	unsigned char rbuf[MAX_RBUF];
@@ -160,9 +160,9 @@ typedef struct usb_cardman {
 	int flags;
 	int op;
 	unsigned char proto;
-	int ttl, ttl_hi,	//CWT
-	 bwt,			//BWT
-	 ptsttl;		//PTS retry
+	int ttl, ttl_hi,	/* CWT */
+	 bwt,			/* BWT */
+	 ptsttl;		/* PTS retry */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 	int open;
 	int present;

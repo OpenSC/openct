@@ -51,7 +51,7 @@ enum {
 	RIA_SERIAL_GET_CONFIG,
 	RIA_SERIAL_SET_CONFIG,
 
-	RIA_DATA = 0x80,
+	RIA_DATA = 0x80
 };
 
 extern ria_client_t *ria_connect(const char *);

@@ -41,7 +41,7 @@ extern "C" {
 		CTAPI_DAD_ICC1 = 0,
 		CTAPI_DAD_CT = 1,
 		CTAPI_DAD_HOST = 2,
-		CTAPI_DAD_ICC2 = 3,
+		CTAPI_DAD_ICC2 = 3
 	};
 
 /*

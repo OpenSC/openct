@@ -42,7 +42,7 @@ enum {
 	CMD_ATR,
 	CMD_MF,
 	CMD_READ,
-	CMD_VERSION,
+	CMD_VERSION
 };
 
 int main(int argc, char **argv)

@@ -98,7 +98,7 @@ static int cm_card_reset(ifd_reader_t * reader, int slot, void *atr,
 	ioctl(dev->fd, 0x6304, 1);
 	/* propriatary driver doesn't check return value here, too */
 
-	// CM_IOCGATR
+	/* CM_IOCGATR */
 	if (ioctl(dev->fd, CM_IOCGATR, &cmatr) != 0) {
 		ifd_debug(1, "error during ioctl(CM_IOCGATR)\n");
 		return -1;

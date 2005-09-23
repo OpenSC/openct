@@ -18,7 +18,7 @@
 
 enum {
 	TYPE_KAAN,
-	TYPE_B1,
+	TYPE_B1
 };
 
 /*

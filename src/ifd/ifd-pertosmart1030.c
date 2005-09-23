@@ -37,7 +37,7 @@ typedef enum PS_INSTRUCTIION {
   PS_RESET             = 0x80,
   PS_EXCHANGE_APDU     = 0xa0,
   PS_EXCHANGE_T1_FRAME = 0xa1,
-  PS_POWER_OFF         = 0x81,
+  PS_POWER_OFF         = 0x81
 } ps_instruction_t;
 
 
@@ -56,7 +56,7 @@ typedef enum PS_CARD_TYPE {
   PS_T1_CARD_TYPE      = 0x0d,
   PS_2WIRE_CARD_TYPE   = 0x06,
   PS_3WIRE_CARD_TYPE   = 0x05,
-  PS_I2C_CARD_TYPE     = 0x02,
+  PS_I2C_CARD_TYPE     = 0x02
 } ps_card_type_t;
 
 
@@ -473,13 +473,13 @@ ps_encode_ascii_hex(unsigned char * out, size_t out_len,
   }
 
   for(i = 0, k = 0; i < in_len; i++) {
-    // convert the most significant nibble
+    /* convert the most significant nibble */
     out[k++] = PS_ASCII_TO_HEX(in[i] >> 4);
-    // convert the less significant nibble
+    /* convert the less significant nibble */
     out[k++] = PS_ASCII_TO_HEX(in[i] & 0x0f);
   }
 
-  // return the number of byte copied to output buffer
+  /* return the number of byte copied to output buffer */
   return k;
 }
 
@@ -743,7 +743,7 @@ ps_receive_from_ifd(ifd_reader_t *reader, unsigned char *rbuf, size_t rlen)
 
   /* header is present */
   if(PS_HEADER != protocol_bytes[PS_HEADER_IDX]) {
-    // receive error
+    /* receive error */
     rc = IFD_ERROR_COMM_ERROR;
     goto out;
   }
