@@ -15,7 +15,7 @@ libifd_la_SOURCES = \
 	\
 	ifd-acr30u.c ifd-cardman.c ifd-ccid.c ifd-cm4000.c ifd-egate.c \
 	ifd-etoken.c ifd-etoken64.c ifd-eutron.c ifd-gempc.c ifd-ikey2k.c \
-	ifd-ikey3k.c ifd-kaan.c ifd-pertosmart1030.c ifd-smartboard.c \
+	ifd-ikey3k.c ifd-kaan.c ifd-pertosmart1030.c ifd-pertosmart1038.c ifd-smartboard.c \
 	ifd-towitoko.c cardman.h \
 	\
 	proto-gbp.c proto-sync.c proto-t0.c proto-t1.c \

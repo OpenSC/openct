@@ -103,3 +103,9 @@ driver pertosmart1030 {
 		usb:072f/8009,
 	};
 };
+driver pertosmart1038 {
+	ids = {
+		usb:072f/9000,
+		usb:072f/90d0,
+	};
+};
