@@ -334,7 +334,7 @@ ps_if_transmission_receive(ifd_device_t * dev, unsigned char *rbuf, size_t rlen)
 				rlen - rbuf_offset);
 
 		if (chunk_len > 0) {
-			const long timeout;
+			long timeout;
 			chunk_start = &rbuf[rbuf_offset];
 
 			timeout = device_data->if_timeout -
@@ -609,7 +609,7 @@ ps_receive_from_ifd(ifd_reader_t * reader, unsigned char *rbuf, size_t rlen)
 	}
 
 	if (data_len > 0) {
-		const size_t remaining;
+		size_t remaining;
 		/* copy data from first packet */
 		received = rc - PS_RESPONSE_DATA_IDX;
 
