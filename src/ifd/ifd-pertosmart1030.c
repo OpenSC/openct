@@ -256,14 +256,14 @@ ps_if_transmission_send(ifd_device_t * dev, const void *sbuf, size_t slen)
 		rc = ifd_device_send(dev, sbuf, slen);
 	}
 
-	if (rc >= 0) {
+	if (rc < 0) {
+		ct_error("ps_if_transmission_send: failed: %i", rc);
+	} else {
 		ct_debug("ps_if_transmission_send: sent %u bytes: %s",
 			 slen, ct_hexdump(sbuf, slen));
-	} else {
-		ct_error("ps_if_transmission_send: failed: %i", rc);
 	}
 
-	device_data->if_state = (0 <= rc) ? WAITING_TO_RECEIVE : ERROR;
+	device_data->if_state = (rc < 0) ? ERROR : WAITING_TO_RECEIVE;
 
 	return rc;
 }
@@ -299,7 +299,6 @@ ps_if_transmission_receive(ifd_device_t * dev, const void *rbuf, size_t rlen)
 
 	/* Capture URBs or read from the serial until we have a complete answer */
 	for (;;) {
-
 		unsigned char packet_buf[INTERRUPT_URB_DATA_SIZE];
 		const int packet_buf_len = sizeof(packet_buf);
 		long wait;
@@ -519,7 +518,7 @@ unsigned char ps_checksum(unsigned char iv,
 {
 	unsigned char checksum = iv;
 
-	if (NULL != buf) {
+	if (buf != NULL) {
 		while (len) {
 			checksum ^= buf[--len];
 		}
@@ -553,9 +552,8 @@ ps_send_to_ifd(ifd_reader_t * reader, ps_instruction_t instruction,
 	device_data = (ps_device_data_t *) dev->user_data;
 
 	if (slen > PS_MAX_SEND_LEN) {
-		ct_error
-		    ("ps_apdu_send: transmission is larger than maximum allowed: %i",
-		     slen);
+		ct_error ("ps_apdu_send: transmission is larger "
+				"than maximum allowed: %i", slen);
 		return IFD_ERROR_GENERIC;
 	}
 
@@ -599,7 +597,7 @@ ps_send_to_ifd(ifd_reader_t * reader, ps_instruction_t instruction,
 
 	checksum = ps_checksum(0, protocol_bytes, size_tmp);
 
-	if (0 > rc) 
+	if (rc < 0) 
 		goto out;
 
 	p += rc;
@@ -608,7 +606,7 @@ ps_send_to_ifd(ifd_reader_t * reader, ps_instruction_t instruction,
 	rc = ps_encode_ascii_hex(p, buffer_len - (p - buffer_start), sbuf,
 				 slen);
 
-	if (0 > rc) 
+	if (rc < 0) 
 		goto out;
 
 	p += rc;
@@ -682,14 +680,19 @@ ps_receive_from_ifd(ifd_reader_t * reader, unsigned char *rbuf, size_t rlen)
 	device_data = (ps_device_data_t *) dev->user_data;
 	data_length = 0;
 
-	if (rbuf == NULL && rlen > 0) {
-		ct_error("ps_receive_from_ifd: NULL == rbuf && rlen > 0");
+	if (rbuf == NULL)
+		ct_error("ps_receive_from_ifd: rbuf == NULL");
 		rc = IFD_ERROR_GENERIC;
 		goto out;
 	}
 
-	if (rbuf == NULL) 
-		memset(rbuf, 0, rlen);
+	if (rlen > 0) {
+		ct_error("ps_receive_from_ifd: rlen > 0");
+		rc = IFD_ERROR_GENERIC;
+		goto out;
+	}
+
+	memset(rbuf, 0, rlen);
 
 	/* receive transmission */
 	rc = ps_if_transmission_receive(dev, buffer, buffer_len);
@@ -711,14 +714,10 @@ ps_receive_from_ifd(ifd_reader_t * reader, unsigned char *rbuf, size_t rlen)
 	p++;
 
 	/* decode the "protocol bytes", i.e. header, SW1, SW1 and data length */
-
+		/* 8 = 2 * (header + sw1 + sw2 + data_length) */
+		/* make sure it's even size */
 	rc = ps_decode_ascii_hex(protocol_bytes, sizeof(protocol_bytes), p,
-				 min(8
-				     /* 2 * (header + sw1 + sw2 + data_length) */
-				     ,
-				     (rcvd_len - (p - buffer))
-				     & ~((size_t) 1)
-				     /* make sure it's even size */ ));
+			 min(8,(rcvd_len - (p - buffer)) & ~((size_t) 1)));
 
 	if (rc < 0) 
 		goto out;
@@ -916,10 +915,10 @@ ps_transceive_instruction(ifd_reader_t * reader,
 
 	rc = ps_send_to_ifd(reader, instruction, sbuf, slen);
 
-	if (rc >= 0) {
-		rc = ps_receive_from_ifd(reader, rbuf, rlen);
-	} else {
+	if (rc < 0) {
 		ct_error("ps_transceive_instruction: failed: %i", rc);
+	} else {
+		rc = ps_receive_from_ifd(reader, rbuf, rlen);
 	}
 
 	return rc;
@@ -960,12 +959,11 @@ static int ps_get_stat(ifd_reader_t * reader, ps_stat_t * stat)
 	rc = ps_transceive_instruction(reader, PS_GET_ACR_STAT,
 				       NULL, 0, buffer, sizeof(buffer));
 
-	if (rc >= 0) {
-		if (sizeof(buffer) > rc) {
-			rc = IFD_ERROR_COMM_ERROR;
-			goto out;
-		}
-	} else {
+	if (rc < 0) 
+		goto out;
+
+	if (sizeof(buffer) > rc) {
+		rc = IFD_ERROR_COMM_ERROR;
 		goto out;
 	}
 
@@ -1010,7 +1008,7 @@ static int ps_card_status(ifd_reader_t * reader, int slot, int *status)
 
 	rc = ps_get_stat(reader, &(device_data->stat));
 
-	if (IFD_SUCCESS == rc) {
+	if (rc == IFD_SUCCESS) {
 		*status = (device_data->stat.c_stat) ? IFD_CARD_PRESENT : 0;
 
 		if (c_stat != device_data->stat.c_stat) {
@@ -1262,7 +1260,6 @@ ps_apdu_send(ifd_reader_t * reader, unsigned int dad,
 	switch (device_data->cur_icc_proto) {
 
 	case IFD_PROTOCOL_T0:
-
 		ct_debug("ps_apdu_send: using EXCHANGE_APDU");
 
 		instruction = PS_EXCHANGE_APDU;
@@ -1280,7 +1277,6 @@ ps_apdu_send(ifd_reader_t * reader, unsigned int dad,
 		switch (cse) {
 
 		case IFD_APDU_CASE_1:
-
 			ct_debug("ps_apdu_send: T0 case 1");
 
 			/* lc = 0 at the end of sbuf
@@ -1289,7 +1285,6 @@ ps_apdu_send(ifd_reader_t * reader, unsigned int dad,
 			/* fall through */
 
 		case IFD_APDU_CASE_3S:
-
 			if (IFD_APDU_CASE_3S == cse) {
 				ct_debug("ps_apdu_send: T0 case 3S");
 			}
@@ -1304,7 +1299,6 @@ ps_apdu_send(ifd_reader_t * reader, unsigned int dad,
 			break;
 
 		case IFD_APDU_CASE_2S:
-
 			ct_debug("ps_apdu_send: T0 case 2S");
 
 			/* le is at the end of sbuf
@@ -1318,12 +1312,10 @@ ps_apdu_send(ifd_reader_t * reader, unsigned int dad,
 			break;
 
 		case IFD_ERROR_GENERIC:
-
 			ct_error("ps_apdu_send: ifd_apdu_case failed");
 			return IFD_ERROR_GENERIC;
 
 		default:
-
 			ct_error("ps_apdu_send: apdu case not supported %i",
 				 cse);
 			return IFD_ERROR_NOT_SUPPORTED;
@@ -1334,24 +1326,18 @@ ps_apdu_send(ifd_reader_t * reader, unsigned int dad,
 		break;
 
 	case IFD_PROTOCOL_T1:
-
 		ct_debug("ps_apdu_send: using EXCHANGE_T1 FRAME");
-
 		instruction = PS_EXCHANGE_T1_FRAME;
-
 		rc = ps_send_to_ifd(reader, instruction, sbuf, slen);
-
 		break;
 
 	default:
-
 		ct_debug("ps_apdu_send: unknow protocol");
 		return IFD_ERROR_GENERIC;
 	}
 
-	if (0 > rc) {
+	if (rc < 0) 
 		ct_error("ps_apdu_send: error %i", rc);
-	}
 
 	return rc;
 }
@@ -1366,11 +1352,11 @@ ps_apdu_recv(ifd_reader_t * reader, unsigned int dad, unsigned char *buffer,
 
 	rc = ps_receive_from_ifd(reader, buffer, len);
 
-	if (rc => 0) {
+	if (rc < 0) {
+		ct_error("ps_apdu_recv: failed");
+	} else {
 		ct_debug("ps_apdu_recv: received %i bytes: %s", rc,
 			 ct_hexdump(buffer, rc));
-	} else {
-		ct_error("ps_apdu_recv: failed");
 	}
 
 	return rc;
