@@ -75,11 +75,7 @@ int ctbcs_build_verify_apdu(unsigned char *cmd, size_t size, unsigned char ins,
 	ctbcs_begin(&buf, ins, p1, 0x00);
 
 	ctbcs_add_timeout(&buf, timeout);
-	if (prompt) {
-		ctbcs_add_message(&buf, prompt);
-	} else {
-		cmd[3] |= 0xF0;
-	}
+	ctbcs_add_message(&buf, prompt);
 
 	ct_buf_putc(&buf, 0x52);
 	ct_buf_putc(&buf, data_len);
