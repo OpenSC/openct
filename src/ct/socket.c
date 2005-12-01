@@ -786,12 +786,17 @@ int ct_socket_read(ct_socket_t * sock, void *ptr, size_t size)
  */
 void ct_socket_link(ct_socket_t * prev, ct_socket_t * sock)
 {
-	ct_socket_t *next = prev->next;
+	ct_socket_t *next;
+
+	if (!prev)
+		return;
+
+	next = prev->next;
 
 	if (next)
 		next->prev = sock;
-	if (prev)
-		prev->next = sock;
+
+	prev->next = sock;
 	sock->prev = prev;
 	sock->next = next;
 }
