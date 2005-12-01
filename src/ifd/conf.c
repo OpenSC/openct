@@ -356,7 +356,7 @@ int get_token(char **tok)
 	if (skipws() < 0)
 		return -1;
 
-again:
+      again:
 	s = (char *)ct_buf_head(&config_buf);
 	n = ct_buf_avail(&config_buf);
 

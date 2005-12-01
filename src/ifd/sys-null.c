@@ -98,10 +98,9 @@ int ifd_sysdep_usb_end_capture(ifd_device_t * dev, ifd_usb_capture_t * cap)
 	return -1;
 }
 
-
 int ifd_sysdep_usb_open(const char *device, int flags)
 {
-        return -1;
+	return -1;
 }
 
 /*

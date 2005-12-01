@@ -84,7 +84,7 @@ static int open_devstat(char *name)
 	if (!devstat_fd) {
 		char *devstat;
 
-		if ((devstat = calloc(1,strlen(name) + 2)) == NULL) {
+		if ((devstat = calloc(1, strlen(name) + 2)) == NULL) {
 			ct_error("out of memory");
 			return IFD_ERROR_NO_MEMORY;
 		}
@@ -303,11 +303,11 @@ ifd_sysdep_usb_control(ifd_device_t * dev,
 
 	bytes_to_process = USB_REQUEST_SIZE +
 	    ((requesttype & USB_EP_DIR_MASK) == USB_EP_DIR_OUT ? len : 0);
-	if ((usb_control_req = calloc(1,bytes_to_process)) == NULL) {
+	if ((usb_control_req = calloc(1, bytes_to_process)) == NULL) {
 		ct_error("out of memory");
 		return -1;
 	}
-	if ((recv_data = calloc(1,len)) == NULL) {
+	if ((recv_data = calloc(1, len)) == NULL) {
 		ct_error("out of memory");
 		free(usb_control_req);
 		return -1;

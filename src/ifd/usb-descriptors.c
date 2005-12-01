@@ -114,10 +114,10 @@ static int ifd_usb_parse_interface(struct ifd_usb_interface *interface,
 
 	while (size > 0) {
 		interface->altsetting = (struct ifd_usb_interface_descriptor *)
-			realloc(interface->altsetting,
- 				sizeof(struct ifd_usb_interface_descriptor)
- 				* (interface-> num_altsetting + 1)
-			);
+		    realloc(interface->altsetting,
+			    sizeof(struct ifd_usb_interface_descriptor)
+			    * (interface->num_altsetting + 1)
+		    );
 		if (!interface->altsetting) {
 			ct_error("out of memory");
 			return -1;

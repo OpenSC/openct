@@ -124,7 +124,7 @@ static ifd_protocol_t *ifd_sync_probe_icc(ifd_reader_t * reader, int slot,
 		}
 	}
 
-out:
+      out:
 	if (!res) {
 		ifd_protocol_free(p);
 		p = NULL;
@@ -165,7 +165,7 @@ int ifd_sync_detect_icc(ifd_reader_t * reader, int slot, void *atr, size_t size)
 
 	return n;
 
-failed:
+      failed:
 	if (p != NULL)
 		ifd_protocol_free(p);
 	return IFD_ERROR_NO_ATR;

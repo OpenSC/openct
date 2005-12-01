@@ -19,8 +19,8 @@ int ifd_init(void)
 
 	/* initialize ltdl */
 	i = lt_dlinit();
-	if (i != 0) 
-		ct_error("lt_dlinit returned %d",i);
+	if (i != 0)
+		ct_error("lt_dlinit returned %d", i);
 
 	/* Register built-in drivers */
 	ifd_acr30u_register();

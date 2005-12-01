@@ -102,7 +102,7 @@ int main(int argc, char **argv)
 	ct_config.debug = opt_debug;
 
 	/* Initialize IFD library */
-	if (ifd_init()) 
+	if (ifd_init())
 		return 1;
 
 	/* Allocate a socket slot
@@ -164,7 +164,7 @@ int main(int argc, char **argv)
 
 static void TERMhandler(int signo)
 {
-        ct_mainloop_leave();
+	ct_mainloop_leave();
 }
 
 /*

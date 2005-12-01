@@ -174,4 +174,3 @@ unsigned int ifd_drivers_list(const char **names, size_t max)
 	}
 	return n;
 }
-
