@@ -97,8 +97,7 @@ RESPONSECODE IFDHCreateChannel(DWORD Lun, DWORD Channel)
 		if (ret == OK) {
 			/* Initialize context of the all slots in this reader */
 			for (slot = 0; slot < IFDH_MAX_SLOTS; slot++) {
-				ifdh_context[ctn][slot] =
-				    (IFDH_Context *)
+				ifdh_context[ctn][slot] = (IFDH_Context *)
 				    malloc(sizeof(IFDH_Context));
 
 				if (ifdh_context[ctn][slot] != NULL)
