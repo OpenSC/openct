@@ -642,12 +642,12 @@ ps_send_to_ifd(ifd_reader_t * reader, ps_instruction_t instruction,
 		free(buffer_start);
 	}
 
-	if (rc => 0) {
-		ct_debug("ps_send_to_ifd: sent %u bytes:%s", slen,
-			 ct_hexdump(sbuf, slen));
-	} else {
+	if (rc < 0) {
 		ct_error("ps_send_to_ifd: failed: %i", rc);
 		ps_if_transmission_end(dev);
+	} else {
+		ct_debug("ps_send_to_ifd: sent %u bytes:%s", slen,
+			 ct_hexdump(sbuf, slen));
 	}
 
 	return rc;
@@ -680,7 +680,7 @@ ps_receive_from_ifd(ifd_reader_t * reader, unsigned char *rbuf, size_t rlen)
 	device_data = (ps_device_data_t *) dev->user_data;
 	data_length = 0;
 
-	if (rbuf == NULL)
+	if (rbuf == NULL) {
 		ct_error("ps_receive_from_ifd: rbuf == NULL");
 		rc = IFD_ERROR_GENERIC;
 		goto out;

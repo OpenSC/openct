@@ -277,7 +277,7 @@ ps_if_transmission_send(ifd_device_t * dev,
 	/* complete packet */
 	rc = ifd_device_send(dev, sbuf, slen);
 	if (slen != rc) {
-		if (rc => IFD_SUCCESS) {
+		if (rc >= IFD_SUCCESS) {
 			/* if_device_send didn't reported an error,
 			   but didn't transmitted a full packet to the reader */
 			ct_debug("ps_if_transmission_send: unexpected "
