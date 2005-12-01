@@ -27,17 +27,15 @@
  * with the STX and ETX bytes.
  */
 typedef struct acr_priv {
-	int		icc_proto;
-	unsigned char	sw1, sw2;
-	unsigned char	abuf[267*2+2];
-	unsigned char	sbuf[267];
-	unsigned char	rbuf[265];
-	unsigned int	head, tail;
+	int icc_proto;
+	unsigned char sw1, sw2;
+	unsigned char abuf[267 * 2 + 2];
+	unsigned char sbuf[267];
+	unsigned char rbuf[265];
+	unsigned int head, tail;
 } acr_priv_t;
 
-
-typedef int	complete_fn_t(const void *, size_t);
-
+typedef int complete_fn_t(const void *, size_t);
 
 #define ACR_GET_STATUS			0x01
 #define ACR_SELECT_CARD_TYPE		0x02
@@ -75,45 +73,41 @@ typedef int	complete_fn_t(const void *, size_t);
 
 #define ACR_STATUS_LENGTH		16
 
-
 /*
  * Send USB control message, and receive data via
  * Interrupt URBs.
  */
 static int
-acr_usb_int(ifd_device_t *dev, int requesttype, int request,
-	       int value, int index,
-	       const void *sbuf, size_t slen,
-	       void *rbuf, size_t rlen,
-	       complete_fn_t complete,
-	       long timeout)
+acr_usb_int(ifd_device_t * dev, int requesttype, int request,
+	    int value, int index,
+	    const void *sbuf, size_t slen,
+	    void *rbuf, size_t rlen, complete_fn_t complete, long timeout)
 {
-	ifd_usb_capture_t	*cap;
-	struct timeval		begin;
-	unsigned int		total = 0;
-	unsigned char		*etx;
-	int			rc;
+	ifd_usb_capture_t *cap;
+	struct timeval begin;
+	unsigned int total = 0;
+	unsigned char *etx;
+	int rc;
 
 	if (timeout < 0)
 		timeout = dev->timeout;
 
 	rc = ifd_usb_begin_capture(dev,
-		       	IFD_USB_URB_TYPE_INTERRUPT,
-			0x81, 8, &cap);
+				   IFD_USB_URB_TYPE_INTERRUPT, 0x81, 8, &cap);
 	if (rc < 0)
 		return rc;
 
 	gettimeofday(&begin, NULL);
 	ifd_debug(3, "sending %u bytes:%s", slen, ct_hexdump(sbuf, slen));
 	rc = ifd_usb_control(dev, requesttype, request,
-			value, index, (void *) sbuf, slen, timeout);
+			     value, index, (void *)sbuf, slen, timeout);
 	if (rc < 0)
 		goto out;
 
 	/* Capture URBs until we have a complete answer */
 	while (rc >= 0 && total < rlen) {
-		unsigned char	temp[8];
-		long		wait;
+		unsigned char temp[8];
+		long wait;
 
 		wait = timeout - ifd_time_elapsed(&begin);
 		if (wait <= 0)
@@ -121,7 +115,7 @@ acr_usb_int(ifd_device_t *dev, int requesttype, int request,
 		memset(temp, 0, sizeof temp);
 		rc = ifd_usb_capture(dev, cap, temp, sizeof(temp), wait);
 		if (rc > 0) {
-			if (rc > (int) (rlen - total))
+			if (rc > (int)(rlen - total))
 				rc = rlen - total;
 			memcpy((caddr_t) rbuf + total, temp, rc);
 			total += rc;
@@ -137,20 +131,20 @@ acr_usb_int(ifd_device_t *dev, int requesttype, int request,
 	 * with garbage.
 	 */
 	if ((etx = memchr(rbuf, 0x03, total)) != NULL)
-		total = etx - (unsigned char*)rbuf + 1;
+		total = etx - (unsigned char *)rbuf + 1;
 
 	if (rc >= 0) {
-		ifd_debug(3, "received %u bytes:%s", total, ct_hexdump(rbuf, total));
+		ifd_debug(3, "received %u bytes:%s", total,
+			  ct_hexdump(rbuf, total));
 		rc = total;
 	}
 
-out:
+      out:
 	ifd_usb_end_capture(dev, cap);
 	return rc;
 }
 
-static int
-acr_reply_complete(const void *ptr, size_t len)
+static int acr_reply_complete(const void *ptr, size_t len)
 {
 	return memchr(ptr, 0x03, len) != NULL;
 }
@@ -159,21 +153,20 @@ acr_reply_complete(const void *ptr, size_t len)
  * Transmit a command to the reader.
  */
 static int
-acr_transmit(ifd_reader_t *reader,
-		const void *sbuf, size_t slen,
-		void *rbuf, size_t rlen)
+acr_transmit(ifd_reader_t * reader,
+	     const void *sbuf, size_t slen, void *rbuf, size_t rlen)
 {
 	static const char acr_hex[16] = "0123456789ABCDEF";
 
-	acr_priv_t	*priv = (acr_priv_t *) reader->driver_data;
-	ifd_device_t	*dev = reader->device;
-	unsigned char	*abuf = priv->abuf;
-	unsigned char	*cbuf = (unsigned char*)sbuf;
-	unsigned char	checksum;
-	unsigned char	c;
-	int		requesttype;
-	int		rc;
-	int		i;
+	acr_priv_t *priv = (acr_priv_t *) reader->driver_data;
+	ifd_device_t *dev = reader->device;
+	unsigned char *abuf = priv->abuf;
+	unsigned char *cbuf = (unsigned char *)sbuf;
+	unsigned char checksum;
+	unsigned char c;
+	int requesttype;
+	int rc;
+	int i;
 
 	if (slen > 261)
 		return IFD_ERROR_GENERIC;
@@ -197,9 +190,8 @@ acr_transmit(ifd_reader_t *reader,
 
 	/* Transmit the encoded command */
 	requesttype = IFD_USB_RECIP_DEVICE
-		    | IFD_USB_TYPE_VENDOR
-		    | IFD_USB_ENDPOINT_OUT;
-	rc = acr_usb_int(dev, requesttype, 0, 0, 0, priv->abuf, slen*2 + 6,
+	    | IFD_USB_TYPE_VENDOR | IFD_USB_ENDPOINT_OUT;
+	rc = acr_usb_int(dev, requesttype, 0, 0, 0, priv->abuf, slen * 2 + 6,
 			 priv->abuf, sizeof priv->abuf, acr_reply_complete, -1);
 
 	if (rc <= 0)
@@ -212,7 +204,7 @@ acr_transmit(ifd_reader_t *reader,
 
 	/* Decode and verify the response */
 	abuf = priv->abuf;
-	if (abuf[0] != 0x02 || abuf[rc-1] != 0x03) {
+	if (abuf[0] != 0x02 || abuf[rc - 1] != 0x03) {
 		ifd_debug(1, "data: %s", ct_hexdump(abuf, rc));
 		ct_error("acr: communication error: invalid header/footer");
 		return IFD_ERROR_COMM_ERROR;
@@ -224,11 +216,11 @@ acr_transmit(ifd_reader_t *reader,
 
 	for (i = 0; i < rc; ++i) {
 		*abuf -= '0';
-		if (*abuf >  9)
+		if (*abuf > 9)
 			*abuf -= 'A' - '0' - 10;
 		c = (*abuf++ & 0x0f) << 4;
 		*abuf -= '0';
-		if (*abuf >  9)
+		if (*abuf > 9)
 			*abuf -= 'A' - '0' - 10;
 		c += *abuf++ & 0x0f;
 
@@ -246,14 +238,13 @@ acr_transmit(ifd_reader_t *reader,
 	if (priv->abuf[3] == 0xff) {
 		rc = (priv->abuf[4] << 8) + priv->abuf[5];
 		abuf = &priv->abuf[6];
-	}
-	else {
+	} else {
 		rc = priv->abuf[3];
 		abuf = &priv->abuf[4];
 	}
 
 	if (rc > (int)rlen) {
-		ifd_debug(1, "received more data than requested, " \
+		ifd_debug(1, "received more data than requested, "
 			  "discarding data: %s", ct_hexdump(abuf, rlen - rc));
 	}
 
@@ -265,10 +256,9 @@ acr_transmit(ifd_reader_t *reader,
 /*
  * Read the reader status
  */
-static int
-acr_reader_status(ifd_reader_t *reader, void *status, size_t len)
+static int acr_reader_status(ifd_reader_t * reader, void *status, size_t len)
 {
-	unsigned char	cmd[2];
+	unsigned char cmd[2];
 	int rc;
 
 	cmd[0] = ACR_GET_STATUS;
@@ -289,20 +279,18 @@ acr_reader_status(ifd_reader_t *reader, void *status, size_t len)
 /*
  * Initialize the device
  */
-static int
-acr_open(ifd_reader_t *reader, const char *device_name)
+static int acr_open(ifd_reader_t * reader, const char *device_name)
 {
-	ifd_device_t	*dev;
-	acr_priv_t	*priv;
+	ifd_device_t *dev;
+	acr_priv_t *priv;
 	ifd_device_params_t params;
-	unsigned char	status[ACR_STATUS_LENGTH];
-	int		rc;
+	unsigned char status[ACR_STATUS_LENGTH];
+	int rc;
 
 	if (!(dev = ifd_device_open(device_name)))
 		return -1;
 	if (ifd_device_type(dev) != IFD_DEVICE_TYPE_USB) {
-		ct_error("acr30u: device %s is not a USB device",
-				device_name);
+		ct_error("acr30u: device %s is not a USB device", device_name);
 		ifd_device_close(dev);
 		return -1;
 	}
@@ -328,8 +316,8 @@ acr_open(ifd_reader_t *reader, const char *device_name)
 	/* strndup is a GNU extension, so it might not be available on all
 	 * the target platforms. Use malloc and memcpy instead.
 	 */
-	reader->name = (char*) calloc(1, 11);
-	memcpy((char*) reader->name, status, 10);
+	reader->name = (char *)calloc(1, 11);
+	memcpy((char *)reader->name, status, 10);
 	ifd_debug(1, "found %s reader.", reader->name);
 	ifd_debug(1, "supported cards: %02x%02x", status[12], status[13]);
 
@@ -339,10 +327,9 @@ acr_open(ifd_reader_t *reader, const char *device_name)
 /*
  * Close the device
  */
-static int
-acr_close(ifd_reader_t *reader)
+static int acr_close(ifd_reader_t * reader)
 {
-	free((char*) reader->name);
+	free((char *)reader->name);
 	free(reader->driver_data);
 	return 0;
 }
@@ -351,15 +338,13 @@ acr_close(ifd_reader_t *reader)
  * Power up the reader - always powered up.
  * TODO: What about an USB standby mode ?
  */
-static int
-acr_activate(ifd_reader_t *reader)
+static int acr_activate(ifd_reader_t * reader)
 {
 	ifd_debug(1, "called.");
 	return 0;
 }
 
-static int
-acr_deactivate(ifd_reader_t *reader)
+static int acr_deactivate(ifd_reader_t * reader)
 {
 	ifd_debug(1, "called.");
 	return -1;
@@ -368,11 +353,10 @@ acr_deactivate(ifd_reader_t *reader)
 /*
  * Card status
  */
-static int
-acr_card_status(ifd_reader_t *reader, int slot, int *status)
+static int acr_card_status(ifd_reader_t * reader, int slot, int *status)
 {
-	unsigned char	acr_status[ACR_STATUS_LENGTH];
-	int		rc;
+	unsigned char acr_status[ACR_STATUS_LENGTH];
+	int rc;
 
 	*status = 0;
 
@@ -382,12 +366,12 @@ acr_card_status(ifd_reader_t *reader, int slot, int *status)
 	}
 
 	ifd_debug(2, "C_SEL: %02x C_STAT: %02x",
-			acr_status[14], acr_status[15]);
+		  acr_status[14], acr_status[15]);
 
 	if (acr_status[15])
 		*status = IFD_CARD_PRESENT;
 
-	ifd_debug(2, "card %spresent", *status? "" : "not ");
+	ifd_debug(2, "card %spresent", *status ? "" : "not ");
 	return 0;
 }
 
@@ -395,10 +379,10 @@ acr_card_status(ifd_reader_t *reader, int slot, int *status)
  * Reset
  */
 static int
-acr_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
+acr_card_reset(ifd_reader_t * reader, int slot, void *atr, size_t size)
 {
-	unsigned char	buffer[IFD_MAX_ATR_LEN];
-	unsigned char	cmd[2];
+	unsigned char buffer[IFD_MAX_ATR_LEN];
+	unsigned char cmd[2];
 	int rc;
 
 	cmd[0] = ACR_RESET;
@@ -418,13 +402,12 @@ acr_card_reset(ifd_reader_t *reader, int slot, void *atr, size_t size)
 /*
  * Select a protocol for communication with the ICC.
  */
-static int
-acr_set_protocol(ifd_reader_t *reader, int nslot, int proto)
+static int acr_set_protocol(ifd_reader_t * reader, int nslot, int proto)
 {
-	ifd_slot_t	*slot;
-	acr_priv_t	*priv;
-	unsigned char	cmd[3];
-	int		rc;
+	ifd_slot_t *slot;
+	acr_priv_t *priv;
+	unsigned char cmd[3];
+	int rc;
 
 	ifd_debug(1, "called, proto=%d", proto);
 
@@ -465,16 +448,17 @@ acr_set_protocol(ifd_reader_t *reader, int nslot, int proto)
  * Send/receive routines
  */
 static int
-acr_send_t0(ifd_reader_t *reader, unsigned int dad, const unsigned char *sbuf, size_t slen)
+acr_send_t0(ifd_reader_t * reader, unsigned int dad, const unsigned char *sbuf,
+	    size_t slen)
 {
-	acr_priv_t	*priv = (acr_priv_t *) reader->driver_data;
-	ifd_iso_apdu_t	iso;
-	int		rc;
+	acr_priv_t *priv = (acr_priv_t *) reader->driver_data;
+	ifd_iso_apdu_t iso;
+	int rc;
 
 	if (slen > 260)
 		return IFD_ERROR_GENERIC;
 
-        /* The reader expects Lc and Le to always be present, so fix the
+	/* The reader expects Lc and Le to always be present, so fix the
 	 * APDU to add a null Le byte for Case 1, Case 3S and Case 4S and
 	 * insert a null Lc byte for Case 2S. The T=0 protocol handler already
 	 * took care of inserting a null Lc byte for Case 1, and removed the
@@ -488,14 +472,14 @@ acr_send_t0(ifd_reader_t *reader, unsigned int dad, const unsigned char *sbuf, s
 		return rc;
 
 	if (iso.cse == IFD_APDU_CASE_2S) {
-		priv->sbuf[slen+2] = priv->sbuf[slen+1];
-		priv->sbuf[slen+1] = 0;
-	}
-	else
-		priv->sbuf[slen+2] = 0;
+		priv->sbuf[slen + 2] = priv->sbuf[slen + 1];
+		priv->sbuf[slen + 1] = 0;
+	} else
+		priv->sbuf[slen + 2] = 0;
 
 	priv->head = priv->tail = 0;
-	rc = acr_transmit(reader, priv->sbuf, slen + 3, priv->rbuf, sizeof priv->rbuf);
+	rc = acr_transmit(reader, priv->sbuf, slen + 3, priv->rbuf,
+			  sizeof priv->rbuf);
 	if (rc >= 0) {
 		priv->tail = rc;
 		rc = slen;
@@ -504,9 +488,10 @@ acr_send_t0(ifd_reader_t *reader, unsigned int dad, const unsigned char *sbuf, s
 }
 
 static int
-acr_send(ifd_reader_t *reader, unsigned int dad, const unsigned char *buffer, size_t len)
+acr_send(ifd_reader_t * reader, unsigned int dad, const unsigned char *buffer,
+	 size_t len)
 {
-	acr_priv_t	*priv = (acr_priv_t *) reader->driver_data;
+	acr_priv_t *priv = (acr_priv_t *) reader->driver_data;
 
 	switch (priv->icc_proto) {
 	case IFD_PROTOCOL_T0:
@@ -517,9 +502,10 @@ acr_send(ifd_reader_t *reader, unsigned int dad, const unsigned char *buffer, si
 }
 
 static int
-acr_recv(ifd_reader_t *reader, unsigned int dad, unsigned char *buffer, size_t len, long timeout)
+acr_recv(ifd_reader_t * reader, unsigned int dad, unsigned char *buffer,
+	 size_t len, long timeout)
 {
-	acr_priv_t	*priv = (acr_priv_t *) reader->driver_data;
+	acr_priv_t *priv = (acr_priv_t *) reader->driver_data;
 
 	switch (priv->icc_proto) {
 	case IFD_PROTOCOL_T0:
@@ -529,14 +515,13 @@ acr_recv(ifd_reader_t *reader, unsigned int dad, unsigned char *buffer, size_t l
 		priv->head += len;
 		return len;
 	}
-	return IFD_ERROR_NOT_SUPPORTED; /* not yet */
+	return IFD_ERROR_NOT_SUPPORTED;	/* not yet */
 }
 
 /*
  * Set the card's baud rate etc
  */
-int
-acr_set_card_parameters(ifd_device_t *dev, unsigned int baudrate)
+int acr_set_card_parameters(ifd_device_t * dev, unsigned int baudrate)
 {
 	return 0;
 }
@@ -544,13 +529,12 @@ acr_set_card_parameters(ifd_device_t *dev, unsigned int baudrate)
 /*
  * Driver operations
  */
-static struct ifd_driver_ops	acr30u_driver;
+static struct ifd_driver_ops acr30u_driver;
 
 /*
  * Initialize this module
  */
-void
-ifd_acr30u_register(void)
+void ifd_acr30u_register(void)
 {
 	memset(&acr30u_driver, 0, sizeof acr30u_driver);
 
