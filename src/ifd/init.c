@@ -68,8 +68,10 @@ int ifd_init(void)
 		}
 		n = ifd_conf_get_nodes("driver", nodes, n);
 		for (i = 0; i < n; i++) {
-			if (configure_driver(nodes[i]))
+			if (configure_driver(nodes[i])) {
+				free(nodes);
 				return 1;
+			}
 		}
 		free(nodes);
 	}
