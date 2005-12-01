@@ -114,6 +114,8 @@ static int ikey2k_card_reset(ifd_reader_t * reader, int slot, void *atr,
 	if (rc != 25)
 		goto failed;
 
+	/* yes, this is _currently_ dead code, as IFD_MAX_ATR_LEN
+	 * is higher than 25 ... */
 	if (rc > IFD_MAX_ATR_LEN)
 		goto failed;
 
