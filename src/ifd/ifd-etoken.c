@@ -114,7 +114,7 @@ static int et_card_reset(ifd_reader_t * reader, int slot, void *atr,
 		goto failed;
 	return atrlen;
 
-failed:
+      failed:
 	ct_error("etoken: failed to activate token");
 	return -1;
 }

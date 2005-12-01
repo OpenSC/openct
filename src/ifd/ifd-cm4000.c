@@ -69,8 +69,8 @@ static int cm_card_status(ifd_reader_t * reader, int slot, int *status)
 	*status = 0;
 
 	ifd_debug(1, "called.");
-	rc = ioctl(dev->fd, CM_IOCGSTATUS,  &cm_status);
-	if (rc != 0) { 
+	rc = ioctl(dev->fd, CM_IOCGSTATUS, &cm_status);
+	if (rc != 0) {
 		ifd_debug(1, "error during ioctl(CM_IOCGSTATUS): %d=%s",
 			  rc, strerror(errno));
 		return -1;

@@ -23,7 +23,8 @@ static int et64_open(ifd_reader_t * reader, const char *device_name)
 	if (!(dev = ifd_device_open(device_name)))
 		return -1;
 	if (ifd_device_type(dev) != IFD_DEVICE_TYPE_USB) {
-		ct_error("etoken64: device %s is not a USB device", device_name);
+		ct_error("etoken64: device %s is not a USB device",
+			 device_name);
 		ifd_device_close(dev);
 		return -1;
 	}
@@ -32,7 +33,6 @@ static int et64_open(ifd_reader_t * reader, const char *device_name)
 
 	return 0;
 }
-
 
 /*
  * Power up the reader
@@ -61,7 +61,7 @@ static int et64_card_status(ifd_reader_t * reader, int slot, int *status)
  * We should do something to make it come back with all state zapped
  */
 static int et64_card_reset(ifd_reader_t * reader, int slot, void *atr,
-			 size_t size)
+			   size_t size)
 {
 	ifd_device_t *dev = reader->device;
 	unsigned char buffer[256];
@@ -97,7 +97,7 @@ static int et64_card_reset(ifd_reader_t * reader, int slot, void *atr,
 
 	return atrlen;
 
-failed:
+      failed:
 	ct_error("etoken64: failed to activate token");
 	return -1;
 }
@@ -106,14 +106,14 @@ failed:
  * Send/receive routines
  */
 static int et64_send(ifd_reader_t * reader, unsigned int dad,
-		   const unsigned char *buffer, size_t len)
+		     const unsigned char *buffer, size_t len)
 {
 	return ifd_usb_control(reader->device, 0x40, 0x06, 0, 0,
 			       (void *)buffer, len, -1);
 }
 
 static int et64_recv(ifd_reader_t * reader, unsigned int dad,
-		   unsigned char *buffer, size_t len, long timeout)
+		     unsigned char *buffer, size_t len, long timeout)
 {
 	return ifd_usb_control(reader->device, 0xc0, 0x86, 0, 0,
 			       buffer, len, timeout);

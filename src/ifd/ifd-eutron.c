@@ -123,7 +123,7 @@ static int eutron_card_reset(ifd_reader_t * reader, int slot, void *atr,
 
 	return atrlen;
 
-failed:
+      failed:
 	ct_error("eutron: failed to activate token");
 	return -1;
 }
@@ -165,7 +165,7 @@ static int eutron_recv(ifd_reader_t * reader, unsigned int dad,
 		goto failed;
 
 	return lr;
-failed:
+      failed:
 	ct_error("eutron: failed to receive t=1 frame");
 	return -1;
 }

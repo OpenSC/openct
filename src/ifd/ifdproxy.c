@@ -209,7 +209,6 @@ int run_client(int argc, char **argv)
 	if (ifd_init())
 		return 1;
 
-
 	if (argc != 2 && argc != 3)
 		usage(1);
 	name = argv[0];
