@@ -88,8 +88,10 @@ static int dir(struct CardTerminal *ct, ct_buf_t * buf, off_t start,
 {
 	struct CardTerminalFile **entry;
 
-	if (size)
-		*size = 0;
+	if (!size)
+		return -1;
+
+	*size = 0;
 	for (entry = &ct->cwd->dir[0]; *entry; ++entry) {
 		unsigned char r[5];
 		int rc;
@@ -118,8 +120,10 @@ static int hostcf(struct CardTerminal *ct, ct_buf_t * buf, off_t start,
 	const char *version = "OpenCT";
 	int rc;
 
-	if (size)
-		*size = 0;
+	if (!size)
+		return -1;
+
+	*size = 0;
 	data[0] = 0x01;
 	data[1] = strlen(version);
 	if ((rc = put(buf, &start, &length, size, data, 2)) < 0)
@@ -510,9 +514,6 @@ static int ctapi_transact(struct CardTerminal *ct, int nslot,
 		le = 256;
 
 	if (cmd_len == 11 && memcmp(cmd, select_kvk, 11) == 0) {
-		rc = 0;
-		if (rc < 0)
-			return rc;
 		if (ctapi_put_sw(&rbuf, 0x9000) < 0)
 			return ctapi_error(&rbuf, CTBCS_SW_BAD_LENGTH);
 		return ct_buf_avail(&rbuf);
