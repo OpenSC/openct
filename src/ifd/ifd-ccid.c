@@ -594,7 +594,6 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 	if (!intf) {
 		ct_error("ccid: class descriptor not found");
 		ifd_device_close(dev);
-		ifd_usb_free_configuration(&conf);
 		return -1;
 	}
 	params.usb.configuration = conf.bConfigurationValue;
