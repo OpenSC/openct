@@ -517,10 +517,11 @@ unsigned char ps_checksum(unsigned char iv,
 			  const unsigned char *buf, size_t len)
 {
 	unsigned char checksum = iv;
+	int mylen = len;
 
 	if (buf != NULL) {
-		while (len) {
-			checksum ^= buf[--len];
+		while (mylen) {
+			checksum ^= buf[--mylen];
 		}
 	}
 
@@ -830,12 +831,12 @@ ps_receive_from_ifd(ifd_reader_t * reader, unsigned char *rbuf, size_t rlen)
 						 rlen - rbuf_offset, p,
 						 encoded_data_slice_len);
 
+			if (rc < 0) 
+				goto out;
+
 			/* calculate checksum of the decode data */
 			checksum =
 			    ps_checksum(checksum, rbuf + rbuf_offset, rc);
-
-			if (rc < 0) 
-				goto out;
 
 			p += 2 * rc;
 			remaining_data_length -= rc;
