@@ -461,7 +461,7 @@ ps_send_to_ifd(ifd_reader_t * reader,
 	if (buffer_len < command_size) {
 		buffer = (unsigned char *)malloc(command_size);
 
-		if (NULL == buffer) {
+		if (buffer == NULL) {
 			rc = IFD_ERROR_NO_MEMORY;
 			goto out;
 		}
@@ -547,8 +547,14 @@ ps_receive_from_ifd(ifd_reader_t * reader, unsigned char *rbuf, size_t rlen)
 	dev = reader->device;
 	device_data = (ps_device_data_t *) dev->user_data;
 
-	if (rbuf == NULL && rlen > 0) {
-		ct_error("ps_receive_from_ifd: NULL == rbuf && rlen > 0");
+	if (rbuf == NULL) {
+		ct_error("ps_receive_from_ifd: rbuf == NULL");
+		rc = IFD_ERROR_GENERIC;
+		goto out;
+	}
+
+	if (rlen > 0) {
+		ct_error("ps_receive_from_ifd: rlen > 0");
 		rc = IFD_ERROR_GENERIC;
 		goto out;
 	}
@@ -945,10 +951,10 @@ ps_card_reset_select_protocol(ifd_reader_t * reader, int nslot,
 
 	/* power up the card */
 	rc = ps_transceive_instruction(reader, PS_RESET, NULL, 0, atr, size);
-
-	if (0 > rc) {
-		ct_debug("ps_card_reset_select_protocol: failed (PS_RESET): %i",
+	if (rc < 0) {
+		ct_error("ps_card_reset_select_protocol: failed (PS_RESET): %i",
 			 rc);
+		return rc;
 	}
 
 	atr_len = rc;
@@ -1173,11 +1179,11 @@ ps_apdu_recv(ifd_reader_t * reader, unsigned int dad, unsigned char *buffer,
 
 	rc = ps_receive_from_ifd(reader, buffer, len);
 
-	if (0 <= rc) {
+	if (rc < 0) {
+		ct_error("ps_apdu_recv: failed");
+	} else {
 		ct_debug("ps_apdu_recv: received %i bytes: %s", rc,
 			 ct_hexdump(buffer, rc));
-	} else {
-		ct_error("ps_apdu_recv: failed");
 	}
 
 	ps_if_transmission_end(dev);
