@@ -412,21 +412,28 @@ void ifd_usb_free_configuration(struct ifd_usb_config_descriptor *cf)
 			struct ifd_usb_interface_descriptor *as =
 			    &ifp->altsetting[j];
 
-			if (as->extra)
+			if (as->extra) {
 				free(as->extra);
+				as->extra=NULL;
+			}
 
 			if (!as->endpoint)
 				break;
 
 			for (k = 0; k < as->bNumEndpoints; k++) {
-				if (as->endpoint[k].extra)
+				if (as->endpoint[k].extra) {
 					free(as->endpoint[k].extra);
+					as->endpoint[k].extra=NULL;
+				}
 			}
 			free(as->endpoint);
+			as->endpoint=NULL;
 		}
 
 		free(ifp->altsetting);
+		ifp->altsetting=NULL;
 	}
 
 	free(cf->interface);
+	cf->interface=NULL;
 }
