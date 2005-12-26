@@ -3,8 +3,7 @@ dnl Process this file with autoconf to produce a configure script.
 
 # Require autoconf 2.52
 AC_PREREQ(2.52)
-
-AC_INIT(openct, WIP)
+AC_INIT([openct], [0.6.6-svn-r[]m4_translit([$Revision$],[Ra-z $:])])
 AM_INIT_AUTOMAKE
 AM_CONFIG_HEADER(config.h)
 
