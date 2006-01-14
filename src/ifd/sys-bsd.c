@@ -344,7 +344,7 @@ int ifd_scan_usb(void)
 	for (i = 0; i < 10; i++) {
 		int address;
 
-		snprintf(controller_devname, 10, "/dev/usb%d", i);
+		snprintf(controller_devname, 10, "/dev/usb%d.00", i);
 		if ((controller_fd = open(controller_devname, O_RDONLY)) < 0)
 			continue;
 
