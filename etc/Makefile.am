@@ -2,14 +2,15 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-DISTCLEANFILES = openct.conf hotplug.openct init-script
+DISTCLEANFILES = openct.conf hotplug.openct init-script openct.hald
 
-EXTRA_DIST = Info.plist openct.usermap \
-	openct.conf.in hotplug.openct.in init-script.in
+EXTRA_DIST = Info.plist openct.usermap openct.udev \
+	openct.conf.in hotplug.openct.in init-script.in \
+	openct.hald.in
 
 noinst_DATA = openct.conf
 
-noinst_SCRIPTS = hotplug.openct init-script
+noinst_SCRIPTS = hotplug.openct init-script openct.hald
 
 hotplug.openct: hotplug.openct.in
 	sed -e "s#SBINDIR#${sbindir}#g" < $^ > $@

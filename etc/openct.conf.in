@@ -77,6 +77,11 @@ driver	ikey3k {
 		usb:04b9/1300,
 	};
 };
+driver	starkey {
+	ids = {
+		usb:096e/0005,
+	};
+};
 driver	cardman {
 	ids = {
 #		usb:076b/0596, # OMNIKEY CardMan 2020

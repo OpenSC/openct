@@ -1,0 +1,17 @@
+#!/bin/bash
+
+PRODUCT="$HAL_PROP_USB_DEVICE_VENDOR_ID/$HAL_PROP_USB_DEVICE_PRODUCT_ID"
+
+DEVICE=`printf /dev/bus/usb/%03u/%03u \
+	$HAL_PROP_USB_DEVICE_BUS_NUMBER \
+	$HAL_PROP_USB_DEVICE_LINUX_DEVICE_NUMBER`
+
+if test -e $DEVICE
+then
+	exec @SBINDIR@/openct-control attach $DEVICE usb:$PRODUCT
+fi
+
+DEVICE=`printf /proc/bus/usb/%03u/%03u \
+	$HAL_PROP_USB_DEVICE_BUS_NUMBER \
+	$HAL_PROP_USB_DEVICE_LINUX_DEVICE_NUMBER`
+exec @SBINDIR@/openct-control attach $DEVICE usb:$PRODUCT
