@@ -17,6 +17,8 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/poll.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <string.h>
 #include <stdio.h>
 #include <signal.h>
@@ -36,7 +38,8 @@ int ifd_sysdep_device_type(const char *name)
 	if (!name || name[0] != '/')
 		return -1;
 
-	if (!strncmp(name, "/proc/bus/usb", 13))
+	if (!strncmp(name, "/proc/bus/usb", 13) &&
+		!strncmp(name, "/dev/bus/usb", 12)) 
 		return IFD_DEVICE_TYPE_USB;
 
 	if (stat(name, &stb) < 0)
@@ -317,6 +320,7 @@ int ifd_scan_usb(void)
 		for (dev = bus->devices; dev; dev = dev->next) {
 			const char *driver;
 			char device[PATH_MAX];
+			struct stat buf;
 
 			id.val[0] = dev->descriptor.idVendor;
 			id.val[1] = dev->descriptor.idProduct;
@@ -325,10 +329,17 @@ int ifd_scan_usb(void)
 				continue;
 
 			snprintf(device, sizeof(device),
-				 "/proc/bus/usb/%s/%s",
+				 "/dev/bus/usb/%s/%s",
 				 bus->dirname, dev->filename);
-
-			ifd_spawn_handler(driver, device, -1);
+			if (stat(device, &buf) == 0) {
+				ifd_spawn_handler(driver, device, -1);
+			} else {
+				snprintf(device, sizeof(device),
+				 	"/proc/bus/usb/%s/%s",
+				 	bus->dirname, dev->filename);
+			
+				ifd_spawn_handler(driver, device, -1);
+			}
 		}
 	}
 #endif
