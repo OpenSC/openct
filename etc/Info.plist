@@ -1,5 +1,5 @@
 	<key>ifdManufacturerString</key>
-	<string>OpenSC Project (www.opensc.org)</string>
+	<string>OpenCT Project (www.opensc-project.org/openct/)</string>
 	<key>ifdProductString</key>
 	<string>PC/SC Lite IFD wrapper for OpenCT</string>
 
