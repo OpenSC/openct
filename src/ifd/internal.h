@@ -134,6 +134,7 @@ extern void ifd_kaan_register(void);
 extern void ifd_pertosmart_ac1030_register(void);
 extern void ifd_pertosmart_ac1038_register(void);
 extern void ifd_smartboard_register(void);
+extern void ifd_smph_register(void);
 extern void ifd_starkey_register(void);
 extern void ifd_towitoko_register(void);
 
