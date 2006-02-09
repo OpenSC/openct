@@ -4,6 +4,12 @@ New in 0.6.7; ????-??-?? 11 Andreas Jellinghaus
 * configure.ac uses now pkg-config.
 * add phoenix/smartmouse driver by Antoine Nguyen
   based on sctk by Alexandre Becoulet
+* License is now officialy LGPL. So far it was BSD/LGPL
+  dual licensed, and most parts still are, but we already
+  had some usb code under LGPL and now got another driver
+  under LGPL, so the project as whole is considered LGPL.
+  Libopenct is still 100% BSD, in case you want to use it.
+  so this only affects the ifdhandler process and other tools.
 
 New in 0.6.6; 2005-09-11 Andreas Jellinghaus
 * updated html documentation. now generated with "make dist".
