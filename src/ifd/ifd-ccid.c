@@ -513,11 +513,17 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 				if (force_parse
 				    && intf->bInterfaceClass == 0xff)
 					typeok = 1;
-				if (typeok == 0)
+				if (intf->bNumEndpoints < 2 || intf->bNumEndpoints > 3)
+					typeok = 0;
+				if (typeok == 0) {
+					intf = NULL;
 					continue;
-				if (intf->bNumEndpoints != 3)
-					continue;
-				for (i = 0; i < 3; i++) {
+				}
+				if (intf->bNumEndpoints == 2) {
+					params.usb.ep_intr = 0;
+					ok |= 4;
+				}
+				for (i = 0; i < intf->bNumEndpoints; i++) {
 					if (((intf->endpoint[i].bmAttributes &
 					      IFD_USB_ENDPOINT_TYPE_MASK) ==
 					     IFD_USB_ENDPOINT_TYPE_BULK) &&
@@ -596,7 +602,29 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 		ifd_device_close(dev);
 		return -1;
 	}
-	params.usb.configuration = conf.bConfigurationValue;
+
+	/* Don't touch the device configuration if it's the one and only.
+	 * The reason for this is that in multi purpose devices (eg keyboards
+	 * with an integrated reader) some interfaces might already be in use.
+	 * Trying to change the device configuration in such a case will produce
+	 * this kernel message on Linux:
+	 * usbfs: interface X claimed while 'ifdhandler' sets config #N
+	 * and often the call will fail with EBUSY.
+	 * Actually a bit better fix could be implemented in usb_set_params.
+	 * The code there should check if the device is already in the requested
+	 * configuration and thus if the change is needed after all. However 
+	 * implementing this would need a bunch of new sysdep functions to
+	 * determine the current device configuration.
+	 * So IMHO we should postpone this hard work until some USB device
+	 * surfaces that really needs such magic.
+	 *
+	 * Antti Andreimann <Antti.Andreimann@mail.ee> Thu Feb 2 2006
+	 */
+	if(de.bNumConfigurations > 1)
+		params.usb.configuration=conf.bConfigurationValue;
+	else
+		params.usb.configuration=-1;
+
 	params.usb.interface = intf->bInterfaceNumber;
 	params.usb.altsetting = intf->bAlternateSetting;
 
@@ -782,7 +810,8 @@ static int ccid_card_status(ifd_reader_t * reader, int slot, int *status)
 	unsigned char ret[20];
 	unsigned char cmdbuf[10];
 
-	if (ifd_device_type(reader->device) == IFD_DEVICE_TYPE_USB) {
+	if (ifd_device_type(reader->device) == IFD_DEVICE_TYPE_USB &&
+		reader->device->settings.usb.ep_intr) {
 		ifd_usb_capture_t *cap;
 		int any = 0;
 		int i, j, bits, stat;
