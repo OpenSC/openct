@@ -38,7 +38,7 @@ int ifd_sysdep_device_type(const char *name)
 	if (!name || name[0] != '/')
 		return -1;
 
-	if (!strncmp(name, "/proc/bus/usb", 13) &&
+	if (!strncmp(name, "/proc/bus/usb", 13) ||
 		!strncmp(name, "/dev/bus/usb", 12)) 
 		return IFD_DEVICE_TYPE_USB;
 
