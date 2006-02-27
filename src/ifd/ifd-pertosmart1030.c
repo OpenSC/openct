@@ -10,6 +10,7 @@
 
 #include "internal.h"
 #include "atr.h"
+#include "usb-descriptors.h"
 
 #ifndef NULL
 #define NULL 0
@@ -111,8 +112,10 @@ static const ps_baudrate_t ps_baudrate_table[] = {
 #define PS_SW1_IDX              1
 #define PS_SW2_IDX              2
 
-#define INTERRUPT_URB_DATA_SIZE 0x08
-#define PS_ENDPOINT             0x81
+#define PS_USB_INTERFACE_INDEX            0x00
+#define PS_USB_INTERRUPT_ENDPOINT_ADDRESS 0x81
+#define PS_USB_INTERRUPT_URB_DATA_SIZE    0x08
+
 #define PS_STX                  0x02
 #define PS_ETX                  0x03
 
@@ -213,8 +216,8 @@ static int ps_if_transmission_start(ifd_device_t * dev, long timeout)
 	if (dev->type == IFD_DEVICE_TYPE_USB) {
 		rc = ifd_usb_begin_capture(dev,
 					   IFD_USB_URB_TYPE_INTERRUPT,
-					   PS_ENDPOINT,
-					   INTERRUPT_URB_DATA_SIZE,
+					   PS_USB_INTERRUPT_ENDPOINT_ADDRESS,
+					   PS_USB_INTERRUPT_URB_DATA_SIZE,
 					   &(device_data->capture));
 		if (rc != IFD_SUCCESS) {
 			ct_error("ps_if_transmission_start: failed: %i", rc);
@@ -248,7 +251,10 @@ ps_if_transmission_send(ifd_device_t * dev, const void *sbuf, size_t slen)
 	gettimeofday(&(device_data->begin), NULL);
 
 	if (dev->type == IFD_DEVICE_TYPE_USB) {
-		rc = ifd_usb_control(dev, USB_RECIP_ENDPOINT | USB_TYPE_VENDOR,
+		rc = ifd_usb_control(dev,
+				     IFD_USB_ENDPOINT_OUT |
+				     IFD_USB_TYPE_VENDOR  |
+				     IFD_USB_RECIP_DEVICE,
 				     0, 0, 0, (void *)sbuf, slen,
 				     device_data->if_timeout);
 	} else {
@@ -286,20 +292,20 @@ ps_if_transmission_receive(ifd_device_t * dev, const void *rbuf, size_t rlen)
 		return IFD_ERROR_GENERIC;
 	}
 
-	if (rlen < INTERRUPT_URB_DATA_SIZE) {
+	if (rlen < PS_USB_INTERRUPT_URB_DATA_SIZE) {
 		ct_error("ps_if_transmission_receive: buffer too small for "
 			 "receiving interrupt urbs: %i", rlen);
 		return IFD_ERROR_GENERIC;
 	}
 
-	if (rlen % INTERRUPT_URB_DATA_SIZE) {
+	if (rlen % PS_USB_INTERRUPT_URB_DATA_SIZE) {
 		rlen =
-		    (rlen / INTERRUPT_URB_DATA_SIZE) * INTERRUPT_URB_DATA_SIZE;
+		    (rlen / PS_USB_INTERRUPT_URB_DATA_SIZE) * PS_USB_INTERRUPT_URB_DATA_SIZE;
 	}
 
 	/* Capture URBs or read from the serial until we have a complete answer */
 	for (;;) {
-		unsigned char packet_buf[INTERRUPT_URB_DATA_SIZE];
+		unsigned char packet_buf[PS_USB_INTERRUPT_URB_DATA_SIZE];
 		const int packet_buf_len = sizeof(packet_buf);
 		long wait;
 
@@ -537,7 +543,9 @@ ps_send_to_ifd(ifd_reader_t * reader, ps_instruction_t instruction,
 {
 	int rc;
 	unsigned char buffer[1024];
-	unsigned char protocol_bytes[6];
+	unsigned char protocol_bytes[5]; /* 1 header byte      +
+					    1 instruction byte +
+					    3 size bytes         */
 	unsigned char *buffer_start = buffer;
 	unsigned char *p;
 	unsigned char checksum;
@@ -658,7 +666,9 @@ static int
 ps_receive_from_ifd(ifd_reader_t * reader, unsigned char *rbuf, size_t rlen)
 {
 	int rc;
-	unsigned char protocol_bytes[6];
+	unsigned char protocol_bytes[6]; /* 1 STX    byte  +
+					    2 status bytes +
+					    3 size bytes */
 	unsigned char checksum;
 	unsigned char expected_checksum;
 	unsigned char sw1 = 0;
@@ -681,14 +691,12 @@ ps_receive_from_ifd(ifd_reader_t * reader, unsigned char *rbuf, size_t rlen)
 	device_data = (ps_device_data_t *) dev->user_data;
 	data_length = 0;
 
-	if (rbuf == NULL) {
-		ct_error("ps_receive_from_ifd: rbuf == NULL");
-		rc = IFD_ERROR_GENERIC;
-		goto out;
-	}
-
-	if (rlen > 0) {
-		ct_error("ps_receive_from_ifd: rlen > 0");
+	/**
+	 * rbuf == NULL && rlen == 0 IS VALID,
+	 * it means receive the reader status, but no data
+	 */
+	if(rbuf == NULL && rlen > 0) {
+		ct_error("ps_receive_from_ifd: NULL == rbuf && rlen > 0");
 		rc = IFD_ERROR_GENERIC;
 		goto out;
 	}
@@ -1371,6 +1379,7 @@ static int ps_open(ifd_reader_t * reader, const char *device_name)
 	int rc;
 	ifd_device_t *dev;
 	ps_device_data_t *device_data;
+	ifd_device_params_t params;
 
 	unsigned char sbuf[2];
 
@@ -1386,7 +1395,20 @@ static int ps_open(ifd_reader_t * reader, const char *device_name)
 	switch (dev->type) {
 
 	case IFD_DEVICE_TYPE_USB:
+		
 		reader->name = PS_USB_READER_NAME;
+		
+		params = dev->settings;
+		params.usb.interface = PS_USB_INTERFACE_INDEX;
+		params.usb.ep_intr = PS_USB_INTERRUPT_ENDPOINT_ADDRESS;
+		
+		rc = ifd_device_set_parameters(dev, &params);
+		
+		if (rc != IFD_SUCCESS) {
+			ct_error("ps_open: ifd_device_set_parameters "
+			"returned error %i", rc);
+			return rc;
+		}
 		break;
 
 	case IFD_DEVICE_TYPE_SERIAL:
