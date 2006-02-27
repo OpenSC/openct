@@ -160,8 +160,8 @@ typedef struct ps_device_data {
 #define PS_RESPONSE_HEADER_SIZE  4
 #define PS_RESPONSE_DATA_IDX     PS_RESPONSE_HEADER_SIZE
 
-#define INTERRUPT_URB_DATA_SIZE 0x08
-#define PS_ENDPOINT             0x81
+#define PS_INTERRUPT_URB_DATA_SIZE 0x08
+#define PS_ENDPOINT                0x81
 
 #define PS_BULK_SEND_PACKET_SIZE    64
 #define PS_BULK_RECEIVE_PACKET_SIZE 64
@@ -175,7 +175,7 @@ typedef struct ps_device_data {
 /* read timeout
  * we must wait enough so that the card can finish its calculation */
 static const long PS_BULK_TIMEOUT = 30000;
-static const long PS_INTERRUPT_TIMEOUT = 200;
+static const long PS_INTERRUPT_TIMEOUT = 100;
 
 /* reader names */
 static const char PS_USB_READER_NAME[] = "PertoSmart EMV (AC1038, USB)";
@@ -390,8 +390,6 @@ static int ps_if_transmission_flush_reader_output_buffer(ifd_device_t * dev)
 
 	device_data = (ps_device_data_t *) dev->user_data;
 
-	return IFD_SUCCESS;
-
 	do {
 		rc = ifd_device_recv(dev, buffer, buffer_len, timeout);
 	} while (rc > 0);
@@ -526,6 +524,9 @@ ps_send_to_ifd(ifd_reader_t * reader,
 
 /*
  * Receive a response from reader
+ *
+ * (rbuf == NULL && rlen == 0) means caller wants no data,
+ * just the reader status 
  */
 static int
 ps_receive_from_ifd(ifd_reader_t * reader, unsigned char *rbuf, size_t rlen)
@@ -547,14 +548,8 @@ ps_receive_from_ifd(ifd_reader_t * reader, unsigned char *rbuf, size_t rlen)
 	dev = reader->device;
 	device_data = (ps_device_data_t *) dev->user_data;
 
-	if (rbuf == NULL) {
+	if (rbuf == NULL && rlen > 0) {
 		ct_error("ps_receive_from_ifd: rbuf == NULL");
-		rc = IFD_ERROR_GENERIC;
-		goto out;
-	}
-
-	if (rlen > 0) {
-		ct_error("ps_receive_from_ifd: rlen > 0");
 		rc = IFD_ERROR_GENERIC;
 		goto out;
 	}
@@ -673,9 +668,6 @@ ps_transceive_instruction(ifd_reader_t * reader,
 	ct_debug("ps_transceive_instruction: called");
 
 	dev = reader->device;
-
-	/* flush the output buffer from the reader */
-	rc = ps_if_transmission_flush_reader_output_buffer(dev);
 
 	if (rc == IFD_SUCCESS) {
 		/* start the transmission */
@@ -805,7 +797,7 @@ static int ps_card_status(ifd_reader_t * reader, int slot, int *status)
 			}
 		}
 	} else {
-		unsigned char packet_buf[INTERRUPT_URB_DATA_SIZE];
+		unsigned char packet_buf[PS_INTERRUPT_URB_DATA_SIZE];
 		const size_t packet_buf_len = sizeof(packet_buf);
 
 		/* read notifications received from the reader */
@@ -1273,7 +1265,7 @@ static int ps_open(ifd_reader_t * reader, const char *device_name)
 	rc = ifd_usb_begin_capture(dev,
 				   IFD_USB_URB_TYPE_INTERRUPT,
 				   params.usb.ep_intr,
-				   INTERRUPT_URB_DATA_SIZE,
+				   PS_INTERRUPT_URB_DATA_SIZE,
 				   &(device_data->capture));
 
       out:
