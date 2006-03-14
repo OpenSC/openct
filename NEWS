@@ -10,6 +10,7 @@ New in 0.6.7; ????-??-?? 11 Andreas Jellinghaus
   under LGPL, so the project as whole is considered LGPL.
   Libopenct is still 100% BSD, in case you want to use it.
   so this only affects the ifdhandler process and other tools.
+* Siemens B1 driver improved by Lorenz Knauer.
 
 New in 0.6.6; 2005-09-11 Andreas Jellinghaus
 * updated html documentation. now generated with "make dist".

@@ -341,6 +341,50 @@ static int kaan_card_status(ifd_reader_t * reader, int slot, int *status)
 }
 
 /*
+ * Get the card status
+ */
+static int b1_card_status(ifd_reader_t * reader, int slot, int *status)
+{
+        kaan_status_t *st = (kaan_status_t *) reader->driver_data;
+        unsigned char buffer[16];
+        int rc;
+
+        buffer[2] = slot + 1;
+        ifd_debug(1, "slot=%d", slot);
+        if (!st->frozen && st->last_activity + FREEZE_DELAY < time(NULL)
+            && ifd_device_type(reader->device) == IFD_DEVICE_TYPE_SERIAL) {
+                if ((rc = kaan_freeze(reader)) < 0)
+                        return rc;
+                usleep(10000);
+                st->frozen = 1;
+        }
+
+        if (st->frozen) {
+                /* Get the DSR status */
+                if (!ifd_serial_get_dsr(reader->device)) {
+                        *status = reader->slot[slot].status;
+                        return 0;
+                }
+
+                /* Activity detected - go on an get status */
+                st->last_activity = time(NULL);
+                st->frozen = 0;
+        }
+
+        rc = kaan_get_tlv_from_file(reader,
+                                    0x7F70 | (slot),
+                                    0x7021 | (slot << 8), 0x21, buffer, 1);
+        if (rc < 0)
+                return rc;
+
+        ct_error("buffer[0] = %i\n", buffer[0] );
+        if (buffer[0]) {
+                *status |= IFD_CARD_PRESENT;
+        }
+        return 0;
+}
+
+/*
  * Send the Freeze command to the reader
  */
 int kaan_freeze(ifd_reader_t * reader)
@@ -1047,7 +1091,7 @@ void ifd_kaan_register(void)
 	b1_driver.open = b1_open;
 	b1_driver.activate = kaan_activate;
 	b1_driver.deactivate = kaan_deactivate;
-	b1_driver.card_status = kaan_card_status;
+	b1_driver.card_status = b1_card_status;
 	b1_driver.card_reset = kaan_card_reset;
 	b1_driver.card_request = kaan_card_request;
 	b1_driver.output = kaan_display;
