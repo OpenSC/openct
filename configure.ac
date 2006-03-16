@@ -50,13 +50,6 @@ case "$host" in
 	CPPFLAGS="$CPPFLAGS -D_POSIX_PII_SOCKET"
 	;;
 *-*-linux*)
-	AC_CHECK_MEMBER(struct usbdevfs_ctrltransfer.bRequestType,
-		[AC_DEFINE(LINUX_NEWUSB,1,[new usb structure])],
-		[],
-		[
-#include <linux/compiler.h>
-#include <linux/usbdevice_fs.h>
-		])
 	;;
 *-*-darwin*)
 	LIBS="$LIBS -Wl,-framework,CoreFoundation"
