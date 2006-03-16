@@ -38,9 +38,9 @@ int ifd_init(void)
 	ifd_pertosmart_ac1038_register();
 	ifd_smartboard_register();
 	ifd_smph_register();
+	ifd_starkey_register();
 	ifd_towitoko_register();
 	/* ccid last */
-	ifd_starkey_register();
 	ifd_ccid_register();
 
 	/* Register all builtin protocols */
