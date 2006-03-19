@@ -1,11 +1,24 @@
 #!/bin/sh
 
 test "$ACTION" = "add" || exit 0
+test -n "$DEVICE" -o -n "$DEVNAME" || exit 0 
+test -e /var/run/openct/status || exit 0
 
-if [ -e /var/run/openct/status ]
+# race condition in the kernel, $DEVICE might not exist now
+sleep 1
+
+if [ -n "$DEVICE" ]
 then
-	# race condition in the kernel, $DEVICE might not exist now
-	sleep 1
-	# let's hope 1 second is good enough
 	SBINDIR/openct-control attach $DEVICE usb:$PRODUCT
+	exit 0
+fi
+
+if [ -n "$DEVNAME" ]
+then
+	V="`cat /sys/$DEVPATH/device/idVendor |sed -e "s/^0*//"`"
+	P="`cat /sys/$DEVPATH/device/idProduct|sed -e "s/^0*//"`"
+	D="`cat /sys/$DEVPATH/device/bcdDevice |sed -e "s/^0*//"`"
+	PRODUCT="$V/$P/$D"
+	SBINDIR/openct-control attach $DEVNAME usb:$PRODUCT
+	exit 0
 fi

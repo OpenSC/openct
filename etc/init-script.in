@@ -8,6 +8,8 @@ DESC="smart card terminal framework"
 
 test -x $DAEMON || exit 0
 
+test -e /var/run/openct || mkdir /var/run/openct
+
 set -e
 
 case "$1" in
