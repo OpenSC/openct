@@ -418,8 +418,7 @@ static int ccid_abort(ifd_reader_t * reader, int slot)
 
 	int r;
 	if (ifd_device_type(reader->device) == IFD_DEVICE_TYPE_USB) {
-		r = ifd_usb_control(reader->device,
-				    0x21
+		r = ifd_usb_control(reader->device, 0x21
 				    /*USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_INTERFACE */
 				    ,
 				    CCID_REQ_ABORT, st->seq << 8 | slot,
@@ -513,7 +512,8 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 				if (force_parse
 				    && intf->bInterfaceClass == 0xff)
 					typeok = 1;
-				if (intf->bNumEndpoints < 2 || intf->bNumEndpoints > 3)
+				if (intf->bNumEndpoints < 2
+				    || intf->bNumEndpoints > 3)
 					typeok = 0;
 				if (typeok == 0) {
 					intf = NULL;
@@ -620,10 +620,10 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 	 *
 	 * Antti Andreimann <Antti.Andreimann@mail.ee> Thu Feb 2 2006
 	 */
-	if(de.bNumConfigurations > 1)
-		params.usb.configuration=conf.bConfigurationValue;
+	if (de.bNumConfigurations > 1)
+		params.usb.configuration = conf.bConfigurationValue;
 	else
-		params.usb.configuration=-1;
+		params.usb.configuration = -1;
 
 	params.usb.interface = intf->bInterfaceNumber;
 	params.usb.altsetting = intf->bAlternateSetting;
@@ -811,7 +811,7 @@ static int ccid_card_status(ifd_reader_t * reader, int slot, int *status)
 	unsigned char cmdbuf[10];
 
 	if (ifd_device_type(reader->device) == IFD_DEVICE_TYPE_USB &&
-		reader->device->settings.usb.ep_intr) {
+	    reader->device->settings.usb.ep_intr) {
 		ifd_usb_capture_t *cap;
 		int any = 0;
 		int i, j, bits, stat;
@@ -1046,7 +1046,7 @@ static int ccid_set_protocol(ifd_reader_t * reader, int s, int proto)
 	 * is performed. What about F and D? */
 	if ((st->flags & FLAG_NO_PTS) == 0 &&
 	    (proto == IFD_PROTOCOL_T1 || atr_info.TA[0] != -1
-	     || atr_info.TC[0] != -1)) {
+	     || atr_info.TC[0] == 255)) {
 		unsigned char pts[7], ptsret[7];
 		int ptslen;
 
@@ -1060,9 +1060,10 @@ static int ccid_set_protocol(ifd_reader_t * reader, int s, int proto)
 				  sizeof(ptsret));
 		if (r < 0)
 			return r;
-		if (r < ptslen || memcmp(pts, ptsret, ptslen)) {
+		r = ifd_verify_pts(&atr_info, proto, ptsret, r);
+		if (r) {
 			ct_error("%s: Bad PTS response", reader->name);
-			return IFD_ERROR_INCOMPATIBLE_DEVICE;
+			return r;
 		}
 	}
 

@@ -105,8 +105,8 @@ int ifd_build_pts(const ifd_atr_info_t * info, int protocol, unsigned char *buf,
 		ptsbuf[ptslen++] = info->TA[0];
 		ptsbuf[1] |= 0x10;
 	}
-	if (info->TC[0] != -1) {
-		ptsbuf[ptslen++] = info->TC[0];
+	if (info->TC[0] == 255) {
+		ptsbuf[ptslen++] = 1;
 		ptsbuf[1] |= 0x20;
 	}
 
@@ -119,4 +119,39 @@ int ifd_build_pts(const ifd_atr_info_t * info, int protocol, unsigned char *buf,
 
 	memcpy(buf, ptsbuf, ptslen);
 	return ptslen;
+}
+
+/* validate a PTS response according to ISO7816-3 */
+int
+ifd_verify_pts(ifd_atr_info_t * info,
+	       int protocol, const unsigned char *buf, size_t len)
+{
+	int n, i;
+	int ptsr[3];
+	int pck;
+
+	if (len < 3)
+		return IFD_ERROR_BUFFER_TOO_SMALL;
+
+	if (buf[0] != 0xFF)
+		return IFD_ERROR_INCOMPATIBLE_DEVICE;	/* not a pts response */
+
+	for (n = 0, pck = 0; n < len; n++)
+		pck ^= buf[n];
+
+	if (pck)
+		return IFD_ERROR_COMM_ERROR;
+	for (i = 0; i < 3; i++)
+		ptsr[i] = -1;
+	for (i = 0, n = 2; i < 3 && n < len - 1; i++) {
+		if (buf[1] & 1 << (i + 4))
+			ptsr[i] = buf[n++];
+	}
+	if (n < len - 1)	/* extra bytes in response */
+		return IFD_ERROR_INCOMPATIBLE_DEVICE;
+	if (info->TA[0] != -1 && ptsr[0] != info->TA[0])
+		info->TA[0] = -1;
+	if (info->TC[0] == 255 && (ptsr[1] == -1 || (ptsr[1] & 1) == 0))
+		return IFD_ERROR_INCOMPATIBLE_DEVICE;
+	return 0;
 }
