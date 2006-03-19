@@ -3,8 +3,7 @@
 BUS!="usb", ACTION!="add", GOTO="openct_rules_end"
 
 # egate
-SYSFS{idVendor}=="0973", SYSFS{idProduct}=="0001", RUN+="/etc/hotplug/usb/openct
-"
+SYSFS{idVendor}=="0973", SYSFS{idProduct}=="0001", RUN+="/etc/hotplug/usb/openct"
 # eToken
 SYSFS{idVendor}=="0529", SYSFS{idProduct}=="050c", RUN+="/etc/hotplug/usb/openct
 SYSFS{idVendor}=="0529", SYSFS{idProduct}=="0514", RUN+="/etc/hotplug/usb/openct
