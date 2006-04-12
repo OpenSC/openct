@@ -65,13 +65,14 @@ void ifd_revert_bits(unsigned char *data, size_t len)
   } while (0)
 #endif
 
+/* return time elapsed since "then" in miliseconds */
 long ifd_time_elapsed(struct timeval *then)
 {
 	struct timeval now, delta;
 
 	gettimeofday(&now, NULL);
 	timersub(&now, then, &delta);
-	return delta.tv_sec * 1000 + (delta.tv_usec % 1000);
+	return delta.tv_sec * 1000 + (delta.tv_usec / 1000);
 }
 
 /*
