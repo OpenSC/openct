@@ -166,7 +166,8 @@ static int ps_complete_transmission(const void *p, size_t size)
 
 	for (i = 0; i < size; i++) {
 		if (((unsigned char *)p)[i] == PS_ETX) {
-			ct_debug("ps_complete_transmission: ETX found");
+			if (ct_config.debug >= 4)
+				ct_debug("ps_complete_transmission: ETX found");
 			return i + 1;
 		}
 	}
@@ -201,7 +202,8 @@ static int ps_if_transmission_start(ifd_device_t * dev, long timeout)
 	int rc;
 	ps_device_data_t *device_data;
 
-	ct_debug("ps_if_transmission_start: called");
+	if (ct_config.debug >= 1)
+		ct_debug("ps_if_transmission_start: called");
 
 	device_data = (ps_device_data_t *) dev->user_data;
 
@@ -241,6 +243,15 @@ ps_if_transmission_send(ifd_device_t * dev, const void *sbuf, size_t slen)
 
 	device_data = (ps_device_data_t *) dev->user_data;
 
+	if (ct_config.debug >= 4)
+		ct_debug("ps_if_transmission_send: sent %u bytes: %s",
+			 slen, ct_hexdump(sbuf, slen));
+	else
+		if (ct_config.debug >= 1)
+			ct_debug("ps_if_transmission_send: called");
+
+
+
 	if (device_data->if_state != WAITING_TO_SEND) {
 		ct_error
 		    ("ps_if_transmission_send: invalid transmission state %i.",
@@ -264,9 +275,6 @@ ps_if_transmission_send(ifd_device_t * dev, const void *sbuf, size_t slen)
 
 	if (rc < 0) {
 		ct_error("ps_if_transmission_send: failed: %i", rc);
-	} else {
-		ct_debug("ps_if_transmission_send: sent %u bytes: %s",
-			 slen, ct_hexdump(sbuf, slen));
 	}
 
 	device_data->if_state = (rc < 0) ? ERROR : WAITING_TO_RECEIVE;
@@ -322,7 +330,9 @@ ps_if_transmission_receive(ifd_device_t * dev, const void *rbuf, size_t rlen)
 						     packet_buf, packet_buf_len,
 						     wait);
 			} else {
+				ct_config.suppress_errors++;
 				rc = ifd_device_recv(dev, packet_buf, 1, wait);
+				ct_config.suppress_errors--;
 			}
 		}
 
@@ -358,8 +368,9 @@ ps_if_transmission_receive(ifd_device_t * dev, const void *rbuf, size_t rlen)
 
 	if (rc >= 0) {
 		rc = received;
-		ct_debug("ps_if_transmission_receive: received %u bytes:%s", rc,
-			 ct_hexdump(rbuf, rc));
+		if (ct_config.debug >= 4)
+			ct_debug("ps_if_transmission_receive: received %u bytes:%s", rc,
+			 	 ct_hexdump(rbuf, rc));
 	} else {
 		ct_error("ps_if_transmission_receive: failed: %i", rc);
 	}
@@ -375,7 +386,8 @@ static int ps_if_transmission_flush_reader_output_buffer(ifd_device_t * dev)
 	const size_t packet_buf_len = sizeof(packet_buf);
 	const long timeout = 20;
 
-	ct_debug("ps_if_transmission_flush_reader_output_buffer: called");
+	if (ct_config.debug >= 1)
+		ct_debug("ps_if_transmission_flush_reader_output_buffer: called");
 
 	device_data = (ps_device_data_t *) dev->user_data;
 
@@ -387,8 +399,10 @@ static int ps_if_transmission_flush_reader_output_buffer(ifd_device_t * dev)
 					     packet_buf, packet_buf_len,
 					     timeout);
 		} else {
+			ct_config.suppress_errors++;
 			rc = ifd_device_recv(dev, packet_buf, packet_buf_len,
 					     timeout);
+			ct_config.suppress_errors--;
 		}
 
 		if (rc <= 0) {
@@ -404,7 +418,8 @@ static int ps_if_transmission_end(ifd_device_t * dev)
 {
 	ps_device_data_t *device_data;
 
-	ct_debug("ps_if_transmission_end: called");
+	if (ct_config.debug >= 1)
+		ct_debug("ps_if_transmission_end: called");
 
 	device_data = (ps_device_data_t *) dev->user_data;
 
@@ -456,7 +471,8 @@ ps_encode_ascii_hex(unsigned char *out, size_t out_len,
 {
 	int i, k;
 
-	ct_debug("ps_encode_ascii_hex");
+	if (ct_config.debug >= 4)
+		ct_debug("ps_encode_ascii_hex: called");
 
 	if (out_len < (2 * in_len)) {
 		ct_error("ps_encode_ascii_hex: output buffer too small.");
@@ -483,7 +499,8 @@ ps_decode_ascii_hex(unsigned char *out, size_t out_len,
 {
 	size_t i, k;
 
-	ct_debug("ps_decode_ascii_hex: called");
+	if (ct_config.debug >= 4)
+		ct_debug("ps_decode_ascii_hex: called");
 
 	if (in_len % 2) {
 		ct_error
@@ -555,7 +572,12 @@ ps_send_to_ifd(ifd_reader_t * reader, ps_instruction_t instruction,
 	ps_device_data_t *device_data;
 	size_t tx_len;
 
-	ct_debug("ps_send_to_ifd: called");
+	if (ct_config.debug >= 4)
+		ct_debug("ps_send_to_ifd: sending %u bytes:%s", slen,
+		 	 ct_hexdump(sbuf, slen));
+	else if (ct_config.debug >= 1)
+		ct_debug("ps_send_to_ifd: called");
+	
 
 	dev = reader->device;
 	device_data = (ps_device_data_t *) dev->user_data;
@@ -654,10 +676,7 @@ ps_send_to_ifd(ifd_reader_t * reader, ps_instruction_t instruction,
 	if (rc < 0) {
 		ct_error("ps_send_to_ifd: failed: %i", rc);
 		ps_if_transmission_end(dev);
-	} else {
-		ct_debug("ps_send_to_ifd: sent %u bytes:%s", slen,
-			 ct_hexdump(sbuf, slen));
-	}
+	} 
 
 	return rc;
 }
@@ -685,7 +704,8 @@ ps_receive_from_ifd(ifd_reader_t * reader, unsigned char *rbuf, size_t rlen)
 	ifd_device_t *dev;
 	ps_device_data_t *device_data;
 
-	ct_debug("ps_receive_from_ifd: called");
+	if (ct_config.debug >= 1)
+		ct_debug("ps_receive_from_ifd: called");
 
 	dev = reader->device;
 	device_data = (ps_device_data_t *) dev->user_data;
@@ -745,7 +765,8 @@ ps_receive_from_ifd(ifd_reader_t * reader, unsigned char *rbuf, size_t rlen)
 	sw1 = protocol_bytes[PS_SW1_IDX];
 	sw2 = protocol_bytes[PS_SW2_IDX];
 
-	ct_debug("ps_receive_from_ifd: sw1 = %#02x, sw2 = %#02x", sw1, sw2);
+	if (ct_config.debug >= 4)
+		ct_debug("ps_receive_from_ifd: sw1 = %#02x, sw2 = %#02x", sw1, sw2);
 
 	if (sw1 != 0x90) {
 		if (sw1 == 0x60 && sw2 == 0x02) {
@@ -759,9 +780,10 @@ ps_receive_from_ifd(ifd_reader_t * reader, unsigned char *rbuf, size_t rlen)
 	/* skip already decoded data */
 	p += 2 * rc;
 
-	ct_debug
-	    ("ps_receive_from_ifd: protocol_bytes[PS_RESPONSE_LENGTH0_IDX]: %i",
-	     protocol_bytes[PS_RESPONSE_LENGTH0_IDX]);
+	if (ct_config.debug >= 4)
+		ct_debug("ps_receive_from_ifd: "
+			 "protocol_bytes[PS_RESPONSE_LENGTH0_IDX]: %i",
+	     		 protocol_bytes[PS_RESPONSE_LENGTH0_IDX]);
 
 	/* decode the length of the received data */
 	if (protocol_bytes[PS_RESPONSE_LENGTH0_IDX] == 0xff) {
@@ -786,13 +808,15 @@ ps_receive_from_ifd(ifd_reader_t * reader, unsigned char *rbuf, size_t rlen)
 		    ps_checksum(checksum,
 				&protocol_bytes[PS_RESPONSE_LENGTH1_IDX], rc);
 
-		ct_debug
-		    ("ps_receive_from_ifd: protocol_bytes[PS_RESPONSE_LENGTH1_IDX]: %i",
-		     protocol_bytes[PS_RESPONSE_LENGTH1_IDX]);
-		ct_debug
-		    ("ps_receive_from_ifd: protocol_bytes[PS_RESPONSE_LENGTH2_IDX]: %i",
-		     protocol_bytes[PS_RESPONSE_LENGTH2_IDX]);
-
+		if (ct_config.debug >= 4) {
+			ct_debug("ps_receive_from_ifd: "
+				 "protocol_bytes[PS_RESPONSE_LENGTH1_IDX]: %i",
+		     		 protocol_bytes[PS_RESPONSE_LENGTH1_IDX]);
+			ct_debug("ps_receive_from_ifd: "
+				 "protocol_bytes[PS_RESPONSE_LENGTH2_IDX]: %i",
+		     		 protocol_bytes[PS_RESPONSE_LENGTH2_IDX]);
+		}
+		
 		data_length = protocol_bytes[PS_RESPONSE_LENGTH1_IDX] << 8;
 		data_length |= protocol_bytes[PS_RESPONSE_LENGTH2_IDX];
 
@@ -905,8 +929,10 @@ ps_receive_from_ifd(ifd_reader_t * reader, unsigned char *rbuf, size_t rlen)
 	if (rc < 0) {
 		ct_error("ps_receive_from_ifd: failed: %i", rc);
 	} else {
-		ct_debug("ps_receive_from_ifd: received: %i: %s", rc,
-			 ct_hexdump(rbuf, rc));
+		if (ct_config.debug >= 4) {
+			ct_debug("ps_receive_from_ifd: received: %i: %s", rc,
+			 	 ct_hexdump(rbuf, rc));
+		}
 	}
 
 	return rc;
@@ -920,7 +946,8 @@ ps_transceive_instruction(ifd_reader_t * reader,
 {
 	int rc;
 
-	ct_debug("ps_transceive_instruction: called");
+	if (ct_config.debug >= 1)
+		ct_debug("ps_transceive_instruction: called");
 
 	rc = ps_send_to_ifd(reader, instruction, sbuf, slen);
 
@@ -938,7 +965,9 @@ ps_transceive_instruction(ifd_reader_t * reader,
  */
 static int ps_activate(ifd_reader_t * reader)
 {
-	ct_debug("ps_activate: called");
+	
+	if (ct_config.debug >= 1)
+		ct_debug("ps_activate: called");
 
 	return IFD_SUCCESS;
 }
@@ -947,7 +976,9 @@ static int ps_deactivate(ifd_reader_t * reader)
 {
 	int rc;
 
-	ct_debug("ps_deactivate: called");
+	
+        if (ct_config.debug >= 1)
+		ct_debug("ps_deactivate: called");
 
 	rc = ps_transceive_instruction(reader, PS_POWER_OFF, NULL, 0, NULL, 0);
 
@@ -963,7 +994,8 @@ static int ps_get_stat(ifd_reader_t * reader, ps_stat_t * stat)
 	unsigned char buffer[16];
 	unsigned char *p;
 
-	ct_debug("ps_get_stat: called");
+        if (ct_config.debug >= 1)
+		ct_debug("ps_get_stat: called");
 
 	rc = ps_transceive_instruction(reader, PS_GET_ACR_STAT,
 				       NULL, 0, buffer, sizeof(buffer));
@@ -1002,7 +1034,8 @@ static int ps_card_status(ifd_reader_t * reader, int slot, int *status)
 	ps_device_data_t *device_data;
 	unsigned char c_stat;
 
-	ct_debug("ps_card_status: called");
+        if (ct_config.debug >= 1)
+		ct_debug("ps_card_status: called");
 
 	if (slot != 0) {
 		ct_error("ps_card_status: bad slot index %u", slot);
@@ -1024,7 +1057,7 @@ static int ps_card_status(ifd_reader_t * reader, int slot, int *status)
 			*status |= IFD_CARD_STATUS_CHANGED;
 		}
 	} else {
-		ct_debug("ps_card_status: failed: %i", rc);
+		ct_error("ps_card_status: failed: %i", rc);
 	}
 
 	return rc;
@@ -1045,7 +1078,8 @@ ps_card_reset_select_protocol(ifd_reader_t * reader, int nslot,
 	ifd_slot_t *slot;
 	ifd_atr_info_t atr_info;
 
-	ct_debug("ps_card_reset_select_protocol: called");
+        if (ct_config.debug >= 1)
+		ct_debug("ps_card_reset_select_protocol: called");
 
 	if (nslot != 0) {
 		ct_error("ps_card_reset_select_protocol: bad slot index %u",
@@ -1071,27 +1105,29 @@ ps_card_reset_select_protocol(ifd_reader_t * reader, int nslot,
 		switch (new_icc_proto) {
 
 		case IFD_PROTOCOL_DEFAULT:
-			ct_debug("ps_card_reset_select_protocol: "
-				 "using automatic protocol selecting");
+		        if (ct_config.debug >= 1)
+				ct_debug("ps_card_reset_select_protocol: "
+					 "using automatic protocol selecting");
 			sbuf[0] = PS_DEFAULT_CARD_TYPE;
 			break;
 
 		case IFD_PROTOCOL_T0:
-			ct_debug
-			    ("ps_card_reset_select_protocol: selecting protocol T0");
+		        if (ct_config.debug >= 1)
+				ct_debug("ps_card_reset_select_protocol: "
+					 "selecting protocol T0");
 			sbuf[0] = PS_T0_CARD_TYPE;
 			break;
 
 		case IFD_PROTOCOL_T1:
-			ct_debug
-			    ("ps_card_reset_select_protocol: selecting protocol T1");
+		        if (ct_config.debug >= 1)
+				ct_debug("ps_card_reset_select_protocol: "
+					 "selecting protocol T1");
 			sbuf[0] = PS_T1_CARD_TYPE;
 			break;
 
 		default:
-			ct_error
-			    ("ps_card_reset_select_protocol: unknow protocol %i",
-			     new_icc_proto);
+			ct_error("ps_card_reset_select_protocol: "
+				 "unknow protocol %i", new_icc_proto);
 			return IFD_ERROR_NOT_SUPPORTED;
 		}
 
@@ -1099,9 +1135,8 @@ ps_card_reset_select_protocol(ifd_reader_t * reader, int nslot,
 					       sbuf, sizeof(sbuf), NULL, 0);
 
 		if (rc != IFD_SUCCESS) {
-			ct_error
-			    ("ps_card_reset_select_protocol: error selecting card type %#02x",
-			     sbuf[0]);
+			ct_error("ps_card_reset_select_protocol: "
+				 "error selecting card type %#02x", sbuf[0]);
 			return rc;
 		}
 	}
@@ -1110,8 +1145,9 @@ ps_card_reset_select_protocol(ifd_reader_t * reader, int nslot,
 	rc = ps_transceive_instruction(reader, PS_RESET, NULL, 0, atr, size);
 
 	if (rc < 0) {
-		ct_debug("ps_card_reset_select_protocol: failed (PS_RESET): %i",
+		ct_error("ps_card_reset_select_protocol: failed (PS_RESET): %i",
 			 rc);
+		return rc;
 	}
 
 	atr_len = rc;
@@ -1129,9 +1165,10 @@ ps_card_reset_select_protocol(ifd_reader_t * reader, int nslot,
 
 	if (atr_info.TA[1] != -1) {
 		/* specific mode */
-		ct_debug
-		    ("ps_card_reset_select_protocol: card in specific mode %#02x",
-		     atr_info.TA[1] & 0x0f);
+	        if (ct_config.debug >= 1)
+			ct_debug("ps_card_reset_select_protocol: "
+				 "card in specific mode %#02x",
+		     		 atr_info.TA[1] & 0x0f);
 		new_icc_proto = atr_info.TA[1] & 0x0f;
 	} else {
 		if (new_icc_proto == IFD_PROTOCOL_DEFAULT) {
@@ -1149,8 +1186,8 @@ ps_card_reset_select_protocol(ifd_reader_t * reader, int nslot,
 		    ifd_protocol_new(new_icc_proto, reader, slot->dad);
 
 		if (slot->proto == NULL) {
-			ct_error
-			    ("ps_cart_reset_select_protocol: ifd_protocol_new");
+			ct_error("ps_cart_reset_select_protocol: "
+				 "ifd_protocol_new");
 			return IFD_ERROR_GENERIC;
 		}
 
@@ -1158,16 +1195,18 @@ ps_card_reset_select_protocol(ifd_reader_t * reader, int nslot,
 		switch (new_icc_proto) {
 
 		case IFD_PROTOCOL_T0:
-			ct_debug
-			    ("ps_card_reset_select_protocol: using protocol T0");
+		        if (ct_config.debug >= 1)
+				ct_debug("ps_card_reset_select_protocol: "
+					 "using protocol T0");
 			ifd_protocol_set_parameter(slot->proto,
 						   IFD_PROTOCOL_BLOCK_ORIENTED,
 						   1);
 			break;
 
 		case IFD_PROTOCOL_T1:
-			ct_debug
-			    ("ps_card_reset_select_protocol: using protocol T1");
+		        if (ct_config.debug >= 1)
+				ct_debug("ps_card_reset_select_protocol: "
+					 "using protocol T1");
 			ifd_protocol_set_parameter(slot->proto,
 						   IFD_PROTOCOL_BLOCK_ORIENTED,
 						   1);
@@ -1181,9 +1220,9 @@ ps_card_reset_select_protocol(ifd_reader_t * reader, int nslot,
 			break;
 
 		default:
-			ct_error
-			    ("ps_card_reset_select_protocol: protocol not supported %#02x",
-			     atr_info.default_protocol);
+			ct_error("ps_card_reset_select_protocol: "
+				 "protocol not supported %#02x",
+			     	 atr_info.default_protocol);
 			return IFD_ERROR_NOT_SUPPORTED;
 		}
 
@@ -1200,7 +1239,8 @@ ps_card_reset(ifd_reader_t * reader, int slot, void *atr, size_t size)
 	ifd_device_t *dev;
 	ps_device_data_t *device_data;
 
-	ct_debug("ps_card_reset: called");
+	if (ct_config.debug >= 1)
+		ct_debug("ps_card_reset: called");
 
 	dev = reader->device;
 	device_data = (ps_device_data_t *) dev->user_data;
@@ -1221,7 +1261,8 @@ static int ps_set_protocol(ifd_reader_t * reader, int nslot, int proto)
 	ps_device_data_t *device_data;
 	ifd_slot_t *slot;
 
-	ct_debug("ps_set_protocol: called");
+        if (ct_config.debug >= 1)
+		ct_debug("ps_set_protocol: called");
 
 	dev = reader->device;
 	device_data = (ps_device_data_t *) dev->user_data;
@@ -1261,7 +1302,13 @@ ps_apdu_send(ifd_reader_t * reader, unsigned int dad,
 	ps_instruction_t instruction;
 	unsigned char t0_buffer[260];
 
-	ct_debug("ps_apdu_send: sending %i: %s", slen, ct_hexdump(sbuf, slen));
+        if (ct_config.debug >= 3)
+		ct_debug("ps_apdu_send: sending %i: %s", 
+		         slen, ct_hexdump(sbuf, slen));
+	else
+		if (ct_config.debug >= 1)
+			ct_debug("ps_apdu_send: called");
+
 
 	dev = reader->device;
 	device_data = (ps_device_data_t *) dev->user_data;
@@ -1269,15 +1316,17 @@ ps_apdu_send(ifd_reader_t * reader, unsigned int dad,
 	switch (device_data->cur_icc_proto) {
 
 	case IFD_PROTOCOL_T0:
-		ct_debug("ps_apdu_send: using EXCHANGE_APDU");
+
+	        if (ct_config.debug >= 1)
+			ct_debug("ps_apdu_send: using EXCHANGE_APDU");
 
 		instruction = PS_EXCHANGE_APDU;
 
 		/* must have room for le=0 or lc=0 */
 		if (sizeof(t0_buffer) <= slen) {
-			ct_error
-			    ("ps_apdu_send: apdu size not supported: %i bytes (max: %i)",
-			     slen, sizeof(t0_buffer) - 1);
+			ct_error("ps_apdu_send: apdu size not supported: "
+				 "%i bytes (max: %i)",
+			     	 slen, sizeof(t0_buffer) - 1);
 			return IFD_ERROR_NO_MEMORY;
 		}
 
@@ -1286,7 +1335,9 @@ ps_apdu_send(ifd_reader_t * reader, unsigned int dad,
 		switch (cse) {
 
 		case IFD_APDU_CASE_1:
-			ct_debug("ps_apdu_send: T0 case 1");
+
+			if (ct_config.debug >= 1)
+				ct_debug("ps_apdu_send: T0 case 1");
 
 			/* lc = 0 at the end of sbuf
 			   must add le = 0 at end */
@@ -1294,9 +1345,9 @@ ps_apdu_send(ifd_reader_t * reader, unsigned int dad,
 			/* fall through */
 
 		case IFD_APDU_CASE_3S:
-			if (IFD_APDU_CASE_3S == cse) {
+			
+			if (ct_config.debug >= 1 && IFD_APDU_CASE_3S == cse) 
 				ct_debug("ps_apdu_send: T0 case 3S");
-			}
 
 			/* lc is in the expected placed
 			   must add le = 0  at end */
@@ -1308,7 +1359,9 @@ ps_apdu_send(ifd_reader_t * reader, unsigned int dad,
 			break;
 
 		case IFD_APDU_CASE_2S:
-			ct_debug("ps_apdu_send: T0 case 2S");
+
+			if (ct_config.debug >= 1)
+				ct_debug("ps_apdu_send: T0 case 2S");
 
 			/* le is at the end of sbuf
 			   must insert lc = 0 before le */
@@ -1335,13 +1388,15 @@ ps_apdu_send(ifd_reader_t * reader, unsigned int dad,
 		break;
 
 	case IFD_PROTOCOL_T1:
-		ct_debug("ps_apdu_send: using EXCHANGE_T1 FRAME");
+		if (ct_config.debug >= 1)		
+			ct_debug("ps_apdu_send: using EXCHANGE_T1 FRAME");
 		instruction = PS_EXCHANGE_T1_FRAME;
 		rc = ps_send_to_ifd(reader, instruction, sbuf, slen);
 		break;
 
 	default:
-		ct_debug("ps_apdu_send: unknow protocol");
+		if (ct_config.debug >= 1)
+			ct_debug("ps_apdu_send: unknow protocol");
 		return IFD_ERROR_GENERIC;
 	}
 
@@ -1357,15 +1412,17 @@ ps_apdu_recv(ifd_reader_t * reader, unsigned int dad, unsigned char *buffer,
 {
 	int rc;
 
-	ct_debug("ps_apdu_recv: called");
+	if (ct_config.debug >= 1)
+		ct_debug("ps_apdu_recv: called");
 
 	rc = ps_receive_from_ifd(reader, buffer, len);
 
 	if (rc < 0) {
 		ct_error("ps_apdu_recv: failed");
 	} else {
-		ct_debug("ps_apdu_recv: received %i bytes: %s", rc,
-			 ct_hexdump(buffer, rc));
+		if (ct_config.debug >= 3)
+			ct_debug("ps_apdu_recv: received %i bytes: %s", rc,
+				 ct_hexdump(buffer, rc));
 	}
 
 	return rc;
@@ -1383,7 +1440,8 @@ static int ps_open(ifd_reader_t * reader, const char *device_name)
 
 	unsigned char sbuf[2];
 
-	ct_debug("ps_open: called: device name =%s", device_name);
+	if (ct_config.debug >= 1)
+		ct_debug("ps_open: called: device name =%s", device_name);
 
 	dev = ifd_device_open(device_name);
 
@@ -1476,8 +1534,9 @@ static int ps_open(ifd_reader_t * reader, const char *device_name)
 
 			if (rc < 0) 
 				return rc;
-			
-			ct_debug("ps_open: baudrate changed to 115200");
+		
+			if (ct_config.debug >= 1)	
+				ct_debug("ps_open: baudrate changed to 115200");
 		}
 	}
 #endif
@@ -1499,7 +1558,8 @@ static int ps_close(ifd_reader_t * reader)
 	ifd_device_t *dev;
 	ps_device_data_t *device_data;
 
-	ct_debug("ps_open: called");
+	if (ct_config.debug >= 1)
+		ct_debug("ps_open: called");
 
 	dev = reader->device;
 	device_data = (ps_device_data_t *) dev->user_data;
