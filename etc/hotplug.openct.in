@@ -7,8 +7,11 @@ test -e /var/run/openct/status || exit 0
 # race condition in the kernel, $DEVICE might not exist now
 sleep 1
 
+
 if [ -n "$DEVICE" ]
 then
+	# if you see two ifdhandlers for one device, then you can
+	# either comment out the next line here ...
 	SBINDIR/openct-control attach $DEVICE usb:$PRODUCT
 	exit 0
 fi
@@ -19,6 +22,7 @@ then
 	P="`cat /sys/$DEVPATH/device/idProduct|sed -e "s/^0*//"`"
 	D="`cat /sys/$DEVPATH/device/bcdDevice |sed -e "s/^0*//"`"
 	PRODUCT="$V/$P/$D"
+	# or the following line. both should disable that effect.
 	SBINDIR/openct-control attach $DEVNAME usb:$PRODUCT
 	exit 0
 fi
