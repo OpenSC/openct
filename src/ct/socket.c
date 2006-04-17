@@ -25,6 +25,7 @@
 
 #include <openct/logging.h>
 #include <openct/socket.h>
+#include <openct/path.h>
 #include <openct/error.h>
 
 static unsigned int ifd_xid = 1;
@@ -238,18 +239,26 @@ int ct_socket_connect(ct_socket_t * sock, const char *addr)
 /*
  * Listen on a socket
  */
-int ct_socket_listen(ct_socket_t * sock, const char *addr, int mode)
+int ct_socket_listen(ct_socket_t * sock, int reader, int mode)
 {
+        char path[PATH_MAX];
+	char file[PATH_MAX];
+
+	snprintf(file, PATH_MAX, "%d", reader);
+	if (! ct_format_path(path, PATH_MAX, reader)) {
+		return -1;
+	}
+
 	ct_socket_close(sock);
-	if (ct_socket_make(sock, CT_MAKESOCK_BIND, addr) < 0)
+	if (ct_socket_make(sock, CT_MAKESOCK_BIND, path) < 0)
 		return -1;
 
 	if (listen(sock->fd, 5) < 0) {
 		ct_socket_close(sock);
 		return -1;
 	}
-	if (addr[0] == '/')
-		chmod(addr, mode);
+	if (path[0] == '/')
+		chmod(path, mode);
 
 	sock->listener = 1;
 	sock->events = POLLIN;

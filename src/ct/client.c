@@ -12,10 +12,12 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <errno.h>
+#include <limits.h>
 #include <openct/openct.h>
 #include <openct/socket.h>
 #include <openct/tlv.h>
 #include <openct/error.h>
+#include <openct/path.h>
 #include <openct/protocol.h>
 
 struct ct_handle {
@@ -56,9 +58,17 @@ int ct_reader_info(unsigned int reader, ct_info_t * result)
 ct_handle *ct_reader_connect(unsigned int reader)
 {
 	const ct_info_t *info;
-	char path[1024];
+	char path[PATH_MAX];
+	char file[PATH_MAX];
 	ct_handle *h;
-	int rc;
+	int rc, len;
+
+	len = PATH_MAX;
+
+	snprintf(file, PATH_MAX, "%d", reader);
+	if (! ct_format_path(path, PATH_MAX, reader)) {
+		return NULL;
+	}
 
 	if ((rc = ct_status(&info)) < 0 || reader > (unsigned int)rc)
 		return NULL;
@@ -70,19 +80,6 @@ ct_handle *ct_reader_connect(unsigned int reader)
 		free(h);
 		return NULL;
 	}
-#if defined (sunray) || defined (sunrayclient)
-	{
-		char *utdevroot = getenv("UTDEVROOT");
-		if (utdevroot)
-			snprintf(path, sizeof(path),
-				 "%s/openct/%u", utdevroot, reader);
-		else
-			snprintf(path, sizeof(path),
-				 OPENCT_SOCKET_PATH "/%u", reader);
-	}
-#else
-	snprintf(path, sizeof(path), OPENCT_SOCKET_PATH "/%u", reader);
-#endif
 	if (ct_socket_connect(h->sock, path) < 0) {
 		ct_reader_disconnect(h);
 		return NULL;

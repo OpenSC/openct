@@ -57,7 +57,7 @@ extern ct_socket_t *	ct_socket_new(unsigned int);
 extern void		ct_socket_free(ct_socket_t *);
 extern void		ct_socket_reuseaddr(int);
 extern int		ct_socket_connect(ct_socket_t *, const char *);
-extern int		ct_socket_listen(ct_socket_t *, const char *, int);
+extern int		ct_socket_listen(ct_socket_t *, int, int);
 extern ct_socket_t *	ct_socket_accept(ct_socket_t *);
 extern void		ct_socket_close(ct_socket_t *);
 extern int		ct_socket_call(ct_socket_t *, ct_buf_t *, ct_buf_t *);

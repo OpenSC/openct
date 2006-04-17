@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <time.h>
+#include <limits.h>
 
 #include <openct/ifd.h>
 #include <openct/conf.h>
@@ -172,7 +173,6 @@ static void TERMhandler(int signo)
  */
 void ifdhandler_run(ifd_reader_t * reader)
 {
-	char socket_name[1024];
 	ct_socket_t *sock;
 	int rc;
 	struct sigaction act;
@@ -184,14 +184,7 @@ void ifdhandler_run(ifd_reader_t * reader)
 	}
 
 	sock = ct_socket_new(0);
-#if defined (sunray)
-	snprintf(socket_name, sizeof(socket_name),
-		 "%s/openct/%u", getenv("UTDEVROOT"), opt_reader);
-#else
-	snprintf(socket_name, sizeof(socket_name),
-		 "%s/%u", OPENCT_SOCKET_PATH, opt_reader);
-#endif
-	if (ct_socket_listen(sock, socket_name, 0666) < 0) {
+	if (ct_socket_listen(sock, opt_reader, 0666) < 0) {
 		ct_error("Failed to create server socket");
 		exit(1);
 	}
@@ -215,8 +208,8 @@ void ifdhandler_run(ifd_reader_t * reader)
 
 	/* Call the server loop */
 	ct_mainloop();
+	ct_socket_unlink(sock);
 	ct_socket_free(sock);
-	unlink(socket_name);
 	memset(reader->status, 0, sizeof(*reader->status));
 	ct_status_update(reader->status);
 	ifd_debug(1, "ifdhandler for reader %s shut down", reader->name);
