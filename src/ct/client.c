@@ -66,7 +66,7 @@ ct_handle *ct_reader_connect(unsigned int reader)
 	len = PATH_MAX;
 
 	snprintf(file, PATH_MAX, "%d", reader);
-	if (! ct_format_path(path, PATH_MAX, reader)) {
+	if (! ct_format_path(path, PATH_MAX, file)) {
 		return NULL;
 	}
 

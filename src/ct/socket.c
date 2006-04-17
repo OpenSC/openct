@@ -245,7 +245,7 @@ int ct_socket_listen(ct_socket_t * sock, int reader, int mode)
 	char file[PATH_MAX];
 
 	snprintf(file, PATH_MAX, "%d", reader);
-	if (! ct_format_path(path, PATH_MAX, reader)) {
+	if (! ct_format_path(path, PATH_MAX, file)) {
 		return -1;
 	}
 

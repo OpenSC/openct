@@ -17,6 +17,9 @@ int ct_format_path(char *path, size_t pathlen, char *file)
 {
 	int rc;
 
+	if (!file)
+		return 0;
+
 #if defined (sunray) || defined (sunrayclient)
 	{
 		if (getenv("UTDEVROOT"))
