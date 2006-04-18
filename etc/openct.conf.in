@@ -102,6 +102,7 @@ driver	ccid {
 		usb:076b/5121,
 		usb:0783/0003,
 		usb:03f0/1024,
+		usb:046a/0010,
 	};
 };
 driver pertosmart1030 {
