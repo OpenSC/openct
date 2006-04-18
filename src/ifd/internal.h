@@ -198,4 +198,7 @@ extern int ifd_protocol_register(struct ifd_protocol_ops *);
 extern int ifd_sync_detect_icc(ifd_reader_t *, int, void *, size_t);
 extern unsigned int ifd_protocols_list(const char **, unsigned int);
 
+/* proto-t1.c */
+extern int t1_negotiate_ifsd(ifd_protocol_t *, unsigned int, int);
+
 #endif				/* IFD_INTERNAL_H */

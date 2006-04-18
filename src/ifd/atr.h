@@ -26,6 +26,7 @@ extern "C" {
 				 size_t);
 	extern int ifd_verify_pts(ifd_atr_info_t *, int,
 				  const unsigned char *, size_t);
+	extern int ifd_pts_complete(const unsigned char *pts, size_t len);
 
 #ifdef __cplusplus
 }

@@ -155,3 +155,18 @@ ifd_verify_pts(ifd_atr_info_t * info,
 		return IFD_ERROR_INCOMPATIBLE_DEVICE;
 	return 0;
 }
+
+int
+ifd_pts_complete(const unsigned char *pts, size_t len)
+{
+       unsigned int j=2;
+
+       if (j > len)
+               return 0;
+       j =+ ifd_count_bits(pts[1] & 0x70);
+       j++;
+       if (j > len)
+               return 0;
+       return 1;
+}
+

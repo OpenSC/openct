@@ -2,6 +2,9 @@
  * Implementation of T=1
  *
  * Copyright (C) 2003, Olaf Kirch <okir@suse.de>
+ *
+ * improvements by:
+ * Copyright (C) 2004 Ludovic Rousseau <ludovic.rousseau@free.fr>
  */
 
 #include "internal.h"
@@ -575,4 +578,60 @@ int t1_xcv(t1_state_t * t1, unsigned char *block, size_t slen, size_t rmax)
 		ifd_debug(3, "received %s", ct_hexdump(block, n));
 
 	return n;
+}
+
+int t1_negotiate_ifsd(ifd_protocol_t * proto, unsigned int dad, int ifsd)
+{
+	t1_state_t *t1 = (t1_state_t *) proto;
+	ct_buf_t sbuf;
+	unsigned char sdata[T1_BUFFER_SIZE];
+	unsigned int slen;
+	unsigned int retries;
+	size_t snd_len;
+	int n;
+	unsigned char snd_buf[1], pcb;
+
+	retries = t1->retries;
+
+	/* S-block IFSD request */
+	snd_buf[0] = ifsd;
+	snd_len = 1;
+
+	/* Initialize send/recv buffer */
+	ct_buf_set(&sbuf, (void *)snd_buf, snd_len);
+
+	while (1) {
+		/* Build the block */
+		slen =
+		    t1_build(t1, sdata, dad, T1_S_BLOCK | T1_S_IFS, &sbuf,
+			     NULL);
+
+		if ((n = t1_xcv(t1, sdata, slen, sizeof(sdata))) < 0) {
+			ifd_debug(1, "fatal: transmit/receive failed");
+			t1->state = DEAD;
+			goto error;
+		}
+
+		if (!t1_verify_checksum(t1, sdata, n)) {
+			ifd_debug(1, "checksum failed");
+			if (retries == 0)
+				goto error;
+			continue;
+		}
+		pcb = sdata[1];
+		if (t1_block_type(pcb) == T1_S_BLOCK &&
+		    T1_S_TYPE(pcb) == T1_S_IFS && T1_S_IS_RESPONSE(pcb)) {
+			if (sdata[2] != 1 || sdata[3] != ifsd)
+				goto error;
+			break;
+		}
+		if (retries == 0)
+			goto error;
+	}
+
+	return n;
+
+      error:
+	t1_resynchronize(proto, dad);
+	return -1;
 }
