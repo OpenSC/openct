@@ -38,7 +38,8 @@ static void *ct_map_status(int flags, size_t * size)
 	}
 
 	if ((fd = open(status_path, flags)) < 0) {
-		/* no error message - openct not started? */
+		ct_error("can't open %s: %s",
+				status_path, strerror(errno));
 		return NULL;
 	}
 
