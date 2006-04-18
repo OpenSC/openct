@@ -5,33 +5,33 @@ BUS!="usb", ACTION!="add", GOTO="openct_rules_end"
 # egate
 SYSFS{idVendor}=="0973", SYSFS{idProduct}=="0001", RUN+="/etc/hotplug/usb/openct"
 # eToken
-SYSFS{idVendor}=="0529", SYSFS{idProduct}=="050c", RUN+="/etc/hotplug/usb/openct
-SYSFS{idVendor}=="0529", SYSFS{idProduct}=="0514", RUN+="/etc/hotplug/usb/openct
+SYSFS{idVendor}=="0529", SYSFS{idProduct}=="050c", RUN+="/etc/hotplug/usb/openct"
+SYSFS{idVendor}=="0529", SYSFS{idProduct}=="0514", RUN+="/etc/hotplug/usb/openct"
 # eToken 64
-SYSFS{idVendor}=="0529", SYSFS{idProduct}=="0600", RUN+="/etc/hotplug/usb/openct
+SYSFS{idVendor}=="0529", SYSFS{idProduct}=="0600", RUN+="/etc/hotplug/usb/openct"
 # eutron
-SYSFS{idVendor}=="073d", SYSFS{idProduct}=="0005", RUN+="/etc/hotplug/usb/openct
+SYSFS{idVendor}=="073d", SYSFS{idProduct}=="0005", RUN+="/etc/hotplug/usb/openct"
 # ikey2k
-SYSFS{idVendor}=="04b9", SYSFS{idProduct}=="1200", RUN+="/etc/hotplug/usb/openct
+SYSFS{idVendor}=="04b9", SYSFS{idProduct}=="1200", RUN+="/etc/hotplug/usb/openct"
 # ikey3k
-SYSFS{idVendor}=="04b9", SYSFS{idProduct}=="1300", RUN+="/etc/hotplug/usb/openct
+SYSFS{idVendor}=="04b9", SYSFS{idProduct}=="1300", RUN+="/etc/hotplug/usb/openct"
 # starkey
-SYSFS{idVendor}=="096e", SYSFS{idProduct}=="0005", RUN+="/etc/hotplug/usb/openct
+SYSFS{idVendor}=="096e", SYSFS{idProduct}=="0005", RUN+="/etc/hotplug/usb/openct"
 # cardman
-#SYSFS{idVendor}=="076b", SYSFS{idProduct}=="0596", RUN+="/etc/hotplug/usb/openct
-#SYSFS{idVendor}=="076b", SYSFS{idProduct}=="1784", RUN+="/etc/hotplug/usb/openct
-#SYSFS{idVendor}=="08d4", SYSFS{idProduct}=="0009", RUN+="/etc/hotplug/usb/openct
+#SYSFS{idVendor}=="076b", SYSFS{idProduct}=="0596", RUN+="/etc/hotplug/usb/openct"
+#SYSFS{idVendor}=="076b", SYSFS{idProduct}=="1784", RUN+="/etc/hotplug/usb/openct"
+#SYSFS{idVendor}=="08d4", SYSFS{idProduct}=="0009", RUN+="/etc/hotplug/usb/openct"
 
 # ccid
-SYSFS{bDeviceClass}=="0b", SYSFS{bInterfaceSubClass}=="00", SYSFS{bInterfaceProtocol}=="00" RUN+="/etc/hotplug/usb/openct
+SYSFS{bDeviceClass}=="0b", SYSFS{bInterfaceSubClass}=="00", SYSFS{bInterfaceProtocol}=="00" RUN+="/etc/hotplug/usb/openct"
 
 # spr 532 - ccid, but with wrong interface class (vendor) :(
-SYSFS{idVendor}=="04e6", SYSFS{idProduct}=="0003", RUN+="/etc/hotplug/usb/openct
+SYSFS{idVendor}=="04e6", SYSFS{idProduct}=="0003", RUN+="/etc/hotplug/usb/openct"
 # pertosmart1030
-SYSFS{idVendor}=="072f", SYSFS{idProduct}=="0001", RUN+="/etc/hotplug/usb/openct
-SYSFS{idVendor}=="072f", SYSFS{idProduct}=="8009", RUN+="/etc/hotplug/usb/openct
+SYSFS{idVendor}=="072f", SYSFS{idProduct}=="0001", RUN+="/etc/hotplug/usb/openct"
+SYSFS{idVendor}=="072f", SYSFS{idProduct}=="8009", RUN+="/etc/hotplug/usb/openct"
 # pertosmart1038
-SYSFS{idVendor}=="072f", SYSFS{idProduct}=="9000", RUN+="/etc/hotplug/usb/openct
-SYSFS{idVendor}=="072f", SYSFS{idProduct}=="90d0", RUN+="/etc/hotplug/usb/openct
+SYSFS{idVendor}=="072f", SYSFS{idProduct}=="9000", RUN+="/etc/hotplug/usb/openct"
+SYSFS{idVendor}=="072f", SYSFS{idProduct}=="90d0", RUN+="/etc/hotplug/usb/openct"
 
 LABEL="openct_rules_end"
