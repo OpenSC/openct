@@ -2,19 +2,22 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-DISTCLEANFILES = openct.conf hotplug.openct init-script openct.hald
+DISTCLEANFILES = openct.conf hotplug.openct init-script openct.hald reader.conf
 
 EXTRA_DIST = Info.plist openct.usermap openct.udev \
 	openct.conf.in hotplug.openct.in init-script.in \
-	openct.hald.in
+	openct.hald.in reader.conf.in
 
-noinst_DATA = openct.conf
+noinst_DATA = openct.conf reader.conf
 
 noinst_SCRIPTS = hotplug.openct init-script openct.hald
 
 hotplug.openct: hotplug.openct.in
 	sed -e "s#SBINDIR#${sbindir}#g" < $^ > $@
 	chmod 755 hotplug.openct
+
+reader.conf: reader.conf.in
+	sed -e "s#LIBDIR#${libdir}#g" < $^ > $@
 
 init-script: init-script.in
 	sed -e "s#SBINDIR#${sbindir}#g" < $^ > $@
