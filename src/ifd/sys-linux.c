@@ -16,6 +16,7 @@
 #include <sys/poll.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/file.h>
 #include <string.h>
 #include <stdio.h>
 #include <signal.h>
@@ -404,9 +405,9 @@ int ifd_sysdep_usb_end_capture(ifd_device_t * dev, ifd_usb_capture_t * cap)
 	return rc;
 }
 
-int ifd_sysdep_usb_open(const char *device, int flags)
+int ifd_sysdep_usb_open(const char *device)
 {
-	return open(device, O_EXCL | O_RDWR);
+        return open(device, O_RDWR);
 }
 
 /*

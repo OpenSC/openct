@@ -9,6 +9,7 @@
 #if defined (sun) && !defined (sunray)
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/file.h>
 #include <dirent.h>
 #include <errno.h>
 #include <stdio.h>
@@ -172,7 +173,7 @@ int open_ep(char *name, int interface, int endpoint, int direction, int flags)
 #if 0
 	strcat((char *)&filename, "stat");
 	if ((interfaces[interface][endpoint].ep_stat_fd[direction] =
-	     open(filename, O_RDONLY | O_EXCL | O_NONBLOCK)) < 0) {
+	     open(filename, O_RDONLY | O_NONBLOCK)) < 0) {
 		ifd_debug(6, "open_ep: error opening \"%s\": %s", filename,
 			  strerror(errno));
 		close(interfaces[interface][endpoint].ep_fd[direction]);
@@ -527,9 +528,9 @@ int ifd_sysdep_usb_end_capture(ifd_device_t * dev, ifd_usb_capture_t * cap)
 	return 0;
 }
 
-int ifd_sysdep_usb_open(const char *device, int flags)
+int ifd_sysdep_usb:open(const char *device)
 {
-	return open(device, O_EXCL | O_RDWR);
+        return open(device, O_RDWR);
 }
 
 /*

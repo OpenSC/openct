@@ -17,6 +17,7 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/poll.h>
+#include <sys/file.h>
 #include <string.h>
 #include <stdio.h>
 #include <signal.h>
@@ -327,9 +328,9 @@ int ifd_sysdep_usb_release_interface(ifd_device_t * dev, int interface)
 	return 0;
 }
 
-int ifd_sysdep_usb_open(const char *device, int flags)
+int ifd_sysdep_usb_open(const char *device)
 {
-	return open(device, O_EXCL | O_RDWR);
+        return open(device, O_RDWR);
 }
 
 /*

@@ -174,13 +174,13 @@ static struct ifd_device_ops ifd_usb_ops;
 ifd_device_t *ifd_open_usb(const char *device)
 {
 	ifd_device_t *dev;
-	int fd;
+	int fd,rc;
 
-	if ((fd = ifd_sysdep_usb_open(device, O_EXCL | O_RDWR)) < 0) {
+	if ((fd = ifd_sysdep_usb_open(device)) < 0) {
 		ct_error("Unable to open USB device %s: %m", device);
 		return NULL;
 	}
-
+	
 	ifd_usb_ops.poll_presence = ifd_sysdep_usb_poll_presence;
 	ifd_usb_ops.set_params = usb_set_params;
 	ifd_usb_ops.send = usb_send;
@@ -195,6 +195,12 @@ ifd_device_t *ifd_open_usb(const char *device)
 	dev->settings.usb.altsetting = -1;
 	dev->settings.usb.ep_o = -1;
 	dev->settings.usb.ep_i = -1;
+
+	rc = ifd_sysdep_usb_claim_interface(dev, 0);
+	if (rc < 0) {
+		ifd_device_free(dev);
+		return NULL;
+	}
 
 	return dev;
 }

@@ -266,12 +266,12 @@ int ifd_sysdep_usb_release_interface(ifd_device_t * dev, int interface)
 /*
  * Open usb device
  */
-int ifd_sysdep_usb_open(const char *name, int flags)
+int ifd_sysdep_usb_open(const char *name)
 {
 	struct usb_bus *bus;
 	struct usb_device *dev;
 
-	ct_debug("ifd_sysdep_usb_open: name=%s flags=%d", name, flags);
+	ct_debug("ifd_sysdep_usb_open: name=%s", name);
 	ct_debug("ifd_sysdep_usb_open: usb_init()");
 	usb_init();
 	ct_debug("ifd_sysdep_usb_open: usb_find_busses()");
