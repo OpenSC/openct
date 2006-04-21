@@ -2,6 +2,23 @@ NEWS for OpenCT -- History of user visible changes
 
 New in 0.6.7; ????-??-?? 11 Andreas Jellinghaus
 * configure.ac uses now pkg-config.
+* sys-linux.c does not need kernel headers (all data etc. included)
+* now generating a Changelog file in the documentation
+* all urls now based on http://www.opensc-project.org/
+* wiki documentation included as html snapshot
+* new driver for WB Electronics' Infinity USB Unlimited by Juan Carlos Borras
+* bug in sleep code fixed.
+* new pertosmart ac1038 driver by Carlos Henrique Bauer
+* new smartkey driver: not finished yet
+* support for both /proc/bus/usb and /dev/bus/usb devices with linux
+* improved T=1 implementation by Ludovic Rousseau
+* improved eutron driver by Chaskiel Grundman
+* OPENCT_SOCKETDIR environment can point to any dir for the sockets so
+  users can use it without being root.
+* samle confi files for both hald and udev.
+  we suggest udev as hotplug replacement. hald is not tested.
+* sample reader.conf included for pcsc-lite.
+  remember to use opensc->openct or opensc->pcsc->openct but not both.
 * add phoenix/smartmouse driver by Antoine Nguyen
   based on sctk by Alexandre Becoulet
 * License is now officialy LGPL. So far it was BSD/LGPL
