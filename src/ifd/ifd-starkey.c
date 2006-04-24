@@ -63,7 +63,7 @@ static int starkey_card_reset(ifd_reader_t * reader, int slot, void *atr,
 {
 	ifd_device_t *dev = reader->device;
 	unsigned char buffer[32];
-	int rc, n, atrlen, total;
+	int rc, atrlen;
 	ifd_usb_capture_t *cap;
 
         rc = ifd_usb_begin_capture(dev,
