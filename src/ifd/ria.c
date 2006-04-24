@@ -34,7 +34,13 @@ static void ifd_remote_close(ifd_device_t *);
 ria_client_t *ria_connect(const char *address)
 {
 	ria_client_t *clnt;
+	int reader;
 	int rc;
+
+	if (scanf("5d",address,&reader) != 1) {
+		ct_error("can't parse address \"%s\"",address);
+		return NULL;
+	}
 
 	clnt = (ria_client_t *) calloc(1, sizeof(*clnt) + RIA_QUEUE_LEN);
 	if (!clnt) {
@@ -44,9 +50,9 @@ ria_client_t *ria_connect(const char *address)
 	ct_buf_init(&clnt->data, (clnt + 1), RIA_QUEUE_LEN);
 
 	clnt->sock = ct_socket_new(1024);
-	if ((rc = ct_socket_connect(clnt->sock, address)) < 0) {
-		ct_error("Failed to connect to RIA server \"%s\": %s",
-			 address, ct_strerror(rc));
+	if ((rc = ct_socket_connect(clnt->sock, reader)) < 0) {
+		ct_error("Failed to connect to RIA server %d: %s",
+			 reader, ct_strerror(rc));
 		ria_free(clnt);
 		return NULL;
 	}
