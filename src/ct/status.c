@@ -207,7 +207,7 @@ void ct_status_unlock(void)
 	char status_lock_path[PATH_MAX];
 
 	if (! ct_format_path(status_lock_path, PATH_MAX, "status.lock")) {
-		return NULL;
+		return;
 	}
 
 	unlink(status_lock_path);
