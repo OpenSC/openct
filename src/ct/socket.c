@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <limits.h>
 
 #include <openct/logging.h>
 #include <openct/socket.h>
@@ -239,16 +240,8 @@ int ct_socket_connect(ct_socket_t * sock, const char *addr)
 /*
  * Listen on a socket
  */
-int ct_socket_listen(ct_socket_t * sock, int reader, int mode)
+int ct_socket_listen(ct_socket_t * sock, const char *path, int mode)
 {
-        char path[PATH_MAX];
-	char file[PATH_MAX];
-
-	snprintf(file, PATH_MAX, "%d", reader);
-	if (! ct_format_path(path, PATH_MAX, file)) {
-		return -1;
-	}
-
 	ct_socket_close(sock);
 	if (ct_socket_make(sock, CT_MAKESOCK_BIND, path) < 0)
 		return -1;

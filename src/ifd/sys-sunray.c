@@ -20,6 +20,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <limits.h>
+
 #include <openct/driver.h>
 #define USB_READ_INTERRUPT_TIMEOUT_WORKAROUND 1
 #ifdef USB_READ_INTERRUPT_TIMEOUT_WORKAROUND

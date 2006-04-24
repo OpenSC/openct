@@ -17,7 +17,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <limits.h>
 
+#include <openct/path.h>
 #include <openct/socket.h>
 #include <openct/server.h>
 #include <openct/logging.h>
@@ -34,11 +36,14 @@ static void ifd_remote_close(ifd_device_t *);
 ria_client_t *ria_connect(const char *address)
 {
 	ria_client_t *clnt;
-	int reader;
+	char path[PATH_MAX];
 	int rc;
 
-	if (scanf("5d",address,&reader) != 1) {
-		ct_error("can't parse address \"%s\"",address);
+	if (! address) {
+		return NULL;
+	}
+
+	if (! ct_format_path(path, PATH_MAX, address)) {
 		return NULL;
 	}
 
@@ -50,9 +55,9 @@ ria_client_t *ria_connect(const char *address)
 	ct_buf_init(&clnt->data, (clnt + 1), RIA_QUEUE_LEN);
 
 	clnt->sock = ct_socket_new(1024);
-	if ((rc = ct_socket_connect(clnt->sock, reader)) < 0) {
-		ct_error("Failed to connect to RIA server %d: %s",
-			 reader, ct_strerror(rc));
+	if ((rc = ct_socket_connect(clnt->sock, path)) < 0) {
+		ct_error("Failed to connect to RIA server \"%s\": %s",
+			 path, ct_strerror(rc));
 		ria_free(clnt);
 		return NULL;
 	}
