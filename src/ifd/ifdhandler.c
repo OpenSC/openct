@@ -21,6 +21,7 @@
 #include <time.h>
 #include <limits.h>
 
+#include <openct/path.h>
 #include <openct/ifd.h>
 #include <openct/conf.h>
 #include <openct/logging.h>
@@ -34,7 +35,7 @@ static int opt_debug = 0;
 static int opt_hotplug = 0;
 static int opt_foreground = 0;
 static int opt_info = 0;
-static unsigned int opt_reader = -1;
+static const char *opt_reader = NULL;
 
 static void usage(int exval);
 static void version(void);
@@ -71,7 +72,7 @@ int main(int argc, char **argv)
 			opt_info = 1;
 			break;
 		case 'r':
-			opt_reader = atoi(optarg);
+			opt_reader = optarg;
 			break;
 		case 's':
 			ct_log_destination("@syslog");
@@ -110,10 +111,17 @@ int main(int argc, char **argv)
 	 * FIXME: may need to use a lock file here to
 	 * prevent race condition
 	 */
-	status = ct_status_alloc_slot(&opt_reader);
-	if (status == NULL) {
-		ct_error("too many readers, no reader slot available");
-		return 1;
+	{
+		unsigned int r;
+		char path[PATH_MAX];
+
+		status = ct_status_alloc_slot(&r);
+		if (status == NULL) {
+			ct_error("too many readers, no reader slot available");
+			return 1;
+		}
+		snprintf(path,PATH_MAX,"%d",r);
+		opt_reader=strdup(path);
 	}
 
 	/* Become a daemon if needed - we do this after allocating the
@@ -176,6 +184,13 @@ void ifdhandler_run(ifd_reader_t * reader)
 	ct_socket_t *sock;
 	int rc;
 	struct sigaction act;
+        char path[PATH_MAX];
+        char file[PATH_MAX];
+
+        if (! ct_format_path(path, PATH_MAX, file)) {
+		ct_error("ct_format_path failed!");
+		exit(1);
+	}
 
 	/* Activate reader */
 	if ((rc = ifd_activate(reader)) < 0) {

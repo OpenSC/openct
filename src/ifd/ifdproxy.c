@@ -24,19 +24,19 @@
 #include <errno.h>
 #include <pwd.h>
 #include <grp.h>
+#include <limits.h>
 
+#include <openct/path.h>
 #include <openct/socket.h>
 #include <openct/server.h>
 #include <openct/logging.h>
 #include "internal.h"
 #include "ria.h"
 
-#define DEFAULT_SERVER_PATH	OPENCT_SOCKET_PATH "/proxy"
-
 static int opt_foreground = 0;
 static char *opt_config = NULL;
 static const char *opt_device_port = ":6666";
-static const char *opt_server_port = OPENCT_SOCKET_PATH "/proxy";
+static const char *opt_server_port = "proxy";
 static const char *opt_chroot = NULL;
 static const char *opt_user = NULL;
 
@@ -174,15 +174,21 @@ static int get_ports(void)
 int run_server(int argc, char **argv)
 {
 	int rc;
+	char path[PATH_MAX];
+
+	if (! ct_format_path(path, PATH_MAX, opt_server_port)) {
+		return -1;
+	}
+
 
 	if (argc != 0)
 		usage(1);
 	if (ct_config.debug)
 		ct_socket_reuseaddr(1);
 
-	if ((rc = ria_svc_listen(opt_server_port, 1)) < 0) {
+	if ((rc = ria_svc_listen(path, 1)) < 0) {
 		ct_error("Cannot bind to server port \"%s\": %s\n",
-			 opt_server_port, ct_strerror(rc));
+			 path, ct_strerror(rc));
 		return rc;
 	}
 	if ((rc = ria_svc_listen(opt_device_port, 0)) < 0) {

@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <limits.h>
 #ifdef HAVE_LIBUSB
 #include <usb.h>
 #endif

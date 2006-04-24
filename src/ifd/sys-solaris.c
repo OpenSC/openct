@@ -185,6 +185,7 @@ int open_ep(char *name, int interface, int endpoint, int direction, int flags)
 	return 0;
 }
 
+void
 close_ep(int interface, int endpoint, int direction)
 {
 	if (interfaces[interface][endpoint].ep_fd[direction]) {
@@ -528,7 +529,7 @@ int ifd_sysdep_usb_end_capture(ifd_device_t * dev, ifd_usb_capture_t * cap)
 	return 0;
 }
 
-int ifd_sysdep_usb:open(const char *device)
+int ifd_sysdep_usb_open(const char *device)
 {
         return open(device, O_RDWR);
 }
