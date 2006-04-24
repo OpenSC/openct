@@ -465,7 +465,7 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 	struct ifd_usb_device_descriptor de;
 	struct ifd_usb_config_descriptor conf;
 	struct ifd_usb_interface_descriptor *intf;
-	struct usb_ccid_descriptor ccid;
+	struct usb_ccid_descriptor ccid = { 0 };
 	int force_parse;
 	struct force_parse_device_st *force_dev;
 	unsigned char *_class;
