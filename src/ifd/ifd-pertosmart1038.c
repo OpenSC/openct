@@ -806,6 +806,7 @@ static int ps_card_status(ifd_reader_t * reader, int slot, int *status)
 		ps_stat_t stat;
 
 		/* ask the current status to the reader */
+		memset(&stat, 0, sizeof(stat));
 		rc = ps_get_stat(reader, &stat);
 
 		if (rc >= 0) {
