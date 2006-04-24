@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-	extern int ct_format_path(char *path, size_t pathlen, char *file);
+extern int ct_format_path(char *path, const size_t pathlen, const char *file);
 
 #ifdef __cplusplus
 }

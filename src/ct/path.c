@@ -14,7 +14,7 @@
 /*
  * Format path
  */
-int ct_format_path(char *path, size_t pathlen, char *file)
+int ct_format_path(char *path, const size_t pathlen, const char *file)
 {
 	int rc;
 
