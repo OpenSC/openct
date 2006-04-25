@@ -123,7 +123,7 @@ static void enter_jail(void)
 	}
 
 	if (opt_chroot) {
-		if (chroot(opt_chroot) < 0 || chdir("/") < 0) {
+		if (chdir("/") < 0 || chroot(opt_chroot) < 0) {
 			ct_error("chroot(%s) failed: %m", opt_chroot);
 			exit(1);
 		}
@@ -257,12 +257,14 @@ int list_devices(int argc, char **argv)
 	if (rc < 0) {
 		ct_error("Failed to list exported devices: %s",
 			 ct_strerror(rc));
+		ria_free(clnt);
 		return 1;
 	}
 
 	count = rc / sizeof(ria_device_t);
 	if (count == 0) {
 		printf("No exported devices\n");
+		ria_free(clnt);
 		return 0;
 	}
 
@@ -272,6 +274,7 @@ int list_devices(int argc, char **argv)
 		       info->handle, info->address, info->name);
 	}
 
+	ria_free(clnt);
 	return 0;
 }
 
