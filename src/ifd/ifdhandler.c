@@ -112,7 +112,7 @@ int main(int argc, char **argv)
 	 * prevent race condition
 	 */
 	{
-		unsigned int r;
+		int r = -1;
 		char path[PATH_MAX];
 
 		status = ct_status_alloc_slot(&r);
