@@ -185,9 +185,8 @@ void ifdhandler_run(ifd_reader_t * reader)
 	int rc;
 	struct sigaction act;
         char path[PATH_MAX];
-        char file[PATH_MAX];
 
-        if (! ct_format_path(path, PATH_MAX, file)) {
+        if (! ct_format_path(path, PATH_MAX, opt_reader)) {
 		ct_error("ct_format_path failed!");
 		exit(1);
 	}
@@ -199,7 +198,7 @@ void ifdhandler_run(ifd_reader_t * reader)
 	}
 
 	sock = ct_socket_new(0);
-	if (ct_socket_listen(sock, opt_reader, 0666) < 0) {
+	if (ct_socket_listen(sock, path, 0666) < 0) {
 		ct_error("Failed to create server socket");
 		exit(1);
 	}
