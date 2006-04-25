@@ -56,7 +56,6 @@ case "$host" in
 	if test "$GCC" = "yes"; then
 		CFLAGS="$CFLAGS -no-cpp-precomp"
 	fi
-	with_bundles=yes
 	;;
 esac
 
@@ -265,10 +264,10 @@ CFLAGS="$saved_CFLAGS"
 
 BUNDLEDIR="${libdir}"
 AC_ARG_WITH(bundle-dir,
-        AC_HELP_STRING([--with-bundle-dir=PATH], [install MacOS X bundles to PAT
-H [[EPREFIX/lib]]]),
+        AC_HELP_STRING([--with-bundle-dir=PATH], [install bundle file for pcsc-lite to PATH [[not installed]]]),
         [
                 BUNDLEDIR="$withval"
+		with_bundles=yes
         ]
 )
 AC_SUBST(BUNDLEDIR)
