@@ -92,7 +92,7 @@ extern int		ct_card_write_memory(ct_handle *, unsigned int slot,
 				const void *send_buf, size_t send_len);
 
 extern int		ct_status_clear(unsigned int);
-extern ct_info_t *	ct_status_alloc_slot(unsigned int *);
+extern ct_info_t *	ct_status_alloc_slot(int *);
 extern int		ct_status_update(ct_info_t *);
 
 #ifdef __cplusplus
