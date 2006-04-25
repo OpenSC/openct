@@ -48,6 +48,7 @@ static int eutron_open(ifd_reader_t * reader, const char *device_name)
 	priv = (eut_priv_t *) calloc(1, sizeof(eut_priv_t));
 	if (!priv) {
 		ct_error("out of memory");
+		ifd_device_close(dev);
 		return IFD_ERROR_NO_MEMORY;
 	}
 
