@@ -100,7 +100,7 @@ int ct_status(const ct_info_t ** result)
 	return num_status;
 }
 
-ct_info_t *ct_status_alloc_slot(unsigned int *num)
+ct_info_t *ct_status_alloc_slot(int *num)
 {
 	ct_info_t *info;
 	size_t size;
@@ -111,7 +111,7 @@ ct_info_t *ct_status_alloc_slot(unsigned int *num)
 		return NULL;
 
 	max = size / sizeof(ct_info_t);
-	if (*num == (unsigned int)-1) {
+	if (*num == -1) {
 		sigset_t sigset;
 
 		/* Block all signals while holding the lock */
