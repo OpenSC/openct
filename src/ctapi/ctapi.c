@@ -547,7 +547,6 @@ char CT_init(unsigned short ctn, unsigned short pn)
 	struct CardTerminal *ct;
 	ct_handle *h;
 	ct_info_t info;
-	ct_lock_handle lock;
 	int i;
 
 	ct = (struct CardTerminal *)malloc(sizeof(struct CardTerminal));
@@ -560,7 +559,6 @@ char CT_init(unsigned short ctn, unsigned short pn)
 	memset(ct, 0, sizeof(struct CardTerminal));
 	ct->ctn = ctn;
 	ct->h = h;
-	ct->lock = lock;
 	ct->next = cardTerminals;
 	cardTerminals = ct;
 	ct->cwd = &ct->mf;
@@ -590,7 +588,7 @@ char CT_init(unsigned short ctn, unsigned short pn)
 	ct->hoststatus.id = 0xff11;
 	ct->hoststatus.gen = hoststatus;
 	ct->hoststatus.dir[0] = &ct->hoststatus;
-	if (ct_card_lock(h, 0, IFD_LOCK_EXCLUSIVE, &lock) < 0) {
+	if (ct_card_lock(h, 0, IFD_LOCK_EXCLUSIVE, &ct->lock) < 0) {
 		CT_close(ctn);
 		return ERR_HTSI;
 	}
