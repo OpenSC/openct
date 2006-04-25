@@ -1274,6 +1274,7 @@ static int ps_open(ifd_reader_t * reader, const char *device_name)
 	if (NULL == device_data) {
 		ct_error("ps_open: not enough memory");
 		rc = IFD_ERROR_NO_MEMORY;
+		goto out;
 	}
 
 	memset(device_data, 0, sizeof(*device_data));
