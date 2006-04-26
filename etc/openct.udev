@@ -23,7 +23,7 @@ SYSFS{idVendor}=="096e", SYSFS{idProduct}=="0005", RUN+="/etc/hotplug/usb/openct
 #SYSFS{idVendor}=="08d4", SYSFS{idProduct}=="0009", RUN+="/etc/hotplug/usb/openct"
 
 # ccid
-SYSFS{bDeviceClass}=="0b", SYSFS{bInterfaceSubClass}=="00", SYSFS{bInterfaceProtocol}=="00" RUN+="/etc/hotplug/usb/openct"
+SYSFS{bInterfaceClass}=="0b", SYSFS{bInterfaceSubClass}=="00", SYSFS{bInterfaceProtocol}=="00" RUN+="/etc/hotplug/usb/openct"
 
 # spr 532 - ccid, but with wrong interface class (vendor) :(
 SYSFS{idVendor}=="04e6", SYSFS{idProduct}=="0003", RUN+="/etc/hotplug/usb/openct"
