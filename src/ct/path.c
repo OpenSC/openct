@@ -29,7 +29,7 @@ int ct_format_path(char *path, const size_t pathlen, const char *file)
 				      file);
 		else if (getenv("OPENCT_SOCKETDIR"))
 			rc = snprintf(path, pathlen,
-				      "%s/openct/%s", getenv("UTDEVROOT"),
+				      "%s/%s", getenv("OPENCT_SOCKETDIR"),
 				      file);
 		else
 			rc = snprintf(path, pathlen,
