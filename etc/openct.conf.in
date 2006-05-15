@@ -119,6 +119,6 @@ driver pertosmart1038 {
 };
 driver wbeiuu {
 	ids = {
-		usb:104f:0004,
+		usb:104f/0004,
 	};
 };
