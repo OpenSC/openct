@@ -390,9 +390,13 @@ int ifd_scan_usb(void)
 
 			if (!(driver = ifd_driver_for_id(&id)))
 				continue;
-
+#ifdef __OpenBSD__
+			snprintf(device, sizeof(device),
+				"/dev/%s.00", device_info.udi_devnames[0]);
+#else
 			snprintf(device, sizeof(device),
 				 "/dev/%s", device_info.udi_devnames[0]);
+#endif	/* __OpenBSD__ */
 
 			ifd_spawn_handler(driver, device, -1);
 		}
