@@ -369,6 +369,7 @@ int ct_socket_call(ct_socket_t * sock, ct_buf_t * args, ct_buf_t * resp)
 	header.xid = xid;
 	header.count = ct_buf_avail(args);
 	header.dest = 0;
+	header.error = 0;
 
 	/* Put everything into send buffer and transmit */
 	if ((rc = ct_socket_put_packet(sock, &header, args)) < 0
