@@ -93,21 +93,24 @@ static int eg_card_reset(ifd_reader_t * reader, int slot, void *atr,
 	int rc, atrlen, stat;
 
 	ifd_debug(1, "called.");
+	usleep(100000);
 	/* Reset the device */
 	rc = ifd_usb_control(dev, EGATE_DIR_OUT, EGATE_CMD_RESET,
-			     0, 0, NULL, 0, EG_TIMEOUT);
+			     0, 0, NULL, 0, EG_TIMEOUT*2);
 	if (rc < 0) {
 	      failed:
 		ct_error("egate: failed to activate token");
 		return IFD_ERROR_COMM_ERROR;
 	}
 
+	usleep(100000);
 	rc = ifd_usb_control(reader->device, EGATE_DIR_IN, EGATE_CMD_STATUS,
 			     0, 0, &stat, 1, EG_TIMEOUT);
 	if (rc != 1)
 		return IFD_ERROR_COMM_ERROR;
 
 	/* Fetch the ATR */
+	usleep(100000);
 	rc = ifd_usb_control(dev, EGATE_DIR_IN, EGATE_CMD_READ_ATR,
 			     0, 0, buffer, EGATE_ATR_MAXSIZE, EG_TIMEOUT);
 	if (rc <= 0)
