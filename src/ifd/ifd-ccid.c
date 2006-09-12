@@ -490,7 +490,7 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 	p = NULL;
 	r = i = 0;
 	memset(&conf, 0, sizeof(conf));
-	for (c = 1; c <= de.bNumConfigurations; c++) {
+	for (c = 0; c <de.bNumConfigurations; c++) {
 		if (ifd_usb_get_config(dev, c, &conf)) {
 			ct_error("ccid: config descriptor %d not found", c);
 			continue;

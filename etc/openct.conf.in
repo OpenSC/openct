@@ -91,9 +91,9 @@ driver	cardman {
 };
 driver	ccid {
 	ids = {
-		usb:08e6/3437,
-		usb:08e6/3438,
-		usb:08e6/4433,
+		usb:08e6/3437, # Gemplus
+		usb:08e6/3438, # Gemplus GemPC Key SmartCard Reader
+		usb:08e6/4433, # Gemplus
 		usb:04e6/5115,
 		usb:04e6/5116,
 		usb:04e6/E001,
@@ -103,6 +103,11 @@ driver	ccid {
 		usb:0783/0003,
 		usb:03f0/1024,
 		usb:046a/0010,
+		usb:076b/6622,	# OmniKey CardMan 6121
+		usb:04e6/5117,	# SCM Micro token size reader
+		usb:073d/0c00,	# Eutron SimPocket (doesn't work yet)
+		usb:03f0/1024,	# HP Keyboard with CCID reader
+		usb:0bf8/1006,	# fujitsu siemens 3.5" drive size reader
 	};
 };
 driver pertosmart1030 {

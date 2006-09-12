@@ -1,6 +1,20 @@
 NEWS for OpenCT -- History of user visible changes
 
-New in 0.6.7; ????-??-?? 11 Andreas Jellinghaus
+New in 0.6.9; ????-??-??; Andreas Jellinghaus
+* more work on wbeeui driver.
+* better handling of usb devices for openbsd.
+* small delays in egate initialisation for new sealed egate token.
+* small bugfix in socket code.
+* fix openct.conf for wbeeui driver.
+* move scripts used by udev to /lib/udev/ by default.
+* udev scripts for usb, pcmcia_block and serial readers.
+* add several usb ids to ccid driver config.
+* small fix in ccid driver with configuration 0.
+
+New in 0.6.8; 2006-06-19; Andreas Jellinghaus
+Fix bug in socket code: retry if read() returns -1/EINTR.
+
+New in 0.6.7; 2006-05-01; Andreas Jellinghaus
 * configure.ac uses now pkg-config.
 * sys-linux.c does not need kernel headers (all data etc. included)
 * now generating a Changelog file in the documentation

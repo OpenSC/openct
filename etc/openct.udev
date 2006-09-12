@@ -1,39 +1,51 @@
 # udev rules file for openct
 #
-BUS!="usb", ACTION!="add", GOTO="openct_rules_end"
+BUS!="usb", ACTION!="add", GOTO="openct_usb_rules_end"
 
 # egate
-SYSFS{idVendor}=="0973", SYSFS{idProduct}=="0001", RUN+="/etc/hotplug/usb/openct"
+SYSFS{idVendor}=="0973", SYSFS{idProduct}=="0001", RUN+="/lib/udev/openct_usb"
 # eToken
-SYSFS{idVendor}=="0529", SYSFS{idProduct}=="050c", RUN+="/etc/hotplug/usb/openct"
-SYSFS{idVendor}=="0529", SYSFS{idProduct}=="0514", RUN+="/etc/hotplug/usb/openct"
+SYSFS{idVendor}=="0529", SYSFS{idProduct}=="050c", RUN+="/lib/udev/openct_usb"
+SYSFS{idVendor}=="0529", SYSFS{idProduct}=="0514", RUN+="/lib/udev/openct_usb"
 # eToken 64
-SYSFS{idVendor}=="0529", SYSFS{idProduct}=="0600", RUN+="/etc/hotplug/usb/openct"
+SYSFS{idVendor}=="0529", SYSFS{idProduct}=="0600", RUN+="/lib/udev/openct_usb"
 # eutron
-SYSFS{idVendor}=="073d", SYSFS{idProduct}=="0005", RUN+="/etc/hotplug/usb/openct"
+SYSFS{idVendor}=="073d", SYSFS{idProduct}=="0005", RUN+="/lib/udev/openct_usb"
 # ikey2k
-SYSFS{idVendor}=="04b9", SYSFS{idProduct}=="1200", RUN+="/etc/hotplug/usb/openct"
+SYSFS{idVendor}=="04b9", SYSFS{idProduct}=="1200", RUN+="/lib/udev/openct_usb"
 # ikey3k
-SYSFS{idVendor}=="04b9", SYSFS{idProduct}=="1300", RUN+="/etc/hotplug/usb/openct"
+SYSFS{idVendor}=="04b9", SYSFS{idProduct}=="1300", RUN+="/lib/udev/openct_usb"
 # starkey
-SYSFS{idVendor}=="096e", SYSFS{idProduct}=="0005", RUN+="/etc/hotplug/usb/openct"
+SYSFS{idVendor}=="096e", SYSFS{idProduct}=="0005", RUN+="/lib/udev/openct_usb"
 # cardman
-#SYSFS{idVendor}=="076b", SYSFS{idProduct}=="0596", RUN+="/etc/hotplug/usb/openct"
-#SYSFS{idVendor}=="076b", SYSFS{idProduct}=="1784", RUN+="/etc/hotplug/usb/openct"
-#SYSFS{idVendor}=="08d4", SYSFS{idProduct}=="0009", RUN+="/etc/hotplug/usb/openct"
+#SYSFS{idVendor}=="076b", SYSFS{idProduct}=="0596", RUN+="/lib/udev/openct_usb"
+#SYSFS{idVendor}=="076b", SYSFS{idProduct}=="1784", RUN+="/lib/udev/openct_usb"
+#SYSFS{idVendor}=="08d4", SYSFS{idProduct}=="0009", RUN+="/lib/udev/openct_usb"
 
 # ccid
-SYSFS{bInterfaceClass}=="0b", SYSFS{bInterfaceSubClass}=="00", SYSFS{bInterfaceProtocol}=="00" RUN+="/etc/hotplug/usb/openct"
+SYSFS{bInterfaceClass}=="0b", SYSFS{bInterfaceSubClass}=="00", SYSFS{bInterfaceProtocol}=="00" RUN+="/lib/udev/openct_usb"
 
 # spr 532 - ccid, but with wrong interface class (vendor) :(
-SYSFS{idVendor}=="04e6", SYSFS{idProduct}=="0003", RUN+="/etc/hotplug/usb/openct"
+SYSFS{idVendor}=="04e6", SYSFS{idProduct}=="0003", RUN+="/lib/udev/openct_usb"
 # pertosmart1030
-SYSFS{idVendor}=="072f", SYSFS{idProduct}=="0001", RUN+="/etc/hotplug/usb/openct"
-SYSFS{idVendor}=="072f", SYSFS{idProduct}=="8009", RUN+="/etc/hotplug/usb/openct"
+SYSFS{idVendor}=="072f", SYSFS{idProduct}=="0001", RUN+="/lib/udev/openct_usb"
+SYSFS{idVendor}=="072f", SYSFS{idProduct}=="8009", RUN+="/lib/udev/openct_usb"
 # pertosmart1038
-SYSFS{idVendor}=="072f", SYSFS{idProduct}=="9000", RUN+="/etc/hotplug/usb/openct"
-SYSFS{idVendor}=="072f", SYSFS{idProduct}=="90d0", RUN+="/etc/hotplug/usb/openct"
+SYSFS{idVendor}=="072f", SYSFS{idProduct}=="9000", RUN+="/lib/udev/openct_usb"
+SYSFS{idVendor}=="072f", SYSFS{idProduct}=="90d0", RUN+="/lib/udev/openct_usb"
 # wbeiuu
-SYSFS{idVendor}=="104f", SYSFS{idProduct}=="0004", RUN+="/etc/hotplug/usb/openct"
+SYSFS{idVendor}=="104f", SYSFS{idProduct}=="0004", RUN+="/lib/udev/openct_usb"
 
-LABEL="openct_rules_end"
+LABEL="openct_usb_rules_end"
+
+# udev pcmcia rules file for openct
+#
+BUS!="pcmcia", ACTION!="add", GOTO="openct_pcmcia_rules_end"
+
+# omnikey cardman 4040
+SUBSYSTEM=="cardman_4040", RUN+="/lib/udev/openct_pcmcia"
+
+# Gemplus PCMCIA Card
+BUS="pcmcia", DRIVER=="serial_cs", SYSFS{prod_id1}=="Gemplus", SYSFS{prod_id2}=="SerialPort", SYSFS{prod_id3}=="GemPC Card", RUN+="/lib/udev/openct_serial"
+
+LABEL="openct_pcmcia_rules_end"
