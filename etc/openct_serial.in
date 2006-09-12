@@ -1,0 +1,11 @@
+#!/bin/sh
+
+test "$ACTION" = "add" || exit 0
+test -n "$DEVNAME" || exit 0 
+test -e /var/run/openct/status || exit 0
+
+if [ -n "$DEVNAME" ]
+then
+	/home/aj/opentest/sbin/ifdhandler -H -r0 ccid serial:$DEVNAME
+	exit 0
+fi
