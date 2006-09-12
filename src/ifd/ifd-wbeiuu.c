@@ -119,6 +119,7 @@ static int wbeiuu_open(ifd_reader_t * reader, const char *dev_name)
 {
 	int status;
 	ifd_device_t *dev;
+        ifd_device_params_t params;
 
 	ifd_debug(1, "%s:%d wbeiuu_open()", __FILE__, __LINE__);
 
@@ -141,6 +142,14 @@ static int wbeiuu_open(ifd_reader_t * reader, const char *dev_name)
 		//ifd_device_close(dev);
 		return -1;
 	}
+
+        params = dev->settings;
+        params.usb.interface = 0;
+        if (ifd_device_set_parameters(dev, &params) < 0) {
+                ct_error("wbeiuu: setting parameters failed", dev_name);
+                ifd_device_close(dev);
+                return -1;
+        }
 
 	reader->device = dev;
 	dev->timeout = USB_TIMEOUT;

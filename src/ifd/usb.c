@@ -196,11 +196,5 @@ ifd_device_t *ifd_open_usb(const char *device)
 	dev->settings.usb.ep_o = -1;
 	dev->settings.usb.ep_i = -1;
 
-	rc = ifd_sysdep_usb_claim_interface(dev, 0);
-	if (rc < 0) {
-		ifd_device_free(dev);
-		return NULL;
-	}
-
 	return dev;
 }

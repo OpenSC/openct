@@ -84,6 +84,17 @@ static int kaan_open(ifd_reader_t * reader, const char *device_name)
 		params.serial.stopbits = 1;
 		ifd_device_set_parameters(dev, &params);
 	}
+	if (ifd_device_type(dev) == IFD_DEVICE_TYPE_USB) {
+	        ifd_device_params_t params;
+
+        	params = dev->settings;
+		params.usb.interface = 0;
+		if (ifd_device_set_parameters(dev, &params) < 0) {
+			ct_error("kaan: setting parameters failed", device_name);
+			ifd_device_close(dev);
+			return -1;
+		}
+	}
 
 	reader->device = dev;
 	if ((st = (kaan_status_t *) calloc(1, sizeof(*st))) == NULL) {

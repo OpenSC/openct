@@ -43,6 +43,7 @@
 static int eg_open(ifd_reader_t * reader, const char *device_name)
 {
 	ifd_device_t *dev;
+        ifd_device_params_t params;
 
 	ifd_debug(1, "device=%s", device_name);
 	reader->name = "Schlumberger E-Gate";
@@ -51,6 +52,14 @@ static int eg_open(ifd_reader_t * reader, const char *device_name)
 		return -1;
 	if (ifd_device_type(dev) != IFD_DEVICE_TYPE_USB) {
 		ct_error("egate: device %s is not a USB device", device_name);
+		ifd_device_close(dev);
+		return -1;
+	}
+
+	params = dev->settings;
+	params.usb.interface = 0;
+	if (ifd_device_set_parameters(dev, &params) < 0) {
+		ct_error("egate: setting parameters failed", device_name);
 		ifd_device_close(dev);
 		return -1;
 	}

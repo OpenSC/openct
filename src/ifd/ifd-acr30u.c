@@ -298,6 +298,7 @@ static int acr_open(ifd_reader_t * reader, const char *device_name)
 	params = dev->settings;
 	params.usb.interface = 0;
 	if (ifd_device_set_parameters(dev, &params) < 0) {
+		ct_error("acr30u: setting parameters failed", device_name);
 		ifd_device_close(dev);
 		return -1;
 	}

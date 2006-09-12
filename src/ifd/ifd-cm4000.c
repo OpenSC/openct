@@ -23,6 +23,7 @@
 static int cm_open(ifd_reader_t * reader, const char *device_name)
 {
 	ifd_device_t *dev;
+        ifd_device_params_t params;
 
 	reader->name = "OMNIKEY CardMan 4000";
 	reader->nslots = 1;
@@ -38,6 +39,14 @@ static int cm_open(ifd_reader_t * reader, const char *device_name)
 	reader->driver_data = NULL;
 	reader->device = dev;
 	dev->timeout = 2000;
+
+	params = dev->settings;
+	params.usb.interface = 0;
+	if (ifd_device_set_parameters(dev, &params) < 0) {
+		ct_error("cm4000: setting parameters failed", device_name);
+		ifd_device_close(dev);
+		return -1;
+	}
 
 	return 0;
 }

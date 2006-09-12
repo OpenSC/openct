@@ -1,7 +1,7 @@
 NEWS for OpenCT -- History of user visible changes
 
 New in 0.6.9; ????-??-??; Andreas Jellinghaus
-* more work on wbeeui driver.
+* more work on wbeiuu driver.
 * better handling of usb devices for openbsd.
 * small delays in egate initialisation for new sealed egate token.
 * small bugfix in socket code.
@@ -10,6 +10,9 @@ New in 0.6.9; ????-??-??; Andreas Jellinghaus
 * udev scripts for usb, pcmcia_block and serial readers.
 * add several usb ids to ccid driver config.
 * small fix in ccid driver with configuration 0.
+* don't claim interface in device_open, instead make sure all drivers
+  call ifd_device_set_parameters which will (in the case of usb) claim
+  the interface.
 
 New in 0.6.8; 2006-06-19; Andreas Jellinghaus
 Fix bug in socket code: retry if read() returns -1/EINTR.
