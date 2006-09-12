@@ -430,7 +430,7 @@ int ifd_scan_usb(void)
 	for (bus = usb_busses; bus; bus = bus->next) {
 		for (dev = bus->devices; dev; dev = dev->next) {
 			const char *driver;
-			char device[PATH_MAX];
+			char typedev[PATH_MAX];
 			struct stat buf;
 
 			id.val[0] = dev->descriptor.idVendor;
@@ -439,17 +439,19 @@ int ifd_scan_usb(void)
 			if (!(driver = ifd_driver_for_id(&id)))
 				continue;
 
-			snprintf(device, sizeof(device),
+			snprintf(typedev, sizeof(typedev),
 				 "/dev/bus/usb/%s/%s",
 				 bus->dirname, dev->filename);
-			if (stat(device, &buf) == 0) {
-				ifd_spawn_handler(driver, device, -1);
-			} else {
-				snprintf(device, sizeof(device),
-				 	"/proc/bus/usb/%s/%s",
+			if (stat(typedev, &buf) == 0) {
+				snprintf(typedev, sizeof(typedev),
+				 	"usb:/dev/bus/usb/%s/%s",
 				 	bus->dirname, dev->filename);
-			
-				ifd_spawn_handler(driver, device, -1);
+				ifd_spawn_handler(driver, typedev, -1);
+			} else {
+				snprintf(typedev, sizeof(typedev),
+				 	"usb:/proc/bus/usb/%s/%s",
+				 	bus->dirname, dev->filename);
+				ifd_spawn_handler(driver, typedev, -1);
 			}
 		}
 	}

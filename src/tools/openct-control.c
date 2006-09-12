@@ -160,29 +160,41 @@ int mgr_shutdown(int argc, char **argv)
  */
 int mgr_attach(int argc, char **argv)
 {
-	const char *device, *driver, *idstring;
+	const char *driver, *type, *device, *typedev;
 	ifd_devid_t id;
 	pid_t pid;
 
-	if (argc != 3)
+	if (argc != 4)
 		usage(1);
-	device = argv[1];
-	idstring = argv[2];
+	driver = argv[1];
+	type = argv[2];
+	device = argv[3];
 
 	/* Initialize IFD library */
 	ifd_init();
 
-	if (ifd_device_id_parse(idstring, &id) < 0) {
-		fprintf(stderr, "Cannot parse device ID %s\n", idstring);
+	typedev = malloc(strlen(type)+strlen(device)+2);
+	if (!typedev) {
+		fprintf(stderr, "out of memory\n");
 		return 1;
 	}
+	sprintf(typedev,"%s:%s",type,device);
 
-	if (!(driver = ifd_driver_for_id(&id))) {
-		fprintf(stderr, "No driver for this device\n");
-		return 1;
+	if (strncmp(type,driver,strlen(type)) == 0) {
+		/* detect what kind of devide we have */
+
+		if (ifd_device_id_parse(driver, &id) < 0) {
+			fprintf(stderr, "Cannot parse device ID %s\n", driver);
+			return 1;
+		}
+
+		if (!(driver = ifd_driver_for_id(&id))) {
+			fprintf(stderr, "No driver for this device\n");
+			return 1;
+		}
 	}
 
-	pid = ifd_spawn_handler(driver, device, -1);
+	pid = ifd_spawn_handler(driver, typedev, -1);
 	return (pid > 0) ? 0 : 1;
 }
 
@@ -251,8 +263,10 @@ void configure_reader(ifd_conf_node_t * cf)
 		return;
 	}
 
-	if (ifd_conf_node_get_string(cf, "driver", &driver) < 0)
-		driver = "auto";
+	if (ifd_conf_node_get_string(cf, "driver", &driver) < 0) {
+		ct_error("no driver specified in reader configuration for device %s", device);
+		return;
+	}
 
 	if (device == NULL && driver == NULL) {
 		ct_error("neither device nor driver specified "
@@ -286,7 +300,7 @@ void usage(int exval)
 		"  -v   display version and exit\n"
 		"\nWhere command is one of:\n"
 		"init - initialize OpenCT\n"
-		"attach device ident - attach a hotplug device\n"
+		"attach driver type device - attach a hotplug device\n"
 		"status - display status of all readers present\n"
 		"shutdown - shutdown OpenCT\n", OPENCT_CONF_PATH);
 	exit(exval);

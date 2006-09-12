@@ -12,7 +12,7 @@ if [ -n "$DEVICE" ]
 then
 	# if you see two ifdhandlers for one device, then you can
 	# either comment out the next line here ...
-	SBINDIR/openct-control attach $DEVICE usb:$PRODUCT
+	SBINDIR/openct-control attach usb:$PRODUCT usb $DEVICE
 	exit 0
 fi
 
@@ -23,6 +23,6 @@ then
 	D="`cat /sys/$DEVPATH/device/bcdDevice |sed -e "s/^0*//"`"
 	PRODUCT="$V/$P/$D"
 	# or the following line. both should disable that effect.
-	SBINDIR/openct-control attach $DEVNAME usb:$PRODUCT
+	SBINDIR/openct-control attach usb:$PRODUCT usb $DEVNAME
 	exit 0
 fi

@@ -78,14 +78,15 @@ long ifd_time_elapsed(struct timeval *then)
 /*
  * Spawn an ifdhandler
  */
-int ifd_spawn_handler(const char *driver, const char *device, int idx)
+int ifd_spawn_handler(const char *driver, const char *devtype, int idx)
 {
 	const char *argv[16];
 	char reader[16], debug[10];
+	char *type, *device;
 	int argc, n;
 	pid_t pid;
 
-	ifd_debug(1, "driver=%s, device=%s, index=%d", driver, device, idx);
+	ifd_debug(1, "driver=%s, devtype=%s, index=%d", driver, devtype, idx);
 
 	if ((pid = fork()) < 0) {
 		ct_error("fork failed: %m");
@@ -122,9 +123,17 @@ int ifd_spawn_handler(const char *driver, const char *device, int idx)
 		argv[argc++] = debug;
 	}
 
+	type = strdup(devtype);
+	device = strtok(type,":");
+	device = strtok(NULL,":");
+	if (!device || !type) {
+		ct_error("failed to parse devtype %s",devtype);
+		exit(1);
+	}
+
 	argv[argc++] = driver;
-	if (device)
-		argv[argc++] = device;
+	argv[argc++] = type;
+	argv[argc++] = device;
 	argv[argc] = NULL;
 
 	n = getdtablesize();

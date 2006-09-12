@@ -49,7 +49,7 @@ static void print_info(void);
 
 int main(int argc, char **argv)
 {
-	const char *device = NULL, *driver;
+	const char *driver = NULL, *type = NULL, *device = NULL;
 	ifd_reader_t *reader;
 	ct_info_t *status;
 	int c;
@@ -95,10 +95,11 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	if (optind != argc - 2)
+	if (optind != argc - 3)
 		usage(1);
 
 	driver = argv[optind++];
+	type = argv[optind++];
 	device = argv[optind++];
 
 	ct_config.debug = opt_debug;
@@ -152,9 +153,18 @@ int main(int argc, char **argv)
 	}
 
 	/* Create reader */
-	if (!(reader = ifd_open(driver, device))) {
-		ct_error("unable to open reader %s@%s", driver, device);
-		return 1;
+	{
+		char *typedev = malloc(strlen(type)+strlen(device)+2);
+		if (!typedev) {
+			ct_error("out of memory");
+			return 1;
+		}
+		sprintf(typedev,"%s:%s",type,device);
+		if (!(reader = ifd_open(driver, typedev))) {
+			ct_error("unable to open reader %s %s %s", driver, type, device);
+			return 1;
+		}
+		free(typedev);
 	}
 
 	ifd_device_set_hotplug(reader->device, opt_hotplug);
@@ -427,7 +437,7 @@ void version(void)
 void usage(int exval)
 {
 	fprintf(exval ? stderr : stdout,
-		"usage: ifdhandler [-Hds] [-r reader] driver device\n"
+		"usage: ifdhandler [-Hds] [-r reader] driver type device\n"
 		"  -r   specify index of reader\n"
 		"  -F   stay in foreground\n"
 		"  -H   hotplug device, monitor for detach\n"

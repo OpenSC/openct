@@ -590,6 +590,7 @@ int ifd_scan_usb(void)
 		do {
 			int device = -1;
 			char device_instance_cntrl0_name[256];
+			char typedev[256];
 			struct stat dummy;
 
 			errno = 0;
@@ -610,9 +611,9 @@ int ifd_scan_usb(void)
 				ifd_debug(1,
 					  "ifd_scan_usb: \t\tfound device instance %s\n",
 					  device_instance_cntrl0_name);
-				ifd_spawn_handler(driver,
-						  device_instance_cntrl0_name,
-						  -1);
+				snprintf(typedev,sizeof(typedev),
+					"usb:%s", device_instance_cntrl0_name);
+				ifd_spawn_handler(driver, typedev, -1);
 			}
 		} while (device_instance != NULL);
 		if (errno != 0)

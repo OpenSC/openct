@@ -6,6 +6,6 @@ test -e /var/run/openct/status || exit 0
 
 if [ -n "$DEVNAME" ]
 then
-	/home/aj/opentest/sbin/ifdhandler -H -r0 ccid serial:$DEVNAME
+	SBINDIR/openct-control attach ccid serial $DEVNAME
 	exit 0
 fi

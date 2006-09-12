@@ -359,7 +359,7 @@ int ifd_scan_usb(void)
 			struct usb_device_info device_info;
 			ifd_devid_t id;
 			const char *driver;
-			char device[256];
+			char typedev[256];
 
 			device_info.udi_addr = address;
 
@@ -391,14 +391,14 @@ int ifd_scan_usb(void)
 			if (!(driver = ifd_driver_for_id(&id)))
 				continue;
 #ifdef __OpenBSD__
-			snprintf(device, sizeof(device),
-				"/dev/%s.00", device_info.udi_devnames[0]);
+			snprintf(typedev, sizeof(typedev),
+				"usb:/dev/%s.00", device_info.udi_devnames[0]);
 #else
-			snprintf(device, sizeof(device),
-				 "/dev/%s", device_info.udi_devnames[0]);
+			snprintf(typedev, sizeof(typedev),
+				 "usb:/dev/%s", device_info.udi_devnames[0]);
 #endif	/* __OpenBSD__ */
 
-			ifd_spawn_handler(driver, device, -1);
+			ifd_(driver, typedev, -1);
 		}
 		close(controller_fd);
 	}

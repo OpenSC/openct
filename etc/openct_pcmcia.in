@@ -6,6 +6,6 @@ test -e /var/run/openct/status || exit 0
 
 if [ -n "$DEVNAME" ]
 then
-	SBINDIR/ifdhandler -H -r0 ccid pcmcia_block:$DEVNAME
+	SBINDIR/openct-control attach ccid pcmcia_block $DEVNAME
 	exit 0
 fi
