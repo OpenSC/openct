@@ -29,15 +29,7 @@ ifd_device_t *ifd_device_open(const char *name)
 	if (!strncmp(name, "pcmcia_block:", 13))
 		return ifd_open_pcmcia_block(name + 13);
 
-	switch (ifd_sysdep_device_type(name)) {
-	case IFD_DEVICE_TYPE_SERIAL:
-		return ifd_open_serial(name);
-	case IFD_DEVICE_TYPE_USB:
-		return ifd_open_usb(name);
-		/* Other types to be added */
-	case -1:
-		ct_error("Unknown device type \"%s\"", name);
-	}
+	ct_error("Unknown device type \"%s\"", name);
 	return NULL;
 }
 
@@ -81,19 +73,6 @@ void ifd_device_free(ifd_device_t * dev)
 int ifd_device_type(ifd_device_t * dev)
 {
 	return dev->type;
-}
-
-int ifd_device_identify(const char *name, char *ident, size_t len)
-{
-	ifd_device_t *dev;
-	int res = -1;
-
-	if (!(dev = ifd_device_open(name)))
-		return -1;
-	if (dev->ops && dev->ops->identify)
-		res = dev->ops->identify(dev, ident, len);
-	ifd_device_close(dev);
-	return res;
 }
 
 int ifd_device_reset(ifd_device_t * dev)

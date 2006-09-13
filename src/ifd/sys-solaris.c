@@ -221,36 +221,6 @@ prepare_usb_control_req(usb_request_t * req, uint8_t bmRequestType,
 #endif				/* _BIG_ENDIAN */
 }
 
-int ifd_sysdep_device_type(const char *name)
-{
-	char *cwd;
-
-	if ((cwd = getcwd(NULL, PATH_MAX)) == NULL) {
-		return -1;
-	}
-	/*
-	 * A USB device that is supported through the UGEN driver
-	 * is typically indicated by its control endpoint.
-	 * Eg /dev/usb/<vendor>.<product>/<instance>/cntrl0
-	 */
-	ifd_debug(6, "ifd_sysdep_device_type: cwd=\"%s\" name=\"%s\"", cwd,
-		  name);
-
-	if (!name || name[0] != '/') {
-		ifd_debug(6,
-			  "ifd_sysdep_device_type: device name does not start with \"/\"");
-		return -1;
-	}
-
-	if (strncmp(name, "/dev/usb/", 9) == 0) {
-		ifd_debug(6, "ifd_sysdep_device_type: detected USB device");
-		return IFD_DEVICE_TYPE_USB;
-	}
-
-	ifd_debug(6, "ifd_sysdep_device_type: No USB device detected");
-	return -1;
-}
-
 /*
  * Poll for presence of USB device
  */

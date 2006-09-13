@@ -356,15 +356,6 @@ int ifd_serial_get_cts(ifd_device_t * dev)
 }
 
 /*
- * Identify attached device
- */
-static int ifd_serial_identify(ifd_device_t * dev, char *namebuf, size_t len)
-{
-	ct_error("Serial PNP not yet implemented");
-	return -1;
-}
-
-/*
  * Close the device
  */
 static void ifd_serial_close(ifd_device_t * dev)
@@ -393,7 +384,6 @@ ifd_device_t *ifd_open_serial(const char *name)
 	/* Clear the NDELAY flag */
 	fcntl(fd, F_SETFL, 0);
 
-	ifd_serial_ops.identify = ifd_serial_identify;
 	ifd_serial_ops.reset = ifd_serial_reset;
 	ifd_serial_ops.set_params = ifd_serial_set_params;
 	ifd_serial_ops.get_params = ifd_serial_get_params;

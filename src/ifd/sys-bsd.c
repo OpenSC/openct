@@ -28,24 +28,6 @@
 
 #include "usb-descriptors.h"
 
-int ifd_sysdep_device_type(const char *name)
-{
-	struct stat stb;
-
-	ifd_debug(1, "BSD: ifd_sysdep_device_type(%s)", name);
-	if (!name || name[0] != '/')
-		return -1;
-
-	if (!strncmp(name, "/dev/ugen", 9)) {
-		ifd_debug(1, "BSD: returning IFD_DEVICE_TYPE_USB");
-		if (stat(name, &stb) < 0)
-			return -1;
-		return IFD_DEVICE_TYPE_USB;
-	}
-
-	return -1;
-}
-
 /*
  * Poll for presence of USB device
  */

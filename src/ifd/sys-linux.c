@@ -141,48 +141,7 @@ struct usbdevfs_hub_portinfo {
 #define USBDEVFS_DISCONNECT        _IO('U', 22)
 #define USBDEVFS_CONNECT           _IO('U', 23)
 
-/* other constants from kernel code */
-
-#define TTY_MAJOR            4
-#define PTY_SLAVE_MAJOR              3
-#define UNIX98_PTY_MASTER_MAJOR      128
-#define UNIX98_PTY_SLAVE_MAJOR       (UNIX98_PTY_MASTER_MAJOR+UNIX98_PTY_MAJOR_COUNT)
-#define UNIX98_PTY_MAJOR_COUNT       8
-#define MISC_MAJOR           10
-
 /* end of import from usbdevice_fs.h */
-
-int ifd_sysdep_device_type(const char *name)
-{
-	struct stat stb;
-
-	if (!name || name[0] != '/')
-		return -1;
-
-	if (!strncmp(name, "/proc/bus/usb", 13) ||
-		!strncmp(name, "/dev/bus/usb", 12)) 
-		return IFD_DEVICE_TYPE_USB;
-
-	if (stat(name, &stb) < 0)
-		return -1;
-
-	if (S_ISCHR(stb.st_mode)) {
-		int major = major(stb.st_rdev);
-		int minor = minor(stb.st_rdev);
-
-		if (major == TTY_MAJOR
-		    || major == PTY_SLAVE_MAJOR
-		    || (UNIX98_PTY_SLAVE_MAJOR <= major
-			&& major <
-			UNIX98_PTY_SLAVE_MAJOR + UNIX98_PTY_MAJOR_COUNT))
-			return IFD_DEVICE_TYPE_SERIAL;
-
-		if (major == MISC_MAJOR && minor == 1)
-			return IFD_DEVICE_TYPE_PS2;
-	}
-
-	return -1;
-}
 
 /*
  * Poll for presence of USB device

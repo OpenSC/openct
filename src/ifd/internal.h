@@ -43,11 +43,6 @@ struct ifd_device {
 };
 
 struct ifd_device_ops {
-	/* Try to identify the attached device. In the case of
-	 * a serial device, perform serial PnP. For USB devices,
-	 * get the vendor/device ID */
-	int (*identify) (ifd_device_t *, char *, size_t);
-
 	/* Reset device */
 	int (*reset) (ifd_device_t *);
 
@@ -164,7 +159,6 @@ extern unsigned int csum_lrc_compute(const uint8_t *, size_t, unsigned char *);
 extern unsigned int csum_crc_compute(const uint8_t *, size_t, unsigned char *);
 
 /* Internal system dependent device functions */
-extern int ifd_sysdep_device_type(const char *);
 extern int ifd_sysdep_usb_poll_presence(ifd_device_t *, struct pollfd *);
 extern int ifd_sysdep_usb_control(ifd_device_t *,
 				  unsigned int,

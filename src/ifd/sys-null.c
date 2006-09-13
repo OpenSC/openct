@@ -13,11 +13,6 @@
 #include <stdio.h>
 #include <openct/driver.h>
 
-int ifd_sysdep_device_type(const char *name)
-{
-	return -1;
-}
-
 /*
  * USB handling
  */

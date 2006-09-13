@@ -32,23 +32,6 @@
 
 struct usb_dev_handle *devices[128];
 
-int ifd_sysdep_device_type(const char *name)
-{
-	char prefix[PATH_MAX];
-	char *utdevroot;
-
-	ifd_debug(1, "SunRay: ifd_sysdep_device_type(%s)", name);
-	if (!name || name[0] != '/')
-		return -1;
-
-	utdevroot = getenv("UTDEVROOT");
-	snprintf(prefix, sizeof(prefix), "%s/usb/", utdevroot ? utdevroot : "");
-	if (!strncmp(name, prefix, strlen(prefix)))
-		return IFD_DEVICE_TYPE_USB;
-
-	return -1;
-}
-
 /*
  * Poll for presence of USB device
  */
