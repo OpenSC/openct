@@ -102,7 +102,7 @@ driver	ccid {
 		usb:076b/5121,
 		usb:0783/0003,
 		usb:03f0/1024,
-		usb:046a/0010,
+		usb:046a/0010,	# Cherry smartboard G83-6744
 		usb:076b/6622,	# OmniKey CardMan 6121
 		usb:04e6/5117,	# SCM Micro token size reader
 		usb:073d/0c00,	# Eutron SimPocket (doesn't work yet)
