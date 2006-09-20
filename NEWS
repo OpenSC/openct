@@ -1,6 +1,6 @@
 NEWS for OpenCT -- History of user visible changes
 
-New in 0.6.9; ????-??-??; Andreas Jellinghaus
+New in 0.6.9; 2006-09-20; Andreas Jellinghaus
 * more work on wbeiuu driver.
 * better handling of usb devices for openbsd.
 * small delays in egate initialisation for new sealed egate token.
