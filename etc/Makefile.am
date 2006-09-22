@@ -35,13 +35,13 @@ init-script: init-script.in
 %: %.in
 	sed -e "s#SBINDIR#${sbindir}#g" < $^ > $@
 
-install-data-local: openct_usb
+install-data-local: openct_usb openct_pcmcia openct_serial
 	@set -e; if test -w $(DESTDIR)/lib/udev; then \
-		echo install -m 755 openct_usb $(DESTDIR)/lib/usb/openct_usb; \
+		echo install -m 755 openct_usb $(DESTDIR)/lib/udev/openct_usb; \
 		install -m 755 openct_usb $(DESTDIR)/lib/udev/openct_usb; \
-		echo install -m 755 openct_pcmcia $(DESTDIR)/lib/pcmcia/openct_pcmcia; \
+		echo install -m 755 openct_pcmcia $(DESTDIR)/lib/udev/openct_pcmcia; \
 		install -m 755 openct_pcmcia $(DESTDIR)/lib/udev/openct_pcmcia; \
-		echo install -m 755 openct_serial $(DESTDIR)/lib/pcmcia/openct_serial; \
+		echo install -m 755 openct_serial $(DESTDIR)/lib/udev/openct_serial; \
 		install -m 755 openct_serial $(DESTDIR)/lib/udev/openct_serial; \
 	else \
 		echo "*** Please install udev scripts manually" >&2; \

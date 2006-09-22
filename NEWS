@@ -1,5 +1,8 @@
 NEWS for OpenCT -- History of user visible changes
 
+New in 0.6.10; 2006-??-??; Andreas Jellinghaus
+* fix etc/Makefile installation (Ville Skytta)
+
 New in 0.6.9; 2006-09-20; Andreas Jellinghaus
 * more work on wbeiuu driver.
 * better handling of usb devices for openbsd.
