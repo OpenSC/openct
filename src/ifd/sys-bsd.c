@@ -380,7 +380,7 @@ int ifd_scan_usb(void)
 				 "usb:/dev/%s", device_info.udi_devnames[0]);
 #endif	/* __OpenBSD__ */
 
-			ifd_(driver, typedev, -1);
+			ifd_spawn_handler(driver, typedev, -1);
 		}
 		close(controller_fd);
 	}
