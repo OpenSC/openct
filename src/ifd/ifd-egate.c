@@ -191,20 +191,33 @@ static unsigned char eg_status(ifd_reader_t * reader)
 static int eg_transparent(ifd_reader_t * reader, int dad, const void *inbuffer,
 			  size_t inlen, void *outbuffer, size_t outlen)
 {
-	int rc;
+	int rc, bytesread;
 	unsigned char stat;
 	ifd_iso_apdu_t iso;
 	unsigned char cmdbuf[5];
-
+	int i;
+	
 	stat = eg_status(reader);
 	if (stat != EGATE_STATUS_READY) {
-		ifd_debug(2, "device not ready, attempting reset");
-		rc = ifd_usb_control(reader->device, EGATE_DIR_OUT,
-				     EGATE_CMD_RESET, 0, 0, NULL, 0,
-				     EG_TIMEOUT);
-		if (rc < 0)
-			return IFD_ERROR_COMM_ERROR;
+		for (i=0; i < 4; i++) {
+			ifd_debug(2, "device not ready, attempting reset");
+			rc = ifd_usb_control(reader->device, EGATE_DIR_OUT,
+				EGATE_CMD_RESET, 0, 0, NULL, 0, EG_TIMEOUT);
+			if (rc < 0)
+				return IFD_ERROR_COMM_ERROR;
+			usleep(100);
+			stat = eg_status(reader);
+			if (stat == EGATE_STATUS_READY) {
+				ifd_debug(2, "reset succeeded");
+				/* FIXME: we need a better error code */
+				return IFD_ERROR_COMM_ERROR;
+			}
+			ifd_debug(2, "reset failed");
+	     	}
+		ifd_debug(2, "giving up on reset");
+		return IFD_ERROR_COMM_ERROR;
 	}
+
 	if (ifd_iso_apdu_parse(inbuffer, inlen, &iso) < 0)
 		return IFD_ERROR_INVALID_ARG;
 	if (inlen >= 5 && inlen < 5 + iso.lc)
@@ -233,21 +246,21 @@ static int eg_transparent(ifd_reader_t * reader, int dad, const void *inbuffer,
 		ifd_debug(3, "sent %d bytes of data", iso.lc);
 		stat = eg_status(reader);
 	}
-	if (stat == EGATE_STATUS_DATA) {
+	bytesread=0;
+	
+	while (stat == EGATE_STATUS_DATA && bytesread < iso.le) {
 		rc = ifd_usb_control(reader->device, EGATE_DIR_IN,
-				     EGATE_CMD_READ, 0, 0, (void *)outbuffer,
-				     iso.le, EG_TIMEOUT);
+				     EGATE_CMD_READ, 0, 0, 
+				     (void *)(((unsigned char *)outbuffer) + 
+					      bytesread),
+				     iso.le - bytesread, EG_TIMEOUT);
 		if (rc < 0)
 			return IFD_ERROR_COMM_ERROR;
-		if (rc != iso.le) {
-			ifd_debug(1, "short USB read (%u of %u bytes)", rc,
-				  iso.le);
-			return IFD_ERROR_COMM_ERROR;
-		}
-		ifd_debug(3, "received %d bytes of data", iso.le);
+		bytesread += rc;
+		ifd_debug(3, "received %d bytes of data", rc);
 		stat = eg_status(reader);
-	} else
-		iso.le = 0;
+	}
+	iso.le = bytesread;
 	if (stat != EGATE_STATUS_SW)
 		return IFD_ERROR_DEVICE_DISCONNECTED;
 	rc = ifd_usb_control(reader->device, EGATE_DIR_IN, EGATE_CMD_READ, 0, 0,
