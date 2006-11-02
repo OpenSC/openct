@@ -1,6 +1,6 @@
 # udev rules file for openct
 #
-BUS!="usb", ACTION!="add", GOTO="openct_usb_rules_end"
+SUBSYSTEMS!="usb", ACTION!="add", GOTO="openct_usb_rules_end"
 
 # egate
 SYSFS{idVendor}=="0973", SYSFS{idProduct}=="0001", RUN+="/lib/udev/openct_usb"
@@ -40,12 +40,12 @@ LABEL="openct_usb_rules_end"
 
 # udev pcmcia rules file for openct
 #
-BUS!="pcmcia", ACTION!="add", GOTO="openct_pcmcia_rules_end"
+SUBSYSTEMS!="pcmcia", ACTION!="add", GOTO="openct_pcmcia_rules_end"
 
 # omnikey cardman 4040
 SUBSYSTEM=="cardman_4040", RUN+="/lib/udev/openct_pcmcia"
 
 # Gemplus PCMCIA Card
-BUS="pcmcia", DRIVER=="serial_cs", SYSFS{prod_id1}=="Gemplus", SYSFS{prod_id2}=="SerialPort", SYSFS{prod_id3}=="GemPC Card", RUN+="/lib/udev/openct_serial"
+DRIVER=="serial_cs", SYSFS{prod_id1}=="Gemplus", SYSFS{prod_id2}=="SerialPort", SYSFS{prod_id3}=="GemPC Card", RUN+="/lib/udev/openct_serial"
 
 LABEL="openct_pcmcia_rules_end"
