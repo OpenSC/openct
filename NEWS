@@ -6,6 +6,7 @@ New in 0.6.10; 2006-??-??; Andreas Jellinghaus
 * include string.h in utils.c (Dann Frazier)
 * fix 'BUS="pcmcia"' match in udev rules file.
 * improve egate reset logic (Chaskiel Grundman, bugs by AJ)
+* implement usb reset (Andrey Jivsov)
 
 New in 0.6.9; 2006-09-20; Andreas Jellinghaus
 * more work on wbeiuu driver.

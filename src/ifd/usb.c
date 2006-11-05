@@ -166,6 +166,17 @@ static int usb_recv(ifd_device_t * dev, unsigned char *recv, size_t recvlen,
 	return rc;
 }
 
+static int usb_reset(ifd_device_t * dev)
+{
+	int rc;
+
+	rc = ifd_sysdep_usb_reset( dev );
+
+	return rc;
+}
+
+
+
 static struct ifd_device_ops ifd_usb_ops;
 
 /*
@@ -185,6 +196,7 @@ ifd_device_t *ifd_open_usb(const char *device)
 	ifd_usb_ops.set_params = usb_set_params;
 	ifd_usb_ops.send = usb_send;
 	ifd_usb_ops.recv = usb_recv;
+	ifd_usb_ops.reset = usb_reset;
 
 	dev = ifd_device_new(device, &ifd_usb_ops, sizeof(*dev));
 	dev->type = IFD_DEVICE_TYPE_USB;
