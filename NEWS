@@ -1,6 +1,8 @@
 NEWS for OpenCT -- History of user visible changes
 
-New in 0.6.10; 2006-??-??; Andreas Jellinghaus
+New in 0.6.11; 2007-??-??; Andreas Jellinghaus
+
+New in 0.6.10; 2006-11-11: Andreas Jellinghaus
 * fix etc/Makefile installation (Ville Skytta)
 * bsd compile fixed (Markus Schatzl)
 * include string.h in utils.c (Dann Frazier)
