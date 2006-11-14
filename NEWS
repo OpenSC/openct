@@ -1,6 +1,8 @@
 NEWS for OpenCT -- History of user visible changes
 
 New in 0.6.11; 2007-??-??; Andreas Jellinghaus
+* add usb reset for non-linux too (dummy code only).
+* fix three small bugs/warnings
 
 New in 0.6.10; 2006-11-11: Andreas Jellinghaus
 * fix etc/Makefile installation (Ville Skytta)
