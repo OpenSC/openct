@@ -296,6 +296,12 @@ int ifd_sysdep_usb_open(const char *name)
 	return ENOENT;
 }
 
+int ifd_sysdep_usb_reset(ifd_device_t * dev)
+{
+	/* not implemented so far */
+        return -1;
+}
+
 /*
  * Scan all usb devices to see if there is one we support
  */

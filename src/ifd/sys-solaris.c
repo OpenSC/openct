@@ -504,6 +504,12 @@ int ifd_sysdep_usb_open(const char *device)
         return open(device, O_RDWR);
 }
 
+int ifd_sysdep_usb_reset(ifd_device_t * dev)
+{
+	/* not implemented so far */
+        return -1;
+}
+
 /*
  * Scan the /dev/usb directory to see if there is any control pipe matching:
  *

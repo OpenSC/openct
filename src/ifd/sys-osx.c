@@ -88,6 +88,11 @@ int ifd_sysdep_usb_open(const char *device)
 	return -1;
 }
 
+int ifd_sysdep_usb_reset(const char *device)
+{
+	return -1;
+}
+
 /*
  * Scan all usb devices to see if there is one we support
  */
