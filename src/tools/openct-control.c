@@ -160,7 +160,8 @@ int mgr_shutdown(int argc, char **argv)
  */
 int mgr_attach(int argc, char **argv)
 {
-	const char *driver, *type, *device, *typedev;
+	const char *driver, *type, *device;
+	char *typedev;
 	ifd_devid_t id;
 	pid_t pid;
 
