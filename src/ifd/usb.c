@@ -185,7 +185,7 @@ static struct ifd_device_ops ifd_usb_ops;
 ifd_device_t *ifd_open_usb(const char *device)
 {
 	ifd_device_t *dev;
-	int fd,rc;
+	int fd;
 
 	if ((fd = ifd_sysdep_usb_open(device)) < 0) {
 		ct_error("Unable to open USB device %s: %m", device);
