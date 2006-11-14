@@ -225,7 +225,7 @@ int ifd_sysdep_usb_release_interface(ifd_device_t * dev, int interface)
 int ifd_sysdep_usb_reset(ifd_device_t * dev)
 {
 	if (ioctl(dev->fd, USBDEVFS_RESET, NULL) < 0) {
-		ct_error(40, "usb_reset failed: %m");
+		ct_error("usb_reset failed: %m");
 		return IFD_ERROR_COMM_ERROR;
 	}
 	return 0;
