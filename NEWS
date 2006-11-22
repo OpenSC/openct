@@ -1,6 +1,6 @@
 NEWS for OpenCT -- History of user visible changes
 
-New in 0.6.11; 2007-??-??; Andreas Jellinghaus
+New in 0.6.11; 2007-11-22: Andreas Jellinghaus
 * add usb reset for non-linux too (dummy code only).
 * fix three small bugs/warnings
 
