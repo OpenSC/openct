@@ -89,6 +89,17 @@ static int ifd_pcmcia_recv(ifd_device_t * dev, unsigned char *buffer,
 }
 
 /*
+ * Set pcmcia params
+ */
+static int ifd_pcmcia_set_params(ifd_device_t * dev,
+			  const ifd_device_params_t * params)
+{
+	/* nothing to do so far */
+        dev->settings = *params;
+	return 0;
+}
+
+/*
  * Close the device
  */
 static void ifd_pcmcia_close(ifd_device_t * dev)
@@ -115,6 +126,7 @@ ifd_device_t *ifd_open_pcmcia(const char *name)
 
 	ifd_pcmcia_ops.send = ifd_pcmcia_send;
 	ifd_pcmcia_ops.recv = ifd_pcmcia_recv;
+	ifd_pcmcia_ops.set_params = ifd_pcmcia_set_params;
 	ifd_pcmcia_ops.close = ifd_pcmcia_close;
 
 	dev = ifd_device_new(name, &ifd_pcmcia_ops, sizeof(*dev));
