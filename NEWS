@@ -1,7 +1,7 @@
 NEWS for OpenCT -- History of user visible changes
 
 New in 0.6.12; 2006-??-??; Andreas Jellinghaus
-* add get_params to pcmcia and pcmcia-block code to
+* add set_params to pcmcia and pcmcia-block code to
   get cm4000/cm4040 drivers to work again.
 
 New in 0.6.11; 2006-11-22; Andreas Jellinghaus
