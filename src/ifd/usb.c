@@ -15,7 +15,7 @@
  */
 int ifd_usb_control(ifd_device_t * dev, unsigned int requesttype,
 		    unsigned int request, unsigned int value,
-		    unsigned int index, void *buffer, size_t len, long timeout)
+		    unsigned int idx, void *buffer, size_t len, long timeout)
 {
 	int n;
 
@@ -27,18 +27,18 @@ int ifd_usb_control(ifd_device_t * dev, unsigned int requesttype,
 	if ((ct_config.debug >= 3) && !(requesttype & 0x80)) {
 		ifd_debug(4,
 			  "usb req type=x%02x req=x%02x val=x%04x ind=x%04x len=%u",
-			  requesttype, request, value, index, len);
+			  requesttype, request, value, idx, len);
 		if (len)
 			ifd_debug(4, "send %s", ct_hexdump(buffer, len));
 	}
 
-	n = ifd_sysdep_usb_control(dev, requesttype, request, value, index,
+	n = ifd_sysdep_usb_control(dev, requesttype, request, value, idx,
 				   buffer, len, timeout);
 
 	if ((ct_config.debug >= 3) && (requesttype & 0x80)) {
 		ifd_debug(4,
 			  "usb req type=x%02x req=x%02x val=x%04x ind=x%04x len=%d",
-			  requesttype, request, value, index, n);
+			  requesttype, request, value, idx, n);
 		if (n > 0)
 			ifd_debug(4, "recv %s", ct_hexdump(buffer, n));
 	}
