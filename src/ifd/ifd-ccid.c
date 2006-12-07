@@ -814,7 +814,7 @@ static int ccid_card_status(ifd_reader_t * reader, int slot, int *status)
 	    reader->device->settings.usb.ep_intr) {
 		ifd_usb_capture_t *cap;
 		int any = 0;
-		int i, j, bits, stat;
+		int i, j, bits;
 
 		i = 1 + (slot / 4);
 		j = 2 * (slot % 4);
