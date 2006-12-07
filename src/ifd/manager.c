@@ -64,15 +64,15 @@ ifd_reader_t *ifd_reader_by_handle(unsigned int handle)
 	return NULL;
 }
 
-ifd_reader_t *ifd_reader_by_index(unsigned int index)
+ifd_reader_t *ifd_reader_by_index(unsigned int idx)
 {
 	ifd_reader_t *reader;
 
-	if (index >= OPENCT_MAX_READERS) {
-		ct_error("ifd_reader_by_index: invalid index %u", index);
+	if (idx >= OPENCT_MAX_READERS) {
+		ct_error("ifd_reader_by_index: invalid index %u", idx);
 		return NULL;
 	}
-	if (!(reader = ifd_readers[index]))
+	if (!(reader = ifd_readers[idx]))
 		return NULL;
 
 	return reader;
