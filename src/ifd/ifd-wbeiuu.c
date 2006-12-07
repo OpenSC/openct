@@ -747,6 +747,8 @@ static int wbeiuu_perform_verify(ifd_reader_t * reader,
 	return 0;
 }
 
+#if 0
+/* not used so far */
 static int wbeiuu_set_protocol(ifd_reader_t * reader, int slot, int protocol)
 {
 	ifd_debug(1, "%s:%d wbeiuu_set_protocol", __FILE__, __LINE__);
@@ -762,6 +764,7 @@ static int wbeiuu_set_protocol(ifd_reader_t * reader, int slot, int protocol)
 
 	return 0;
 }
+#endif
 
 static int wbeiuu_transparent(ifd_reader_t * reader, int slot,
 			      const void *sbuf, size_t slen,
