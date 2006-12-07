@@ -160,7 +160,7 @@ int ifd_sysdep_usb_poll_presence(ifd_device_t * dev, struct pollfd *pfd)
  */
 int ifd_sysdep_usb_control(ifd_device_t * dev, unsigned int requesttype,
 			   unsigned int request, unsigned int value,
-			   unsigned int index, void *data, size_t len,
+			   unsigned int idx, void *data, size_t len,
 			   long timeout)
 {
 	struct usbdevfs_ctrltransfer ctrl;
@@ -169,7 +169,7 @@ int ifd_sysdep_usb_control(ifd_device_t * dev, unsigned int requesttype,
 	ctrl.bRequestType = requesttype;
 	ctrl.bRequest = request;
 	ctrl.wValue = value;
-	ctrl.wIndex = index;
+	ctrl.wIndex = idx;
 	ctrl.wLength = len;
 	ctrl.data = data;
 	ctrl.timeout = timeout;

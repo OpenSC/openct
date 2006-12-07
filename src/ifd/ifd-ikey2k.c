@@ -165,11 +165,11 @@ static int ikey2k_set_protocol(ifd_reader_t * reader, int nslot, int proto)
 static int ikey2k_send(ifd_reader_t * reader, unsigned int dad,
 		       const unsigned char *buffer, size_t len)
 {
-	int value, index;
+	int value, idx;
 	value = buffer[1] << 8 | buffer[0];
-	index = buffer[3] << 8 | buffer[2];
+	idx = buffer[3] << 8 | buffer[2];
 
-	return ifd_usb_control(reader->device, 0x41, 0x17, value, index,
+	return ifd_usb_control(reader->device, 0x41, 0x17, value, idx,
 			       (void *)&buffer[4], len - 4, -1);
 }
 
