@@ -26,7 +26,7 @@ static int cm_transceive_t0(ifd_reader_t * reader,
 			    const void *sbuf, size_t slen,
 			    void *rbuf, size_t rlen);
 static int cm_usb_int(ifd_device_t * dev, int requesttype, int request,
-		      int value, int index,
+		      int value, int idx,
 		      const void *sbuf, size_t slen,
 		      void *rbuf, size_t rlen,
 		      complete_fn_t check, long timeout);
@@ -341,7 +341,7 @@ int cm_set_card_parameters(ifd_device_t * dev, unsigned int baudrate)
  * Interrupt URBs.
  */
 int cm_usb_int(ifd_device_t * dev, int requesttype, int request, int value,
-	       int index, const void *sbuf, size_t slen, void *rbuf,
+	       int idx, const void *sbuf, size_t slen, void *rbuf,
 	       size_t rlen, complete_fn_t complete, long timeout)
 {
 	ifd_usb_capture_t *cap;
@@ -359,7 +359,7 @@ int cm_usb_int(ifd_device_t * dev, int requesttype, int request, int value,
 
 	gettimeofday(&begin, NULL);
 	rc = ifd_usb_control(dev, requesttype, request,
-			     value, index, (void *)sbuf, slen, timeout);
+			     value, idx, (void *)sbuf, slen, timeout);
 	if (rc < 0)
 		goto out;
 

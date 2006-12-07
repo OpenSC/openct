@@ -79,7 +79,7 @@ typedef int complete_fn_t(const void *, size_t);
  */
 static int
 acr_usb_int(ifd_device_t * dev, int requesttype, int request,
-	    int value, int index,
+	    int value, int idx,
 	    const void *sbuf, size_t slen,
 	    void *rbuf, size_t rlen, complete_fn_t complete, long timeout)
 {
@@ -100,7 +100,7 @@ acr_usb_int(ifd_device_t * dev, int requesttype, int request,
 	gettimeofday(&begin, NULL);
 	ifd_debug(3, "sending %u bytes:%s", slen, ct_hexdump(sbuf, slen));
 	rc = ifd_usb_control(dev, requesttype, request,
-			     value, index, (void *)sbuf, slen, timeout);
+			     value, idx, (void *)sbuf, slen, timeout);
 	if (rc < 0)
 		goto out;
 
