@@ -85,8 +85,6 @@ static int kaan_open(ifd_reader_t * reader, const char *device_name)
 		ifd_device_set_parameters(dev, &params);
 	}
 	if (ifd_device_type(dev) == IFD_DEVICE_TYPE_USB) {
-	        ifd_device_params_t params;
-
         	params = dev->settings;
 		params.usb.interface = 0;
 		if (ifd_device_set_parameters(dev, &params) < 0) {
