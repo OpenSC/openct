@@ -64,12 +64,12 @@ wbeiuu_status_t wbeiuu_status;
 
 // 8.- A struct for saving the wbeiuu state and the inserted card params
 
-static int wbeiuu_set_led(ifd_device_t * dev, u_int16_t R, u_int16_t G,
-			  u_int16_t B, u_int8_t F)
+static int wbeiuu_set_led(ifd_device_t * dev, uint16_t R, uint16_t G,
+			  uint16_t B, uint8_t F)
 {
 	const int BUFSIZE = 8;
 	int status;
-	u_int8_t buf[BUFSIZE];
+	uint8_t buf[BUFSIZE];
 
 	buf[0] = 0x04;		// Set LED command
 	buf[1] = R & 0xFF;
@@ -428,9 +428,9 @@ static int wbeiuu_change_parity(ifd_reader_t * reader, int parity)
 
 //  buf[0] = IUU_UART_ESC;
 //  buf[1] = IUU_UART_CHANGE;
-//  buf[2] = (u_int8_t) ((br >> 8) & 0x00FF);   /* high byte */
-//  buf[3] = (u_int8_t) (0x00FF & br);   /* low byte */
-//  buf[4] = (u_int8_t) (parity & sbits);        /* both parity and stop now */
+//  buf[2] = (uint8_t) ((br >> 8) & 0x00FF);   /* high byte */
+//  buf[3] = (uint8_t) (0x00FF & br);   /* low byte */
+//  buf[4] = (uint8_t) (parity & sbits);        /* both parity and stop now */
 //  
 //  status = iuu_write(inf, buf, 5);
 //   if (status != IUU_OPERATION_OK)
