@@ -1,7 +1,7 @@
 /*
  * Driver for WB Electronics' Infinity USB Unlimited card readers
  *
- * Copyright (C) 2006, Juan Carlos Borr·s <jcborras@gmail.com>
+ * Copyright (C) 2006, Juan Carlos Borr√°s <jcborras@gmail.com>
  */
 
 #include "internal.h"
