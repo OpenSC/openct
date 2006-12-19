@@ -9,6 +9,9 @@
  * Based on information from the cm4000 driver by Omnikey AG.
  */
 
+/* only available on linux */
+#ifdef linux
+
 #include "cardman.h"
 #include "internal.h"
 #include <stdlib.h>
@@ -163,3 +166,14 @@ void ifd_cm4000_register(void)
 
 	ifd_driver_register("cm4000", &cm4000_driver);
 }
+
+#else
+
+/*
+ * Initialize this module
+ */
+void ifd_cm4000_register(void)
+{
+}
+
+#endif
