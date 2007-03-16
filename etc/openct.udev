@@ -1,6 +1,13 @@
 # udev rules file for openct
 #
-BUS!="usb", ACTION!="add", GOTO="openct_usb_rules_end"
+SUBSYSTEM!="usb", GOTO="openct_usb_rules_end"
+ACTION!="add", GOTO="openct_usb_rules_end"
+
+# last file created by the kernel, if this is present everything should be
+KERNEL=="[0-9]*:*", WAIT_FOR_SYSFS="bInterfaceProtocol"
+
+# sleep for a second - the wait_for_sysfs might not be enough
+PROGRAM="/bin/sleep 1"
 
 # egate
 SYSFS{idVendor}=="0973", SYSFS{idProduct}=="0001", RUN+="/lib/udev/openct_usb"
@@ -40,7 +47,8 @@ LABEL="openct_usb_rules_end"
 
 # udev pcmcia rules file for openct
 #
-BUS!="pcmcia", ACTION!="add", GOTO="openct_pcmcia_rules_end"
+SUBSYSTEMS!="pcmcia", GOTO="openct_pcmcia_rules_end"
+ACTION!="add", GOTO="openct_pcmcia_rules_end"
 
 # omnikey cardman 4040
 SUBSYSTEM=="cardman_4040", RUN+="/lib/udev/openct_pcmcia"
