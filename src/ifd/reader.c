@@ -9,7 +9,6 @@
 #include <string.h>
 #include <signal.h>
 #include <time.h>
-#include <openct/driver.h>
 
 static int ifd_recv_atr(ifd_device_t *, ct_buf_t *, unsigned int, int);
 
@@ -79,6 +78,7 @@ int ifd_set_protocol(ifd_reader_t * reader, unsigned int idx, int prot)
 	return 0;
 }
 
+#if 0
 /*
  * Set the serial speed at which we communicate with the
  * reader
@@ -94,6 +94,7 @@ int ifd_set_speed(ifd_reader_t * reader, unsigned int speed)
 		rc = IFD_ERROR_NOT_SUPPORTED;
 	return rc;
 }
+#endif
 
 /*
  * Activate/Deactivate the reader
@@ -339,7 +340,7 @@ int ifd_card_request(ifd_reader_t * reader, unsigned int idx, time_t timeout,
 	return count;
 }
 
-int ifd_recv_atr(ifd_device_t * dev, ct_buf_t * bp, unsigned int count,
+static int ifd_recv_atr(ifd_device_t * dev, ct_buf_t * bp, unsigned int count,
 		 int revert_bits)
 {
 	unsigned char *buf;

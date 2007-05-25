@@ -208,7 +208,7 @@ static int b1_open(ifd_reader_t * reader, const char *device_name)
 /*
  * Reset the card reader
  */
-int kaan_reset_ct(ifd_reader_t * reader)
+static int kaan_reset_ct(ifd_reader_t * reader)
 {
 	unsigned char cmd1[] = { 0x20, 0x10, 0x00, 0x00 };
 	unsigned char cmd2[] = { 0x20, 0x11, 0x00, 0x00 };
@@ -396,7 +396,7 @@ static int b1_card_status(ifd_reader_t * reader, int slot, int *status)
 /*
  * Send the Freeze command to the reader
  */
-int kaan_freeze(ifd_reader_t * reader)
+static int kaan_freeze(ifd_reader_t * reader)
 {
 	unsigned char freeze[16] = { 0x80, 0x70, 0x00, 0x00, 0x00, 0x30, 00 };
 	unsigned int m, n;
@@ -802,7 +802,7 @@ static int kaan_sync_detect(ifd_reader_t * reader, int nslot)
 /*
  * Read from config/status file
  */
-int kaan_get_tlv_from_file(ifd_reader_t * reader, unsigned int df_id,
+static int kaan_get_tlv_from_file(ifd_reader_t * reader, unsigned int df_id,
 			   unsigned int ef_id, unsigned char tag,
 			   unsigned char *data, size_t len)
 {
@@ -830,8 +830,8 @@ int kaan_get_tlv_from_file(ifd_reader_t * reader, unsigned int df_id,
 /*
  * Stuff to interface with the Kaan's internal file system
  */
-int kaan_select_file(ifd_reader_t * reader, unsigned char nad, unsigned int fid,
-		     size_t * sizep)
+static int kaan_select_file(ifd_reader_t * reader, unsigned char nad,
+		     unsigned int fid, size_t * sizep)
 {
 	unsigned char cmd[] = { 0x00, 0xa4, 0x00, 0x00, 2, 0x00, 0x00 };
 	unsigned char resp[64];
@@ -854,7 +854,8 @@ int kaan_select_file(ifd_reader_t * reader, unsigned char nad, unsigned int fid,
 	return 0;
 }
 
-int kaan_select_app(ifd_reader_t * reader, int nad, const void *aid, size_t len)
+static int kaan_select_app(ifd_reader_t * reader, int nad, const void *aid,
+				size_t len)
 {
 	unsigned char cmd[32] = { 0x00, 0xa4, 0x04, 0x00 };
 	unsigned char resp[64];
@@ -872,7 +873,7 @@ int kaan_select_app(ifd_reader_t * reader, int nad, const void *aid, size_t len)
 	return kaan_check_sw("kaan_select_app", resp, r);
 }
 
-int kaan_read_binary(ifd_reader_t * reader, unsigned char nad,
+static int kaan_read_binary(ifd_reader_t * reader, unsigned char nad,
 		     unsigned int offset, unsigned char *data, size_t len)
 {
 	unsigned char cmd[] = { 0x00, 0xB0, 0x00, 0x00, 0x00 };
@@ -922,7 +923,7 @@ int kaan_read_binary(ifd_reader_t * reader, unsigned char nad,
 	return total;
 }
 
-int kaan_update_binary(ifd_reader_t * reader, unsigned char nad,
+static int kaan_update_binary(ifd_reader_t * reader, unsigned char nad,
 		       unsigned int offset, const unsigned char *data,
 		       size_t len)
 {
@@ -960,7 +961,7 @@ int kaan_update_binary(ifd_reader_t * reader, unsigned char nad,
 /*
  * APDU exchange with terminal
  */
-int __kaan_apdu_xcv(ifd_reader_t * reader, const unsigned char *sbuf,
+static int __kaan_apdu_xcv(ifd_reader_t * reader, const unsigned char *sbuf,
 		    size_t slen, unsigned char *rbuf, size_t rlen,
 		    time_t timeout, int activity)
 {
@@ -1003,7 +1004,7 @@ int __kaan_apdu_xcv(ifd_reader_t * reader, const unsigned char *sbuf,
 /*
  * Check status word returned by Kaan
  */
-int kaan_check_sw(const char *msg, const unsigned char *buf, int rc)
+static int kaan_check_sw(const char *msg, const unsigned char *buf, int rc)
 {
 	unsigned short sw;
 
@@ -1018,7 +1019,8 @@ int kaan_check_sw(const char *msg, const unsigned char *buf, int rc)
 	return rc;
 }
 
-int kaan_get_sw(const unsigned char *buf, unsigned int n, unsigned short *sw)
+static int kaan_get_sw(const unsigned char *buf, unsigned int n,
+				unsigned short *sw)
 {
 	if (n < 2) {
 		ifd_debug(1, "response too short (%d bytes)", n);
@@ -1051,7 +1053,7 @@ static int kaan_recv(ifd_reader_t * reader, unsigned int dad,
  * The length is encoded as a single byte in the range 0 to 254.
  * A value of 255 means a big endian two byte length value follows.
  */
-int kaan_get_tlv(unsigned char *buf, size_t len, unsigned char tag,
+static int kaan_get_tlv(unsigned char *buf, size_t len, unsigned char tag,
 		 unsigned char **res)
 {
 	unsigned char *p = buf;

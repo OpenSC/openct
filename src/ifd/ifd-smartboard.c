@@ -108,7 +108,7 @@ static int smartboard_open(ifd_reader_t * reader, const char *device_name)
 /*
  * Reset the card reader
  */
-int smartboard_reset_ct(ifd_reader_t * reader)
+static int smartboard_reset_ct(ifd_reader_t * reader)
 {
 	unsigned char buffer[128], code;
 	int rc;
@@ -335,7 +335,7 @@ static int __smartboard_rsp(ifd_reader_t * reader, unsigned char *code,
 	return -1;
 }
 
-int smartboard_command(ifd_reader_t * reader, unsigned char cmd,
+static int smartboard_command(ifd_reader_t * reader, unsigned char cmd,
 		       const unsigned char *arg, size_t arg_len,
 		       unsigned char *code, void *res, size_t res_len)
 {

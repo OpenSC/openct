@@ -331,7 +331,7 @@ static int cm_recv(ifd_reader_t * reader, unsigned int dad,
 /*
  * Set the card's baud rate etc
  */
-int cm_set_card_parameters(ifd_device_t * dev, unsigned int baudrate)
+static int cm_set_card_parameters(ifd_device_t * dev, unsigned int baudrate)
 {
 	return ifd_usb_control(dev, 0x42, 0x30, baudrate << 8, 2, NULL, 0, -1);
 }
@@ -340,8 +340,8 @@ int cm_set_card_parameters(ifd_device_t * dev, unsigned int baudrate)
  * Send USB control message, and receive data via
  * Interrupt URBs.
  */
-int cm_usb_int(ifd_device_t * dev, int requesttype, int request, int value,
-	       int idx, const void *sbuf, size_t slen, void *rbuf,
+static int cm_usb_int(ifd_device_t * dev, int requesttype, int request,
+	       int value, int idx, const void *sbuf, size_t slen, void *rbuf,
 	       size_t rlen, complete_fn_t complete, long timeout)
 {
 	ifd_usb_capture_t *cap;

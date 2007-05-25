@@ -26,7 +26,7 @@ typedef struct wbeiuu_status_ {
 	unsigned char tx_buffer[1024];
 } wbeiuu_status_t;
 
-wbeiuu_status_t wbeiuu_status;
+static wbeiuu_status_t wbeiuu_status;
 
 // PENDING: 
 
@@ -67,7 +67,7 @@ wbeiuu_status_t wbeiuu_status;
 static int wbeiuu_set_led(ifd_device_t * dev, uint16_t R, uint16_t G,
 			  uint16_t B, uint8_t F)
 {
-	const int BUFSIZE = 8;
+#define BUFSIZE 8
 	int status;
 	uint8_t buf[BUFSIZE];
 
@@ -87,6 +87,7 @@ static int wbeiuu_set_led(ifd_device_t * dev, uint16_t R, uint16_t G,
 			  __FILE__, __LINE__, status);
 
 	return status;
+#undef BUFSIZE
 }
 
 static void wbeiuu_print_bytestring(unsigned char *ptr, int length)

@@ -479,7 +479,7 @@ static struct {
 	{ -1, -1 }
 };
 
-unsigned int speed_to_termios(unsigned int speed)
+static unsigned int speed_to_termios(unsigned int speed)
 {
 	unsigned int n;
 
@@ -491,7 +491,7 @@ unsigned int speed_to_termios(unsigned int speed)
 	return B9600;
 }
 
-unsigned int termios_to_speed(unsigned int bits)
+static unsigned int termios_to_speed(unsigned int bits)
 {
 	unsigned int n;
 

@@ -99,7 +99,7 @@ int ria_send(ria_client_t * clnt, unsigned char cmd, const void *arg_buf,
 	return 0;
 }
 
-int ria_recv(ria_client_t * clnt, unsigned char expect, uint32_t xid,
+static int ria_recv(ria_client_t * clnt, unsigned char expect, uint32_t xid,
 	     void *res_buf, size_t res_len, long timeout)
 {
 	ct_socket_t *sock = clnt->sock;
@@ -185,7 +185,7 @@ int ria_command(ria_client_t * clnt, unsigned char cmd, const void *arg_buf,
 	return rc;
 }
 
-int ria_claim_device(ria_client_t * clnt, const char *name, ria_device_t * info)
+static int ria_claim_device(ria_client_t * clnt, const char *name, ria_device_t * info)
 {
 	return ria_command(clnt, RIA_MGR_CLAIM, name, strlen(name),
 			   info, sizeof(*info), -1);

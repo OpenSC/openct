@@ -522,7 +522,7 @@ acr_recv(ifd_reader_t * reader, unsigned int dad, unsigned char *buffer,
 /*
  * Set the card's baud rate etc
  */
-int acr_set_card_parameters(ifd_device_t * dev, unsigned int baudrate)
+static int acr_set_card_parameters(ifd_device_t * dev, unsigned int baudrate)
 {
 	return 0;
 }

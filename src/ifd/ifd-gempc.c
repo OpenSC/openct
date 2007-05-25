@@ -342,7 +342,7 @@ static int gpc_set_serial(ifd_reader_t * reader, unsigned int speed, int cs,
 /*
  * Set Reader mode
  */
-int gpc_set_mode(ifd_reader_t * reader, int mode)
+static int gpc_set_mode(ifd_reader_t * reader, int mode)
 {
 	unsigned char cmd[] = { 0x01, 0x00, 0x00 };
 
@@ -661,7 +661,7 @@ static int gpc_iso_exchange_apdu(ifd_reader_t * reader,
 /*
  * Get the OS version
  */
-int gpc_get_os_version(ifd_reader_t * reader, char *buf, size_t len)
+static int gpc_get_os_version(ifd_reader_t * reader, char *buf, size_t len)
 {
 	static unsigned char cmd[] = { 0x22, 0x05, 0x3F, 0xE0, 0x10 };
 
@@ -673,8 +673,8 @@ int gpc_get_os_version(ifd_reader_t * reader, char *buf, size_t len)
 /*
  * Helper functions
  */
-int __gpc_command(ifd_reader_t * reader, const void *cmd, size_t cmd_len,
-		  void *res, size_t res_len, int *gpc_status)
+static int __gpc_command(ifd_reader_t * reader, const void *cmd,
+                  size_t cmd_len, void *res, size_t res_len, int *gpc_status)
 {
 	gpc_status_t *st = (gpc_status_t *) reader->driver_data;
 	unsigned char buffer[257];
@@ -719,7 +719,7 @@ int __gpc_command(ifd_reader_t * reader, const void *cmd, size_t cmd_len,
 	return len;
 }
 
-int gpc_command(ifd_reader_t * reader, const void *cmd, size_t cmd_len,
+static int gpc_command(ifd_reader_t * reader, const void *cmd, size_t cmd_len,
 		void *res, size_t res_len)
 {
 	int rc, status;

@@ -89,7 +89,7 @@ static void t1_set_defaults(t1_state_t * t1)
 	t1->wtx = 0;
 }
 
-void t1_set_checksum(t1_state_t * t1, int csum)
+static void t1_set_checksum(t1_state_t * t1, int csum)
 {
 	switch (csum) {
 	case IFD_PROTOCOL_T1_CHECKSUM_LRC:
@@ -439,8 +439,7 @@ static unsigned int t1_seq(unsigned char pcb)
 	}
 }
 
-unsigned int
-t1_build(t1_state_t * t1, unsigned char *block,
+static unsigned int t1_build(t1_state_t * t1, unsigned char *block,
 	 unsigned char dad, unsigned char pcb, ct_buf_t * bp, size_t * lenp)
 {
 	unsigned int len;
@@ -493,13 +492,13 @@ struct ifd_protocol_ops ifd_protocol_t1 = {
 /*
  * Build/verify checksum
  */
-unsigned int t1_compute_checksum(t1_state_t * t1, unsigned char *data,
+static unsigned int t1_compute_checksum(t1_state_t * t1, unsigned char *data,
 				 size_t len)
 {
 	return len + t1->checksum(data, len, data + len);
 }
 
-int t1_verify_checksum(t1_state_t * t1, unsigned char *rbuf, size_t len)
+static int t1_verify_checksum(t1_state_t * t1, unsigned char *rbuf, size_t len)
 {
 	unsigned char csum[2];
 	int m, n;
@@ -520,7 +519,7 @@ int t1_verify_checksum(t1_state_t * t1, unsigned char *rbuf, size_t len)
 /*
  * Send/receive block
  */
-int t1_xcv(t1_state_t * t1, unsigned char *block, size_t slen, size_t rmax)
+static int t1_xcv(t1_state_t * t1, unsigned char *block, size_t slen, size_t rmax)
 {
 	ifd_protocol_t *prot = &t1->base;
 	unsigned int rlen, timeout;

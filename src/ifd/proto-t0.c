@@ -289,7 +289,7 @@ static int t0_xcv(ifd_protocol_t * prot, const void *sdata, size_t slen,
 	return -1;
 }
 
-int t0_send(ifd_protocol_t * prot, ct_buf_t * bp, int count)
+static int t0_send(ifd_protocol_t * prot, ct_buf_t * bp, int count)
 {
 	int n, avail;
 
@@ -304,7 +304,7 @@ int t0_send(ifd_protocol_t * prot, ct_buf_t * bp, int count)
 	return n;
 }
 
-int t0_recv(ifd_protocol_t * prot, ct_buf_t * bp, int count, long timeout)
+static int t0_recv(ifd_protocol_t * prot, ct_buf_t * bp, int count, long timeout)
 {
 	int n;
 
@@ -316,7 +316,7 @@ int t0_recv(ifd_protocol_t * prot, ct_buf_t * bp, int count, long timeout)
 	return n;
 }
 
-int t0_resynch(t0_state_t * t0)
+static int t0_resynch(t0_state_t * t0)
 {
 	return -1;
 }

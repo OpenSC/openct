@@ -340,7 +340,7 @@ static unsigned int gbp_seq(unsigned char pcb)
 	}
 }
 
-unsigned int gbp_build(gbp_state_t * gp, unsigned char *block,
+static unsigned int gbp_build(gbp_state_t * gp, unsigned char *block,
 		       unsigned char pcb, ct_buf_t * bp)
 {
 	unsigned int len;
@@ -387,14 +387,14 @@ struct ifd_protocol_ops ifd_protocol_gbp = {
 /*
  * Build/verify checksum
  */
-unsigned int gbp_compute_checksum(gbp_state_t * gp, unsigned char *data,
+static unsigned int gbp_compute_checksum(gbp_state_t * gp, unsigned char *data,
 				  size_t len)
 {
 	csum_lrc_compute(data, len, data + len);
 	return len + 1;
 }
 
-int gbp_verify_checksum(gbp_state_t * gp, unsigned char *rbuf, size_t len)
+static int gbp_verify_checksum(gbp_state_t * gp, unsigned char *rbuf, size_t len)
 {
 	unsigned char csum;
 
@@ -405,7 +405,7 @@ int gbp_verify_checksum(gbp_state_t * gp, unsigned char *rbuf, size_t len)
 /*
  * Send/receive block
  */
-int gbp_xcv(gbp_state_t * gp, unsigned char *block, size_t slen, size_t rmax)
+static int gbp_xcv(gbp_state_t * gp, unsigned char *block, size_t slen, size_t rmax)
 {
 	ifd_protocol_t *prot = &gp->base;
 	ifd_device_t *dev = prot->reader->device;

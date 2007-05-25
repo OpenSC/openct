@@ -247,7 +247,7 @@ static int ifd_usb_parse_interface(struct ifd_usb_interface *interface,
 	return parsed;
 }
 
-int ifd_usb_parse_configuration(struct ifd_usb_config_descriptor *config,
+static int ifd_usb_parse_configuration(struct ifd_usb_config_descriptor *config,
 				unsigned char *buffer)
 {
 	int i, retval, size;

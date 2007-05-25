@@ -104,10 +104,10 @@ static ifd_protocol_t *ifd_sync_probe_icc(ifd_reader_t * reader, int slot,
 	int res = 0;
 
 	if (ifd_deactivate(reader) < 0 || ifd_activate(reader) < 0)
-		return 0;
+		return NULL;
 
 	if (!(p = ifd_protocol_new(proto, reader, slot)))
-		return 0;
+		return NULL;
 
 	if (ifd_protocol_read_memory(p, slot, 0, &byte, 1) != 1)
 		goto out;

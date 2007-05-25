@@ -99,7 +99,7 @@ static int et64_card_reset(ifd_reader_t * reader, int slot, void *atr,
 
 	if (ifd_usb_control(dev, 0x40, 0x08, 0, 0, NULL, 0, -1) < 0
 	    || ifd_usb_control(dev, 0xc0, 0x88, 0, 0, buffer, 02, -1) != 02
-	    || ifd_usb_control(dev, 0x40, 0x03, 0, 0, 0, 0, -1) < 0
+	    || ifd_usb_control(dev, 0x40, 0x03, 0, 0, NULL, 0, -1) < 0
 	    || ifd_usb_control(dev, 0xc0, 0x83, 0, 0, buffer, 1, -1) != 1
 	    || buffer[0] != 0)
 		goto failed;

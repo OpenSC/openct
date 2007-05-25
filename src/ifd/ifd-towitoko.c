@@ -13,7 +13,7 @@ static int twt_led(ifd_reader_t *, int);
 static int twt_try_reset(ifd_reader_t *, const void *, size_t, void *, size_t);
 static int twt_command(ifd_reader_t *, const void *, size_t, void *, size_t);
 static int twt_recv_checksum(const unsigned char *, size_t);
-static unsigned int twt_send_checksum(unsigned char *, size_t);
+static size_t twt_send_checksum(unsigned char *, size_t);
 
 enum {
 	TWT_LED_OFF = 0,
@@ -207,7 +207,7 @@ static int twt_card_reset(ifd_reader_t * reader, int slot, void *atr,
 	return ifd_sync_detect_icc(reader, slot, atr, size);
 }
 
-int twt_try_reset(ifd_reader_t * reader, const void *cmd, size_t cmd_len,
+static int twt_try_reset(ifd_reader_t * reader, const void *cmd, size_t cmd_len,
 		  void *atr, size_t atr_len)
 {
 	ifd_device_t *dev = reader->device;
@@ -462,7 +462,7 @@ static int twt_sync_set_read_address(ifd_reader_t * reader, int slot, int proto,
 	return twt_command(reader, cmd, len, NULL, 0);
 }
 
-int twt_sync_read(ifd_reader_t * reader, int slot, int proto,
+static int twt_sync_read(ifd_reader_t * reader, int slot, int proto,
 		  unsigned short addr, unsigned char *buffer, size_t len)
 {
 	int r;
@@ -582,7 +582,7 @@ static int twt_sync_set_write_address(ifd_reader_t * reader, int slot,
 	return twt_command(reader, cmd, len, NULL, 0);
 }
 
-int twt_sync_write(ifd_reader_t * reader, int slot, int proto,
+static int twt_sync_write(ifd_reader_t * reader, int slot, int proto,
 		   unsigned short addr, const unsigned char *buffer, size_t len)
 {
 	int r;
@@ -596,7 +596,7 @@ int twt_sync_write(ifd_reader_t * reader, int slot, int proto,
 /*
  * Turn LED on/off
  */
-int twt_led(ifd_reader_t * reader, int what)
+static int twt_led(ifd_reader_t * reader, int what)
 {
 	unsigned char cmd[] = { 0x6F, 0x00, 0x6A, 0x0F };
 
@@ -607,7 +607,7 @@ int twt_led(ifd_reader_t * reader, int what)
 /*
  * Helper functions
  */
-int twt_command(ifd_reader_t * reader, const void *cmd, size_t cmd_len,
+static int twt_command(ifd_reader_t * reader, const void *cmd, size_t cmd_len,
 		void *res, size_t res_len)
 {
 	unsigned char buffer[254];
@@ -656,7 +656,7 @@ static unsigned char twt_checksum(unsigned char cs, const unsigned char *data,
 	return cs;
 }
 
-int twt_recv_checksum(const unsigned char *data, size_t len)
+static int twt_recv_checksum(const unsigned char *data, size_t len)
 {
 	if (len == 0)
 		return 0;
@@ -664,7 +664,7 @@ int twt_recv_checksum(const unsigned char *data, size_t len)
 	return data[len - 1] == twt_checksum(0x01, data, len - 1);
 }
 
-unsigned int twt_send_checksum(unsigned char *data, size_t len)
+static size_t twt_send_checksum(unsigned char *data, size_t len)
 {
 	data[len] = twt_checksum(0x00, data, len);
 	return len + 1;

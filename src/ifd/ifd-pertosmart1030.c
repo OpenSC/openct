@@ -536,7 +536,7 @@ ps_decode_ascii_hex(unsigned char *out, size_t out_len,
 	return k;
 }
 
-unsigned char ps_checksum(unsigned char iv,
+static unsigned char ps_checksum(unsigned char iv,
 			  const unsigned char *buf, size_t len)
 {
 	unsigned char checksum = iv;

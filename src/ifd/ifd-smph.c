@@ -22,8 +22,6 @@
 #define PHS_CONV_INDIRECT 1
 #define TIMEOUT	1000
 
-extern int errno;
-
 /* table for indirect to direct byte mode conversion */
 static const uint8_t dir_conv_table[0x100] =
 {
