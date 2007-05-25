@@ -94,8 +94,8 @@ int ria_register_device(ria_client_t * ria, const char *name)
 			   &devinfo, sizeof(devinfo), NULL, 0, -1);
 }
 
-int ria_devsock_process(ct_socket_t * sock, header_t * hdr, ct_buf_t * args,
-			ct_buf_t * resp)
+static int ria_devsock_process(ct_socket_t * sock, header_t * hdr,
+			ct_buf_t * args, ct_buf_t * resp)
 {
 	ria_client_t *ria = (ria_client_t *) sock->user_data;
 	ifd_device_t *dev = (ifd_device_t *) ria->user_data;
@@ -184,7 +184,7 @@ int ria_devsock_process(ct_socket_t * sock, header_t * hdr, ct_buf_t * args,
 
 }
 
-void ria_devsock_close(ct_socket_t * sock)
+static void ria_devsock_close(ct_socket_t * sock)
 {
 	ct_error("Network connection closed, exiting\n");
 	exit(0);
@@ -236,7 +236,7 @@ static int ria_poll_device(ct_socket_t * sock, struct pollfd *pfd)
 	return 1;
 }
 
-void ria_close_device(ct_socket_t * sock)
+static void ria_close_device(ct_socket_t * sock)
 {
 	ct_error("Dispatcher requests that device is closed, abort");
 	exit(1);

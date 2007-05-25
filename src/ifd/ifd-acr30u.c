@@ -519,6 +519,7 @@ acr_recv(ifd_reader_t * reader, unsigned int dad, unsigned char *buffer,
 	return IFD_ERROR_NOT_SUPPORTED;	/* not yet */
 }
 
+#if 0
 /*
  * Set the card's baud rate etc
  */
@@ -526,6 +527,7 @@ static int acr_set_card_parameters(ifd_device_t * dev, unsigned int baudrate)
 {
 	return 0;
 }
+#endif
 
 /*
  * Driver operations

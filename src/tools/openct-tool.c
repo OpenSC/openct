@@ -184,13 +184,13 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-void version(void)
+static void version(void)
 {
 	fprintf(stdout, "OpenCT " VERSION "\n");
 	exit(0);
 }
 
-void usage(int exval)
+static void usage(int exval)
 {
 	fprintf(exval ? stderr : stdout,
 		"usage: openct-tool [-d] [-f configfile] [-r reader] command ...\n"
@@ -211,7 +211,7 @@ void usage(int exval)
 	exit(exval);
 }
 
-int do_reset(ct_handle * h, unsigned char *atr, size_t atr_len)
+static int do_reset(ct_handle * h, unsigned char *atr, size_t atr_len)
 {
 	int rc, n, status;
 
@@ -239,7 +239,7 @@ int do_reset(ct_handle * h, unsigned char *atr, size_t atr_len)
 	return n;
 }
 
-void do_select_mf(ct_handle * h)
+static void do_select_mf(ct_handle * h)
 {
 	unsigned char cmd[] =
 	    { 0x00, 0xA4, 0x00, 0x00, 0x02, 0x3f, 0x00, 0x00 };
@@ -271,7 +271,7 @@ void do_select_mf(ct_handle * h)
 	dump(res, rc);
 }
 
-void do_read_memory(ct_handle * h, unsigned int address, unsigned int count)
+static void do_read_memory(ct_handle * h, unsigned int address, unsigned int count)
 {
 	unsigned char buffer[8192];
 	int rc;
@@ -290,7 +290,7 @@ void do_read_memory(ct_handle * h, unsigned int address, unsigned int count)
 	dump(buffer, rc);
 }
 
-void print_reader(ct_handle * h)
+static void print_reader(ct_handle * h)
 {
 	ct_info_t info;
 	int rc;
@@ -302,7 +302,7 @@ void print_reader(ct_handle * h)
 	}
 }
 
-void print_reader_info(ct_info_t * info)
+static void print_reader_info(ct_info_t * info)
 {
 	const char *sepa;
 
@@ -326,7 +326,7 @@ void print_reader_info(ct_info_t * info)
 	printf("\n");
 }
 
-void print_atr(ct_handle * h, unsigned char *atr, size_t len)
+static void print_atr(ct_handle * h, unsigned char *atr, size_t len)
 {
 	unsigned int m;
 
@@ -340,7 +340,7 @@ void print_atr(ct_handle * h, unsigned char *atr, size_t len)
 	printf("\n");
 }
 
-void dump(unsigned char *data, size_t len)
+static void dump(unsigned char *data, size_t len)
 {
 	unsigned int offset = 0;
 

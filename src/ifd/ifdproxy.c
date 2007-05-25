@@ -171,7 +171,7 @@ static int get_ports(void)
 	return 0;
 }
 
-int run_server(int argc, char **argv)
+static int run_server(int argc, char **argv)
 {
 	int rc;
 	char path[PATH_MAX];
@@ -205,7 +205,7 @@ int run_server(int argc, char **argv)
 	return 0;
 }
 
-int run_client(int argc, char **argv)
+static int run_client(int argc, char **argv)
 {
 	const char *name, *device, *address;
 	ria_client_t *ria;
@@ -237,7 +237,7 @@ int run_client(int argc, char **argv)
 	return 0;
 }
 
-int list_devices(int argc, char **argv)
+static int list_devices(int argc, char **argv)
 {
 	unsigned char buffer[8192];
 	ria_device_t *info;
@@ -278,13 +278,13 @@ int list_devices(int argc, char **argv)
 	return 0;
 }
 
-void version()
+static void version(void)
 {
 	fprintf(stderr, "OpenCT " VERSION "\n");
 	exit(0);
 }
 
-void usage(int exval)
+static void usage(int exval)
 {
 	fprintf(exval ? stderr : stdout,
 		"Usage:\n"

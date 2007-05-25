@@ -91,7 +91,7 @@ int main(int argc, char **argv)
 	return 1;
 }
 
-int mgr_init(int argc, char **argv)
+static int mgr_init(int argc, char **argv)
 {
 	int n;
 
@@ -131,7 +131,7 @@ int mgr_init(int argc, char **argv)
 /*
  * shut down the whole thing
  */
-int mgr_shutdown(int argc, char **argv)
+static int mgr_shutdown(int argc, char **argv)
 {
 	const ct_info_t *status;
 	int num, killed = 0;
@@ -158,7 +158,7 @@ int mgr_shutdown(int argc, char **argv)
 /*
  * Attach a new reader
  */
-int mgr_attach(int argc, char **argv)
+static int mgr_attach(int argc, char **argv)
 {
 	const char *driver, *type, *device;
 	char *typedev;
@@ -202,7 +202,7 @@ int mgr_attach(int argc, char **argv)
 /*
  * Show status of all readers
  */
-int mgr_status(int argc, char **argv)
+static int mgr_status(int argc, char **argv)
 {
 	const ct_info_t *readers, *r;
 	unsigned int j;
@@ -254,7 +254,7 @@ int mgr_status(int argc, char **argv)
 /*
  * Configure a reader using info from the config file
  */
-void configure_reader(ifd_conf_node_t * cf)
+static void configure_reader(ifd_conf_node_t * cf)
 {
 	static unsigned int nreaders = 0;
 	char *device, *driver;
@@ -281,7 +281,7 @@ void configure_reader(ifd_conf_node_t * cf)
 /*
  * Display version
  */
-void version(void)
+static void version(void)
 {
 	fprintf(stdout, "OpenCT " VERSION "\n");
 	exit(0);
@@ -290,7 +290,7 @@ void version(void)
 /*
  * Usage message
  */
-void usage(int exval)
+static void usage(int exval)
 {
 	fprintf(exval ? stderr : stdout,
 		"usage: openct-control [-d] [-f configfile] command\n"

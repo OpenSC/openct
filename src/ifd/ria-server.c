@@ -78,7 +78,7 @@ int ria_svc_listen(const char *address, int trusted)
 	return 0;
 }
 
-int ria_svc_accept(ct_socket_t * listener)
+static int ria_svc_accept(ct_socket_t * listener)
 {
 	ria_peer_t *clnt;
 	ct_socket_t *sock;
@@ -103,7 +103,7 @@ int ria_svc_accept(ct_socket_t * listener)
 	return 0;
 }
 
-void ria_svc_app_close(ct_socket_t * sock)
+static void ria_svc_app_close(ct_socket_t * sock)
 {
 	ria_peer_t *clnt = (ria_peer_t *) sock->user_data;
 
@@ -112,7 +112,7 @@ void ria_svc_app_close(ct_socket_t * sock)
 	ria_peer_free((ria_peer_t *) sock->user_data, 0);
 }
 
-void ria_svc_dev_close(ct_socket_t * sock)
+static void ria_svc_dev_close(ct_socket_t * sock)
 {
 	ria_peer_t *clnt = (ria_peer_t *) sock->user_data;
 
@@ -124,8 +124,8 @@ void ria_svc_dev_close(ct_socket_t * sock)
  * Process commands from local clients (i.e. those allowed
  * to claim a device).
  */
-int ria_svc_app_handler(ct_socket_t * sock, header_t * hdr, ct_buf_t * args,
-			ct_buf_t * resp)
+static int ria_svc_app_handler(ct_socket_t * sock, header_t * hdr,
+			ct_buf_t * args, ct_buf_t * resp)
 {
 	unsigned char cmd;
 	ria_peer_t *clnt, *peer;
@@ -195,8 +195,8 @@ int ria_svc_app_handler(ct_socket_t * sock, header_t * hdr, ct_buf_t * args,
 /*
  * Process commands from remote clients (i.e. those offering a device).
  */
-int ria_svc_dev_handler(ct_socket_t * sock, header_t * hdr, ct_buf_t * args,
-			ct_buf_t * resp)
+static int ria_svc_dev_handler(ct_socket_t * sock, header_t * hdr,
+			ct_buf_t * args, ct_buf_t * resp)
 {
 	unsigned char cmd;
 	ria_peer_t *clnt, *peer;
@@ -254,7 +254,7 @@ int ria_svc_dev_handler(ct_socket_t * sock, header_t * hdr, ct_buf_t * args,
 	return rc;
 }
 
-ria_peer_t *ria_peer_new(ct_socket_t * sock)
+static ria_peer_t *ria_peer_new(ct_socket_t * sock)
 {
 	ria_peer_t *clnt;
 
@@ -269,7 +269,7 @@ ria_peer_t *ria_peer_new(ct_socket_t * sock)
 	return clnt;
 }
 
-void ria_peer_free(ria_peer_t * clnt, int detach_peer)
+static void ria_peer_free(ria_peer_t * clnt, int detach_peer)
 {
 	ria_peer_t *peer;
 
@@ -286,7 +286,7 @@ void ria_peer_free(ria_peer_t * clnt, int detach_peer)
 	free(clnt);
 }
 
-void ria_svc_link(ria_peer_t * clnt)
+static void ria_svc_link(ria_peer_t * clnt)
 {
 	ria_peer_t *prev;
 
@@ -297,7 +297,7 @@ void ria_svc_link(ria_peer_t * clnt)
 	clients.prev = clnt;
 }
 
-ria_peer_t *ria_find_device(const char *handle, size_t len)
+static ria_peer_t *ria_find_device(const char *handle, size_t len)
 {
 	ria_peer_t *peer;
 
@@ -319,7 +319,7 @@ ria_peer_t *ria_find_device(const char *handle, size_t len)
 	return NULL;
 }
 
-void ria_svc_unlink(ria_peer_t * clnt)
+static void ria_svc_unlink(ria_peer_t * clnt)
 {
 	ria_peer_t *prev, *next;
 

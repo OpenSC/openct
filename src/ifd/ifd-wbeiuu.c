@@ -563,6 +563,7 @@ static int wbeiuu_card_reset(ifd_reader_t * reader, int slot, void *atr,
 	return len;
 }
 
+#if 0
 static int wbeiuu_card_status(ifd_reader_t * reader, int slot, int *status)
 {
 	// PENDING:
@@ -601,6 +602,7 @@ static int wbeiuu_card_status(ifd_reader_t * reader, int slot, int *status)
 
 	return 0;
 }
+#endif
 
 static int wbeiuu_send(ifd_reader_t * reader, unsigned int dad,
 		       const unsigned char *buffer, size_t len)

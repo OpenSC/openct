@@ -1,4 +1,4 @@
-/*
+/i*
  * Manage a single reader
  *
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
@@ -189,7 +189,7 @@ static void TERMhandler(int signo)
 /*
  * Spawn a new ifd handler thread
  */
-void ifdhandler_run(ifd_reader_t * reader)
+static void ifdhandler_run(ifd_reader_t * reader)
 {
 	ct_socket_t *sock;
 	int rc;
@@ -244,7 +244,7 @@ void ifdhandler_run(ifd_reader_t * reader)
 /*
  * Poll for presence of hotplug device
  */
-int ifdhandler_poll_presence(ct_socket_t * sock, struct pollfd *pfd)
+static int ifdhandler_poll_presence(ct_socket_t * sock, struct pollfd *pfd)
 {
 	ifd_reader_t *reader = (ifd_reader_t *) sock->user_data;
 	ifd_device_t *dev = reader->device;
@@ -320,7 +320,7 @@ static int ifdhandler_accept(ct_socket_t * listener)
 /*
  * Receive data from client
  */
-int ifdhandler_recv(ct_socket_t * sock)
+static int ifdhandler_recv(ct_socket_t * sock)
 {
 	ifd_reader_t *reader;
 	char buffer[CT_SOCKET_BUFSIZ + 64];
@@ -358,7 +358,7 @@ int ifdhandler_recv(ct_socket_t * sock)
 /*
  * Transmit data to client
  */
-int ifdhandler_send(ct_socket_t * sock)
+static int ifdhandler_send(ct_socket_t * sock)
 {
 	return ct_socket_flsbuf(sock, 0);
 }
@@ -367,7 +367,7 @@ int ifdhandler_send(ct_socket_t * sock)
  * Socket is closed - for whatever reason
  * Release any locks held by this client
  */
-void ifdhandler_close(ct_socket_t * sock)
+static void ifdhandler_close(ct_socket_t * sock)
 {
 	ifdhandler_unlock_all(sock);
 }
@@ -400,7 +400,7 @@ static void print_list(const char **names, unsigned int n)
 		printf("\n");
 }
 
-void print_info(void)
+static void print_info(void)
 {
 	const char *names[64];
 	unsigned int n;
@@ -425,7 +425,7 @@ void print_info(void)
 /*
  * Display version
  */
-void version(void)
+static void version(void)
 {
 	fprintf(stdout, "OpenCT " VERSION "\n");
 	exit(0);
@@ -434,7 +434,7 @@ void version(void)
 /*
  * Usage message
  */
-void usage(int exval)
+static void usage(int exval)
 {
 	fprintf(exval ? stderr : stdout,
 		"usage: ifdhandler [-Hds] [-r reader] driver type device\n"
