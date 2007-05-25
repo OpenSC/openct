@@ -16,7 +16,7 @@
 
 #define USB_TIMEOUT	1000
 
-#ifdef 0
+#if 0
 typedef struct wbeiuu_status_ {
 	/* We need a GBP driver to talk to serial readers */
 	int convention;
