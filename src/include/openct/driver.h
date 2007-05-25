@@ -318,6 +318,11 @@ struct ifd_driver_ops {
 	int		(*sync_write)(ifd_reader_t *reader, int slot, int proto,
 				unsigned short addr,
 				const unsigned char *sbuf, size_t slen);
+
+	/*Support for transparent access to "escape" */
+	int		(*escape)(ifd_reader_t *reader, int slot,
+				void *sbuf, size_t slen,
+				void *rbuf, size_t rlen);
 };
 
 extern void		ifd_driver_register(const char *,

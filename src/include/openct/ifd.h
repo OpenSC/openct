@@ -29,6 +29,8 @@ enum {
 	IFD_PROTOCOL_TLP,		/* older Gemplus protocol */
 	IFD_PROTOCOL_GBP,		/* Gemplus block protocol */
 	IFD_PROTOCOL_EUROCHIP,		/* Eurochip Countercard */
+	IFD_PROTOCOL_TCL,		/* ISO 14443-4 T=CL */
+	IFD_PROTOCOL_ESCAPE,		/* Virtual 'escape' protocol */
 	IFD_PROTOCOL_TRANSPARENT = 128
 };
 

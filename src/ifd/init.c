@@ -54,6 +54,7 @@ int ifd_init(void)
 	ifd_protocol_register(&ifd_protocol_2wire);
 	ifd_protocol_register(&ifd_protocol_3wire);
 	ifd_protocol_register(&ifd_protocol_eurochip);
+	ifd_protocol_register(&ifd_protocol_esc);
 
 	if (ifd_conf_get_integer("debug", &ival) >= 0 && ival > ct_config.debug)
 		ct_config.debug = ival;

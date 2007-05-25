@@ -5,6 +5,9 @@
  *
  * 2005-04-20: Harald Welte <laforge@gnumonks.org>
  * 	Add support for PCMCIA based CCID Device (CardMan 4040)
+ *
+ * 2005-05-22: Harald Welte <laforge@gnumonks.org>
+ * 	Add suport for OmniKey Cardman 5121 RFID extensions
  */
 
 #include "internal.h"
@@ -122,6 +125,7 @@ static struct force_parse_device_st {
 
 #define SUPPORT_T0	0x1
 #define SUPPORT_T1	0x2
+#define SUPPORT_ESCAPE	0x80
 
 #define SUPPORT_50V	1
 #define SUPPORT_33V	2
@@ -740,6 +744,12 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 		st->reader_type = TYPE_TPDU;
 	}
 
+	if (de.idVendor == 0x076b && de.idProduct == 0x5121) {
+		/* special handling of RFID part of OmniKey 5121 */
+		reader->nslots++;	/* one virtual slot for RFID escape */
+		st->proto_support |= SUPPORT_ESCAPE;
+	}
+
 	return 0;
 }
 
@@ -816,6 +826,13 @@ static int ccid_card_status(ifd_reader_t * reader, int slot, int *status)
 		int any = 0;
 		int i, j, bits;
 
+		if (st->proto_support & SUPPORT_ESCAPE
+		    && slot == reader->nslots-1) {
+			ifd_debug(1, "virtual escape slot, setting card present\n");
+			*status = IFD_CARD_PRESENT;
+			return 0;
+		}
+
 		i = 1 + (slot / 4);
 		j = 2 * (slot % 4);
 		stat = 0;
@@ -880,6 +897,8 @@ static int ccid_card_status(ifd_reader_t * reader, int slot, int *status)
 	return 0;
 }
 
+static int ccid_set_protocol(ifd_reader_t *reader, int s, int proto);
+
 /*
  * Reset
  */
@@ -898,6 +917,13 @@ ccid_card_reset(ifd_reader_t * reader, int slot, void *atr, size_t size)
 	if (!(status & IFD_CARD_PRESENT))
 		return IFD_ERROR_NO_CARD;
 
+	if (st->proto_support & SUPPORT_ESCAPE
+	    && slot == reader->nslots-1) {
+		ifd_debug(1, "slot: %d, setting atr to 0xff", slot);
+		*((char *)atr) = 0xff;
+		ccid_set_protocol(reader, slot, IFD_PROTOCOL_ESCAPE);
+		return 1;
+	}
 	memset(ctlbuf, 0, 3);
 
 	n = -1;
@@ -940,6 +966,17 @@ static int ccid_set_protocol(ifd_reader_t * reader, int s, int proto)
 	ifd_atr_info_t atr_info;
 	int r;
 
+	slot = &reader->slot[s];
+
+	/* If we support RFID escaping, we only allow ESCAPE protocol
+	 * at the last (== virtual) slot */
+	if ((st->proto_support & SUPPORT_ESCAPE)
+	    && (proto != IFD_PROTOCOL_ESCAPE)
+	    && (s == reader->nslots-1)) {
+		ct_error("reader doesn't support this protocol at this slot\n");
+		return IFD_ERROR_NOT_SUPPORTED;
+	}
+
 	switch (proto) {
 	case IFD_PROTOCOL_T0:
 		if (!(st->proto_support & SUPPORT_T0)) {
@@ -953,12 +990,35 @@ static int ccid_set_protocol(ifd_reader_t * reader, int s, int proto)
 			return IFD_ERROR_NOT_SUPPORTED;
 		}
 		break;
+	case IFD_PROTOCOL_ESCAPE:
+		/* virtual "escape" fallthrough protocol for stacking RFID
+		 * protocol stack on top of openct */
+		if (!(st->proto_support & SUPPORT_ESCAPE)) {
+			ct_error("reader does not support this protocol");
+			return IFD_ERROR_NOT_SUPPORTED;
+		}
+		if (s != reader->nslots-1) {
+			ct_error("reader doesn't support this protocol at this slot");
+			return IFD_ERROR_NOT_SUPPORTED;
+		}
+		p = ifd_protocol_new(IFD_PROTOCOL_ESCAPE,reader, slot->dad);
+		if (!p) {
+			ct_error("%s: internal error", reader->name);
+			return -1;
+		}
+		if (slot->proto) {
+			ifd_protocol_free(slot->proto);
+			slot->proto = NULL;
+		}
+		slot->proto = p;
+		st->icc_proto[s] = proto;
+		ifd_debug(1, "set protocol to ESCAPE\n");
+		return 0;
+		break;
 	default:
 		ct_error("protocol unknown");
 		return IFD_ERROR_NOT_SUPPORTED;
 	}
-
-	slot = &reader->slot[s];
 
 	if (st->reader_type == TYPE_APDU) {
 		p = ifd_protocol_new(IFD_PROTOCOL_TRANSPARENT,
@@ -1103,6 +1163,27 @@ static int ccid_set_protocol(ifd_reader_t * reader, int s, int proto)
 	return 0;
 }
 
+static int ccid_escape(ifd_reader_t *reader, int slot, void *sbuf,
+		       size_t slen, void *rbuf, size_t rlen)
+{
+     unsigned char sendbuf[CCID_MAX_MSG_LEN];
+     unsigned char recvbuf[CCID_MAX_MSG_LEN];
+     int r;
+
+     ifd_debug(1, "slot: %d, slen %d, rlen %d", slot, slen, rlen);
+
+     r = ccid_prepare_cmd(reader, sendbuf, sizeof(sendbuf), slot,
+		          CCID_CMD_ESCAPE, NULL, sbuf, slen);
+     if (r < 0)
+	  return r;
+
+     r = ccid_command(reader, &sendbuf[0], r, recvbuf, sizeof(recvbuf));
+     if (r < 0)
+	  return r;
+
+     return ccid_extract_data(&recvbuf, r, rbuf, rlen);
+}
+
 static int
 ccid_transparent(ifd_reader_t * reader, int slot,
 		 const void *sbuf, size_t slen, void *rbuf, size_t rlen)
@@ -1177,6 +1258,7 @@ void ifd_ccid_register(void)
 	ccid_driver.transparent = ccid_transparent;
 	ccid_driver.send = ccid_send;
 	ccid_driver.recv = ccid_recv;
+	ccid_driver.escape = ccid_escape;
 
 	ifd_driver_register("ccid", &ccid_driver);
 }

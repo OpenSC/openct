@@ -20,7 +20,7 @@ libifd_la_SOURCES = \
 	ifd-wbeiuu.c \
 	\
 	proto-gbp.c proto-sync.c proto-t0.c proto-t1.c \
-	proto-trans.c \
+	proto-trans.c proto-escape.c \
 	\
 	sys-sunray.c sys-solaris.c sys-bsd.c sys-linux.c sys-null.c sys-osx.c \
 	\
