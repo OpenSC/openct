@@ -91,7 +91,7 @@ int ifd_config_parse(const char *filename)
 /*
  * Parse list of statements
  */
-int conf_parse_group(ifd_conf_node_t * group, char closing)
+static int conf_parse_group(ifd_conf_node_t * group, char closing)
 {
 	ifd_conf_node_t *node;
 	char *token;
@@ -172,7 +172,7 @@ int conf_parse_group(ifd_conf_node_t * group, char closing)
 /*
  * Debugging - dump the config tree
  */
-void conf_dump(ifd_conf_node_t * node, int indent)
+static void conf_dump(ifd_conf_node_t * node, int indent)
 {
 	for (; node; node = node->next) {
 		printf("%*.*s%s", indent, indent, "", node->name);
@@ -195,7 +195,7 @@ void conf_dump(ifd_conf_node_t * node, int indent)
 /*
  * Config node handling
  */
-ifd_conf_node_t *conf_add_node(ifd_conf_node_t * parent, const char *name)
+static ifd_conf_node_t *conf_add_node(ifd_conf_node_t * parent, const char *name)
 {
 	ifd_conf_node_t **p, *node;
 
@@ -279,7 +279,7 @@ ifd_conf_node_get_integer(ifd_conf_node_t * node,
 	    || !node->value)
 		return -1;
 
-	*result = strtoul(node->value, 0, 0);
+	*result = strtoul(node->value, NULL, 0);
 	return 0;
 }
 
@@ -346,7 +346,7 @@ ifd_conf_node_get_nodes(ifd_conf_node_t * node,
 /*
  * Tokenizer
  */
-int get_token(char **tok)
+static int get_token(char **tok)
 {
 	static char buffer[512];
 	unsigned int m, n, copy, retry = 1;
@@ -398,7 +398,7 @@ int get_token(char **tok)
 /*
  * Check if we're at the end of the file
  */
-int ateof(void)
+static int ateof(void)
 {
 	int retry = 1;
 
@@ -425,7 +425,7 @@ int ateof(void)
 /*
  * Eat initial white space from buffer
  */
-int skipws(void)
+static int skipws(void)
 {
 	unsigned int m, n, in_comment = 0;
 	char *s;
