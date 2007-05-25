@@ -408,8 +408,30 @@ int ifd_scan_usb(void)
  			 * then check for the interface type (ccid) and use
  			 * driver ccid... */
 
-			if (!(driver = ifd_driver_for_id(&id)))
-				continue;
+			if (!(driver = ifd_driver_for_id(&id))) {
+				/* no driver found, check for interface class */
+				int ccid=0;
+				int conf;
+ 				for (conf = 0; conf < 
+					dev->descriptor.bNumConfigurations;
+					conf++) {
+				int interf;
+  				for (interf = 0; interf <
+					dev->config[conf].bNumInterfaces;
+					interf++) {
+				int alt;
+				for (alt = 0; alt < dev->config[conf].interface[interf].num_altsetting; alt++) {
+					if (dev->config[conf].interface[interf].altsetting[alt].bInterfaceClass == 0x0b) {
+					ccid=1;
+				}
+				}
+				}	
+				}
+					
+				/* not a ccid device */
+				if (!ccid)
+					continue;
+			}
 
 			snprintf(typedev, sizeof(typedev),
 				 "/dev/bus/usb/%s/%s",
