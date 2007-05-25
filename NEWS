@@ -1,6 +1,11 @@
 NEWS for OpenCT -- History of user visible changes
 
 New in 0.6.12; 2006-??-??; Andreas Jellinghaus
+* fix pcsclite compile issue (Ludovic Rousseau).
+* add ccid as fallback driver if no other is found (linux only, FIXME others).
+* add more drivers to etc/ files, get them in sync.
+* fix lots of warnings/issues found by sparse.
+* add patch by harald welte for contactless reader support (librfid).
 * add set_params to pcmcia and pcmcia-block code to
   get cm4000/cm4040 drivers to work again.
 
