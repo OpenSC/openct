@@ -28,6 +28,7 @@
 		<string>0x04e6</string>
 		<string>0x04e6</string>
 		<string>0x04e6</string>
+		<string>0x04e6</string>
 		<string>0x076b</string>
 		<string>0x076b</string>
 		<string>0x076b</string>
@@ -58,6 +59,7 @@
 		<string>0x5115</string>
 		<string>0x5116</string>
 		<string>0x5117</string>
+		<string>0x511d</string>
 		<string>0xE001</string>
 		<string>0xE003</string>
 		<string>0x0c00</string>
@@ -90,6 +92,7 @@
 		<string>Rainbow iKey 2000</string>
 		<string>Rainbow iKey 3000</string>
 		<string>G&D Starkey 100</string>
+		<string>Generic CCID Reader</string>
 		<string>Generic CCID Reader</string>
 		<string>Generic CCID Reader</string>
 		<string>Generic CCID Reader</string>
