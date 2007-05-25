@@ -48,7 +48,7 @@ static void ria_svc_app_close(ct_socket_t *);
 static void ria_svc_dev_close(ct_socket_t *);
 static ria_peer_t *ria_peer_new(ct_socket_t *);
 static void ria_peer_free(ria_peer_t *, int);
-ria_peer_t *ria_find_device(const char *, size_t);
+static ria_peer_t *ria_find_device(const char *, size_t);
 static void ria_svc_link(ria_peer_t *);
 static void ria_svc_unlink(ria_peer_t *);
 
