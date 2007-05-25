@@ -53,7 +53,7 @@ static void *ct_map_status(int flags, size_t * size)
 	if ((flags & O_ACCMODE) == O_RDWR)
 		prot |= PROT_WRITE;
 
-	addr = mmap(0, *size, prot, MAP_SHARED, fd, 0);
+	addr = mmap(NULL, *size, prot, MAP_SHARED, fd, 0);
 
       done:close(fd);
 	return addr;
@@ -173,7 +173,7 @@ int ct_status_update(ct_info_t * status)
 /*
  * Lock file handling
  */
-int ct_status_lock(void)
+static int ct_status_lock(void)
 {
 	int fd, retries = 10;
 	char status_lock_path[PATH_MAX];
@@ -202,7 +202,7 @@ int ct_status_lock(void)
 	return -1;
 }
 
-void ct_status_unlock(void)
+static void ct_status_unlock(void)
 {
 	char status_lock_path[PATH_MAX];
 

@@ -292,7 +292,7 @@ ct_socket_t *ct_socket_accept(ct_socket_t * sock)
  * Get client credentials
  * Should move this to a platform specific file
  */
-int ct_socket_getcreds(ct_socket_t * sock)
+static int ct_socket_getcreds(ct_socket_t * sock)
 {
 #ifdef SO_PEERCRED
 	struct ucred creds;
@@ -609,7 +609,7 @@ int ct_socket_flsbuf(ct_socket_t * sock, int all)
 /*
  * Default send/receive handlers
  */
-int ct_socket_default_recv_cb(ct_socket_t * sock)
+static int ct_socket_default_recv_cb(ct_socket_t * sock)
 {
 	char buffer[CT_SOCKET_BUFSIZ + 64];
 	header_t header;
@@ -660,7 +660,7 @@ int ct_socket_default_recv_cb(ct_socket_t * sock)
 	return 0;
 }
 
-int ct_socket_default_send_cb(ct_socket_t * sock)
+static int ct_socket_default_send_cb(ct_socket_t * sock)
 {
 	return ct_socket_flsbuf(sock, 0);
 }
