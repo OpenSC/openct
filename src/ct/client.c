@@ -109,6 +109,7 @@ int ct_reader_status(ct_handle * h, ct_info_t * info)
 	return 0;
 }
 
+#if 0
 /*
  * Print something to the reader's display
  */
@@ -129,6 +130,7 @@ int ct_reader_output(ct_handle * h, const char *message)
 
 	return ct_socket_call(h->sock, &args, &resp);
 }
+#endif
 
 /*
  * Get card status
@@ -199,6 +201,7 @@ int ct_card_request(ct_handle * h, unsigned int slot,
 	return rc;
 }
 
+#if 0
 int ct_card_eject(ct_handle * h, unsigned int slot,
 		  unsigned int timeout, const char *message)
 {
@@ -219,6 +222,7 @@ int ct_card_eject(ct_handle * h, unsigned int slot,
 
 	return ct_socket_call(h->sock, &args, &resp);
 }
+#endif
 
 int ct_card_set_protocol(ct_handle * h, unsigned int slot,
 			 unsigned int protocol)
@@ -431,7 +435,7 @@ int ct_card_unlock(ct_handle * h, unsigned int slot, ct_lock_handle lock)
 /*
  * Add arguments when calling a resource manager function
  */
-void ct_args_int(ct_buf_t * bp, ifd_tag_t tag, unsigned int value)
+static void ct_args_int(ct_buf_t * bp, ifd_tag_t tag, unsigned int value)
 {
 	ct_tlv_builder_t builder;
 
@@ -439,7 +443,7 @@ void ct_args_int(ct_buf_t * bp, ifd_tag_t tag, unsigned int value)
 	ct_tlv_put_int(&builder, tag, value);
 }
 
-void ct_args_string(ct_buf_t * bp, ifd_tag_t tag, const char *value)
+static void ct_args_string(ct_buf_t * bp, ifd_tag_t tag, const char *value)
 {
 	ct_tlv_builder_t builder;
 
@@ -447,7 +451,7 @@ void ct_args_string(ct_buf_t * bp, ifd_tag_t tag, const char *value)
 	ct_tlv_put_string(&builder, tag, value);
 }
 
-void ct_args_opaque(ct_buf_t * bp, ifd_tag_t tag, const unsigned char *value,
+static void ct_args_opaque(ct_buf_t * bp, ifd_tag_t tag, const unsigned char *value,
 		    size_t len)
 {
 	ct_tlv_builder_t builder;
