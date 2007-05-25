@@ -60,6 +60,7 @@ driver	etoken {
 driver	etoken64 {
 	ids = {
 		usb:0529/0600,
+		usb:0529/0700,
 	};
 };
 driver	eutron {
