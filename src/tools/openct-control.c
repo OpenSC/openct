@@ -190,8 +190,8 @@ int mgr_attach(int argc, char **argv)
 		}
 
 		if (!(driver = ifd_driver_for_id(&id))) {
-			fprintf(stderr, "No driver for this device\n");
-			return 1;
+			/* fall back to ccid driver */
+			driver = "ccid";
 		}
 	}
 

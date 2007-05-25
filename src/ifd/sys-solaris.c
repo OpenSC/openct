@@ -551,6 +551,10 @@ int ifd_scan_usb(void)
 		id.val[0] = vendor;
 		id.val[1] = product;
 
+		/* FIXME: if we don't find a driver with vendor/product
+ 		 * then check for the interface type (ccid) and use
+ 		 * driver ccid... */
+
 		if (!(driver = ifd_driver_for_id(&id)))
 			continue;
 

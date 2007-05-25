@@ -376,6 +376,10 @@ int ifd_scan_usb(void)
 				  device_info.udi_product,
 				  device_info.udi_productNo);
 
+			/* FIXME: if we don't find a driver with vendor/product
+ 			 * then check for the interface type (ccid) and use
+ 			 * driver ccid... */
+
 			if (!(driver = ifd_driver_for_id(&id)))
 				continue;
 #ifdef __OpenBSD__

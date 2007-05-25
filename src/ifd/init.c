@@ -61,7 +61,7 @@ int ifd_init(void)
 	if (ifd_conf_get_string("ifdhandler", &sval) >= 0)
 		ct_config.ifdhandler = sval;
 
-	/* Register all driver information (usu hotplug ids) */
+	/* Register all driver information (use hotplug ids) */
 	n = ifd_conf_get_nodes("driver", NULL, 0);
 	if (n >= 0) {
 		nodes = (ifd_conf_node_t **) calloc(n, sizeof(*nodes));
