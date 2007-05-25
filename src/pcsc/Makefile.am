@@ -14,8 +14,6 @@ openct_ifd_la_SOURCES = pcsc.c
 openct_ifd_la_LDFLAGS = -module -avoid-version
 openct_ifd_la_LIBADD = ../ctapi/libopenctapi.la
 
-noinst_HEADERS = ifdhandler.h
-
 # Don't use HAVE_BUNDLES for this case, pcsc-lite loads
 # USB drivers from MacOS X like bundles for all platforms
 install-exec-local: install-libLTLIBRARIES

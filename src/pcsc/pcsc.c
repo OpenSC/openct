@@ -34,6 +34,7 @@
 #endif
 #include <openct/openct.h>
 #include "ctapi.h"		/* XXX: <openct/ctapi.h>? */
+#define IFDHANDLERv2
 #include "ifdhandler.h"
 
 /* Maximum number of readers handled */
@@ -423,6 +424,8 @@ IFDHTransmitToICC(DWORD Lun, SCARD_IO_HEADER SendPci,
 	return rv;
 }
 
+#ifdef IFDHANDLERv2
+
 RESPONSECODE
 IFDHControl(DWORD Lun, PUCHAR TxBuffer,
 	    DWORD TxLength, PUCHAR RxBuffer, PDWORD RxLength)
@@ -468,6 +471,17 @@ IFDHControl(DWORD Lun, PUCHAR TxBuffer,
 #endif
 	return rv;
 }
+
+#else
+
+RESPONSECODE IFDHControl(DWORD Lun, DWORD dwControlCode,
+   PUCHAR TxBuffer, DWORD TxLength, PUCHAR RxBuffer, DWORD RxLength,
+   PDWORD pdwBytesReturned)
+{
+   /* FIXME */
+}
+
+#endif
 
 RESPONSECODE IFDHICCPresence(DWORD Lun)
 {
