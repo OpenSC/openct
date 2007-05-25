@@ -1,3 +1,7 @@
+# note: this file is for the old linux hotplug mechanism without udev.
+# it is no longer properly maintained and not very much supported - I don't
+# have a machine left where I use it. All I can do is answer emails :(
+
 # module             match_flags idVendor idProduct bcdDevice_lo bcdDevice_hi bDeviceClass bDeviceSubClass bDeviceProtocol bInterfaceClass bInterfaceSubClass bInterfaceProtocol driver_info
 # egate:
 openct		     0x0003      0x0973   0x0001    0x0000       0x0000       0x00         0x00            0x00            0x00            0x00               0x00               0x00000000
@@ -5,8 +9,9 @@ openct		     0x0003      0x0973   0x0001    0x0000       0x0000       0x00      
 # eToken
 openct		     0x0003      0x0529   0x050c    0x0000       0x0000       0x00         0x00            0x00            0x00            0x00               0x00               0x00000000
 openct		     0x0003      0x0529   0x0514    0x0000       0x0000       0x00         0x00            0x00            0x00            0x00               0x00               0x00000000
-# eToken 64
+# eToken 64 / NG OTP
 openct		     0x0003      0x0529   0x0600    0x0000       0x0000       0x00         0x00            0x00            0x00            0x00               0x00               0x00000000
+openct		     0x0003      0x0529   0x0700    0x0000       0x0000       0x00         0x00            0x00            0x00            0x00               0x00               0x00000000
 # eutron
 openct		     0x0003      0x073d   0x0005    0x0000       0x0000       0x00         0x00            0x00            0x00            0x00               0x00               0x00000000
 # ikey2k
