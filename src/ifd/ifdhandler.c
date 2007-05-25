@@ -1,4 +1,4 @@
-/i*
+/*
  * Manage a single reader
  *
  * Copyright (C) 2003 Olaf Kirch <okir@suse.de>
