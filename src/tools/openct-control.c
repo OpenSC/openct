@@ -174,14 +174,14 @@ static int mgr_attach(int argc, char **argv)
 	/* Initialize IFD library */
 	ifd_init();
 
-	typedev = malloc(strlen(type)+strlen(device)+2);
+	typedev = malloc(strlen(type) + strlen(device) + 2);
 	if (!typedev) {
 		fprintf(stderr, "out of memory\n");
 		return 1;
 	}
-	sprintf(typedev,"%s:%s",type,device);
+	sprintf(typedev, "%s:%s", type, device);
 
-	if (strncmp(type,driver,strlen(type)) == 0) {
+	if (strncmp(type, driver, strlen(type)) == 0) {
 		/* detect what kind of devide we have */
 
 		if (ifd_device_id_parse(driver, &id) < 0) {
@@ -265,7 +265,9 @@ static void configure_reader(ifd_conf_node_t * cf)
 	}
 
 	if (ifd_conf_node_get_string(cf, "driver", &driver) < 0) {
-		ct_error("no driver specified in reader configuration for device %s", device);
+		ct_error
+		    ("no driver specified in reader configuration for device %s",
+		     device);
 		return;
 	}
 

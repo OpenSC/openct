@@ -475,10 +475,10 @@ IFDHControl(DWORD Lun, PUCHAR TxBuffer,
 #else
 
 RESPONSECODE IFDHControl(DWORD Lun, DWORD dwControlCode,
-   PUCHAR TxBuffer, DWORD TxLength, PUCHAR RxBuffer, DWORD RxLength,
-   PDWORD pdwBytesReturned)
+			 PUCHAR TxBuffer, DWORD TxLength, PUCHAR RxBuffer,
+			 DWORD RxLength, PDWORD pdwBytesReturned)
 {
-   /* FIXME */
+	/* FIXME */
 }
 
 #endif

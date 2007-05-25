@@ -66,7 +66,7 @@ ct_handle *ct_reader_connect(unsigned int reader)
 	len = PATH_MAX;
 
 	snprintf(file, PATH_MAX, "%d", reader);
-	if (! ct_format_path(path, PATH_MAX, file)) {
+	if (!ct_format_path(path, PATH_MAX, file)) {
 		return NULL;
 	}
 
@@ -451,8 +451,8 @@ static void ct_args_string(ct_buf_t * bp, ifd_tag_t tag, const char *value)
 	ct_tlv_put_string(&builder, tag, value);
 }
 
-static void ct_args_opaque(ct_buf_t * bp, ifd_tag_t tag, const unsigned char *value,
-		    size_t len)
+static void ct_args_opaque(ct_buf_t * bp, ifd_tag_t tag,
+			   const unsigned char *value, size_t len)
 {
 	ct_tlv_builder_t builder;
 

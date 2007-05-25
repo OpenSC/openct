@@ -33,13 +33,12 @@ static void *ct_map_status(int flags, size_t * size)
 	void *addr = NULL;
 	char status_path[PATH_MAX];
 
-	if (! ct_format_path(status_path, PATH_MAX, "status")) {
+	if (!ct_format_path(status_path, PATH_MAX, "status")) {
 		return NULL;
 	}
 
 	if ((fd = open(status_path, flags)) < 0) {
-		ct_error("can't open %s: %s",
-				status_path, strerror(errno));
+		ct_error("can't open %s: %s", status_path, strerror(errno));
 		return NULL;
 	}
 
@@ -64,7 +63,7 @@ int ct_status_clear(unsigned int count)
 	int fd;
 	char status_path[PATH_MAX];
 
-	if (! ct_format_path(status_path, PATH_MAX, "status")) {
+	if (!ct_format_path(status_path, PATH_MAX, "status")) {
 		return -1;
 	}
 
@@ -179,7 +178,7 @@ static int ct_status_lock(void)
 	char status_lock_path[PATH_MAX];
 	char status_temp_path[PATH_MAX];
 
-	if (! ct_format_path(status_lock_path, PATH_MAX, "status.lock")) {
+	if (!ct_format_path(status_lock_path, PATH_MAX, "status.lock")) {
 		return -1;
 	}
 
@@ -206,7 +205,7 @@ static void ct_status_unlock(void)
 {
 	char status_lock_path[PATH_MAX];
 
-	if (! ct_format_path(status_lock_path, PATH_MAX, "status.lock")) {
+	if (!ct_format_path(status_lock_path, PATH_MAX, "status.lock")) {
 		return;
 	}
 

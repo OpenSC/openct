@@ -533,7 +533,7 @@ int ct_socket_filbuf(ct_socket_t * sock, long timeout)
 			return IFD_ERROR_TIMEOUT;
 	}
 
-retry:	
+      retry:
 	n = read(sock->fd, ct_buf_tail(bp), count);
 	if (n < 0 && errno == EINTR)
 		goto retry;

@@ -271,7 +271,8 @@ static void do_select_mf(ct_handle * h)
 	dump(res, rc);
 }
 
-static void do_read_memory(ct_handle * h, unsigned int address, unsigned int count)
+static void do_read_memory(ct_handle * h, unsigned int address,
+			   unsigned int count)
 {
 	unsigned char buffer[8192];
 	int rc;
