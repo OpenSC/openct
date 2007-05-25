@@ -21,7 +21,7 @@ static int et_magic(ifd_device_t *);
 static int et_open(ifd_reader_t * reader, const char *device_name)
 {
 	ifd_device_t *dev;
-        ifd_device_params_t params;
+	ifd_device_params_t params;
 
 	reader->name = "Aladdin eToken PRO";
 	reader->nslots = 1;
@@ -33,13 +33,13 @@ static int et_open(ifd_reader_t * reader, const char *device_name)
 		return -1;
 	}
 
-        params = dev->settings;
-        params.usb.interface = 0;
-        if (ifd_device_set_parameters(dev, &params) < 0) {
-                ct_error("etoken: setting parameters failed", device_name);
-                ifd_device_close(dev);
-                return -1;
-        }
+	params = dev->settings;
+	params.usb.interface = 0;
+	if (ifd_device_set_parameters(dev, &params) < 0) {
+		ct_error("etoken: setting parameters failed", device_name);
+		ifd_device_close(dev);
+		return -1;
+	}
 
 	reader->device = dev;
 

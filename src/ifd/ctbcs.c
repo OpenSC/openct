@@ -60,9 +60,9 @@ int ctbcs_build_output(unsigned char *cmd, size_t size, const char *message)
  * Generic Verify APDU
  */
 static int ctbcs_build_verify_apdu(unsigned char *cmd, size_t size,
-			    unsigned char ins, unsigned char p1,
-			    const char *prompt, unsigned int timeout,
-			    const unsigned char *data, size_t data_len)
+				   unsigned char ins, unsigned char p1,
+				   const char *prompt, unsigned int timeout,
+				   const unsigned char *data, size_t data_len)
 {
 	ct_buf_t buf;
 

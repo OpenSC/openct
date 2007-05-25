@@ -299,7 +299,7 @@ int ifd_sysdep_usb_open(const char *name)
 int ifd_sysdep_usb_reset(ifd_device_t * dev)
 {
 	/* not implemented so far */
-        return -1;
+	return -1;
 }
 
 /*
@@ -326,8 +326,8 @@ int ifd_scan_usb(void)
 			id.val[1] = dev->descriptor.idProduct;
 
 			/* FIXME: if we don't find a driver with vendor/product
- 		 	 * then check for the interface type (ccid) and use
- 		 	 * driver ccid... */
+			 * then check for the interface type (ccid) and use
+			 * driver ccid... */
 
 			if (!(driver = ifd_driver_for_id(&id)))
 				continue;

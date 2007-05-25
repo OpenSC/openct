@@ -185,8 +185,7 @@ int open_ep(char *name, int interface, int endpoint, int direction, int flags)
 	return 0;
 }
 
-void
-close_ep(int interface, int endpoint, int direction)
+void close_ep(int interface, int endpoint, int direction)
 {
 	if (interfaces[interface][endpoint].ep_fd[direction]) {
 		close(interfaces[interface][endpoint].ep_fd[direction]);
@@ -501,13 +500,13 @@ int ifd_sysdep_usb_end_capture(ifd_device_t * dev, ifd_usb_capture_t * cap)
 
 int ifd_sysdep_usb_open(const char *device)
 {
-        return open(device, O_RDWR);
+	return open(device, O_RDWR);
 }
 
 int ifd_sysdep_usb_reset(ifd_device_t * dev)
 {
 	/* not implemented so far */
-        return -1;
+	return -1;
 }
 
 /*
@@ -552,8 +551,8 @@ int ifd_scan_usb(void)
 		id.val[1] = product;
 
 		/* FIXME: if we don't find a driver with vendor/product
- 		 * then check for the interface type (ccid) and use
- 		 * driver ccid... */
+		 * then check for the interface type (ccid) and use
+		 * driver ccid... */
 
 		if (!(driver = ifd_driver_for_id(&id)))
 			continue;
@@ -591,8 +590,8 @@ int ifd_scan_usb(void)
 				ifd_debug(1,
 					  "ifd_scan_usb: \t\tfound device instance %s\n",
 					  device_instance_cntrl0_name);
-				snprintf(typedev,sizeof(typedev),
-					"usb:%s", device_instance_cntrl0_name);
+				snprintf(typedev, sizeof(typedev),
+					 "usb:%s", device_instance_cntrl0_name);
 				ifd_spawn_handler(driver, typedev, -1);
 			}
 		} while (device_instance != NULL);

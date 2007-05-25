@@ -16,7 +16,7 @@
 static int starkey_open(ifd_reader_t * reader, const char *device_name)
 {
 	ifd_device_t *dev;
-        ifd_device_params_t params;
+	ifd_device_params_t params;
 
 	reader->name = "G&D Starkey 100";
 	reader->nslots = 1;
@@ -28,13 +28,13 @@ static int starkey_open(ifd_reader_t * reader, const char *device_name)
 		return -1;
 	}
 
-        params = dev->settings;
-        params.usb.interface = 0;
-        if (ifd_device_set_parameters(dev, &params) < 0) {
-                ct_error("starkey: setting parameters failed", device_name);
-                ifd_device_close(dev);
-                return -1;
-        }
+	params = dev->settings;
+	params.usb.interface = 0;
+	if (ifd_device_set_parameters(dev, &params) < 0) {
+		ct_error("starkey: setting parameters failed", device_name);
+		ifd_device_close(dev);
+		return -1;
+	}
 
 	reader->device = dev;
 
@@ -68,17 +68,18 @@ static int starkey_card_status(ifd_reader_t * reader, int slot, int *status)
  * We should do something to make it come back with all state zapped
  */
 static int starkey_card_reset(ifd_reader_t * reader, int slot, void *atr,
-			 size_t size)
+			      size_t size)
 {
 	ifd_device_t *dev = reader->device;
 	unsigned char buffer[32];
 	int rc, atrlen;
 	ifd_usb_capture_t *cap;
 
-        rc = ifd_usb_begin_capture(dev,
-		IFD_USB_URB_TYPE_INTERRUPT, 0x81, sizeof(buffer), &cap);
-        if (rc < 0)
-                return rc;
+	rc = ifd_usb_begin_capture(dev,
+				   IFD_USB_URB_TYPE_INTERRUPT, 0x81,
+				   sizeof(buffer), &cap);
+	if (rc < 0)
+		return rc;
 
 	rc = ifd_usb_capture(dev, cap, buffer, sizeof(buffer), STARKEY_TIMEOUT);
 
@@ -88,7 +89,7 @@ static int starkey_card_reset(ifd_reader_t * reader, int slot, void *atr,
 	}
 
 	memcpy(atr, buffer, rc);
-	atrlen=rc;
+	atrlen = rc;
 	return atrlen;
 }
 
@@ -96,14 +97,14 @@ static int starkey_card_reset(ifd_reader_t * reader, int slot, void *atr,
  * Send/receive routines
  */
 static int starkey_send(ifd_reader_t * reader, unsigned int dad,
-		   const unsigned char *buffer, size_t len)
+			const unsigned char *buffer, size_t len)
 {
 	return ifd_usb_control(reader->device, 0x40, 0x06, 0, 0,
 			       (void *)buffer, len, -1);
 }
 
 static int starkey_recv(ifd_reader_t * reader, unsigned int dad,
-		   unsigned char *buffer, size_t len, long timeout)
+			unsigned char *buffer, size_t len, long timeout)
 {
 	return ifd_usb_control(reader->device, 0xc0, 0x86, 0, 0,
 			       buffer, len, timeout);

@@ -208,7 +208,7 @@ static int twt_card_reset(ifd_reader_t * reader, int slot, void *atr,
 }
 
 static int twt_try_reset(ifd_reader_t * reader, const void *cmd, size_t cmd_len,
-		  void *atr, size_t atr_len)
+			 void *atr, size_t atr_len)
 {
 	ifd_device_t *dev = reader->device;
 	int rc;
@@ -463,7 +463,7 @@ static int twt_sync_set_read_address(ifd_reader_t * reader, int slot, int proto,
 }
 
 static int twt_sync_read(ifd_reader_t * reader, int slot, int proto,
-		  unsigned short addr, unsigned char *buffer, size_t len)
+			 unsigned short addr, unsigned char *buffer, size_t len)
 {
 	int r;
 
@@ -583,7 +583,8 @@ static int twt_sync_set_write_address(ifd_reader_t * reader, int slot,
 }
 
 static int twt_sync_write(ifd_reader_t * reader, int slot, int proto,
-		   unsigned short addr, const unsigned char *buffer, size_t len)
+			  unsigned short addr, const unsigned char *buffer,
+			  size_t len)
 {
 	int r;
 
@@ -608,7 +609,7 @@ static int twt_led(ifd_reader_t * reader, int what)
  * Helper functions
  */
 static int twt_command(ifd_reader_t * reader, const void *cmd, size_t cmd_len,
-		void *res, size_t res_len)
+		       void *res, size_t res_len)
 {
 	unsigned char buffer[254];
 	int rc;

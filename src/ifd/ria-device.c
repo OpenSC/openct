@@ -95,7 +95,7 @@ int ria_register_device(ria_client_t * ria, const char *name)
 }
 
 static int ria_devsock_process(ct_socket_t * sock, header_t * hdr,
-			ct_buf_t * args, ct_buf_t * resp)
+			       ct_buf_t * args, ct_buf_t * resp)
 {
 	ria_client_t *ria = (ria_client_t *) sock->user_data;
 	ifd_device_t *dev = (ifd_device_t *) ria->user_data;

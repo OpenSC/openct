@@ -73,8 +73,8 @@ ifd_pcmcia_block_recv(ifd_device_t * dev, unsigned char *buffer, size_t len,
 
 	return n;
 
-      timeout:		/* Timeouts are a little special; they may happen e.g.
-			 * when trying to obtain the ATR */
+      timeout:			/* Timeouts are a little special; they may happen e.g.
+				 * when trying to obtain the ATR */
 	if (!ct_config.suppress_errors)
 		ct_error("%s: timed out while waiting for input", dev->name);
 	return IFD_ERROR_TIMEOUT;
@@ -84,11 +84,11 @@ ifd_pcmcia_block_recv(ifd_device_t * dev, unsigned char *buffer, size_t len,
  * Set pcmcia params
  */
 static int ifd_pcmcia_block_set_params(ifd_device_t * dev,
-                          const ifd_device_params_t * params)
+				       const ifd_device_params_t * params)
 {
-        /* nothing to do so far */
-        dev->settings = *params;
-        return 0;
+	/* nothing to do so far */
+	dev->settings = *params;
+	return 0;
 }
 
 /*

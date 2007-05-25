@@ -195,7 +195,8 @@ static void conf_dump(ifd_conf_node_t * node, int indent)
 /*
  * Config node handling
  */
-static ifd_conf_node_t *conf_add_node(ifd_conf_node_t * parent, const char *name)
+static ifd_conf_node_t *conf_add_node(ifd_conf_node_t * parent,
+				      const char *name)
 {
 	ifd_conf_node_t **p, *node;
 

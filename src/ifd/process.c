@@ -168,7 +168,7 @@ int ifdhandler_process(ct_socket_t * sock, ifd_reader_t * reader,
  * Status query
  */
 static int do_status(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
-	      ct_tlv_builder_t * resp)
+		     ct_tlv_builder_t * resp)
 {
 	int n, rc, status;
 
@@ -203,7 +203,7 @@ static int do_status(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
  * Output string to reader's display
  */
 static int do_output(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
-	      ct_tlv_builder_t * resp)
+		     ct_tlv_builder_t * resp)
 {
 	char msgbuf[128];
 	const char *message = NULL;
@@ -222,7 +222,7 @@ static int do_output(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
  * Lock/unlock card
  */
 static int do_lock(ct_socket_t * sock, ifd_reader_t * reader, int unit,
-	    ct_tlv_parser_t * args, ct_tlv_builder_t * resp)
+		   ct_tlv_parser_t * args, ct_tlv_builder_t * resp)
 {
 	unsigned int lock_type;
 	ct_lock_handle lock;
@@ -243,7 +243,7 @@ static int do_lock(ct_socket_t * sock, ifd_reader_t * reader, int unit,
 }
 
 static int do_unlock(ct_socket_t * sock, ifd_reader_t * reader, int unit,
-	      ct_tlv_parser_t * args, ct_tlv_builder_t * resp)
+		     ct_tlv_parser_t * args, ct_tlv_builder_t * resp)
 {
 	ct_lock_handle lock;
 	int rc;
@@ -264,7 +264,7 @@ static int do_unlock(ct_socket_t * sock, ifd_reader_t * reader, int unit,
  * Reset card
  */
 static int do_reset(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
-	     ct_tlv_builder_t * resp)
+		    ct_tlv_builder_t * resp)
 {
 	unsigned char atr[64];
 	char msgbuf[128];
@@ -297,7 +297,7 @@ static int do_reset(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
  * Eject card
  */
 static int do_eject(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
-	     ct_tlv_builder_t * resp)
+		    ct_tlv_builder_t * resp)
 {
 	char msgbuf[128];
 	const char *message = NULL;
@@ -323,7 +323,7 @@ static int do_eject(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
  * Request PIN through key pad and have card verify it
  */
 static int do_verify(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
-	      ct_tlv_builder_t * resp)
+		     ct_tlv_builder_t * resp)
 {
 	char msgbuf[128];
 	unsigned char *data;
@@ -357,7 +357,7 @@ static int do_verify(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
  * Transceive APDU
  */
 static int do_transact(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
-		ct_tlv_builder_t * resp)
+		       ct_tlv_builder_t * resp)
 {
 	unsigned char replybuf[258];
 	unsigned char *data;
@@ -383,7 +383,7 @@ static int do_transact(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 }
 
 static int do_transact_old(ifd_reader_t * reader, int unit, ct_buf_t * args,
-		    ct_buf_t * resp)
+			   ct_buf_t * resp)
 {
 	int rc;
 
@@ -397,8 +397,8 @@ static int do_transact_old(ifd_reader_t * reader, int unit, ct_buf_t * args,
 	return 0;
 }
 
-static int do_set_protocol(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
-		    ct_tlv_builder_t * resp)
+static int do_set_protocol(ifd_reader_t * reader, int unit,
+			   ct_tlv_parser_t * args, ct_tlv_builder_t * resp)
 {
 	unsigned int protocol = 0xFF;
 	int rc;
@@ -419,8 +419,8 @@ static int do_set_protocol(ifd_reader_t * reader, int unit, ct_tlv_parser_t * ar
 /*
  * Synchronous ICC read/write
  */
-static int do_memory_write(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
-		    ct_tlv_builder_t * resp)
+static int do_memory_write(ifd_reader_t * reader, int unit,
+			   ct_tlv_parser_t * args, ct_tlv_builder_t * resp)
 {
 	unsigned char *data;
 	unsigned int data_len;
@@ -441,8 +441,8 @@ static int do_memory_write(ifd_reader_t * reader, int unit, ct_tlv_parser_t * ar
 	return 0;
 }
 
-static int do_memory_read(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
-		   ct_tlv_builder_t * resp)
+static int do_memory_read(ifd_reader_t * reader, int unit,
+			  ct_tlv_parser_t * args, ct_tlv_builder_t * resp)
 {
 	unsigned char data[CT_SOCKET_BUFSIZ];
 	size_t data_len;

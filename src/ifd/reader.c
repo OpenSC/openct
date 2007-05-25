@@ -341,7 +341,7 @@ int ifd_card_request(ifd_reader_t * reader, unsigned int idx, time_t timeout,
 }
 
 static int ifd_recv_atr(ifd_device_t * dev, ct_buf_t * bp, unsigned int count,
-		 int revert_bits)
+			int revert_bits)
 {
 	unsigned char *buf;
 	unsigned int n;

@@ -674,7 +674,8 @@ static int gpc_get_os_version(ifd_reader_t * reader, char *buf, size_t len)
  * Helper functions
  */
 static int __gpc_command(ifd_reader_t * reader, const void *cmd,
-                  size_t cmd_len, void *res, size_t res_len, int *gpc_status)
+			 size_t cmd_len, void *res, size_t res_len,
+			 int *gpc_status)
 {
 	gpc_status_t *st = (gpc_status_t *) reader->driver_data;
 	unsigned char buffer[257];
@@ -720,7 +721,7 @@ static int __gpc_command(ifd_reader_t * reader, const void *cmd,
 }
 
 static int gpc_command(ifd_reader_t * reader, const void *cmd, size_t cmd_len,
-		void *res, size_t res_len)
+		       void *res, size_t res_len)
 {
 	int rc, status;
 

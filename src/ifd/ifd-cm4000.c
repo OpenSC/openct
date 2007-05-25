@@ -26,7 +26,7 @@
 static int cm_open(ifd_reader_t * reader, const char *device_name)
 {
 	ifd_device_t *dev;
-        ifd_device_params_t params;
+	ifd_device_params_t params;
 
 	reader->name = "OMNIKEY CardMan 4000";
 	reader->nslots = 1;

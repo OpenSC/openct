@@ -304,7 +304,8 @@ static int t0_send(ifd_protocol_t * prot, ct_buf_t * bp, int count)
 	return n;
 }
 
-static int t0_recv(ifd_protocol_t * prot, ct_buf_t * bp, int count, long timeout)
+static int t0_recv(ifd_protocol_t * prot, ct_buf_t * bp, int count,
+		   long timeout)
 {
 	int n;
 

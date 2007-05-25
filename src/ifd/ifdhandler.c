@@ -121,8 +121,8 @@ int main(int argc, char **argv)
 			ct_error("too many readers, no reader slot available");
 			return 1;
 		}
-		snprintf(path,PATH_MAX,"%d",r);
-		opt_reader=strdup(path);
+		snprintf(path, PATH_MAX, "%d", r);
+		opt_reader = strdup(path);
 	}
 
 	/* Become a daemon if needed - we do this after allocating the
@@ -154,14 +154,15 @@ int main(int argc, char **argv)
 
 	/* Create reader */
 	{
-		char *typedev = malloc(strlen(type)+strlen(device)+2);
+		char *typedev = malloc(strlen(type) + strlen(device) + 2);
 		if (!typedev) {
 			ct_error("out of memory");
 			return 1;
 		}
-		sprintf(typedev,"%s:%s",type,device);
+		sprintf(typedev, "%s:%s", type, device);
 		if (!(reader = ifd_open(driver, typedev))) {
-			ct_error("unable to open reader %s %s %s", driver, type, device);
+			ct_error("unable to open reader %s %s %s", driver, type,
+				 device);
 			return 1;
 		}
 		free(typedev);
@@ -194,9 +195,9 @@ static void ifdhandler_run(ifd_reader_t * reader)
 	ct_socket_t *sock;
 	int rc;
 	struct sigaction act;
-        char path[PATH_MAX];
+	char path[PATH_MAX];
 
-        if (! ct_format_path(path, PATH_MAX, opt_reader)) {
+	if (!ct_format_path(path, PATH_MAX, opt_reader)) {
 		ct_error("ct_format_path failed!");
 		exit(1);
 	}

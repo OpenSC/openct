@@ -125,7 +125,7 @@ static void ria_svc_dev_close(ct_socket_t * sock)
  * to claim a device).
  */
 static int ria_svc_app_handler(ct_socket_t * sock, header_t * hdr,
-			ct_buf_t * args, ct_buf_t * resp)
+			       ct_buf_t * args, ct_buf_t * resp)
 {
 	unsigned char cmd;
 	ria_peer_t *clnt, *peer;
@@ -196,7 +196,7 @@ static int ria_svc_app_handler(ct_socket_t * sock, header_t * hdr,
  * Process commands from remote clients (i.e. those offering a device).
  */
 static int ria_svc_dev_handler(ct_socket_t * sock, header_t * hdr,
-			ct_buf_t * args, ct_buf_t * resp)
+			       ct_buf_t * args, ct_buf_t * resp)
 {
 	unsigned char cmd;
 	ria_peer_t *clnt, *peer;

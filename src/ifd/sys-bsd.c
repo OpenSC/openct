@@ -312,7 +312,7 @@ int ifd_sysdep_usb_release_interface(ifd_device_t * dev, int interface)
 
 int ifd_sysdep_usb_open(const char *device)
 {
-        return open(device, O_RDWR);
+	return open(device, O_RDWR);
 }
 
 int ifd_sysdep_usb_reset(ifd_device_t * dev)
@@ -377,18 +377,18 @@ int ifd_scan_usb(void)
 				  device_info.udi_productNo);
 
 			/* FIXME: if we don't find a driver with vendor/product
- 			 * then check for the interface type (ccid) and use
- 			 * driver ccid... */
+			 * then check for the interface type (ccid) and use
+			 * driver ccid... */
 
 			if (!(driver = ifd_driver_for_id(&id)))
 				continue;
 #ifdef __OpenBSD__
 			snprintf(typedev, sizeof(typedev),
-				"usb:/dev/%s.00", device_info.udi_devnames[0]);
+				 "usb:/dev/%s.00", device_info.udi_devnames[0]);
 #else
 			snprintf(typedev, sizeof(typedev),
 				 "usb:/dev/%s", device_info.udi_devnames[0]);
-#endif	/* __OpenBSD__ */
+#endif				/* __OpenBSD__ */
 
 			ifd_spawn_handler(driver, typedev, -1);
 		}

@@ -341,8 +341,9 @@ static int cm_set_card_parameters(ifd_device_t * dev, unsigned int baudrate)
  * Interrupt URBs.
  */
 static int cm_usb_int(ifd_device_t * dev, int requesttype, int request,
-	       int value, int idx, const void *sbuf, size_t slen, void *rbuf,
-	       size_t rlen, complete_fn_t complete, long timeout)
+		      int value, int idx, const void *sbuf, size_t slen,
+		      void *rbuf, size_t rlen, complete_fn_t complete,
+		      long timeout)
 {
 	ifd_usb_capture_t *cap;
 	struct timeval begin;

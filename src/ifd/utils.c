@@ -125,10 +125,10 @@ int ifd_spawn_handler(const char *driver, const char *devtype, int idx)
 	}
 
 	type = strdup(devtype);
-	device = strtok(type,":");
-	device = strtok(NULL,":");
+	device = strtok(type, ":");
+	device = strtok(NULL, ":");
 	if (!device || !type) {
-		ct_error("failed to parse devtype %s",devtype);
+		ct_error("failed to parse devtype %s", devtype);
 		exit(1);
 	}
 

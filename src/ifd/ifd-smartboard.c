@@ -336,8 +336,8 @@ static int __smartboard_rsp(ifd_reader_t * reader, unsigned char *code,
 }
 
 static int smartboard_command(ifd_reader_t * reader, unsigned char cmd,
-		       const unsigned char *arg, size_t arg_len,
-		       unsigned char *code, void *res, size_t res_len)
+			      const unsigned char *arg, size_t arg_len,
+			      unsigned char *code, void *res, size_t res_len)
 {
 	int n = 0, rc;
 

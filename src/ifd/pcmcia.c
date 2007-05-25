@@ -92,10 +92,10 @@ static int ifd_pcmcia_recv(ifd_device_t * dev, unsigned char *buffer,
  * Set pcmcia params
  */
 static int ifd_pcmcia_set_params(ifd_device_t * dev,
-			  const ifd_device_params_t * params)
+				 const ifd_device_params_t * params)
 {
 	/* nothing to do so far */
-        dev->settings = *params;
+	dev->settings = *params;
 	return 0;
 }
 

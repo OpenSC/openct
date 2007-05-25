@@ -39,11 +39,11 @@ ria_client_t *ria_connect(const char *address)
 	char path[PATH_MAX];
 	int rc;
 
-	if (! address) {
+	if (!address) {
 		return NULL;
 	}
 
-	if (! ct_format_path(path, PATH_MAX, address)) {
+	if (!ct_format_path(path, PATH_MAX, address)) {
 		return NULL;
 	}
 
@@ -100,7 +100,7 @@ int ria_send(ria_client_t * clnt, unsigned char cmd, const void *arg_buf,
 }
 
 static int ria_recv(ria_client_t * clnt, unsigned char expect, uint32_t xid,
-	     void *res_buf, size_t res_len, long timeout)
+		    void *res_buf, size_t res_len, long timeout)
 {
 	ct_socket_t *sock = clnt->sock;
 	struct timeval begin;
@@ -185,7 +185,8 @@ int ria_command(ria_client_t * clnt, unsigned char cmd, const void *arg_buf,
 	return rc;
 }
 
-static int ria_claim_device(ria_client_t * clnt, const char *name, ria_device_t * info)
+static int ria_claim_device(ria_client_t * clnt, const char *name,
+			    ria_device_t * info)
 {
 	return ria_command(clnt, RIA_MGR_CLAIM, name, strlen(name),
 			   info, sizeof(*info), -1);

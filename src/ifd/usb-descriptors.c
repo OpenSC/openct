@@ -67,7 +67,8 @@ static int ifd_usb_parse_endpoint(struct ifd_usb_endpoint_descriptor *endpoint,
 		    (header->bDescriptorType == IFD_USB_DT_DEVICE))
 			break;
 
-		ct_debug("in p_ep: skipping descriptor 0x%X", header->bDescriptorType);
+		ct_debug("in p_ep: skipping descriptor 0x%X",
+			 header->bDescriptorType);
 		numskipped++;
 
 		buffer += header->bLength;
@@ -219,15 +220,17 @@ static int ifd_usb_parse_interface(struct ifd_usb_interface *interface,
 			if (retval < 0)
 				return retval;
 
-			if ( ifp->endpoint[i].extra != NULL ) {
-				ifp->extra = (unsigned char *)malloc(ifp->endpoint[i].extralen);
+			if (ifp->endpoint[i].extra != NULL) {
+				ifp->extra =
+				    (unsigned char *)malloc(ifp->endpoint[i].
+							    extralen);
 				if (!ifp->extra) {
 					ct_error("out of memory");
 					ifp->extralen = 0;
 					return -1;
 				}
 				memcpy(ifp->extra, ifp->endpoint[i].extra,
-					ifp->endpoint[i].extralen);
+				       ifp->endpoint[i].extralen);
 				ifp->extralen = ifp->endpoint[i].extralen;
 			}
 
@@ -248,7 +251,7 @@ static int ifd_usb_parse_interface(struct ifd_usb_interface *interface,
 }
 
 static int ifd_usb_parse_configuration(struct ifd_usb_config_descriptor *config,
-				unsigned char *buffer)
+				       unsigned char *buffer)
 {
 	int i, retval, size;
 	struct ifd_usb_descriptor_header *header;
@@ -426,7 +429,7 @@ void ifd_usb_free_configuration(struct ifd_usb_config_descriptor *cf)
 
 			if (as->extra) {
 				free(as->extra);
-				as->extra=NULL;
+				as->extra = NULL;
 			}
 
 			if (!as->endpoint)
@@ -435,17 +438,17 @@ void ifd_usb_free_configuration(struct ifd_usb_config_descriptor *cf)
 			for (k = 0; k < as->bNumEndpoints; k++) {
 				if (as->endpoint[k].extra) {
 					free(as->endpoint[k].extra);
-					as->endpoint[k].extra=NULL;
+					as->endpoint[k].extra = NULL;
 				}
 			}
 			free(as->endpoint);
-			as->endpoint=NULL;
+			as->endpoint = NULL;
 		}
 
 		free(ifp->altsetting);
-		ifp->altsetting=NULL;
+		ifp->altsetting = NULL;
 	}
 
 	free(cf->interface);
-	cf->interface=NULL;
+	cf->interface = NULL;
 }

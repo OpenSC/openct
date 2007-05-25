@@ -170,12 +170,10 @@ static int usb_reset(ifd_device_t * dev)
 {
 	int rc;
 
-	rc = ifd_sysdep_usb_reset( dev );
+	rc = ifd_sysdep_usb_reset(dev);
 
 	return rc;
 }
-
-
 
 static struct ifd_device_ops ifd_usb_ops;
 
@@ -191,7 +189,7 @@ ifd_device_t *ifd_open_usb(const char *device)
 		ct_error("Unable to open USB device %s: %m", device);
 		return NULL;
 	}
-	
+
 	ifd_usb_ops.poll_presence = ifd_sysdep_usb_poll_presence;
 	ifd_usb_ops.set_params = usb_set_params;
 	ifd_usb_ops.send = usb_send;

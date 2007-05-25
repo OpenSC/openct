@@ -494,7 +494,7 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 	p = NULL;
 	r = i = 0;
 	memset(&conf, 0, sizeof(conf));
-	for (c = 0; c <de.bNumConfigurations; c++) {
+	for (c = 0; c < de.bNumConfigurations; c++) {
 		if (ifd_usb_get_config(dev, c, &conf)) {
 			ct_error("ccid: config descriptor %d not found", c);
 			continue;
@@ -827,8 +827,9 @@ static int ccid_card_status(ifd_reader_t * reader, int slot, int *status)
 		int i, j, bits;
 
 		if (st->proto_support & SUPPORT_ESCAPE
-		    && slot == reader->nslots-1) {
-			ifd_debug(1, "virtual escape slot, setting card present\n");
+		    && slot == reader->nslots - 1) {
+			ifd_debug(1,
+				  "virtual escape slot, setting card present\n");
 			*status = IFD_CARD_PRESENT;
 			return 0;
 		}
@@ -897,7 +898,7 @@ static int ccid_card_status(ifd_reader_t * reader, int slot, int *status)
 	return 0;
 }
 
-static int ccid_set_protocol(ifd_reader_t *reader, int s, int proto);
+static int ccid_set_protocol(ifd_reader_t * reader, int s, int proto);
 
 /*
  * Reset
@@ -917,8 +918,7 @@ ccid_card_reset(ifd_reader_t * reader, int slot, void *atr, size_t size)
 	if (!(status & IFD_CARD_PRESENT))
 		return IFD_ERROR_NO_CARD;
 
-	if (st->proto_support & SUPPORT_ESCAPE
-	    && slot == reader->nslots-1) {
+	if (st->proto_support & SUPPORT_ESCAPE && slot == reader->nslots - 1) {
 		ifd_debug(1, "slot: %d, setting atr to 0xff", slot);
 		*((char *)atr) = 0xff;
 		ccid_set_protocol(reader, slot, IFD_PROTOCOL_ESCAPE);
@@ -972,7 +972,7 @@ static int ccid_set_protocol(ifd_reader_t * reader, int s, int proto)
 	 * at the last (== virtual) slot */
 	if ((st->proto_support & SUPPORT_ESCAPE)
 	    && (proto != IFD_PROTOCOL_ESCAPE)
-	    && (s == reader->nslots-1)) {
+	    && (s == reader->nslots - 1)) {
 		ct_error("reader doesn't support this protocol at this slot\n");
 		return IFD_ERROR_NOT_SUPPORTED;
 	}
@@ -997,11 +997,12 @@ static int ccid_set_protocol(ifd_reader_t * reader, int s, int proto)
 			ct_error("reader does not support this protocol");
 			return IFD_ERROR_NOT_SUPPORTED;
 		}
-		if (s != reader->nslots-1) {
-			ct_error("reader doesn't support this protocol at this slot");
+		if (s != reader->nslots - 1) {
+			ct_error
+			    ("reader doesn't support this protocol at this slot");
 			return IFD_ERROR_NOT_SUPPORTED;
 		}
-		p = ifd_protocol_new(IFD_PROTOCOL_ESCAPE,reader, slot->dad);
+		p = ifd_protocol_new(IFD_PROTOCOL_ESCAPE, reader, slot->dad);
 		if (!p) {
 			ct_error("%s: internal error", reader->name);
 			return -1;
@@ -1163,25 +1164,25 @@ static int ccid_set_protocol(ifd_reader_t * reader, int s, int proto)
 	return 0;
 }
 
-static int ccid_escape(ifd_reader_t *reader, int slot, void *sbuf,
+static int ccid_escape(ifd_reader_t * reader, int slot, void *sbuf,
 		       size_t slen, void *rbuf, size_t rlen)
 {
-     unsigned char sendbuf[CCID_MAX_MSG_LEN];
-     unsigned char recvbuf[CCID_MAX_MSG_LEN];
-     int r;
+	unsigned char sendbuf[CCID_MAX_MSG_LEN];
+	unsigned char recvbuf[CCID_MAX_MSG_LEN];
+	int r;
 
-     ifd_debug(1, "slot: %d, slen %d, rlen %d", slot, slen, rlen);
+	ifd_debug(1, "slot: %d, slen %d, rlen %d", slot, slen, rlen);
 
-     r = ccid_prepare_cmd(reader, sendbuf, sizeof(sendbuf), slot,
-		          CCID_CMD_ESCAPE, NULL, sbuf, slen);
-     if (r < 0)
-	  return r;
+	r = ccid_prepare_cmd(reader, sendbuf, sizeof(sendbuf), slot,
+			     CCID_CMD_ESCAPE, NULL, sbuf, slen);
+	if (r < 0)
+		return r;
 
-     r = ccid_command(reader, &sendbuf[0], r, recvbuf, sizeof(recvbuf));
-     if (r < 0)
-	  return r;
+	r = ccid_command(reader, &sendbuf[0], r, recvbuf, sizeof(recvbuf));
+	if (r < 0)
+		return r;
 
-     return ccid_extract_data(&recvbuf, r, rbuf, rlen);
+	return ccid_extract_data(&recvbuf, r, rbuf, rlen);
 }
 
 static int

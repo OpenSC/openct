@@ -440,7 +440,8 @@ static unsigned int t1_seq(unsigned char pcb)
 }
 
 static unsigned int t1_build(t1_state_t * t1, unsigned char *block,
-	 unsigned char dad, unsigned char pcb, ct_buf_t * bp, size_t * lenp)
+			     unsigned char dad, unsigned char pcb,
+			     ct_buf_t * bp, size_t * lenp)
 {
 	unsigned int len;
 
@@ -493,7 +494,7 @@ struct ifd_protocol_ops ifd_protocol_t1 = {
  * Build/verify checksum
  */
 static unsigned int t1_compute_checksum(t1_state_t * t1, unsigned char *data,
-				 size_t len)
+					size_t len)
 {
 	return len + t1->checksum(data, len, data + len);
 }
@@ -519,7 +520,8 @@ static int t1_verify_checksum(t1_state_t * t1, unsigned char *rbuf, size_t len)
 /*
  * Send/receive block
  */
-static int t1_xcv(t1_state_t * t1, unsigned char *block, size_t slen, size_t rmax)
+static int t1_xcv(t1_state_t * t1, unsigned char *block, size_t slen,
+		  size_t rmax)
 {
 	ifd_protocol_t *prot = &t1->base;
 	unsigned int rlen, timeout;

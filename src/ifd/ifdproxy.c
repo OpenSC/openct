@@ -176,10 +176,9 @@ static int run_server(int argc, char **argv)
 	int rc;
 	char path[PATH_MAX];
 
-	if (! ct_format_path(path, PATH_MAX, opt_server_port)) {
+	if (!ct_format_path(path, PATH_MAX, opt_server_port)) {
 		return -1;
 	}
-
 
 	if (argc != 0)
 		usage(1);

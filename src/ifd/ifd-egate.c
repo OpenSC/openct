@@ -43,7 +43,7 @@
 static int eg_open(ifd_reader_t * reader, const char *device_name)
 {
 	ifd_device_t *dev;
-        ifd_device_params_t params;
+	ifd_device_params_t params;
 
 	ifd_debug(1, "device=%s", device_name);
 	reader->name = "Schlumberger E-Gate";
@@ -105,7 +105,7 @@ static int eg_card_reset(ifd_reader_t * reader, int slot, void *atr,
 	usleep(100000);
 	/* Reset the device */
 	rc = ifd_usb_control(dev, EGATE_DIR_OUT, EGATE_CMD_RESET,
-			     0, 0, NULL, 0, EG_TIMEOUT*2);
+			     0, 0, NULL, 0, EG_TIMEOUT * 2);
 	if (rc < 0) {
 	      failed:
 		ct_error("egate: failed to activate token");
@@ -196,13 +196,14 @@ static int eg_transparent(ifd_reader_t * reader, int dad, const void *inbuffer,
 	ifd_iso_apdu_t iso;
 	unsigned char cmdbuf[5];
 	int i;
-	
+
 	stat = eg_status(reader);
 	if (stat != EGATE_STATUS_READY) {
-		for (i=0; i < 4; i++) {
+		for (i = 0; i < 4; i++) {
 			ifd_debug(2, "device not ready, attempting reset");
 			rc = ifd_usb_control(reader->device, EGATE_DIR_OUT,
-				EGATE_CMD_RESET, 0, 0, NULL, 0, EG_TIMEOUT);
+					     EGATE_CMD_RESET, 0, 0, NULL, 0,
+					     EG_TIMEOUT);
 			if (rc < 0)
 				return IFD_ERROR_COMM_ERROR;
 			usleep(100);
@@ -213,7 +214,7 @@ static int eg_transparent(ifd_reader_t * reader, int dad, const void *inbuffer,
 				return IFD_ERROR_COMM_ERROR;
 			}
 			ifd_debug(2, "reset failed");
-	     	}
+		}
 		ifd_debug(2, "giving up on reset");
 		return IFD_ERROR_COMM_ERROR;
 	}
@@ -246,12 +247,12 @@ static int eg_transparent(ifd_reader_t * reader, int dad, const void *inbuffer,
 		ifd_debug(3, "sent %d bytes of data", iso.lc);
 		stat = eg_status(reader);
 	}
-	bytesread=0;
-	
+	bytesread = 0;
+
 	while (stat == EGATE_STATUS_DATA && bytesread < iso.le) {
 		rc = ifd_usb_control(reader->device, EGATE_DIR_IN,
-				     EGATE_CMD_READ, 0, 0, 
-				     (void *)(((unsigned char *)outbuffer) + 
+				     EGATE_CMD_READ, 0, 0,
+				     (void *)(((unsigned char *)outbuffer) +
 					      bytesread),
 				     iso.le - bytesread, EG_TIMEOUT);
 		if (rc < 0)
