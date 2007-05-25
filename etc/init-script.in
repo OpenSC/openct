@@ -57,7 +57,7 @@ case "$1" in
 	#
 	echo -n "Restarting $DESC: $NAME"
 	$DAEMON shutdown
-	sleep 1
+	sleep 0.1
 	$DAEMON init
 	echo "."
 	;;

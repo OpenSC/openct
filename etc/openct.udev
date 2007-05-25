@@ -6,8 +6,8 @@ ACTION!="add", GOTO="openct_usb_rules_end"
 # last file created by the kernel, if this is present everything should be
 KERNEL=="[0-9]*:*", WAIT_FOR_SYSFS="bInterfaceProtocol"
 
-# sleep for a second - the wait_for_sysfs might not be enough
-PROGRAM="/bin/sleep 1"
+# sleep for 100ms - the wait_for_sysfs might not be enough
+PROGRAM="/bin/sleep 0.1"
 
 # egate
 SYSFS{idVendor}=="0973", SYSFS{idProduct}=="0001", RUN+="/lib/udev/openct_usb"

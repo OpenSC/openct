@@ -5,8 +5,7 @@ test -n "$DEVICE" -o -n "$DEVNAME" || exit 0
 test -e /var/run/openct/status || exit 0
 
 # race condition in the kernel, $DEVICE might not exist now
-sleep 1
-
+sleep 0.1
 
 if [ -n "$DEVICE" ]
 then
