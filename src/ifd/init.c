@@ -84,7 +84,7 @@ int ifd_init(void)
 /*
  * Configure a reader driver
  */
-int configure_driver(ifd_conf_node_t * cf)
+static int configure_driver(ifd_conf_node_t * cf)
 {
 	const char *driver;
 	char **ids;

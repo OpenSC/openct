@@ -167,7 +167,7 @@ int ifdhandler_process(ct_socket_t * sock, ifd_reader_t * reader,
 /*
  * Status query
  */
-int do_status(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
+static int do_status(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 	      ct_tlv_builder_t * resp)
 {
 	int n, rc, status;
@@ -202,7 +202,7 @@ int do_status(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 /*
  * Output string to reader's display
  */
-int do_output(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
+static int do_output(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 	      ct_tlv_builder_t * resp)
 {
 	char msgbuf[128];
@@ -221,7 +221,7 @@ int do_output(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 /*
  * Lock/unlock card
  */
-int do_lock(ct_socket_t * sock, ifd_reader_t * reader, int unit,
+static int do_lock(ct_socket_t * sock, ifd_reader_t * reader, int unit,
 	    ct_tlv_parser_t * args, ct_tlv_builder_t * resp)
 {
 	unsigned int lock_type;
@@ -242,7 +242,7 @@ int do_lock(ct_socket_t * sock, ifd_reader_t * reader, int unit,
 	return 0;
 }
 
-int do_unlock(ct_socket_t * sock, ifd_reader_t * reader, int unit,
+static int do_unlock(ct_socket_t * sock, ifd_reader_t * reader, int unit,
 	      ct_tlv_parser_t * args, ct_tlv_builder_t * resp)
 {
 	ct_lock_handle lock;
@@ -263,7 +263,7 @@ int do_unlock(ct_socket_t * sock, ifd_reader_t * reader, int unit,
 /*
  * Reset card
  */
-int do_reset(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
+static int do_reset(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 	     ct_tlv_builder_t * resp)
 {
 	unsigned char atr[64];
@@ -296,7 +296,7 @@ int do_reset(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 /*
  * Eject card
  */
-int do_eject(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
+static int do_eject(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 	     ct_tlv_builder_t * resp)
 {
 	char msgbuf[128];
@@ -322,7 +322,7 @@ int do_eject(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 /*
  * Request PIN through key pad and have card verify it
  */
-int do_verify(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
+static int do_verify(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 	      ct_tlv_builder_t * resp)
 {
 	char msgbuf[128];
@@ -356,7 +356,7 @@ int do_verify(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 /*
  * Transceive APDU
  */
-int do_transact(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
+static int do_transact(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 		ct_tlv_builder_t * resp)
 {
 	unsigned char replybuf[258];
@@ -382,7 +382,7 @@ int do_transact(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 	return 0;
 }
 
-int do_transact_old(ifd_reader_t * reader, int unit, ct_buf_t * args,
+static int do_transact_old(ifd_reader_t * reader, int unit, ct_buf_t * args,
 		    ct_buf_t * resp)
 {
 	int rc;
@@ -397,7 +397,7 @@ int do_transact_old(ifd_reader_t * reader, int unit, ct_buf_t * args,
 	return 0;
 }
 
-int do_set_protocol(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
+static int do_set_protocol(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 		    ct_tlv_builder_t * resp)
 {
 	unsigned int protocol = 0xFF;
@@ -419,7 +419,7 @@ int do_set_protocol(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 /*
  * Synchronous ICC read/write
  */
-int do_memory_write(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
+static int do_memory_write(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 		    ct_tlv_builder_t * resp)
 {
 	unsigned char *data;
@@ -441,7 +441,7 @@ int do_memory_write(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 	return 0;
 }
 
-int do_memory_read(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
+static int do_memory_read(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 		   ct_tlv_builder_t * resp)
 {
 	unsigned char data[CT_SOCKET_BUFSIZ];

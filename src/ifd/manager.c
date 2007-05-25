@@ -14,7 +14,7 @@ static unsigned int ifd_reader_handle = 1;
 /*
  * Return number of readers available
  */
-int ifd_reader_count()
+int ifd_reader_count(void)
 {
 	return OPENCT_MAX_READERS;
 }
