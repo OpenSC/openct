@@ -9,6 +9,7 @@
 #include <string.h>
 #include <signal.h>
 #include <time.h>
+#include <openct/driver.h>
 
 static int ifd_recv_atr(ifd_device_t *, ct_buf_t *, unsigned int, int);
 
