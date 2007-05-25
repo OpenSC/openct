@@ -1127,7 +1127,7 @@ static int ccid_send(ifd_reader_t * reader, unsigned int dad,
 	if (st->sbuf[dad]) {
 		free(st->sbuf[dad]);
 		st->sbuf[dad] = NULL;
-		st->slen[dad] = NULL;
+		st->slen[dad] = 0;
 	}
 
 	apdu = (unsigned char *)calloc(1, len);
@@ -1153,7 +1153,7 @@ static int ccid_recv(ifd_reader_t * reader, unsigned int dad,
 			  len);
 	if (st->sbuf[dad])
 		free(st->sbuf[dad]);
-	st->sbuf[dad] = 0;
+	st->sbuf[dad] = NULL;
 	st->slen[dad] = 0;
 	return r;
 }
