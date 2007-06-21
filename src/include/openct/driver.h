@@ -321,7 +321,7 @@ struct ifd_driver_ops {
 
 	/*Support for transparent access to "escape" */
 	int		(*escape)(ifd_reader_t *reader, int slot,
-				void *sbuf, size_t slen,
+				const void *sbuf, const size_t slen,
 				void *rbuf, size_t rlen);
 };
 

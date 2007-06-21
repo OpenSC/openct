@@ -1174,7 +1174,7 @@ static int ccid_set_protocol(ifd_reader_t * reader, int s, int proto)
 	return 0;
 }
 
-static int ccid_escape(ifd_reader_t * reader, int slot, void *sbuf,
+static int ccid_escape(ifd_reader_t * reader, int slot, const void *sbuf,
 		       size_t slen, void *rbuf, size_t rlen)
 {
 	unsigned char sendbuf[CCID_MAX_MSG_LEN];
