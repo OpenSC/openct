@@ -449,7 +449,7 @@ static int ccid_exchange(ifd_reader_t * reader, int slot,
 	unsigned char sendbuf[CCID_MAX_MSG_LEN + 1];
 	unsigned char recvbuf[CCID_MAX_MSG_LEN + 1];
 	int r;
-	unsigned char ctlbuf[3], *ctlptr=0;
+	unsigned char ctlbuf[3], *ctlptr=NULL;
 
 	ctlptr=NULL;
 	if (st->reader_type == TYPE_CHAR) {
