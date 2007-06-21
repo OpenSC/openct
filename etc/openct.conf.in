@@ -109,7 +109,8 @@ driver	ccid {
 		usb:08e6/3437,	# Gemplus
 		usb:08e6/3438,	# Gemplus GemPC Key SmartCard Reader
 		usb:08e6/4433,	# Gemplus
-		usb:0b97/7761,	# O2 Micro, Inc. Oz776 SmartCard Reader 
+		usb:0b97/7762,	# O2 Micro, Inc. Oz776 SmartCard Reader 
+		usb:0b97/7772,	# O2 Micro, Inc. Oz776 SmartCard Reader 
 		usb:0bf8/1006,	# fujitsu siemens 3.5" drive size reader
 	};
 };
