@@ -261,7 +261,7 @@ static int smph_card_reset(ifd_reader_t *reader, int slot, void *atr,
     return -1;
 
   /* FIXME: use ifd_serial_reset instead? */
-  udelay(1000000);
+  sleep(1);
 
   if (smph_setctrl(dev, (privd->prot == prot_phoenix) 
 		   ? TIOCM_CTS | TIOCM_DTR :
@@ -269,7 +269,7 @@ static int smph_card_reset(ifd_reader_t *reader, int slot, void *atr,
     return -1;
 
   /* FIXME: use ifd_serial_reset instead? */
-  udelay(200);
+  usleep(200);
 
   if ((res = smph_recv(reader, 0, (unsigned char *)atr, size, dev->timeout)) < 1)
     return -1;
