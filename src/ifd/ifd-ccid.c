@@ -449,9 +449,18 @@ static int ccid_exchange(ifd_reader_t * reader, int slot,
 	unsigned char sendbuf[CCID_MAX_MSG_LEN + 1];
 	unsigned char recvbuf[CCID_MAX_MSG_LEN + 1];
 	int r;
+	unsigned char ctlbuf[3], *ctlptr=0;
+
+	ctlptr=NULL;
+	if (st->reader_type == TYPE_CHAR) {
+		ctlbuf[0] = 0;
+		ctlbuf[1] = rlen & 0xff;
+		ctlbuf[2] = (rlen >> 8) & 0xff;
+		ctlptr = ctlbuf;
+	}
 
 	r = ccid_prepare_cmd(reader, sendbuf, st->maxmsg,
-			     slot, CCID_CMD_XFRBLOCK, NULL, sbuf, slen);
+			     slot, CCID_CMD_XFRBLOCK, ctlptr, sbuf, slen);
 	if (r < 0)
 		return r;
 
@@ -693,13 +702,6 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 	if (ccid.dwFeatures & 0x80)
 		st->flags |= FLAG_NO_PTS;
 	st->ifsd = ccid.dwMaxIFSD;
-
-	if (st->reader_type == TYPE_CHAR) {
-		ct_error("ccid: Character mode readers not supported");
-		free(st);
-		ifd_device_close(dev);
-		return -1;
-	}
 
 	/* must provide AUTO or at least one of 5/3.3/1.8 */
 	if (st->voltage_support == 0) {
@@ -1118,7 +1120,7 @@ static int ccid_set_protocol(ifd_reader_t * reader, int s, int proto)
 			return ptslen;
 		}
 		r = ccid_exchange(reader, s, pts, ptslen, ptsret,
-				  sizeof(ptsret));
+				  ptslen);
 		if (r < 0)
 			return r;
 		r = ifd_verify_pts(&atr_info, proto, ptsret, r);
@@ -1130,8 +1132,13 @@ static int ccid_set_protocol(ifd_reader_t * reader, int s, int proto)
 
 	memset(&parambuf[r], 0, sizeof(parambuf) - r);
 	if (proto == IFD_PROTOCOL_T0) {
-		p = ifd_protocol_new(IFD_PROTOCOL_TRANSPARENT,
-				     reader, slot->dad);
+		if (st->reader_type == TYPE_CHAR) {
+			p = ifd_protocol_new(proto,
+					     reader, slot->dad);
+		} else {
+			p = ifd_protocol_new(IFD_PROTOCOL_TRANSPARENT,
+					     reader, slot->dad);
+		}
 	} else {
 		p = ifd_protocol_new(proto, reader, slot->dad);
 		if (p) {
@@ -1155,6 +1162,9 @@ static int ccid_set_protocol(ifd_reader_t * reader, int s, int proto)
 		ct_error("%s: internal error", reader->name);
 		return -1;
 	}
+	/* ccid_recv needs to know the exact expected data length */
+	if (st->reader_type == TYPE_CHAR)
+		ifd_protocol_set_parameter(p, IFD_PROTOCOL_BLOCK_ORIENTED, 0);
 	if (slot->proto) {
 		ifd_protocol_free(slot->proto);
 		slot->proto = NULL;
@@ -1237,6 +1247,8 @@ static int ccid_recv(ifd_reader_t * reader, unsigned int dad,
 		free(st->sbuf[dad]);
 	st->sbuf[dad] = NULL;
 	st->slen[dad] = 0;
+	if (r < 0)
+		ifd_debug(3, "failed: %d", r);
 	return r;
 }
 
