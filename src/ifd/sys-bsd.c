@@ -11,7 +11,7 @@
  */
 
 #include "internal.h"
-#if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__FreeBSD_kernel__)
+#if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__FreeBSD_kernel__) || defined(__DragonFly__)
 #include <sys/types.h>
 #include <dev/usb/usb.h>
 #include <sys/stat.h>
@@ -20,6 +20,7 @@
 #include <sys/file.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <signal.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -73,6 +74,7 @@ int open_ep(char *name, int interface, int endpoint, int flags)
 	return 0;
 }
 
+static void
 close_ep(int interface, int endpoint)
 {
 	if (interfaces[interface][endpoint].ep_fd) {
