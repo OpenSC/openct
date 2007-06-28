@@ -55,6 +55,6 @@ ACTION!="add", GOTO="openct_pcmcia_rules_end"
 SUBSYSTEM=="cardman_4040", RUN+="/lib/udev/openct_pcmcia"
 
 # Gemplus PCMCIA Card
-DRIVER=="serial_cs", SYSFS{prod_id1}=="Gemplus", SYSFS{prod_id2}=="SerialPort", SYSFS{prod_id3}=="GemPC Card", RUN+="/lib/udev/openct_serial"
+DRIVERS=="serial_cs", SYSFS{prod_id1}=="Gemplus", SYSFS{prod_id2}=="SerialPort", SYSFS{prod_id3}=="GemPC Card", RUN+="/lib/udev/openct_serial"
 
 LABEL="openct_pcmcia_rules_end"
