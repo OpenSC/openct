@@ -445,7 +445,7 @@ static int do_memory_read(ifd_reader_t * reader, int unit,
 			  ct_tlv_parser_t * args, ct_tlv_builder_t * resp)
 {
 	unsigned char data[CT_SOCKET_BUFSIZ];
-	size_t data_len;
+	unsigned int data_len;
 	unsigned int address;
 	int rc;
 
@@ -453,7 +453,7 @@ static int do_memory_read(ifd_reader_t * reader, int unit,
 		return IFD_ERROR_INVALID_SLOT;
 
 	if (ct_tlv_get_int(args, CT_TAG_ADDRESS, &address) == 0
-	    || !ct_tlv_get_int(args, CT_TAG_COUNT, (unsigned int *)&data_len))
+	    || !ct_tlv_get_int(args, CT_TAG_COUNT, &data_len))
 		return IFD_ERROR_MISSING_ARG;
 
 	if (data_len > sizeof(data))
