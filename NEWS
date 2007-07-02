@@ -1,6 +1,10 @@
 NEWS for OpenCT -- History of user visible changes
 
-New in 0.6.12; 2006-??-??; Andreas Jellinghaus
+New in 0.6.12; 2007-07-03 Andreas Jellinghaus
+* remove TEST_MINUS_S_SH tests from configure (not needed)
+* make lots of functions static (warnings from sparse)
+* rename variables clashing with function names such as index.
+* fix DragonFly BSD build.
 * add small delays to smph driver, suggested by  Alexej Wassiljew.
 * fix pcsclite compile issue (Ludovic Rousseau).
 * add ccid as fallback driver if no other is found (linux only, FIXME others).
