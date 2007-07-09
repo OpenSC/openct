@@ -1,5 +1,15 @@
 # udev rules file for openct
 #
+# COMPATIBILITY NOTES
+# new versions of udev want DRIVERS, older versions only support DRIVER
+# new versions of udev want SUBSYSTEMS, older versions only support BUS
+#
+# new combinations of udev and linux kernel do not create proper events
+# (or udev processes them "too fast" / race conditions) or similar.
+# as a result there is no way to get openct-control run when a usb smart
+# card reader is plugged in. restarting the init script will help as a
+# crude workaround.
+#
 SUBSYSTEM!="usb", GOTO="openct_usb_rules_end"
 ACTION!="add", GOTO="openct_usb_rules_end"
 
