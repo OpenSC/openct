@@ -5,7 +5,7 @@ MAINTAINERCLEANFILES = Makefile.in
 DISTCLEANFILES = openct.conf init-script openct.hald reader.conf \
 		openct_usb openct_pcmcia openct_serial
 
-EXTRA_DIST = Info.plist openct.usermap openct.udev \
+EXTRA_DIST = Info.plist openct.usermap openct.udev openct.udev.modalias \
 	openct.conf.in init-script.in openct.hald.in reader.conf.in \
 	openct_usb.in openct_pcmcia.in openct_serial.in
 
