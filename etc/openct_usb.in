@@ -4,6 +4,8 @@ test "$ACTION" = "add" || exit 0
 test -n "$DEVICE" -o -n "$DEVNAME" || exit 0 
 test -e /var/run/openct/status || exit 0
 
+(
+
 if [ -n "$DEVICE" ]
 then
 	for A in `seq 10`
@@ -47,5 +49,4 @@ fi
 ) &
 disown %1
 
-	exit 0
-fi
+exit 0
