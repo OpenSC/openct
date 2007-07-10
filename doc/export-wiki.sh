@@ -3,7 +3,8 @@
 set -e
 
 export SERVER=http://www.opensc-project.org
-export WIKI=openct/wiki
+export PROJECT=openct
+export WIKI=$PROJECT/wiki
 export XSL=export-wiki.xsl
 
 SRCDIR=.
@@ -24,7 +25,8 @@ rm -rf "$SRCDIR"/*.html "$SRCDIR"/*.css
 
 wget -nv $SERVER/$WIKI/TitleIndex -O "$SRCDIR"/TitleIndex.tmp
 
-grep "\"/$WIKI/[^\"]*\"" "$SRCDIR"/TitleIndex.tmp \
+sed -e "s#</li>#</li>\n#g" < "$SRCDIR"/TitleIndex.tmp \
+	| grep "\"/$WIKI/[^\"]*\"" \
         |sed -e "s#.*\"/$WIKI/\([^\"]*\)\".*#\1#g" \
 	> "$SRCDIR"/WikiWords.tmp
 sed -e /^Trac/d -e /^Wiki/d -e /^TitleIndex/d -e /^RecentChanges/d \
@@ -43,5 +45,23 @@ mv "$SRCDIR"/WikiStart.html "$SRCDIR"/index.html
 
 wget -nv http://www.opensc-project.org/trac/css/trac.css \
 	-O "$SRCDIR"/trac.css
+
+cat *.html |grep "<img src=\"/$PROJECT/attachment/wiki" \
+	|sed -e 's/.*<img src="\/'$PROJECT'\/attachment\/wiki\/\([^"]*\)?format=raw".*/\1/g' \
+	|sort -u |while read A
+do
+	B="`echo $A |tr / _`"
+	wget -nv "$SERVER/$PROJECT/attachment/wiki/$A?format=raw" -O $B
+	for C in *.html
+	do
+		sed -e 's#\/'$PROJECT'\/attachment\/wiki\/'$A'?format=raw#'$B'#g' -i $C
+	done
+done
+
+for A in *.html
+do
+	sed -e 's#href="/'$PROJECT'/wiki/\([^"]*\)"#href="\1.html"#g' \
+		-i $A
+done
 
 rm "$SRCDIR"/*.tmp
