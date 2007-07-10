@@ -4,24 +4,48 @@ test "$ACTION" = "add" || exit 0
 test -n "$DEVICE" -o -n "$DEVNAME" || exit 0 
 test -e /var/run/openct/status || exit 0
 
-# race condition in the kernel, $DEVICE might not exist now
-sleep 0.1
-
 if [ -n "$DEVICE" ]
 then
-	# if you see two ifdhandlers for one device, then you can
-	# either comment out the next line here ...
-	SBINDIR/openct-control attach usb:$PRODUCT usb $DEVICE
-	exit 0
+	for A in `seq 10`
+	do
+		if test -e $DEVICE
+		then
+			# if you see two ifdhandlers for one device, then you can
+			# either comment out the next line here ...
+			SBINDIR/openct-control attach usb:$PRODUCT usb $DEVICE
+			exit 0
+		fi
+		sleep 0.1
+	done
+	echo "$0 waited for $DEVICE but it did not appear." \
+		|logger -p daemon.error
+	exit 1
 fi
 
 if [ -n "$DEVNAME" ]
 then
-	V="`cat /sys/$DEVPATH/device/idVendor |sed -e "s/^0*//"`"
-	P="`cat /sys/$DEVPATH/device/idProduct|sed -e "s/^0*//"`"
-	D="`cat /sys/$DEVPATH/device/bcdDevice |sed -e "s/^0*//"`"
-	PRODUCT="$V/$P/$D"
-	# or the following line. both should disable that effect.
-	SBINDIR/openct-control attach usb:$PRODUCT usb $DEVNAME
+	for A in `seq 10`
+	do
+		if test -e $DEVNAME
+		then
+			V="`cat /sys/$DEVPATH/device/idVendor |sed -e "s/^0*//"`"
+			P="`cat /sys/$DEVPATH/device/idProduct|sed -e "s/^0*//"`"
+			D="`cat /sys/$DEVPATH/device/bcdDevice |sed -e "s/^0*//"`"
+			PRODUCT="$V/$P/$D"
+			# or the following line. both should disable that effect.
+			SBINDIR/openct-control attach usb:$PRODUCT usb $DEVNAME
+
+			exit 0
+		fi
+		sleep 0.1
+	done
+	echo "$0 waited for $DEVNAME but it did not appear." \
+		|logger -p daemon.error
+	exit 1
+fi
+
+) &
+disown %1
+
 	exit 0
 fi
