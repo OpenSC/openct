@@ -1,6 +1,6 @@
 NEWS for OpenCT -- History of user visible changes
 
-New in 0.6.12; 2007-07-10; Andreas Jellinghaus
+New in 0.6.12; 2007-07-11; Andreas Jellinghaus
 * add alternative udev rules based on MODALIAS.
 * update wiki export (fix links, add images).
 * remove TEST_MINUS_S_SH tests from configure (not needed).
