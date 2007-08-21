@@ -14,10 +14,7 @@ then
 		then
 			if test -z "$PRODUCT"
 			then
-				V="`echo $MODALIAS |sed -e "s/.*v\(....\).*/\1/g"`"
-				P="`echo $MODALIAS |sed -e "s/.*p\(....\).*/\1/g"`"
-				D="`echo $MODALIAS |sed -e "s/.*d\(....\).*/\1/g"`"
-				PRODUCT="$V/$P/$D"
+				PRODUCT="`echo $MODALIAS ||sed -e "s/usb:v\(....\)p\(....\)d\(....\).*/\1\/\2\/\3/g" |tr A-F a-f`"
 			fi
 
 			# if you see two ifdhandlers for one device, then you can
