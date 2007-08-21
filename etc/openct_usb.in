@@ -14,9 +14,9 @@ then
 		then
 			if test -z "$PRODUCT"
 			then
-				V="`echo $MODALIAS |sed -e "s/.*v\(....\).*/\1/g"`
-				P="`echo $MODALIAS |sed -e "s/.*p\(....\).*/\1/g"`
-				D="`echo $MODALIAS |sed -e "s/.*d\(....\).*/\1/g"`
+				V="`echo $MODALIAS |sed -e "s/.*v\(....\).*/\1/g"`"
+				P="`echo $MODALIAS |sed -e "s/.*p\(....\).*/\1/g"`"
+				D="`echo $MODALIAS |sed -e "s/.*d\(....\).*/\1/g"`"
 				PRODUCT="$V/$P/$D"
 			fi
 
