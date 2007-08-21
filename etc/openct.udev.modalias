@@ -19,34 +19,34 @@ ENV{MODALIAS}=="usb:v0973p0001*", RUN+="/lib/udev/openct_usb"
 ENV{MODALIAS}=="usb:v0529p050C*", RUN+="/lib/udev/openct_usb"
 ENV{MODALIAS}=="usb:v0529p0514", RUN+="/lib/udev/openct_usb"
 # eToken 64
-ENV{MODALIAS}=="usb:v0529p0600", RUN+="/lib/udev/openct_usb"
-ENV{MODALIAS}=="usb:v0529p0700", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v0529p0600*", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v0529p0700*", RUN+="/lib/udev/openct_usb"
 # eutron
-ENV{MODALIAS}=="usb:v073Dp0005", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v073Dp0005*", RUN+="/lib/udev/openct_usb"
 # ikey2k
-ENV{MODALIAS}=="usb:v04B9p1200", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v04B9p1200*", RUN+="/lib/udev/openct_usb"
 # ikey3k
-ENV{MODALIAS}=="usb:v04B9p1300", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v04B9p1300*", RUN+="/lib/udev/openct_usb"
 # starkey
-ENV{MODALIAS}=="usb:v096Ep0005", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v096Ep0005*", RUN+="/lib/udev/openct_usb"
 # cardman
-#ENV{MODALIAS}=="usb:v076Bp0596", RUN+="/lib/udev/openct_usb"
-#ENV{MODALIAS}=="usb:v076Bp1784", RUN+="/lib/udev/openct_usb"
-#ENV{MODALIAS}=="usb:v08D4p0009", RUN+="/lib/udev/openct_usb"
+#ENV{MODALIAS}=="usb:v076Bp0596*", RUN+="/lib/udev/openct_usb"
+#ENV{MODALIAS}=="usb:v076Bp1784*", RUN+="/lib/udev/openct_usb"
+#ENV{MODALIAS}=="usb:v08D4p0009*", RUN+="/lib/udev/openct_usb"
 
 # ccid
 ENV{MODALIAS}=="usb:*ic0Bisc00*", RUN+="/lib/udev/openct_usb"
 
 # spr 532 - ccid, but with wrong interface class (vendor) :(
-ENV{MODALIAS}=="usb:v04E6p0003", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v04E6p0003*", RUN+="/lib/udev/openct_usb"
 # pertosmart1030
-ENV{MODALIAS}=="usb:v072Fp0001", RUN+="/lib/udev/openct_usb"
-ENV{MODALIAS}=="usb:v072Fp8009", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v072Fp0001*", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v072Fp8009*", RUN+="/lib/udev/openct_usb"
 # pertosmart1038
-ENV{MODALIAS}=="usb:v072Fp9000", RUN+="/lib/udev/openct_usb"
-ENV{MODALIAS}=="usb:v072Fp90D0", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v072Fp9000*", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v072Fp90D0*", RUN+="/lib/udev/openct_usb"
 # wbeiuu
-ENV{MODALIAS}=="usb:v104Fp0004", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v104Fp0004*", RUN+="/lib/udev/openct_usb"
 
 LABEL="openct_usb_rules_end"
 
