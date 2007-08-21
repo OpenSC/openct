@@ -17,7 +17,6 @@ libifd_la_SOURCES = \
 	ifd-etoken.c ifd-etoken64.c ifd-eutron.c ifd-gempc.c ifd-ikey2k.c \
 	ifd-ikey3k.c ifd-kaan.c ifd-pertosmart1030.c ifd-pertosmart1038.c \
 	ifd-smartboard.c ifd-smph.c ifd-starkey.c ifd-towitoko.c cardman.h \
-	ifd-wbeiuu.c \
 	\
 	proto-gbp.c proto-sync.c proto-t0.c proto-t1.c \
 	proto-trans.c proto-escape.c \
@@ -25,6 +24,7 @@ libifd_la_SOURCES = \
 	sys-sunray.c sys-solaris.c sys-bsd.c sys-linux.c sys-null.c sys-osx.c \
 	\
 	ria.c
+# new driver not working yet: ifd-wbeiuu.c
 libifd_la_LIBADD = ../ct/libopenct.la $(LTLIBLTDL) $(LIBUSB_LIBS)
 
 ifdhandler_SOURCES = ifdhandler.c

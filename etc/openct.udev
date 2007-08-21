@@ -51,8 +51,8 @@ SYSFS{idVendor}=="072f", SYSFS{idProduct}=="8009", RUN+="/lib/udev/openct_usb"
 # pertosmart1038
 SYSFS{idVendor}=="072f", SYSFS{idProduct}=="9000", RUN+="/lib/udev/openct_usb"
 SYSFS{idVendor}=="072f", SYSFS{idProduct}=="90d0", RUN+="/lib/udev/openct_usb"
-# wbeiuu
-SYSFS{idVendor}=="104f", SYSFS{idProduct}=="0004", RUN+="/lib/udev/openct_usb"
+# wbeiuu	- driver not working yet.
+#SYSFS{idVendor}=="104f", SYSFS{idProduct}=="0004", RUN+="/lib/udev/openct_usb"
 
 LABEL="openct_usb_rules_end"
 

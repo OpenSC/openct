@@ -1,5 +1,9 @@
 NEWS for OpenCT -- History of user visible changes
 
+New in 0.6.13; 2007-08-??; Andreas Jellinghaus
+* fix missing "*" in etc/openct.udev.modalias
+* comment out wbeiuu driver - use kernel driver plus phoenix driver instead
+
 New in 0.6.12; 2007-07-11; Andreas Jellinghaus
 * add alternative udev rules based on MODALIAS.
 * update wiki export (fix links, add images).
