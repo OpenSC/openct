@@ -1,7 +1,11 @@
 NEWS for OpenCT -- History of user visible changes
 
 New in 0.6.13; 2007-08-??; Andreas Jellinghaus
+* this version works with linux kernel 2.6.22+ if patched, see
+  http://lkml.org/lkml/2007/8/17/193 for a patch. hope this is fixed
+  in new updates.
 * fix missing "*" in etc/openct.udev.modalias
+* improve etc/openct_usb.in script for working without PRODUCT environment
 * comment out wbeiuu driver - use kernel driver plus phoenix driver instead
 
 New in 0.6.12; 2007-07-11; Andreas Jellinghaus
