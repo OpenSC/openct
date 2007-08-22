@@ -1,10 +1,24 @@
 #!/bin/sh
 
 test "$ACTION" = "add" || exit 0
-test -n "$DEVICE" -o -n "$DEVNAME" || exit 0 
 test -e /var/run/openct/status || exit 0
 
 (
+
+# try to get the device path from udevinfo.
+if [ -z "$DEVICE" -a -u "$DEVNAME" ]
+then
+	if [ -z "$DEVPATH" ]
+	then
+		exit 0
+	fi
+	UDEVINFO="`udevinfo --query=name --path=$(dirname $DEVPATH)`"
+	if [ -z "$UDEVINFO" ]
+	then
+		exit 0
+	fi
+	DEVICE="/dev/$UDEVINFO"
+fi
 
 if [ -n "$DEVICE" ]
 then
