@@ -1,10 +1,12 @@
 NEWS for OpenCT -- History of user visible changes
 
-New in 0.6.13; 2007-08-??; Andreas Jellinghaus
+New in 0.6.13; 2007-08-23; Andreas Jellinghaus
+* get hal setup to work
+* more fixes to udev setup. works now without usbfs.
+* fix openct.udev.modalias rule file for openct. tested, now working fine.
 * this version works with linux kernel 2.6.22+ if patched, see
-  http://lkml.org/lkml/2007/8/17/193 for a patch. hope this is fixed
-  in new updates.
-* fix missing "*" in etc/openct.udev.modalias
+  http://lkml.org/lkml/2007/8/17/193 for a patch.
+  will be fixed in 2.6.22.6 I hope.
 * improve etc/openct_usb.in script for working without PRODUCT environment
 * comment out wbeiuu driver - use kernel driver plus phoenix driver instead
 
