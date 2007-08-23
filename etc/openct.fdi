@@ -1,109 +1,109 @@
 <?xml version="1.0" encoding="UTF-8"?> <!-- -*- SGML -*- -->
 <deviceinfo version="0.2">
   <device>
-    <match key="info.bus" string="usb_device">
+    <match key="info.bus" string="usb">
 
-      <match key="usb_device.vendor_id" int="0973">
-	<match key="usb_device.product_id" int="0001">
-	  <merge key="info.category" type="string">smart_card</merge>
+      <match key="usb.vendor_id" int="0x0973">
+	<match key="usb.product_id" int="0x0001">
+	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <append key="info.addons" type="strlist">hald-addon-openct</append>
 	</match>
       </match>
 
-      <match key="usb_device.vendor_id" int="0529">
-	<match key="usb_device.product_id" int="050c">
-	  <merge key="info.category" type="string">smart_card</merge>
+      <match key="usb.vendor_id" int="0x0529">
+	<match key="usb.product_id" int="0x050c">
+	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <append key="info.addons" type="strlist">hald-addon-openct</append>
 	</match>
       </match>
 
-      <match key="usb_device.vendor_id" int="0529">
-	<match key="usb_device.product_id" int="0514">
-	  <merge key="info.category" type="string">smart_card</merge>
+      <match key="usb.vendor_id" int="0x0529">
+	<match key="usb.product_id" int="0x0514">
+	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <append key="info.addons" type="strlist">hald-addon-openct</append>
 	</match>
       </match>
 
-      <match key="usb_device.vendor_id" int="0529">
-	<match key="usb_device.product_id" int="0600">
-	  <merge key="info.category" type="string">smart_card</merge>
+      <match key="usb.vendor_id" int="0x0529">
+	<match key="usb.product_id" int="0x0600">
+	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <append key="info.addons" type="strlist">hald-addon-openct</append>
 	</match>
       </match>
 
-      <match key="usb_device.vendor_id" int="0529">
-	<match key="usb_device.product_id" int="0700">
-	  <merge key="info.category" type="string">smart_card</merge>
+      <match key="usb.vendor_id" int="0x0529">
+	<match key="usb.product_id" int="0x0700">
+	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <append key="info.addons" type="strlist">hald-addon-openct</append>
 	</match>
       </match>
 
-      <match key="usb_device.vendor_id" int="073d">
-	<match key="usb_device.product_id" int="0005">
-	  <merge key="info.category" type="string">smart_card</merge>
+      <match key="usb.vendor_id" int="0x073d">
+	<match key="usb.product_id" int="0x0005">
+	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <append key="info.addons" type="strlist">hald-addon-openct</append>
 	</match>
       </match>
 
-      <match key="usb_device.vendor_id" int="04b9">
-	<match key="usb_device.product_id" int="1200">
-	  <merge key="info.category" type="string">smart_card</merge>
+      <match key="usb.vendor_id" int="0x04b9">
+	<match key="usb.product_id" int="0x1200">
+	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <append key="info.addons" type="strlist">hald-addon-openct</append>
 	</match>
       </match>
 
-      <match key="usb_device.vendor_id" int="04b9">
-	<match key="usb_device.product_id" int="1300">
-	  <merge key="info.category" type="string">smart_card</merge>
+      <match key="usb.vendor_id" int="0x04b9">
+	<match key="usb.product_id" int="0x1300">
+	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <append key="info.addons" type="strlist">hald-addon-openct</append>
 	</match>
       </match>
 
-      <match key="usb_device.vendor_id" int="096e">
-	<match key="usb_device.product_id" int="0005">
-	  <merge key="info.category" type="string">smart_card</merge>
+      <match key="usb.vendor_id" int="0x096e">
+	<match key="usb.product_id" int="0x0005">
+	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <append key="info.addons" type="strlist">hald-addon-openct</append>
 	</match>
       </match>
 
-      <match key="usb_device.device_class" int="0b">
-	<match key="usb_device.device_subclass" int="00">
-	  <merge key="info.category" type="string">smart_card</merge>
+      <match key="usb.interface.class" int="0xb">
+	<match key="usb.interface.subclass" int="0x0">
+	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <append key="info.addons" type="strlist">hald-addon-openct</append>
 	</match>
       </match>
 
-      <match key="usb_device.vendor_id" int="04e6">
-	<match key="usb_device.product_id" int="0003">
-	  <merge key="info.category" type="string">smart_card</merge>
+      <match key="usb.vendor_id" int="0x04e6">
+	<match key="usb.product_id" int="0x0003">
+	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <append key="info.addons" type="strlist">hald-addon-openct</append>
 	</match>
       </match>
 
-      <match key="usb_device.vendor_id" int="072f">
-	<match key="usb_device.product_id" int="0001">
-	  <merge key="info.category" type="string">smart_card</merge>
+      <match key="usb.vendor_id" int="0x072f">
+	<match key="usb.product_id" int="0x0001">
+	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <append key="info.addons" type="strlist">hald-addon-openct</append>
 	</match>
       </match>
 
-      <match key="usb_device.vendor_id" int="072f">
-	<match key="usb_device.product_id" int="8009">
-	  <merge key="info.category" type="string">smart_card</merge>
+      <match key="usb.vendor_id" int="0x072f">
+	<match key="usb.product_id" int="0x8009">
+	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <append key="info.addons" type="strlist">hald-addon-openct</append>
 	</match>
       </match>
 
-      <match key="usb_device.vendor_id" int="072f">
-	<match key="usb_device.product_id" int="9000">
-	  <merge key="info.category" type="string">smart_card</merge>
+      <match key="usb.vendor_id" int="0x072f">
+	<match key="usb.product_id" int="0x9000">
+	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <append key="info.addons" type="strlist">hald-addon-openct</append>
 	</match>
       </match>
 
-      <match key="usb_device.vendor_id" int="072f">
-	<match key="usb_device.product_id" int="90d0">
-	  <merge key="info.category" type="string">smart_card</merge>
+      <match key="usb.vendor_id" int="0x072f">
+	<match key="usb.product_id" int="0x90d0">
+	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <append key="info.addons" type="strlist">hald-addon-openct</append>
 	</match>
       </match>
