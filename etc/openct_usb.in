@@ -1,71 +1,43 @@
 #!/bin/sh
 
-test "$ACTION" = "add" || exit 0
-test -e /var/run/openct/status || exit 0
+[ -n "$DEVPATH" ] || exit 0
+[ "$ACTION" = "add" ] || exit 0
+[ -e /var/run/openct/status ] || exit 0
 
-(
+# try to get the device node from the parent device
+if [ -z "$DEVNAME" ]; then
+	DEVNAME=/dev/$(udevinfo --query=name --path=$(dirname $DEVPATH))
+fi
 
-# try to get the device path from udevinfo.
-if [ -z "$DEVICE" -a -u "$DEVNAME" ]
-then
-	if [ -z "$DEVPATH" ]
-	then
+# if udev supplied a device node directly from the usb-device, we use it,
+# because it is guaranteed to exist at the time we run
+if [ -n "$DEVNAME" -a -e "$DEVNAME" ]; then
+	DEVICE="$DEVNAME"
+fi
+
+[ -n "$DEVICE" ] || exit 0
+
+if [ -z "$PRODUCT" -a -n "$MODALIAS" ]; then
+	PRODUCT=$(echo $MODALIAS | sed -e 's/usb:v\(....\)p\(....\)d\(....\).*/\1\/\2\/\3/g' |tr A-F a-f)
+fi
+
+if [ -z "$PRODUCT" ]; then
+	V=$(cat /sys$(dirname $DEVPATH)/idVendor | sed -e 's/^0*//')
+	P=$(cat /sys$(dirname $DEVPATH)/idProduct | sed -e 's/^0*//')
+	D=$(cat /sys$(dirname $DEVPATH)/bcdDevice | sed -e 's/^0*//')
+	PRODUCT="$V/$P/$D"
+fi
+
+[ -n "$PRODUCT" ] || exit 0
+
+# we may neeed to wait for the device node, when usbfs is used
+for A in "0 1 2 3 4 5 6 7 8 9"; do
+	if [ -e "$DEVICE" ]; then
+		SBINDIR/openct-control attach usb:$PRODUCT usb $DEVICE
 		exit 0
 	fi
-	UDEVINFO="`udevinfo --query=name --path=$(dirname $DEVPATH)`"
-	if [ -z "$UDEVINFO" ]
-	then
-		exit 0
-	fi
-	DEVICE="/dev/$UDEVINFO"
-fi
+	sleep 0.1
+done
 
-if [ -n "$DEVICE" ]
-then
-	for A in `seq 10`
-	do
-		if test -e $DEVICE
-		then
-			if test -z "$PRODUCT"
-			then
-				PRODUCT="`echo $MODALIAS |sed -e "s/usb:v\(....\)p\(....\)d\(....\).*/\1\/\2\/\3/g" |tr A-F a-f`"
-			fi
-
-			# if you see two ifdhandlers for one device, then you can
-			# either comment out the next line here ...
-			SBINDIR/openct-control attach usb:$PRODUCT usb $DEVICE
-			exit 0
-		fi
-		sleep 0.1
-	done
-	echo "$0 waited for $DEVICE but it did not appear." \
-		|logger -p daemon.error
-	exit 1
-fi
-
-if [ -n "$DEVNAME" ]
-then
-	for A in `seq 10`
-	do
-		if test -e $DEVNAME
-		then
-			V="`cat /sys/$DEVPATH/device/idVendor |sed -e "s/^0*//"`"
-			P="`cat /sys/$DEVPATH/device/idProduct|sed -e "s/^0*//"`"
-			D="`cat /sys/$DEVPATH/device/bcdDevice |sed -e "s/^0*//"`"
-			PRODUCT="$V/$P/$D"
-			# or the following line. both should disable that effect.
-			SBINDIR/openct-control attach usb:$PRODUCT usb $DEVNAME
-
-			exit 0
-		fi
-		sleep 0.1
-	done
-	echo "$0 waited for $DEVNAME but it did not appear." \
-		|logger -p daemon.error
-	exit 1
-fi
-
-) &
-disown %1
-
+echo "$0 waited for $DEVICE but it did not appear." | logger -p daemon.error
 exit 0
