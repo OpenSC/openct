@@ -104,6 +104,7 @@ driver	ccid {
 		usb:076b/1021,  # OmniKey CardMan 1021
 		usb:076b/3021,
 		usb:076b/5121,
+		usb:076b/5321,	# OmniKey CardMan 5321
 		usb:076b/6622,	# OmniKey CardMan 6121
 		usb:0783/0003,
 		usb:08e6/3437,	# Gemplus
