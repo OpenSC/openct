@@ -132,3 +132,11 @@ driver pertosmart1038 {
 #		usb:104f/0004,
 #	};
 #};
+
+# Tested with USBID 0c4b:0100. These are red readers: one with LCD, 
+# another one without. 
+driver cyberjack {
+	ids = {
+		usb:0c4b/0100,
+	};
+};
