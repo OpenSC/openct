@@ -135,6 +135,7 @@ extern void ifd_starkey_register(void);
 extern void ifd_towitoko_register(void);
 /* extern void ifd_wbeiuu_register(void); driver not working yet */
 extern void ifd_cyberjack_register(void);
+extern void ifd_rutoken_register(void);
 
 /* reader.c */
 extern int ifd_send_command(ifd_protocol_t *, const void *, size_t);

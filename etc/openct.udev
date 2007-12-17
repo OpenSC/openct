@@ -62,6 +62,8 @@ SYSFS{idVendor}=="072f", SYSFS{idProduct}=="90d0", RUN+="/lib/udev/openct_usb"
 #SYSFS{idVendor}=="104f", SYSFS{idProduct}=="0004", RUN+="/lib/udev/openct_usb"
 # cyberjack
 SYSFS{idVendor}=="0c4b", SYSFS{idProduct}=="0100", RUN+="/lib/udev/openct_usb"
+# rutoken
+SYSFS{idVendor}=="0a89", SYSFS{idProduct}=="0020", RUN+="/lib/udev/openct_usb"
 
 LABEL="openct_usb_rules_end"
 

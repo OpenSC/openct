@@ -140,3 +140,8 @@ driver cyberjack {
 		usb:0c4b/0100,
 	};
 };
+driver rutoken {
+	ids = {
+		usb:0a89/0020,
+	};
+};

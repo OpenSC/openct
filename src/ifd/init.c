@@ -40,6 +40,7 @@ int ifd_init(void)
 	ifd_smph_register();
 	ifd_starkey_register();
 	ifd_towitoko_register();
+	ifd_rutoken_register();
 	/* ifd_wbeiuu_register();	driver not working yet */
 	ifd_cyberjack_register();	
 	/* ccid last */
