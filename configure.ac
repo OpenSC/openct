@@ -144,13 +144,24 @@ if test "$GCC" = "yes"; then
 fi
 
 dnl use ltdl
-AC_LIB_LINKFLAGS(ltdl)
+if test -z "${LTLIB_LIBS}"; then
+    AC_ARG_VAR([LTLIB_CFLAGS], [C compiler flags for libltdl])
+    AC_ARG_VAR([LTLIB_LIBS], [linker flags for libltdl])
 
-saved_LIBS="$LIBS"
-LIBS="$saved_LIBS $LIBLTDL"
-AC_CHECK_HEADER([ltdl.h], [AC_MSG_RESULT([yes])],
-   [ AC_MSG_ERROR([ltdl.h not found, please install libltdl and/or libtool]) ])
-LIBS="$saved_LIBS"
+    AC_CHECK_LIB(
+        [ltdl],
+        [lt_dlopen],
+        [LTLIB_LIBS="-lltdl"],
+        [AC_MSG_ERROR([ltdl1 not found, please install libltdl and/or libtool])])
+
+    AC_CHECK_HEADER(
+        [ltdl.h],
+        ,
+        [AC_MSG_ERROR([ltdl.h not found, please install libltdl and/or libtool])]
+    )
+fi
+AC_SUBST([LTLIB_CFLAGS])
+AC_SUBST([LTLIB_LIBS])
 
 dnl See if socket() is found from libsocket
 AC_CHECK_LIB(socket, socket, [LIBS="$LIBS -lsocket" ac_cv_func_socket_in_lsocket=yes], ac_cv_func_socket_in_lsocket=no)

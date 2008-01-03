@@ -2,7 +2,7 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-INCLUDES = $(CPPFLAGS) $(PCSC_CFLAGS) $(LIBUSB_CFLAGS)
+INCLUDES = $(CPPFLAGS) $(PCSC_CFLAGS) $(LIBUSB_CFLAGS) $(LTLIB_CFLAGS)
 
 noinst_LTLIBRARIES = libifd.la
 
@@ -26,7 +26,7 @@ libifd_la_SOURCES = \
 	\
 	ria.c
 # new driver not working yet: ifd-wbeiuu.c
-libifd_la_LIBADD = ../ct/libopenct.la $(LTLIBLTDL) $(LIBUSB_LIBS)
+libifd_la_LIBADD = ../ct/libopenct.la $(LTLIB_LIBS) $(LIBUSB_LIBS)
 
 ifdhandler_SOURCES = ifdhandler.c
 ifdhandler_LDADD = libifd.la
