@@ -2,17 +2,15 @@
  * driver for Rutoken devices
  *
  * Copyright (C) 2007, Pavel Mironchik <rutoken@rutoken.ru>
- * Copyright (C) 2007, Eugene Hermann <e_herman@tut.by>
+ * Copyright (C) 2007, Eugene Hermann <e_herman@rutoken.ru>
  */
 
+#include <unistd.h>
+#include <string.h>
 #include "internal.h"
-#include "stdio.h"
-#include "unistd.h"
-#include "string.h"
 
 #define MAX_BUF_T0_LEN  256
 #define T0_HDR_LEN      5
-
 
 #define USB_ICC_POWER_ON	0x62
 #define USB_ICC_POWER_OFF	0x63
@@ -31,16 +29,26 @@
 static int rutoken_open(ifd_reader_t * reader, const char *device_name)
 {
 	ifd_device_t *dev;
+	ifd_device_params_t params;
+
 	ifd_debug(1, "rutoken_open - %s\n", device_name);
 	ifd_debug(1, "%s:%d rutoken_open()", __FILE__, __LINE__);
 
-	reader->name = "ruToken driver.\n";
+	reader->name = "ruToken driver";
 	reader->nslots = 1;
 	if (!(dev = ifd_device_open(device_name)))
 		return -1;
 
 	if (ifd_device_type(dev) != IFD_DEVICE_TYPE_USB) {
 		ct_error("ruToken driver: device %s is not a USB device", device_name);
+		ifd_device_close(dev);
+		return -1;
+	}
+
+	params = dev->settings;
+	params.usb.interface = 0;
+	if (ifd_device_set_parameters(dev, &params) < 0) {
+		ct_error("ruToken driver: setting parameters failed", device_name);
 		ifd_device_close(dev);
 		return -1;
 	}
@@ -64,23 +72,27 @@ static int rutoken_deactivate(ifd_reader_t * reader)
 	return -1;
 }
 
-// Get Status 0 - OK
-//            	- ERROR
-//
-int rutoken_getstatus(ifd_reader_t * reader, char *status)
+static int rutoken_getstatus(ifd_reader_t * reader, unsigned char *status)
 {
-	// TODO Chech for timeout
 	//ifd_debug(1, "");
-	if(!ifd_usb_control(reader->device, 0xc1, USB_ICC_GET_STATUS, 0, 0, status, 1, 1000) < 0 )
+	if(ifd_usb_control(reader->device, 0xc1, USB_ICC_GET_STATUS, 
+				0, 0, status, 1, 1000) < 0 )
 		return -1;
 	if((*status & 0xF0) == ICC_STATUS_BUSY_COMMON){
+		unsigned char prev_status;
 		int i;
-		for(i = 0; i < 100000; i++) {
-			if(!ifd_usb_control(reader->device, 0xc1, USB_ICC_GET_STATUS, 0, 0, status, 1, 1000) < 0 )
+		for(i = 0; i < 200; i++) { // 2 s  (200 * 10 ms)
+			do {
+				usleep(10000); // 10 ms
+				prev_status = *status;
+				if(ifd_usb_control(reader->device, 0xc1, 
+							USB_ICC_GET_STATUS, 0, 0, 
+							status, 1, 1000) < 0
+				)
 				return -1;
 			if((*status & 0xF0) != ICC_STATUS_BUSY_COMMON)
-				return 0;
-			usleep(1000);
+					return *status;
+			} while((((prev_status & 0x0F) + 1) & 0x0F) == (*status & 0x0F));
 		}
 		return -1;
 	}
@@ -99,7 +111,7 @@ static int rutoken_card_reset(ifd_reader_t * reader, int slot, void *atr,
 		ifd_debug(1, "error poweroff\n");
 		return -1;
 	}
-	char status;
+	unsigned char status;
 	if( rutoken_getstatus(reader, &status) < 0)
 	{
 		ifd_debug(1, "error get status\n");
@@ -109,7 +121,8 @@ static int rutoken_card_reset(ifd_reader_t * reader, int slot, void *atr,
 		char buf[OUR_ATR_LEN];
 		memset(buf, 0, OUR_ATR_LEN);
 
-		nLen = ifd_usb_control(reader->device, 0xc1, USB_ICC_POWER_ON, 0, 0, buf, OUR_ATR_LEN, 1000);
+		nLen = ifd_usb_control(reader->device, 0xc1, USB_ICC_POWER_ON, 0, 0, 
+				buf, OUR_ATR_LEN, 1000);
 		if( nLen < 0 )
 		{
 			ifd_debug(1, "error poewron\n");
@@ -174,9 +187,10 @@ static int rutoken_send(ifd_reader_t * reader, unsigned int dad,
 		const unsigned char *buffer, size_t len)
 {
 	int ret;
-	char status;
+	unsigned char status;
 	ifd_debug(3, "usb send %s len %d", ct_hexdump(buffer, len), len);
-	ret =  ifd_usb_control(reader->device, 0x41, USB_ICC_XFR_BLOCK, 0, 0, (void *)buffer, len, -1);
+	ret = ifd_usb_control(reader->device, 0x41, USB_ICC_XFR_BLOCK, 0, 0, 
+			(void *)buffer, len, -1);
 
 	if (rutoken_getstatus(reader, &status) < 0)
 	{
@@ -189,10 +203,11 @@ static int rutoken_send(ifd_reader_t * reader, unsigned int dad,
 static int rutoken_recv(ifd_reader_t * reader, unsigned int dad,
 		unsigned char *buffer, size_t len, long timeout)
 {
-	char status;
+	unsigned char status;
 	int ret = len;
 	// USB_ICC_DATA_BLOCK
-	if( (ret = ifd_usb_control(reader->device, 0xc1, USB_ICC_DATA_BLOCK, 0, 0, buffer, len, timeout)) >= 0)
+	if( (ret = ifd_usb_control(reader->device, 0xc1, USB_ICC_DATA_BLOCK, 0, 0, 
+					buffer, len, timeout)) >= 0)
 		if (rutoken_getstatus(reader, &status) < 0)
 		{
 			ret = -1;
@@ -224,7 +239,8 @@ static int rutoken_recv_sw(ifd_reader_t * reader, int dad, unsigned char *sw)
 // return how mach byte send
 // sbuf - APDU bufer
 // slen
-static int rutoken_send_tpducomand(ifd_reader_t * reader, int dad, const void *sbuf, size_t slen, void *rbuf, size_t rlen, int iscase4)
+static int rutoken_send_tpducomand(ifd_reader_t * reader, int dad, const void *sbuf, 
+		size_t slen, void *rbuf, size_t rlen, int iscase4)
 {
 	ifd_debug(1, "send tpdu command %s, len: %d", ct_hexdump(sbuf, slen), slen);
 	int rrecv = 0;
@@ -277,7 +293,8 @@ static int rutoken_send_tpducomand(ifd_reader_t * reader, int dad, const void *s
 				rrecv = rutoken_recv(reader, 0, rbuf, iso.le, 10000);
 				if (rrecv < 0)
 					return -2;
-				ifd_debug(1, "Get TPDU Anser %s", ct_hexdump(rbuf, iso.le));
+				ifd_debug(1, "Get TPDU Anser %s", 
+						ct_hexdump(rbuf, iso.le));
 			}
 			if (rutoken_recv_sw(reader, 0, sw) < 0)
 				return -2;
@@ -289,17 +306,19 @@ static int rutoken_send_tpducomand(ifd_reader_t * reader, int dad, const void *s
 				unsigned char sbuftmp[slen];
 				memcpy(sbuftmp, sbuf, slen);
 				sbuftmp[4] = sw[1];
-				return rutoken_send_tpducomand(reader, dad, sbuftmp, slen, rbuf,  rlen, 0);
+				return rutoken_send_tpducomand(reader, dad, sbuftmp, 
+						slen, rbuf,  rlen, 0);
 			}
-
 			break;
 		case    IFD_APDU_CASE_3S:
 			// send data
 			ifd_debug(1, "Send Data %d", iso.lc);
 			if(rutoken_getstatus(reader, &status) == ICC_STATUS_READY_DATA)
 			{
-				ifd_debug(1, "Send TPDU Data %s", ct_hexdump(iso.data, iso.lc));
-				if (rutoken_send(reader, 0, iso.data, iso.lc) < 0) return -4;
+				ifd_debug(1, "Send TPDU Data %s", 
+						ct_hexdump(iso.data, iso.lc));
+				if (rutoken_send(reader, 0, iso.data, iso.lc) < 0)
+					return -4;
 			} else return -3;
 			// get sw
 			if (rutoken_recv_sw(reader, 0, sw) < 0)
@@ -314,11 +333,13 @@ static int rutoken_send_tpducomand(ifd_reader_t * reader, int dad, const void *s
 				hdr[3] = 0; // p2
 				hdr[4] = lx ; //lx (case 2)
 				if(iscase4)
-					return rutoken_send_tpducomand(reader, dad, hdr, T0_HDR_LEN, rbuf, rlen, 0);
+					return rutoken_send_tpducomand(reader, dad, hdr, 
+							T0_HDR_LEN, rbuf, rlen, 0);
 				else {
-					int recvtmp = rutoken_send_tpducomand(reader, dad, hdr, T0_HDR_LEN, rbuf, rlen, 0);
+					int recvtmp = rutoken_send_tpducomand(reader,dad,
+							hdr, T0_HDR_LEN, rbuf, rlen, 0);
 					rrecv = 0;
-					memcpy(sw, rbuf+recvtmp-2, 2);
+					memcpy(sw, (unsigned char*)rbuf+recvtmp-2, 2);
 					break;
 				}
 			}
@@ -331,7 +352,8 @@ static int rutoken_send_tpducomand(ifd_reader_t * reader, int dad, const void *s
 				hdr[3] = 0; // p2
 				hdr[4] = iso.le; // le (case 2)
 				if(iscase4)
-					return rutoken_send_tpducomand(reader, dad, hdr, T0_HDR_LEN, rbuf, rlen, 0);
+					return rutoken_send_tpducomand(reader, dad, hdr, 
+							T0_HDR_LEN, rbuf, rlen, 0);
 			}
 			// NOT STANDART TPDU!!! END
 
@@ -344,9 +366,7 @@ static int rutoken_send_tpducomand(ifd_reader_t * reader, int dad, const void *s
 	rrecv+=2;
 	ifd_debug(1, "Recv %d bytes", rrecv);
 	return rrecv;
-
 }
-
 
 static int rutoken_transparent( ifd_reader_t * reader, int dad,
 		const void *sbuf, size_t slen,
@@ -362,11 +382,13 @@ static int rutoken_transparent( ifd_reader_t * reader, int dad,
 		case	IFD_APDU_CASE_1:
 		case    IFD_APDU_CASE_2S:
 		case    IFD_APDU_CASE_3S:
-			return rutoken_send_tpducomand(reader, dad, sbuf, slen, rbuf, rlen, 0);
+			return rutoken_send_tpducomand(reader, dad, sbuf, slen, 
+					rbuf, rlen, 0);
 			break;
 		case	IFD_APDU_CASE_4S:
 			// make send case 4 command
-			rrecv = rutoken_send_tpducomand(reader, dad, sbuf, slen-1, rbuf, rlen, 1);
+			rrecv = rutoken_send_tpducomand(reader, dad, sbuf, slen-1, 
+					rbuf, rlen, 1);
 			return rrecv;
 			break;
 		default:
@@ -390,3 +412,4 @@ void ifd_rutoken_register(void)
 
 	ifd_driver_register("rutoken", &rutoken_driver);
 }
+
