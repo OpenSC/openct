@@ -88,7 +88,7 @@ int ifd_sysdep_usb_open(const char *device)
 	return -1;
 }
 
-int ifd_sysdep_usb_reset(const char *device)
+int ifd_sysdep_usb_reset(ifd_device_t * dev)
 {
 	return -1;
 }
