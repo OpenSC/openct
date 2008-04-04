@@ -5,9 +5,9 @@
  * Copyright (C) 2007, Eugene Hermann <e_herman@rutoken.ru>
  */
 
+#include "internal.h"
 #include <unistd.h>
 #include <string.h>
-#include "internal.h"
 
 #define MAX_BUF_T0_LEN  256
 #define T0_HDR_LEN      5

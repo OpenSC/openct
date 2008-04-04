@@ -12,8 +12,8 @@
 /* only available on linux */
 #ifdef linux
 
-#include "cardman.h"
 #include "internal.h"
+#include "cardman.h"
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>

@@ -1,12 +1,8 @@
-# Process this file with automake to create Makefile.in
-
-MAINTAINERCLEANFILES = Makefile.in
-
-INCLUDES = $(CPPFLAGS) $(PCSC_CFLAGS) $(LIBUSB_CFLAGS) $(LTLIB_CFLAGS)
+MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
 
 noinst_LTLIBRARIES = libifd.la
-
 sbin_PROGRAMS = ifdhandler ifdproxy
+noinst_HEADERS = atr.h ctbcs.h ifdhandler.h internal.h ria.h usb-descriptors.h
 
 libifd_la_SOURCES = \
 	apdu.c atr.c checksum.c conf.c ctbcs.c device.c driver.c \
@@ -26,12 +22,20 @@ libifd_la_SOURCES = \
 	\
 	ria.c
 # new driver not working yet: ifd-wbeiuu.c
-libifd_la_LIBADD = ../ct/libopenct.la $(LTLIB_LIBS) $(LIBUSB_LIBS)
+libifd_la_LIBADD = $(top_builddir)/src/ct/libopenct.la $(LTLIB_LIBS) $(OPTIONAL_LIBUSB_LIBS)
+libifd_la_CFLAGS = $(AM_CFLAGS) \
+	-I$(top_srcdir)/src/include \
+	-I$(top_builddir)/src/include \
+	$(OPTIONAL_PCSC_CFLAGS) $(OPTIONAL_LIBUSB_CFLAGS) $(LTLIB_CFLAGS)
 
 ifdhandler_SOURCES = ifdhandler.c
 ifdhandler_LDADD = libifd.la
+ifdhandler_CFLAGS = $(AM_CFLAGS) \
+	-I$(top_srcdir)/src/include \
+	-I$(top_builddir)/src/include
 
 ifdproxy_SOURCES = ifdproxy.c ria-device.c ria-server.c
 ifdproxy_LDADD = libifd.la
-
-noinst_HEADERS = atr.h ctbcs.h ifdhandler.h internal.h ria.h usb-descriptors.h
+ifdproxy_CFLAGS = $(AM_CFLAGS) \
+	-I$(top_srcdir)/src/include \
+	-I$(top_builddir)/src/include

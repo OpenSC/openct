@@ -1,5 +1,3 @@
-# Process this file with automake to create Makefile.in
+MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
 
-EXTRA_DIST = libtool-bundle
-
-MAINTAINERCLEANFILES = Makefile.in
+dist_noinst_SCRIPTS = libtool-bundle

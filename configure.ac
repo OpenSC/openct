@@ -1,129 +1,255 @@
 dnl -*- mode: m4; -*-
-dnl Process this file with autoconf to produce a configure script.
 
-# Require autoconf 2.52
-AC_PREREQ(2.52)
-AC_INIT([openct], [0.6.14-svn])
-AM_INIT_AUTOMAKE
-AM_CONFIG_HEADER(config.h)
+AC_PREREQ([2.60])
 
-AC_CONFIG_SRCDIR(src/ifd/ifdhandler.c)
+define([PACKAGE_VERSION_MAJOR], [0])
+define([PACKAGE_VERSION_MINOR], [6])
+define([PACKAGE_VERSION_FIX], [14])
+
+AC_INIT([openct], [PACKAGE_VERSION_MAJOR.PACKAGE_VERSION_MINOR.PACKAGE_VERSION_FIX-svn])
+AC_CONFIG_AUX_DIR([.])
+AM_CONFIG_HEADER([config.h])
+AM_INIT_AUTOMAKE([${PACKAGE_NAME}], [${PACKAGE_VERSION}])
+
+OPENCT_VERSION_MAJOR="PACKAGE_VERSION_MAJOR"
+OPENCT_VERSION_MINOR="PACKAGE_VERSION_MINOR"
+OPENCT_VERSION_FIX="PACKAGE_VERSION_FIX"
 
 # LT Version numbers, remember to change them just *before* a release.
 #   (Code changed:                      REVISION++)
-#   (Interfaces added/removed/changed:  CURRENT++, REVISION=0)
-#   (Interfaces added:                  AGE++)
-#   (Interfaces removed:                AGE=0)
-OPENCT_LT_CURRENT=1
-OPENCT_LT_REVISION=0
-OPENCT_LT_AGE=0
+#   (Oldest interface removed:          OLDEST++)
+#   (Interfaces added:                  CURRENT++, REVISION=0)
+OPENCT_LT_CURRENT="1"
+OPENCT_LT_OLDEST="1"
+OPENCT_LT_REVISION="0"
+OPENCT_LT_AGE="$((${OPENCT_LT_CURRENT}-${OPENCT_LT_OLDEST}))"
 
-AC_SUBST(OPENCT_LT_CURRENT)
-AC_SUBST(OPENCT_LT_REVISION)
-AC_SUBST(OPENCT_LT_AGE)
+AC_CONFIG_SRCDIR(src/ifd/ifdhandler.c)
 
 AC_CANONICAL_HOST
 AC_PROG_CC
+PKG_PROG_PKG_CONFIG
 AC_C_BIGENDIAN
 
+AC_MSG_CHECKING([svn checkout])
+if test -e packaged; then
+	svn_checkout="no"
+else
+	svn_checkout="yes"
+fi
+AC_MSG_RESULT([${svn_checkout}])
+
 dnl Check for some target-specific stuff
-case "$host" in
-*-*-hpux*)
-	CPPFLAGS="$CPPFLAGS -D_HPUX_SOURCE -D_XOPEN_SOURCE_EXTENDED"
+case "${host}" in
+	*-*-hpux*)
+		CPPFLAGS="${CPPFLAGS} -D_HPUX_SOURCE -D_XOPEN_SOURCE_EXTENDED"
 	;;
-*-*-solaris*)
-	CPPFLAGS="$CPPFLAGS -I/usr/sfw/include -I/usr/local/include"
-	LDFLAGS="$LDFLAGS -L/usr/sfw/lib -R/usr/sfw/lib -L/usr/local/lib -R/usr/local/lib"
-	need_dash_r=1
+	*-*-solaris*)
+		CPPFLAGS="${CPPFLAGS} -I/usr/local/include"
+		LDFLAGS="${LDFLAGS} -L/usr/local/lib -R/usr/local/lib"
+		need_dash_r="1"
 	;;
-*-*-sunos4*)
-	CPPFLAGS="$CPPFLAGS -DSUNOS4"
+	*-*-sunos4*)
+		CPPFLAGS="${CPPFLAGS} -DSUNOS4"
 	;;
-*-*-aix*)
-	CPPFLAGS="$CPPFLAGS -I/usr/local/include"
-	LDFLAGS="$LDFLAGS -L/usr/local/lib"
-	if (test "$LD" != "gcc" && test -z "$blibpath"); then
-		blibpath="/usr/lib:/lib:/usr/local/lib"
-	fi
+	*-*-aix*)
+		CPPFLAGS="${CPPFLAGS} -I/usr/local/include"
+		LDFLAGS="${LDFLAGS} -L/usr/local/lib"
+		if test "${LD}" != "gcc" -a -z "${blibpath}"; then
+			blibpath="/usr/lib:/lib:/usr/local/lib"
+		fi
 	;;
-*-*-osf*)
-	CPPFLAGS="$CPPFLAGS -D_POSIX_PII_SOCKET"
+	*-*-osf*)
+		CPPFLAGS="${CPPFLAGS} -D_POSIX_PII_SOCKET"
 	;;
-*-*-linux*)
-	;;
-*-*-darwin*)
-	LIBS="$LIBS -Wl,-framework,CoreFoundation"
-	if test "$GCC" = "yes"; then
-		CFLAGS="$CFLAGS -no-cpp-precomp"
-	fi
+	*-*-darwin*)
+		LIBS="${LIBS} -Wl,-framework,CoreFoundation"
+		if test "${GCC}" = "yes"; then
+			CFLAGS="${CFLAGS} -no-cpp-precomp"
+		fi
 	;;
 esac
 
-AC_ARG_WITH(common-dir,
-	AC_HELP_STRING([--with-common-dir=PATH], [Specify path for common installation libraries]),
-	[
-		if test "x$withval" != "xno" ; then
-			trycommondir=$withval
-		fi
-	]
+rootlibdir="/lib${libdir##*/lib}"
+usrlibdir="/usr/lib${libdir##*/lib}"
+usrsbindir="/usr/sbin${libdir##*/sbin}"
+
+full_sysconfdir=`eval eval eval eval eval echo "${sysconfdir}" | sed "s#NONE#${prefix}#" | sed "s#NONE#${ac_default_prefix}#"`
+full_localstatedir=`eval eval eval eval eval echo "${localstatedir}" | sed "s#NONE#${prefix}#" | sed "s#NONE#${ac_default_prefix}#"`
+
+AC_ARG_ENABLE(
+	[strict],
+	[AC_HELP_STRING([--enable-strict], [enable strict compile mode @<:@disabled@:>@])],
+	,
+	[enable_strict="no"]
 )
 
-saved_LDFLAGS="$LDFLAGS"
-saved_CPPFLAGS="$CPPFLAGS"
-AC_CACHE_CHECK([for common directory], ac_cv_commondir, [
-	for commondir in $trycommondir "" /usr/local /usr/pkg /opt ; do
-		# Skip directories if they don't exist
-		if test ! -z "$commondir" -a ! -d "$commondir/" ; then
-			continue;
+AC_ARG_ENABLE(
+	[pedantic],
+	[AC_HELP_STRING([--enable-pedantic], [enable pedantic compile mode @<:@disabled@:>@])],
+	,
+	[enable_pedantic="no"]
+)
+
+AC_ARG_ENABLE(
+	[doc],
+	[AC_HELP_STRING([--enable-doc], [enable installation of documents. @<:@disabled@:>@])],
+	,
+	[enable_doc="no"]
+)
+
+AC_ARG_ENABLE(
+	[api-doc],
+	[AC_HELP_STRING([--enable-api-doc], [enable generation and installation of api documents. @<:@disabled@:>@])],
+	,
+	[enable_api_doc="no"]
+)
+
+AC_ARG_ENABLE(
+	[pcsc],
+	[AC_HELP_STRING([--enable-pcsc], [enable pcsc support. @<:@disabled@:>@])],
+	,
+	[enable_pcsc="no"]
+)
+
+AC_ARG_ENABLE(
+	[usb],
+	[AC_HELP_STRING([--enable-usb], [enable usb support. @<:@disabled@:>@])],
+	,
+	[enable_usb="no"]
+)
+
+AC_ARG_ENABLE(
+	[debug],
+	[AC_HELP_STRING([--enable-debug], [enable debug messages. @<:@disabled@:>@])],
+	[test "${enableval}" = "yes" && AC_DEFINE([DEBUG], [1], [Enable debug messages.])]
+)
+
+AC_ARG_ENABLE(
+	[sunray],
+	[AC_HELP_STRING([--enable-sunray], [enable sunray support. @<:@disabled@:>@])],
+	[test "${enableval}" = "yes" && AC_DEFINE([sunray], [1], [Enable sunray support.])]
+)
+
+AC_ARG_ENABLE(
+	[sunrayclient],
+	[AC_HELP_STRING([--enable-sunrayclient], [enable sunray client support. @<:@disabled@:>@])],
+	[test "${enableval}" = "yes" && AC_DEFINE(sunrayclient, 1, [Enable sunray client support.])]
+)
+
+AC_ARG_WITH(
+	[bundle],
+        [AC_HELP_STRING([--with-bundle=PATH], [install bundle file for pcsc-lite to PATH @<:@not installed@:>@])],
+        [
+		if test "${withval}" = "yes"; then
+			bundledir="\$(libdir)"
+		else
+			bundledir="${withval}"
 		fi
-		CPPFLAGS="$saved_CPPFLAGS"
-		LDFLAGS="$saved_LDFLAGS"
+	],
+	[bundledir=""]
+)
 
-		if test ! -z "$commondir" -a "x$commondir" != "x/usr"; then
-			LDFLAGS="-L$commondir/lib $saved_LDFLAGS"
-			if test ! -z "$need_dash_r" ; then
-				LDFLAGS="-R$commondir/lib $LDFLAGS"
-			fi
-			CPPFLAGS="-I$commondir/include $saved_CPPFLAGS"
+AC_ARG_WITH(
+	[udev],
+        [AC_HELP_STRING([--with-udev=PATH], [install udev files into PATH @<:@not installed@:>@])],
+        [
+		if test "${withval}" = "yes"; then
+			udevdir="\$(libdir)/udev"
+		else
+			udevdir="${withval}"
 		fi
-		break;
-	done
+	],
+	[udevdir=""]
+)
 
-	if test -z "$commondir" ; then
-		commondir="(system)"
-	fi
-	ac_cv_commondir=$commondir
-])
+AC_ARG_WITH(
+	[hotplug],
+        [AC_HELP_STRING([--with-hotplug=PATH], [install hotplug files into PATH @<:@not installed@:>@])],
+        [
+		if test "${withval}" = "yes"; then
+			hotplugdir="\$(sysconfdir)/hotplug/usb"
+		else
+			hotplugdir="${withval}"
+		fi
+	],
+	[hotplugdir=""]
+)
 
-dnl Options
-AM_MAINTAINER_MODE
+AC_ARG_WITH(
+	[ifddir],
+	[AC_HELP_STRING([--with-ifddir], [ifd directory. @<:@/usr/lib/ifd@:>@])],
+	[ifddir="${withval}"],
+	[ifddir="${usrlibdir}/ifd"]
+)
+
+AC_ARG_WITH(
+	[apidocdir],
+	[AC_HELP_STRING([--with-apidocdir], [put API documents at this directory, default HTMLDIR/api])],
+	[apidocdir="${with_apidocdir}"],
+	[apidocdir="\$(htmldir)/api"]
+)
 
 dnl Checks for programs.
 AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_LN_S
+AC_PROG_MKDIR_P
+AC_PROG_SED
 AC_PROG_MAKE_SET
-AM_PROG_LEX
-
-dnl Special check for pthread support.
-ACX_PTHREAD(
-[
- AC_DEFINE(HAVE_PTHREAD,1,
-  [Define if you have POSIX threads libraries and header files.])
-], [
- AC_MSG_ERROR([POSIX thread support required])
-])
-LIBS="$PTHREAD_LIBS $LIBS"
-CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
-CC="$PTHREAD_CC"
 
 dnl Add libtool support.
+AM_PROG_CC_C_O
 AM_PROG_LIBTOOL
+
+AC_CHECK_PROGS([DOXYGEN],[doxygen])
+test "${enable_api_doc}" = "yes" -a -z "${DOXYGEN}" && AC_MSG_ERROR([doxygen is required for api doc])
+
+dnl These required for svn checkout
+AC_ARG_VAR([XSLTPROC], [xsltproc utility])
+AC_ARG_VAR([SVN], [subversion utility])
+AC_ARG_VAR([WGET], [wget utility])
+AC_ARG_VAR([WGET_OPTS], [wget options])
+AC_ARG_VAR([TR], [tr utility])
+AC_CHECK_PROGS([XSLTPROC],[xsltproc])
+AC_CHECK_PROGS([SVN],[svn])
+AC_CHECK_PROGS([WGET],[wget])
+AC_CHECK_PROGS([TR],[tr])
+test -z "${WGET_OPTS}" && WGET_OPTS="-nv"
+
+dnl svn checkout dependencies
+if test "${svn_checkout}" = "yes"; then
+	AC_MSG_CHECKING([XSLTPROC requirement])
+	if test -n "${XSLTPROC}"; then
+		AC_MSG_RESULT([ok])
+	else
+		if test "${enable_doc}" = "yes"; then
+			AC_MSG_ERROR([Missing XSLTPROC svn build with doc])
+		else
+			AC_MSG_WARN(["make dist" will not work])
+		fi
+	fi
+
+	AC_MSG_CHECKING([svn doc build dependencies])
+	if test -n "${SVN}" -a -n "${TR}" -a -n "${WGET}"; then
+		AC_MSG_RESULT([ok])
+	else
+		if test "${enable_doc}" = "yes"; then
+			AC_MSG_ERROR([Missing SVN, TR or WGET for svn doc build])
+		else
+			AC_MSG_WARN(["make dist" will not work])
+		fi
+	fi
+fi
 
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([errno.h fcntl.h malloc.h stdlib.h string.h strings.h sys/time.h unistd.h getopt.h dlfcn.h sys/poll.h])
+AC_CHECK_HEADERS([ \
+	errno.h fcntl.h malloc.h stdlib.h string.h \
+	strings.h sys/time.h unistd.h getopt.h \
+	dlfcn.h sys/poll.h
+])
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -139,246 +265,210 @@ AC_CHECK_FUNCS([gettimeofday daemon])
 
 dnl C Compiler features
 AC_C_INLINE
-if test "$GCC" = "yes"; then
-	CFLAGS="-Wall $CFLAGS"
-fi
-
-dnl use ltdl
-if test -z "${LTLIB_LIBS}"; then
-    AC_ARG_VAR([LTLIB_CFLAGS], [C compiler flags for libltdl])
-    AC_ARG_VAR([LTLIB_LIBS], [linker flags for libltdl])
-
-    AC_CHECK_LIB(
-        [ltdl],
-        [lt_dlopen],
-        [LTLIB_LIBS="-lltdl"],
-        [AC_MSG_ERROR([ltdl1 not found, please install libltdl and/or libtool])])
-
-    AC_CHECK_HEADER(
-        [ltdl.h],
-        ,
-        [AC_MSG_ERROR([ltdl.h not found, please install libltdl and/or libtool])]
-    )
-fi
-AC_SUBST([LTLIB_CFLAGS])
-AC_SUBST([LTLIB_LIBS])
 
 dnl See if socket() is found from libsocket
-AC_CHECK_LIB(socket, socket, [LIBS="$LIBS -lsocket" ac_cv_func_socket_in_lsocket=yes], ac_cv_func_socket_in_lsocket=no)
+AC_CHECK_LIB(
+	[socket],
+	[socket],
+	[
+		LIBS="${LIBS} -lsocket"
+		AC_CHECK_LIB(
+			[resolv],
+			[res_query],
+			[LIBS="${LIBS} -lresolv"]
+		)
+	]
+)
 
-AC_CACHE_CHECK([for ss_family field in struct sockaddr_storage],
-		ac_cv_have_ss_family_in_struct_ss, [
-	AC_TRY_COMPILE(
-		[
-#include <sys/types.h>
-#include <sys/socket.h>
-		],
-		[ struct sockaddr_storage s; s.ss_family = 1; ],
-		[ ac_cv_have_ss_family_in_struct_ss="yes" ],
-		[ ac_cv_have_ss_family_in_struct_ss="no" ],
+AC_ARG_VAR([LTLIB_CFLAGS], [C compiler flags for libltdl])
+AC_ARG_VAR([LTLIB_LIBS], [linker flags for libltdl])
+if test -z "${LTLIB_LIBS}"; then
+	AC_CHECK_LIB(
+		[ltdl],
+		[lt_dlopen],
+		[LTLIB_LIBS="-lltdl"],
+		[AC_MSG_ERROR([ltdl not found, please install libltdl and/or libtool])]
 	)
-])
-
-AC_CACHE_CHECK([for __ss_family field in struct sockaddr_storage],
-		ac_cv_have___ss_family_in_struct_ss, [
-	AC_TRY_COMPILE(
-		[
-#include <sys/types.h>
-#include <sys/socket.h>
-		],
-		[ struct sockaddr_storage s; s.__ss_family = 1; ],
-		[ ac_cv_have___ss_family_in_struct_ss="yes" ],
-		[ ac_cv_have___ss_family_in_struct_ss="no" ]
-	)
-])
-
-if test "x$ac_cv_have___ss_family_in_struct_ss" = "xyes" -a "x$ac_cv_have_ss_family_in_struct_ss" = "xno"; then
-	AC_DEFINE_UNQUOTED(ss_family, __ss_family, [sockaddr_storage.ss_family wrapper])
 fi
+saved_CFLAGS="${CFLAGS}"
+CFLAGS="${CFLAGS} ${LTLIB_CFLAGS}"
+AC_CHECK_HEADER(
+	[ltdl.h],
+	,
+	[AC_MSG_ERROR([ltdl.h not found, please install libltdl and/or libtool])]
+)
+CFLAGS="${saved_CFLAGS}"
+
+AC_MSG_CHECKING([struct sockaddr_storage::ss_family])
+AC_TRY_COMPILE(
+	[
+#include <sys/types.h>
+#include <sys/socket.h>
+	],
+	[
+struct sockaddr_storage s;
+s.ss_family = 1;
+	],
+	[AC_MSG_RESULT([ok])],
+	[AC_TRY_COMPILE(
+		[
+#include <sys/types.h>
+#include <sys/socket.h>
+		],
+		[
+struct sockaddr_storage s;
+s.__ss_family = 1;
+		],
+		[
+			AC_MSG_RESULT([hack])
+			AC_DEFINE_UNQUOTED([ss_family], [__ss_family], [sockaddr_storage.ss_family wrapper])
+		],
+		[AC_MSG_ERROR([Invalid struct sockaddr_storage])]
+	)]
+)
 
 dnl see if poll() is found from libpoll
-AC_CHECK_LIB(poll, poll, [LIBS="$LIBS -lpoll" ac_cv_func_poll_lpoll=yes], ac_cv_func_poll_lpoll=no)
+AC_CHECK_LIB([poll], [poll], [LIBS="$LIBS -lpoll"])
 
-
-PKG_CHECK_MODULES(LIBUSB, [libusb], [
-        LIBUSB_MSG=yes
-        AC_DEFINE(HAVE_LIBUSB, 1, [Have libusb libraries and header files])
-        ], [
-        LIBUSB_MSG=no
-        ])
-AC_SUBST(LIBUSB_CFLAGS)
-AC_SUBST(LIBUSB_LIBS)
-
-case "$host" in
-*-*-darwin*)
-        if test -z "$PCSC_LIBS" -a -z "$PCSC_LIBS"
-        then
-                PCSC_MSG=yes
-                PCSC_CFLAGS=""
-                PCSC_LIBS="-Wl,-framework,PCSC"
-
-                # overwrite autoconf cached variables, too.
-                ac_env_PCSC_CFLAGS_set=${PCSC_CFLAGS+set}
-                ac_env_PCSC_CFLAGS_value=$PCSC_CFLAGS
-                ac_cv_env_PCSC_CFLAGS_set=${PCSC_CFLAGS+set}
-                ac_cv_env_PCSC_CFLAGS_value=$PCSC_CFLAGS
-                ac_env_PCSC_LIBS_set=${PCSC_LIBS+set}
-                ac_cv_env_PCSC_LIBS_set=${PCSC_LIBS+set}
-                ac_cv_env_PCSC_LIBS_value=$PCSC_LIBS
-        fi
-        ;;
-esac
-
-PKG_CHECK_MODULES(PCSC, [libpcsclite], [
-        PCSC_MSG=yes
-        AC_DEFINE(HAVE_PCSC, 1, [Have PC/SC implementation])
-        ], [
-        PCSC_MSG=no
-        ])
-AC_SUBST(PCSC_CFLAGS)
-AC_SUBST(PCSC_LIBS)
-
-AM_CONDITIONAL(HAVE_PCSC, test "x$PCSC_MSG" = "xyes")
-saved_LIBS="$LIBS"
-saved_CFLAGS="$CFLAGS"
-if test "x$PCSC_MSG" = "xyes"; then
-        CFLAGS="${PCSC_CFLAGS} $saved_CFLAGS"
-        LIBS="$PCSC_LIBS $saved_LIBS"
-        AC_TRY_LINK([
-#include <stdlib.h>
-#ifdef __APPLE__
-#include <PCSC/wintypes.h>
-#include <PCSC/winscard.h>
-#else
-#include <winscard.h>
-#endif
-        ], [
-SCardControl(NULL, NULL, 0, NULL, NULL);
-        ], [
-                AC_DEFINE(HAVE_PCSC_OLD, 1, [old version of pc/sc-lite])
-        ])
-fi
-LIBS="$saved_LIBS"
-CFLAGS="$saved_CFLAGS"
-
-# check for reader.h
-saved_CFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS $PCSC_CFLAGS"
-AC_CHECK_HEADER(reader.h,
-        [AC_DEFINE([HAVE_READER_H], 1, [Define if pcsc-lite with reader.h exists])],
-        [AC_MSG_WARN([reader.h not found, install pcsc-lite 1.2.9-beta8 or later, or use PCSC_CFLAGS=... ./configure])],
-        [ #include <reader.h>])
-CFLAGS="$saved_CFLAGS"
-
-BUNDLEDIR="${libdir}"
-AC_ARG_WITH(bundle-dir,
-        AC_HELP_STRING([--with-bundle-dir=PATH], [install bundle file for pcsc-lite to PATH [[not installed]]]),
-        [
-                BUNDLEDIR="$withval"
-		with_bundles=yes
-        ]
-)
-AC_SUBST(BUNDLEDIR)
-AM_CONDITIONAL(HAVE_BUNDLES, test "x$with_bundles" = "xyes")
-
-dnl Enable/disable debugging messages.
-AC_ARG_ENABLE(debug,
-	AC_HELP_STRING([--enable-debug], [enable debug messages. [[default=no]]]),
-	AC_DEFINE(DEBUG, 1, [Enable debug messages.]))
-
-dnl Enable/disable SunRay support.
-AC_ARG_ENABLE(sunray,
-	AC_HELP_STRING([--enable-sunray], [enable sunray support. [[default=no]]]),
-	AC_DEFINE(sunray, 1, [Enable sunray support.]))
-
-AC_ARG_ENABLE(sunrayclient,
-	AC_HELP_STRING([--enable-sunrayclient], [enable sunray client support. [[default=no]]]),
-	AC_DEFINE(sunrayclient, 1, [Enable sunray client support.]))
-
-CPPFLAGS="-I\${top_builddir}/src/include -I\${top_srcdir}/src/include $CPPFLAGS"
-
-if test "x$prefix" = xNONE; then
-  prefix=$ac_default_prefix
-fi
-if test "x$exec_prefix" = xNONE; then
-  exec_prefix='${prefix}'
+if test "${enable_usb}" = "yes"; then
+	PKG_CHECK_MODULES(
+		[LIBUSB],
+		[libusb],
+		[AC_DEFINE([ENABLE_LIBUSB], [1], [Have libusb libraries and header files])],
+		[AC_MSG_ERROR([Cannot detect libusb])]
+	)
 fi
 
-openct_etc_path=`eval echo ${sysconfdir}` ; openct_etc_path=`eval echo ${openct_etc_path}`
-AC_DEFINE_UNQUOTED(OPENCT_ETC_PATH, "$openct_etc_path", [etc path for libopenct])
-openct_conf_path=`eval echo ${openct_etc_path}/openct.conf`
-AC_DEFINE_UNQUOTED(OPENCT_CONF_PATH, "$openct_conf_path", [default config file for libopenct])
-AC_SUBST(openct_conf_path)
+if test "${enable_pcsc}" = "yes"; then
+	case "$host" in
+		*-*-darwin*)
+			if test -z "$PCSC_LIBS" -a -z "$PCSC_LIBS"; then
+				PCSC_MSG=yes
+				PCSC_CFLAGS=""
+				PCSC_LIBS="-Wl,-framework,PCSC"
+			fi
+		;;
+		*)
+			PKG_CHECK_MODULES(
+				[PCSC],
+				[libpcsclite],
+				,
+				[AC_MSG_ERROR([Cannot locate pcsc-lite])]
+			)
+		;;
+	esac
+fi
 
-openct_modules_path=`eval echo ${libdir}` ; openct_modules_path=`eval echo ${openct_modules_path}/ifd`
-AC_DEFINE_UNQUOTED(OPENCT_MODULES_PATH, "$openct_modules_path", [modules path for libopenct])
+if test "${enable_usb}" = "yes"; then
+	OPTIONAL_LIBUSB_CFLAGS="${LIBUSB_CFLAGS}"
+	OPTIONAL_LIBUSB_LIBS="${LIBUSB_LIBS}"
+fi
 
-a=`eval echo $localstatedir`; b=`eval echo ${prefix}/var`
-if test "$a" = "$b"; then localstatedir="/var"; fi	# No one has touched the default settings, so use /var
-openct_socket_path=`eval echo ${localstatedir}` ; openct_socket_path=`eval echo ${openct_socket_path}/run/openct`
-AC_DEFINE_UNQUOTED(OPENCT_SOCKET_PATH, "$openct_socket_path", [socket path for libopenct])
+AC_DEFINE_UNQUOTED([OPENCT_CONF_PATH], ["${full_sysconfdir}/openct.conf"], [default config file for libopenct])
+AC_DEFINE_UNQUOTED([OPENCT_MODULES_PATH], ["${ifddir}"], [modules path for libopenct])
+AC_DEFINE_UNQUOTED([OPENCT_SOCKET_PATH], ["${full_localstatedir}/run/openct"], [socket path for libopenct])
+AC_DEFINE_UNQUOTED([OPENCT_IFDHANDLER_PATH], ["${usrsbindir}/ifdhandler"], [ifdhandler path for libopenct])
 
-openct_status_path=`eval echo ${openct_socket_path}` ; openct_status_path=`eval echo ${openct_status_path}/status`
-AC_DEFINE_UNQUOTED(OPENCT_STATUS_PATH, "$openct_status_path", [status path for libopenct])
+AC_CREATE_STDINT_H([src/include/openct/types.h])
 
-openct_ifdhandler_path=`eval echo ${sbindir}` ; openct_ifdhandler_path=`eval echo ${openct_ifdhandler_path}/ifdhandler`
-AC_DEFINE_UNQUOTED(OPENCT_IFDHANDLER_PATH, "$openct_ifdhandler_path", [ifdhandler path for libopenct])
+if test "${enable_pedantic}" = "yes"; then
+	enable_strict="yes";
+	CFLAGS="${CFLAGS} -pedantic"
+fi
+if test "${enable_strict}" = "yes"; then
+	CFLAGS="${CFLAGS} -Wall -Wextra"
+fi
 
-pkgdata=`eval echo ${datadir}/${PACKAGE}` ; pkgdata=`eval echo ${pkgdata}`
-AC_SUBST(pkgdata)
+pkgconfigdir="\$(libdir)/pkgconfig"
+openctincludedir="\$(includedir)/openct"
 
-sysincludedir='${exec_prefix}/include'
-AC_SUBST(sysincludedir)
+AC_SUBST([pkgconfigdir])
+AC_SUBST([openctincludedir])
+AC_SUBST([apidocdir])
+AC_SUBST([bundledir])
+AC_SUBST([ifddir])
+AC_SUBST([udevdir])
+AC_SUBST([hotplugdir])
+AC_SUBST([OPENCT_VERSION_MAJOR])
+AC_SUBST([OPENCT_VERSION_MINOR])
+AC_SUBST([OPENCT_VERSION_FIX])
+AC_SUBST([OPENCT_LT_CURRENT])
+AC_SUBST([OPENCT_LT_REVISION])
+AC_SUBST([OPENCT_LT_AGE])
+AC_SUBST([OPENCT_LT_OLDEST])
+AC_SUBST([OPTIONAL_LIBUSB_CFLAGS])
+AC_SUBST([OPTIONAL_LIBUSB_LIBS])
+
+AM_CONDITIONAL([SVN_CHECKOUT], [test "${svn_checkout}" = "yes"])
+AM_CONDITIONAL([ENABLE_DOC], [test "${enable_doc}" = "yes"])
+AM_CONDITIONAL([ENABLE_API_DOC], [test "${enable_api_doc}" = "yes"])
+AM_CONDITIONAL([ENABLE_BUNDLES], [test -n "${bundledir}"])
+AM_CONDITIONAL([ENABLE_UDEV], [test -n "${udevdir}"])
+AM_CONDITIONAL([ENABLE_HOTPLUG], [test -n "${hotplugdir}"])
+AM_CONDITIONAL([ENABLE_PCSC], [test "${enable_pcsc}" = "yes"])
 
 AC_OUTPUT([
-Makefile
-aclocal/Makefile
-doc/Makefile
-doc/doxygen.conf
-etc/Makefile
-macos/Makefile
-src/Makefile
-src/ct/Makefile
-src/ct/libopenct.pc
-src/ctapi/Makefile
-src/ifd/Makefile
-src/include/Makefile
-src/include/openct/Makefile
-src/pcsc/Makefile
-src/tools/Makefile
-src/tools/openct-tool.1
+	Makefile
+	aclocal/Makefile
+	doc/Makefile
+	doc/doxygen.conf
+	doc/nonpersistent/Makefile
+	etc/Makefile
+	macos/Makefile
+	src/Makefile
+	src/ct/Makefile
+	src/ct/libopenct.pc
+	src/ctapi/Makefile
+	src/ifd/Makefile
+	src/include/Makefile
+	src/include/openct/Makefile
+	src/pcsc/Makefile
+	src/tools/Makefile
+	src/tools/openct-tool.1
 ])
 
-AC_CREATE_STDINT_H(src/include/openct/types.h)
+cat <<EOF
 
-A=`eval echo ${prefix}` ; A=`eval echo ${A}`
-B=`eval echo ${bindir}` ; B=`eval echo ${B}`
-C=`eval echo ${sysconfdir}` ; C=`eval echo ${C}`
+OpenCT has been configured with the following options:
 
-echo ""
-echo "OpenCT has been configured with the following options"
 
-echo ""
-echo "Version:             ${PACKAGE_VERSION}"
-echo "User binaries:       ${B}"
-echo "Configuration files: ${C}"
+Version:                 ${PACKAGE_VERSION}
+Libraries:               $(eval eval eval echo "${libdir}")
 
-echo ""
-echo "Host:                ${host}"
-echo "Compiler:            ${CC}"
-echo "Compiler flags:      ${CFLAGS}"
-echo "Preprocessor flags:  ${CPPFLAGS}"
-echo "Linker flags:        ${LDFLAGS}"
-echo "Libraries:           ${LIBS}"
+doc support:             ${enable_doc}
+api doc support:         ${enable_api_doc}
+usb support:             ${enable_usb}
+pcsc support:            ${enable_pcsc}
+doc support:             ${enable_doc}
 
-echo ""
-echo "PC/SC support:       ${PCSC_MSG}"
-echo "Libusb used:         ${LIBUSB_MSG}"
-echo ""
+Host:                    ${host}
+Compiler:                ${CC}
+Preprocessor flags:      ${CPPFLAGS}
+Compiler flags:          ${CFLAGS}
+Linker flags:            ${LDFLAGS}
+Libraries:               ${LIBS}
 
-if test "${USB_MSG}" != "yes"; then
-  echo "Without libusb coldplugging will not work."
-  echo "To use usb devices, your hotplugging needs to be"
-  echo "configured and you need to plug in any device "
-  echo "after the system has started (i.e. the init script ran)"
+LIBUSB_CFLAGS:           ${LIBUSB_CFLAGS}
+LIBUSB_LIBS:             ${LIBUSB_LIBS}
+PCSC_CFLAGS:             ${PCSC_CFLAGS}
+PCSC_LIBS:               ${PCSC_LIBS}
+
+bundledir:               ${bundledir}
+ifddir:                  ${ifddir}
+udevdir:                 ${udevdir}
+hotplugdir:              ${hotplugdir}
+
+EOF
+
+if test "${enable_usb}" != "yes"; then
+
+cat <<EOF
+
+Without libusb coldplugging will not work.
+To use usb devices, your hotplugging needs to be
+configured and you need to plug in any device
+after the system has started (i.e. the init script ran)
+
+EOF
+
 fi

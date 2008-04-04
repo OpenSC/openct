@@ -4,8 +4,8 @@
  * Copyright (C) 2004, Olaf Kirch <okir@suse.de>
  */
 
-#include <string.h>
 #include "internal.h"
+#include <string.h>
 #include "atr.h"
 
 int ifd_atr_parse(ifd_atr_info_t * info, const unsigned char *atr, size_t len)

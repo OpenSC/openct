@@ -25,7 +25,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <limits.h>
-#ifdef HAVE_LIBUSB
+#ifdef ENABLE_LIBUSB
 #include <usb.h>
 #endif
 #include <openct/driver.h>
@@ -384,7 +384,7 @@ int ifd_sysdep_usb_open(const char *device)
  */
 int ifd_scan_usb(void)
 {
-#ifdef HAVE_LIBUSB
+#ifdef ENABLE_LIBUSB
 	ifd_devid_t id;
 	struct usb_bus *bus;
 	struct usb_device *dev;

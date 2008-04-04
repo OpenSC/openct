@@ -4,11 +4,11 @@
  * Copyright 2005, Carlos Henrique Bauer <carlos.bauer@smartcon.com.br>
  */
 
+#include "internal.h"
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "internal.h"
 #include "atr.h"
 
 #ifndef NULL

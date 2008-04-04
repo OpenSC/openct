@@ -1,22 +1,27 @@
-# Process this file with automake to create Makefile.in
+AUTOMAKE_OPTIONS = foreign 1.10
+ACLOCAL_AMFLAGS = -I aclocal
 
-SUBDIRS = . aclocal etc macos src 
-DIST_SUBDIRS = . aclocal doc etc macos src 
+MAINTAINERCLEANFILES = \
+	config.log config.status \
+	$(srcdir)/Makefile.in \
+	$(srcdir)/config.h.in $(srcdir)/config.h.in~ $(srcdir)/configure \
+	$(srcdir)/install-sh $(srcdir)/ltmain.sh $(srcdir)/missing \
+	$(srcdir)/depcomp $(srcdir)/aclocal.m4 $(srcdir)/compile \
+	$(srcdir)/config.guess $(srcdir)/config.sub \
+	$(srcdir)/packaged
+EXTRA_DIST = svnignore
 
-EXTRA_DIST = LGPL-2.1 NEWS TODO bootstrap depcomp \
+SUBDIRS = aclocal etc macos src doc
+
+dist_noinst_SCRIPTS = bootstrap
+dist_noinst_DATA = LGPL-2.1 TODO \
 	solaris/Makefile.client solaris/Makefile.server solaris/README \
 	solaris/checkinstall.in solaris/devices-openct-fabric.xml-dist \
 	solaris/openct-fabric-dist solaris/openct-hotplug-dist \
 	solaris/openct.conf-dist solaris/pkginfo.in solaris/postinstall \
 	solaris/preremove solaris/proto
+dist_doc_DATA = NEWS
 
-MAINTAINERCLEANFILES = \
-	Makefile.in config.h.in configure \
-	install-sh ltmain.sh missing mkinstalldirs \
-	compile depcomp config.log config.status \
-	config.guess config.sub acinclude.m4 aclocal.m4
-
-DEPCLEANFILES = config.log configure
-
-AUTOMAKE_OPTIONS = foreign 1.5
-ACLOCAL_AMFLAGS = -I aclocal
+# Allow detection of packaged tarball
+dist-hook:
+	echo > "$(distdir)/packaged"

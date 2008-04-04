@@ -15,7 +15,7 @@ dnl in other environments it will provide the set of basic 'stdint's defined:
 dnl int8_t,uint8_t,int16_t,uint16_t,int32_t,uint32_t,intptr_t,uintptr_t
 dnl int_least32_t.. int_fast32_t.. intmax_t
 dnl which may or may not rely on the definitions of other files,
-dnl or using the AC_COMPILE_CHECK_SIZEOF macro to determine the actual
+dnl or using the AC_CHECK_SIZEOF macro to determine the actual
 dnl sizeof each type.
 dnl
 dnl if your header files require the stdint-types you will want to create an
@@ -38,6 +38,8 @@ dnl @author  Guido Draheim <guidod@gmx.de>
 
 AC_DEFUN([AC_CREATE_STDINT_H],
 [# ------ AC CREATE STDINT H -------------------------------------
+AC_PROG_MKDIR_P
+AC_PROG_SED
 AC_MSG_CHECKING([for stdint-types....])
 ac_stdint_h=`echo ifelse($1, , _stdint.h, $1)`
 if test "$ac_stdint_h" = "stdint.h" ; then
@@ -89,11 +91,11 @@ inttype_headers=`echo inttypes.h sys/inttypes.h sys/inttypes.h $2 \
 # ----------------- DONE inttypes.h checks MAYBE C basic types --------
 
 if test "$ac_cv_header_stdint_x" = "no-file" ; then
-   AC_COMPILE_CHECK_SIZEOF(char)
-   AC_COMPILE_CHECK_SIZEOF(short)
-   AC_COMPILE_CHECK_SIZEOF(int)
-   AC_COMPILE_CHECK_SIZEOF(long)
-   AC_COMPILE_CHECK_SIZEOF(void*)
+   AC_CHECK_SIZEOF(char)
+   AC_CHECK_SIZEOF(short)
+   AC_CHECK_SIZEOF(int)
+   AC_CHECK_SIZEOF(long)
+   AC_CHECK_SIZEOF(void*)
    ac_cv_header_stdint_test="yes"
 else
    ac_cv_header_stdint_test="no"
@@ -102,6 +104,7 @@ fi
 # ----------------- DONE inttypes.h checks START header -------------
 _ac_stdint_h=AS_TR_CPP(_$ac_stdint_h)
 AC_MSG_RESULT(creating $ac_stdint_h : $_ac_stdint_h)
+${MKDIR_P} $(echo "${ac_stdint_h}" | ${SED} 's/[[^/]]*$//') 2> /dev/null
 echo "#ifndef" $_ac_stdint_h >$ac_stdint_h
 echo "#define" $_ac_stdint_h "1" >>$ac_stdint_h
 echo "#ifndef" _GENERATED_STDINT_H >>$ac_stdint_h
