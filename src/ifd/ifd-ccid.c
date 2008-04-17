@@ -650,8 +650,11 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 	}
 
 	if (ccid.bcdCCID != 0x100) {
-		ct_error("ccid: unknown ccid version %d.%d", ccid.bcdCCID >> 8,
-			 ccid.bcdCCID & 0xf);
+		ct_error("ccid: unknown ccid version %d.%d%d supported only 1.00",
+			(ccid.bcdCCID >> 8) & 0xf,
+			(ccid.bcdCCID >> 4) & 0xf,
+			(ccid.bcdCCID >> 0) & 0xf
+		);
 		ifd_device_close(dev);
 		return -1;
 	}
