@@ -182,7 +182,7 @@ static int mgr_attach(int argc, char **argv)
 	sprintf(typedev, "%s:%s", type, device);
 
 	if (strncmp(type, driver, strlen(type)) == 0) {
-		/* detect what kind of devide we have */
+		/* detect what kind of device we have */
 
 		if (ifd_device_id_parse(driver, &id) < 0) {
 			fprintf(stderr, "Cannot parse device ID %s\n", driver);
