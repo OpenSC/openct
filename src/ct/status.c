@@ -53,6 +53,9 @@ static void *ct_map_status(int flags, size_t * size)
 		prot |= PROT_WRITE;
 
 	addr = mmap(NULL, *size, prot, MAP_SHARED, fd, 0);
+	if (addr == MAP_FAILED) {
+		addr = NULL;
+	}
 
       done:close(fd);
 	return addr;
