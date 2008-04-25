@@ -439,7 +439,6 @@ doc support:             ${enable_doc}
 api doc support:         ${enable_api_doc}
 usb support:             ${enable_usb}
 pcsc support:            ${enable_pcsc}
-doc support:             ${enable_doc}
 
 Host:                    ${host}
 Compiler:                ${CC}
