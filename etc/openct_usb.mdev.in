@@ -10,7 +10,6 @@
 [ -n "$DEVPATH" ] || exit 0
 [ "$ACTION" = "add" ] || exit 0
 [ "$DEVTYPE" = "usb_device" ] || exit 0
-[ -e /var/run/openct/status ] || exit 0
 
 DEVICE="$(echo "${DEVICE}" | sed 's/proc/dev/')"
 
@@ -18,6 +17,8 @@ if ! [ -e "${DEVICE}" ]; then
 	mkdir -p "$(dirname "${DEVICE}")"
 	mknod "${DEVICE}" c $MAJOR $MINOR
 fi
+
+[ -e /var/run/openct/status ] || exit 0
 
 # Don't know why...
 sleep 1

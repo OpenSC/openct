@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
+#include <dirent.h>
 #include <string.h>
 #include <stdio.h>
 #include <signal.h>
@@ -379,6 +380,29 @@ int ifd_sysdep_usb_open(const char *device)
         return open(device, O_RDWR);
 }
 
+#ifndef ENABLE_LIBUSB
+static int read_number (const char *base, const char *name, const char *file, const char *format) {
+	char full[PATH_MAX];
+	FILE *fp = NULL;
+	int n = -1;
+
+	snprintf (full, sizeof (full), "%s/%s/%s", base, name, file);
+
+	if ((fp = fopen (full, "r")) == NULL) {
+		goto out;
+	}
+
+	fscanf (fp, format, &n);
+
+out:
+	if (fp != NULL) {
+		fclose (fp);
+	}
+
+	return n;
+}
+#endif
+
 /*
  * Scan all usb devices to see if there is one we support
  */
@@ -448,6 +472,58 @@ int ifd_scan_usb(void)
 				ifd_spawn_handler(driver, typedev, -1);
 			}
 		}
+	}
+#else
+	const char *base = "/sys/bus/usb/devices";
+	DIR *dir = NULL;
+	struct dirent *ent;
+
+	dir = opendir (base);
+
+	if (dir == NULL) {
+		goto out;
+	}
+
+	while ((ent = readdir (dir)) != NULL) {
+		if (ent->d_name[0] != '.') {
+			char buffer[1024];
+			FILE *fp = NULL;
+			int idProduct = -1;
+			int idVendor = -1;
+			int busnum = -1;
+			int devnum = -1;
+
+			idProduct = read_number (base, ent->d_name, "idProduct", "%x");
+			idVendor = read_number (base, ent->d_name, "idVendor", "%x");
+			busnum = read_number (base, ent->d_name, "busnum", "%d");
+			devnum = read_number (base, ent->d_name, "devnum", "%d");
+
+			ifd_debug (6, "coldplug: %s usb: %04x:%04x bus: %03d:%03d\n", ent->d_name, idProduct, idVendor, busnum, devnum);
+
+			if (idProduct != -1 && idVendor != -1 && busnum != -1 && devnum != -1) {
+				const char *driver;
+				ifd_devid_t id;
+
+				id.type = IFD_DEVICE_TYPE_USB;
+				id.num = 2;
+				id.val[0] = idVendor;
+				id.val[1] = idProduct;
+
+				if ((driver = ifd_driver_for_id(&id)) != NULL) {
+					char typedev[1024];
+
+					snprintf(typedev, sizeof(typedev),
+						"usb:/dev/bus/usb/%03d/%03d",
+						busnum, devnum);
+					ifd_spawn_handler(driver, typedev, -1);
+				}
+			}
+		}
+	}
+
+out:
+	if (dir != NULL) {
+		closedir (dir);
 	}
 #endif
 	return 0;
