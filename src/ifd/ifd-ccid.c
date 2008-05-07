@@ -649,11 +649,10 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 		return -1;
 	}
 
-	if (ccid.bcdCCID != 0x100) {
-		ct_error("ccid: unknown ccid version %d.%d%d supported only 1.00",
-			(ccid.bcdCCID >> 8) & 0xf,
-			(ccid.bcdCCID >> 4) & 0xf,
-			(ccid.bcdCCID >> 0) & 0xf
+	if (ccid.bcdCCID != 0x100 && ccid.bcdCCID != 0x110) {
+		ct_error("ccid: unknown ccid version %02d.02%d supported only 1.00, 1.10",
+			(ccid.bcdCCID >> 8) & 0xff,
+			(ccid.bcdCCID >> 0) & 0xff
 		);
 		ifd_device_close(dev);
 		return -1;
@@ -754,7 +753,7 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 		reader->nslots++;	/* one virtual slot for RFID escape */
 		st->proto_support |= SUPPORT_ESCAPE;
 	}
-
+	ifd_debug(3, "Accepted %04x:%04x with features 0x%x and protocols 0x%x", de.idVendor, de.idProduct, ccid.dwFeatures, ccid.dwProtocols);
 	return 0;
 }
 
@@ -969,7 +968,7 @@ static int ccid_set_protocol(ifd_reader_t * reader, int s, int proto)
 	ifd_slot_t *slot;
 	ifd_protocol_t *p;
 	ifd_atr_info_t atr_info;
-	int r;
+	int r, paramlen;
 
 	slot = &reader->slot[s];
 
@@ -1047,72 +1046,49 @@ static int ccid_set_protocol(ifd_reader_t * reader, int s, int proto)
 		ct_error("%s: Bad ATR", reader->name);
 		return r;
 	}
+	/* ccid doesn't have a parameter for this */
+	if (atr_info.TC[0] == 255)
+		atr_info.TC[0] = -1;
 
-	/* does FLAG_AUTO_PARAMS select the protocol??? */
-	memset(parambuf, 0, sizeof(parambuf));
-	memset(ctl, 0, 3);
-	if (proto == IFD_PROTOCOL_T0) {
-		r = 5;
-		ctl[0] = 0;
-		/* TA1 -> Fi | Di */
-		if (atr_info.TA[0] != -1)
-			parambuf[0] = atr_info.TA[0];
-		else
-			parambuf[0] = 0x11;	/* default is Fi = Di = 1 */
-		parambuf[1] = 0;
-		/* TC1 -> N */
-		if (atr_info.TC[0] != -1)
-			parambuf[2] = atr_info.TC[0];
-		/* TC2 -> WI */
-		if (atr_info.TC[1] != -1)
-			parambuf[3] = atr_info.TC[1];
-		else
-			parambuf[3] = 0x0a;	/* default WI=10 */
-		/* TA3 -> clock stop parameter */
-		/* XXX check for IFD clock stop support */
-		if (atr_info.TA[2] != -1)
-			parambuf[4] = atr_info.TA[2] >> 6;
-	} else if (proto == IFD_PROTOCOL_T1) {
-		r = 7;
-		ctl[0] = 1;
-		if (atr_info.TA[0] != -1)
-			parambuf[0] = atr_info.TA[0];
-		else
-			parambuf[0] = 0x11;
-		parambuf[1] = 0x10;
-		/* TC3 -> LRC/CRC selection */
-		if (atr_info.TC[2] == 1)
-			parambuf[1] |= 0x1;
-		/* TC1 -> N */
-		if (atr_info.TC[0] != -1)
-			parambuf[2] = atr_info.TC[0];
-		/* atr_info->TB3 -> BWI/CWI */
-		if (atr_info.TB[2] != -1)
-			parambuf[3] = atr_info.TB[2];
-		else
-			parambuf[3] = 0xD4;
-		parambuf[4] = 0;
-		/* TA3 -> IFSC */
-		if (atr_info.TA[2] != -1)
-			parambuf[5] = atr_info.TA[2];
-		else
-			parambuf[5] = 0x20;
-		/* XXX CCID supports setting up clock stop for T=1, but the
-		 * T=1 ATR does not define a clock-stop byte.
-		 */
-	}
+	/*
+	 * guard time increase must precede PTS
+	 * we don't need to do this separate step if
+	 * a) the ccid does automatic parameter setting, or
+	 * b) the ccid parses the atr itself, or
+	 * c) the ccid does pts itself when we set parameters, or
+	 * d) the ICC does not require extra guard time
+	 * In all but the first case, we'll do parameter setting later, 
+	 * so fetch the default parameters now.
+	 */
 	if ((st->flags & FLAG_NO_SETPARAM) == 0) {
-		r = ccid_simple_wcommand(reader, s, CCID_CMD_SETPARAMS, ctl,
-					 parambuf, r);
+		memset(parambuf, 0, sizeof(parambuf));
+		memset(ctl, 0, 3);
+		r = ccid_simple_rcommand(reader, s, CCID_CMD_GETPARAMS,
+			ctl, parambuf, 7);
 		if (r < 0)
 			return r;
+		if (proto == IFD_PROTOCOL_T0) {
+			paramlen = 5;
+			ctl[0] = 0;
+		}
+		else {
+			paramlen = 7;
+			ctl[0] = 1;
+		}
+		if ((st->flags & (FLAG_NO_PTS | FLAG_AUTO_ATRPARSE)) == 0 &&
+			atr_info.TC[0] != -1) {
+
+			parambuf[2] = atr_info.TC[0];
+			r = ccid_simple_wcommand(reader, s, CCID_CMD_SETPARAMS,
+				ctl, parambuf, paramlen);
+			if (r < 0)
+				return r;
+		}
 	}
 
-	/* is PTS available? N (guard time) must be changed before PTS
-	 * is performed. What about F and D? */
 	if ((st->flags & FLAG_NO_PTS) == 0 &&
-	    (proto == IFD_PROTOCOL_T1 || atr_info.TA[0] != -1
-	     || atr_info.TC[0] == 255)) {
+		(proto == IFD_PROTOCOL_T1 || atr_info.TA[0] != -1)) {
+
 		unsigned char pts[7], ptsret[7];
 		int ptslen;
 
@@ -1131,6 +1107,57 @@ static int ccid_set_protocol(ifd_reader_t * reader, int s, int proto)
 			ct_error("%s: Bad PTS response", reader->name);
 			return r;
 		}
+	}
+
+	if ((st->flags & FLAG_NO_SETPARAM) == 0 &&
+		((st->flags & FLAG_AUTO_ATRPARSE) == 0 |
+		proto != IFD_PROTOCOL_T0)) {
+
+		/* if FLAG_AUTO_ATRPARSE, only set the protocol. */
+		if ((st->flags & FLAG_AUTO_ATRPARSE) == 0) {
+			if (proto == IFD_PROTOCOL_T0) {
+				/* TA1 -> Fi | Di */
+				if (atr_info.TA[0] != -1)
+					parambuf[0] = atr_info.TA[0];
+				/* TC1 -> N */
+				if (atr_info.TC[0] != -1)
+					parambuf[2] = atr_info.TC[0];
+				/* TC2 -> WI */
+				if (atr_info.TC[1] != -1)
+					parambuf[3] = atr_info.TC[1];
+				/* TA3 -> clock stop parameter */
+				/* XXX check for IFD clock stop support */
+				if (atr_info.TA[2] != -1)
+					parambuf[4] = atr_info.TA[2] >> 6;
+			}
+			else if (proto == IFD_PROTOCOL_T1) {
+				if (atr_info.TA[0] != -1)
+					parambuf[0] = atr_info.TA[0];
+				parambuf[1] = 0x10;
+				/* TC3 -> LRC/CRC selection */
+				if (atr_info.TC[2] == 1)
+					parambuf[1] |= 0x1;
+				else
+					parambuf[1] &= 0xfe;
+				/* TC1 -> N */
+				if (atr_info.TC[0] != -1)
+					parambuf[2] = atr_info.TC[0];
+				/* atr_info->TB3 -> BWI/CWI */
+				if (atr_info.TB[2] != -1)
+					parambuf[3] = atr_info.TB[2];
+				/* TA3 -> IFSC */
+				if (atr_info.TA[2] != -1)
+					parambuf[5] = atr_info.TA[2];
+				/*
+				 * XXX CCID supports setting up clock stop for T=1, but the
+				 * T=1 ATR does not define a clock-stop byte.
+				 */
+			}
+		}
+		r = ccid_simple_wcommand(reader, s, CCID_CMD_SETPARAMS, ctl,
+			parambuf, paramlen);
+		if (r < 0)
+			return r;
 	}
 
 	memset(&parambuf[r], 0, sizeof(parambuf) - r);
