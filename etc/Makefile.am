@@ -1,7 +1,7 @@
 MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
 
 CLEANFILES = openct.conf init-script openct.hald reader.conf \
-		openct_usb openct_pcmcia openct_serial
+		openct_usb openct_usb.mdev openct_pcmcia openct_serial
 
 SUFFIXES = .in
 
