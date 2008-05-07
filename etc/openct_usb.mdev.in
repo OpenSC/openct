@@ -1,0 +1,25 @@
+#!/bin/sh
+
+#
+# Copy to /lib/mdev/openct_usb
+# Put the following in /etc/mdev.conf:
+# .* 0:0 0660 @/lib/mdev/openct_usb
+# For some strange reason "usb.*" does not catch the event.
+#
+
+[ -n "$DEVPATH" ] || exit 0
+[ "$ACTION" = "add" ] || exit 0
+[ "$DEVTYPE" = "usb_device" ] || exit 0
+[ -e /var/run/openct/status ] || exit 0
+
+DEVICE="$(echo "${DEVICE}" | sed 's/proc/dev/')"
+
+if ! [ -e "${DEVICE}" ]; then
+	mkdir -p "$(dirname "${DEVICE}")"
+	mknod "${DEVICE}" c $MAJOR $MINOR
+fi
+
+# Don't know why...
+sleep 1
+
+SBINDIR/openct-control attach "usb:${PRODUCT}" usb "${DEVICE}"
