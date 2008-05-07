@@ -113,6 +113,7 @@ driver	ccid {
 		usb:0b97/7762,	# O2 Micro, Inc. Oz776 SmartCard Reader 
 		usb:0b97/7772,	# O2 Micro, Inc. Oz776 SmartCard Reader 
 		usb:0bf8/1006,	# fujitsu siemens 3.5" drive size reader
+		usb:0dc3/1004,	# Athena Smartcard Solutions, Inc. ASEKey
 	};
 };
 driver pertosmart1030 {
