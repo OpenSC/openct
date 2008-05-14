@@ -32,4 +32,11 @@ install-exec-hook:	install-sysconfDATA openct.conf
 	fi
 
 .in:
-	$(SED) -e "s#SBINDIR#$(sbindir)#g" -e "s#LIBDIR#$(libdir)#g" < "$^" > "$@"
+	sed \
+		-e 's|@bindir[@]|$(bindir)|g' \
+		-e 's|@sbindir[@]|$(sbindir)|g' \
+		-e 's|@libdir[@]|$(libdir)|g' \
+		-e 's|@udevdir[@]|$(udevdir)|g' \
+		-e 's|@localstatedir[@]|$(localstatedir)|g' \
+		-e 's|@OPENCT_SOCKET_PATH[@]|$(OPENCT_SOCKET_PATH)|g' \
+		< "$<" > "$@"

@@ -2,7 +2,7 @@
 
 [ -n "$DEVPATH" ] || exit 0
 [ "$ACTION" = "add" ] || exit 0
-[ -e /var/run/openct/status ] || exit 0
+[ -e "@OPENCT_SOCKET_PATH@/status" ] || exit 0
 
 # try to get the device node from the parent device
 if [ -z "$DEVNAME" ]; then
@@ -33,7 +33,7 @@ fi
 # we may neeed to wait for the device node, when usbfs is used
 for A in "0 1 2 3 4 5 6 7 8 9"; do
 	if [ -e "$DEVICE" ]; then
-		SBINDIR/openct-control attach usb:$PRODUCT usb $DEVICE
+		@sbindir@/openct-control attach usb:$PRODUCT usb $DEVICE
 		exit 0
 	fi
 	sleep 0.1

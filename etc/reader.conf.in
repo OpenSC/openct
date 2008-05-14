@@ -3,7 +3,7 @@
 
 FRIENDLYNAME     "OpenCT"
 DEVICENAME       /dev/null 
-LIBPATH          LIBDIR/openct-ifd.so
+LIBPATH          @libdir@/openct-ifd.so
 CHANNELID        0 
 
 # End of file

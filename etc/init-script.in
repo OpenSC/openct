@@ -2,7 +2,7 @@
 #
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=SBINDIR/openct-control
+DAEMON=@sbindir@/openct-control
 NAME=OpenCT
 DESC="smart card terminal framework"
 
@@ -10,16 +10,16 @@ test -x $DAEMON || exit 0
 
 # create the directory for our status and socket files,
 # if it does not exist.
-if ! test -e /var/run/openct
+if ! test -e "@OPENCT_SOCKET_PATH@"
 then
-	mkdir /var/run/openct
+	mkdir "@OPENCT_SOCKET_PATH@"
 
 	# maybe you also want to set owner ship and permissions here.
 	# this example would assign the directory to a group "scard"
 	# and set permissions so only users in that group can access
 	# smart card readers via openct.
-	#chown root:scard /var/run/openct
-	#chmod 0750 /var/run/openct
+	#chown root:scard "@OPENCT_SOCKET_PATH@"
+	#chmod 0750 "@OPENCT_SOCKET_PATH@"
 fi
 
 set -e
@@ -33,7 +33,7 @@ case "$1" in
   stop)
 	echo -n "Stopping $DESC: $NAME "
 	$DAEMON shutdown
-	rm /var/run/openct/status
+	rm "@OPENCT_SOCKET_PATH@/status"
 	echo "."
 	;;
   #reload)
@@ -46,7 +46,7 @@ case "$1" in
 	#
 	# echo -n "Reloading $DESC configuration..."
 	# start-stop-daemon --stop --signal 1 --quiet --pidfile \
-	#	/var/run/$NAME.pid --exec $DAEMON
+	#	@localstatedir@/run/$NAME.pid --exec $DAEMON
 	# echo "done."
   #;;
   restart|force-reload)

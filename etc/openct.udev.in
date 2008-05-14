@@ -1,0 +1,81 @@
+# udev rules file for openct
+#
+# COMPATIBILITY NOTES
+# new versions of udev want DRIVERS, older versions only support DRIVER
+# new versions of udev want SUBSYSTEMS, older versions only support BUS
+#
+# new combinations of udev and linux kernel do not create proper events
+# (or udev processes them "too fast" / race conditions) or similar.
+# as a result there is no way to get openct-control run when a usb smart
+# card reader is plugged in. restarting the init script will help as a
+# crude workaround.
+#
+SUBSYSTEM!="usb", GOTO="openct_usb_rules_end"
+ACTION!="add", GOTO="openct_usb_rules_end"
+
+# some distributions might not have a proper rule to set the name.
+# this is needed without USB_DEVICEFS the kernel doesn't tell us about
+# DEVICE. so we need to know the name of the device created by udev in
+# /dev/bus/usb.
+SUBSYSTEM=="usb", ACTION=="add", ENV{DEVTYPE}=="usb_device", \
+	NAME="bus/usb/$env{BUSNUM}/$env{DEVNUM}", MODE="0644"
+
+# last file created by the kernel, if this is present everything should be
+KERNEL=="[0-9]*:*", WAIT_FOR_SYSFS="bInterfaceProtocol"
+
+# sleep for 100ms - the wait_for_sysfs might not be enough
+PROGRAM="/bin/sleep 0.1"
+
+# egate
+SYSFS{idVendor}=="0973", SYSFS{idProduct}=="0001", RUN+="@udevdir@/openct_usb"
+# eToken
+SYSFS{idVendor}=="0529", SYSFS{idProduct}=="050c", RUN+="@udevdir@/openct_usb"
+SYSFS{idVendor}=="0529", SYSFS{idProduct}=="0514", RUN+="@udevdir@/openct_usb"
+# eToken 64
+SYSFS{idVendor}=="0529", SYSFS{idProduct}=="0600", RUN+="@udevdir@/openct_usb"
+SYSFS{idVendor}=="0529", SYSFS{idProduct}=="0700", RUN+="@udevdir@/openct_usb"
+# eutron
+SYSFS{idVendor}=="073d", SYSFS{idProduct}=="0005", RUN+="@udevdir@/openct_usb"
+# ikey2k
+SYSFS{idVendor}=="04b9", SYSFS{idProduct}=="1200", RUN+="@udevdir@/openct_usb"
+# ikey3k
+SYSFS{idVendor}=="04b9", SYSFS{idProduct}=="1300", RUN+="@udevdir@/openct_usb"
+# starkey
+SYSFS{idVendor}=="096e", SYSFS{idProduct}=="0005", RUN+="@udevdir@/openct_usb"
+# cardman
+#SYSFS{idVendor}=="076b", SYSFS{idProduct}=="0596", RUN+="@udevdir@/openct_usb"
+#SYSFS{idVendor}=="076b", SYSFS{idProduct}=="1784", RUN+="@udevdir@/openct_usb"
+#SYSFS{idVendor}=="08d4", SYSFS{idProduct}=="0009", RUN+="@udevdir@/openct_usb"
+
+# ccid
+SYSFS{bInterfaceClass}=="0b", SYSFS{bInterfaceSubClass}=="00", SYSFS{bInterfaceProtocol}=="00" RUN+="@udevdir@/openct_usb"
+
+# spr 532 - ccid, but with wrong interface class (vendor) :(
+SYSFS{idVendor}=="04e6", SYSFS{idProduct}=="0003", RUN+="@udevdir@/openct_usb"
+# pertosmart1030
+SYSFS{idVendor}=="072f", SYSFS{idProduct}=="0001", RUN+="@udevdir@/openct_usb"
+SYSFS{idVendor}=="072f", SYSFS{idProduct}=="8009", RUN+="@udevdir@/openct_usb"
+# pertosmart1038
+SYSFS{idVendor}=="072f", SYSFS{idProduct}=="9000", RUN+="@udevdir@/openct_usb"
+SYSFS{idVendor}=="072f", SYSFS{idProduct}=="90d0", RUN+="@udevdir@/openct_usb"
+# wbeiuu	- driver not working yet.
+#SYSFS{idVendor}=="104f", SYSFS{idProduct}=="0004", RUN+="@udevdir@/openct_usb"
+# cyberjack
+SYSFS{idVendor}=="0c4b", SYSFS{idProduct}=="0100", RUN+="@udevdir@/openct_usb"
+# rutoken
+SYSFS{idVendor}=="0a89", SYSFS{idProduct}=="0020", RUN+="@udevdir@/openct_usb"
+
+LABEL="openct_usb_rules_end"
+
+# udev pcmcia rules file for openct
+#
+SUBSYSTEMS!="pcmcia", GOTO="openct_pcmcia_rules_end"
+ACTION!="add", GOTO="openct_pcmcia_rules_end"
+
+# omnikey cardman 4040
+SUBSYSTEM=="cardman_4040", RUN+="@udevdir@/openct_pcmcia"
+
+# Gemplus PCMCIA Card
+DRIVERS=="serial_cs", SYSFS{prod_id1}=="Gemplus", SYSFS{prod_id2}=="SerialPort", SYSFS{prod_id3}=="GemPC Card", RUN+="@udevdir@/openct_serial"
+
+LABEL="openct_pcmcia_rules_end"

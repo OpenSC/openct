@@ -18,9 +18,9 @@ if ! [ -e "${DEVICE}" ]; then
 	mknod "${DEVICE}" c $MAJOR $MINOR
 fi
 
-[ -e /var/run/openct/status ] || exit 0
+[ -e "@OPENCT_SOCKET_PATH@/status" ] || exit 0
 
 # Don't know why...
 sleep 1
 
-SBINDIR/openct-control attach "usb:${PRODUCT}" usb "${DEVICE}"
+@sbindir@/openct-control attach "usb:${PRODUCT}" usb "${DEVICE}"

@@ -7,7 +7,7 @@ hotplug	= yes;
 #
 # Path to ifdhandler
 ifdhandler {
-	program		= SBINDIR/ifdhandler;
+	program		= @sbindir@/ifdhandler;
 #	user		= openctd;
 #	groups = {
 #		usb,
@@ -17,7 +17,7 @@ ifdhandler {
 #
 # Configuration for ifdproxy (if you use it)
 ifdproxy {
-#	server-port     = /var/run/openct/.ifdproxy,
+#	server-port     = @OPENCT_SOCKET_PATH@/.ifdproxy,
 #	device-port     = :6666;
 };
 

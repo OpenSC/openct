@@ -70,7 +70,6 @@ case "${host}" in
 	;;
 esac
 
-rootlibdir="/lib${libdir##*/lib}"
 usrlibdir="/usr/lib${libdir##*/lib}"
 usrsbindir="/usr/sbin${libdir##*/sbin}"
 
@@ -366,7 +365,8 @@ fi
 
 AC_DEFINE_UNQUOTED([OPENCT_CONF_PATH], ["${full_sysconfdir}/openct.conf"], [default config file for libopenct])
 AC_DEFINE_UNQUOTED([OPENCT_MODULES_PATH], ["${ifddir}"], [modules path for libopenct])
-AC_DEFINE_UNQUOTED([OPENCT_SOCKET_PATH], ["${full_localstatedir}/run/openct"], [socket path for libopenct])
+OPENCT_SOCKET_PATH="${full_localstatedir}/run/openct"
+AC_DEFINE_UNQUOTED([OPENCT_SOCKET_PATH], ["${OPENCT_SOCKET_PATH}"], [socket path for libopenct])
 AC_DEFINE_UNQUOTED([OPENCT_IFDHANDLER_PATH], ["${usrsbindir}/ifdhandler"], [ifdhandler path for libopenct])
 
 AC_CREATE_STDINT_H([src/include/openct/types.h])
@@ -398,6 +398,7 @@ AC_SUBST([OPENCT_LT_AGE])
 AC_SUBST([OPENCT_LT_OLDEST])
 AC_SUBST([OPTIONAL_LIBUSB_CFLAGS])
 AC_SUBST([OPTIONAL_LIBUSB_LIBS])
+AC_SUBST([OPENCT_SOCKET_PATH])
 
 AM_CONDITIONAL([SVN_CHECKOUT], [test "${svn_checkout}" = "yes"])
 AM_CONDITIONAL([ENABLE_DOC], [test "${enable_doc}" = "yes"])

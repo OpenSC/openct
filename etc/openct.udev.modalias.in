@@ -21,39 +21,39 @@ SUBSYSTEM=="usb", ACTION=="add", ENV{DEVTYPE}=="usb_device", \
 	NAME="bus/usb/$env{BUSNUM}/$env{DEVNUM}", MODE="0644"
 
 # egate
-ENV{MODALIAS}=="usb:v0973p0001*", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v0973p0001*", RUN+="@udevdir@/openct_usb"
 # eToken
-ENV{MODALIAS}=="usb:v0529p050C*", RUN+="/lib/udev/openct_usb"
-ENV{MODALIAS}=="usb:v0529p0514", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v0529p050C*", RUN+="@udevdir@/openct_usb"
+ENV{MODALIAS}=="usb:v0529p0514", RUN+="@udevdir@/openct_usb"
 # eToken 64
-ENV{MODALIAS}=="usb:v0529p0600*", RUN+="/lib/udev/openct_usb"
-ENV{MODALIAS}=="usb:v0529p0700*", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v0529p0600*", RUN+="@udevdir@/openct_usb"
+ENV{MODALIAS}=="usb:v0529p0700*", RUN+="@udevdir@/openct_usb"
 # eutron
-ENV{MODALIAS}=="usb:v073Dp0005*", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v073Dp0005*", RUN+="@udevdir@/openct_usb"
 # ikey2k
-ENV{MODALIAS}=="usb:v04B9p1200*", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v04B9p1200*", RUN+="@udevdir@/openct_usb"
 # ikey3k
-ENV{MODALIAS}=="usb:v04B9p1300*", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v04B9p1300*", RUN+="@udevdir@/openct_usb"
 # starkey
-ENV{MODALIAS}=="usb:v096Ep0005*", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v096Ep0005*", RUN+="@udevdir@/openct_usb"
 # cardman
-#ENV{MODALIAS}=="usb:v076Bp0596*", RUN+="/lib/udev/openct_usb"
-#ENV{MODALIAS}=="usb:v076Bp1784*", RUN+="/lib/udev/openct_usb"
-#ENV{MODALIAS}=="usb:v08D4p0009*", RUN+="/lib/udev/openct_usb"
+#ENV{MODALIAS}=="usb:v076Bp0596*", RUN+="@udevdir@/openct_usb"
+#ENV{MODALIAS}=="usb:v076Bp1784*", RUN+="@udevdir@/openct_usb"
+#ENV{MODALIAS}=="usb:v08D4p0009*", RUN+="@udevdir@/openct_usb"
 
 # ccid
-ENV{MODALIAS}=="usb:*ic0Bisc00*", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:*ic0Bisc00*", RUN+="@udevdir@/openct_usb"
 
 # spr 532 - ccid, but with wrong interface class (vendor) :(
-ENV{MODALIAS}=="usb:v04E6p0003*", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v04E6p0003*", RUN+="@udevdir@/openct_usb"
 # pertosmart1030
-ENV{MODALIAS}=="usb:v072Fp0001*", RUN+="/lib/udev/openct_usb"
-ENV{MODALIAS}=="usb:v072Fp8009*", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v072Fp0001*", RUN+="@udevdir@/openct_usb"
+ENV{MODALIAS}=="usb:v072Fp8009*", RUN+="@udevdir@/openct_usb"
 # pertosmart1038
-ENV{MODALIAS}=="usb:v072Fp9000*", RUN+="/lib/udev/openct_usb"
-ENV{MODALIAS}=="usb:v072Fp90D0*", RUN+="/lib/udev/openct_usb"
+ENV{MODALIAS}=="usb:v072Fp9000*", RUN+="@udevdir@/openct_usb"
+ENV{MODALIAS}=="usb:v072Fp90D0*", RUN+="@udevdir@/openct_usb"
 # wbeiuu - driver not working yet
-#ENV{MODALIAS}=="usb:v104Fp0004*", RUN+="/lib/udev/openct_usb"
+#ENV{MODALIAS}=="usb:v104Fp0004*", RUN+="@udevdir@/openct_usb"
 
 LABEL="openct_usb_rules_end"
 
@@ -63,9 +63,9 @@ SUBSYSTEMS!="pcmcia", GOTO="openct_pcmcia_rules_end"
 ACTION!="add", GOTO="openct_pcmcia_rules_end"
 
 # omnikey cardman 4040
-SUBSYSTEM=="cardman_4040", RUN+="/lib/udev/openct_pcmcia"
+SUBSYSTEM=="cardman_4040", RUN+="@udevdir@/openct_pcmcia"
 
 # Gemplus PCMCIA Card
-DRIVERS=="serial_cs", SYSFS{prod_id1}=="Gemplus", SYSFS{prod_id2}=="SerialPort", SYSFS{prod_id3}=="GemPC Card", RUN+="/lib/udev/openct_serial"
+DRIVERS=="serial_cs", SYSFS{prod_id1}=="Gemplus", SYSFS{prod_id2}=="SerialPort", SYSFS{prod_id3}=="GemPC Card", RUN+="@udevdir@/openct_serial"
 
 LABEL="openct_pcmcia_rules_end"
