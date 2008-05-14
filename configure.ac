@@ -92,53 +92,53 @@ AC_ARG_ENABLE(
 
 AC_ARG_ENABLE(
 	[doc],
-	[AC_HELP_STRING([--enable-doc], [enable installation of documents. @<:@disabled@:>@])],
+	[AC_HELP_STRING([--enable-doc], [enable installation of documents @<:@disabled@:>@])],
 	,
 	[enable_doc="no"]
 )
 
 AC_ARG_ENABLE(
 	[api-doc],
-	[AC_HELP_STRING([--enable-api-doc], [enable generation and installation of api documents. @<:@disabled@:>@])],
+	[AC_HELP_STRING([--enable-api-doc], [enable generation and installation of api documents @<:@disabled@:>@])],
 	,
 	[enable_api_doc="no"]
 )
 
 AC_ARG_ENABLE(
 	[pcsc],
-	[AC_HELP_STRING([--enable-pcsc], [enable pcsc support. @<:@disabled@:>@])],
+	[AC_HELP_STRING([--enable-pcsc], [enable pcsc support @<:@disabled@:>@])],
 	,
 	[enable_pcsc="no"]
 )
 
 AC_ARG_ENABLE(
 	[usb],
-	[AC_HELP_STRING([--enable-usb], [enable usb support. @<:@disabled@:>@])],
+	[AC_HELP_STRING([--enable-usb], [enable usb support @<:@disabled@:>@])],
 	,
 	[enable_usb="no"]
 )
 
 AC_ARG_ENABLE(
 	[debug],
-	[AC_HELP_STRING([--enable-debug], [enable debug messages. @<:@disabled@:>@])],
+	[AC_HELP_STRING([--enable-debug], [enable debug messages @<:@disabled@:>@])],
 	[test "${enableval}" = "yes" && AC_DEFINE([DEBUG], [1], [Enable debug messages.])]
 )
 
 AC_ARG_ENABLE(
 	[sunray],
-	[AC_HELP_STRING([--enable-sunray], [enable sunray support. @<:@disabled@:>@])],
+	[AC_HELP_STRING([--enable-sunray], [enable sunray support @<:@disabled@:>@])],
 	[test "${enableval}" = "yes" && AC_DEFINE([sunray], [1], [Enable sunray support.])]
 )
 
 AC_ARG_ENABLE(
 	[sunrayclient],
-	[AC_HELP_STRING([--enable-sunrayclient], [enable sunray client support. @<:@disabled@:>@])],
+	[AC_HELP_STRING([--enable-sunrayclient], [enable sunray client support @<:@disabled@:>@])],
 	[test "${enableval}" = "yes" && AC_DEFINE(sunrayclient, 1, [Enable sunray client support.])]
 )
 
 AC_ARG_ENABLE(
 	[non-privileged],
-	[AC_HELP_STRING([--enable-non-privileged], [enable non privileged mode. @<:@disabled@:>@])],
+	[AC_HELP_STRING([--enable-non-privileged], [enable non privileged mode @<:@disabled@:>@])],
 	[test "${enableval}" = "no" && ENABLE_NON_PRIVILEGED="#"],
 	[ENABLE_NON_PRIVILEGED="#"]
 )
@@ -184,14 +184,14 @@ AC_ARG_WITH(
 
 AC_ARG_WITH(
 	[ifddir],
-	[AC_HELP_STRING([--with-ifddir], [ifd directory. @<:@/usr/lib/ifd@:>@])],
+	[AC_HELP_STRING([--with-ifddir], [ifd directory @<:@/usr/lib/ifd@:>@])],
 	[ifddir="${withval}"],
 	[ifddir="${usrlibdir}/ifd"]
 )
 
 AC_ARG_WITH(
 	[apidocdir],
-	[AC_HELP_STRING([--with-apidocdir], [put API documents at this directory, default HTMLDIR/api])],
+	[AC_HELP_STRING([--with-apidocdir], [put API documents at this directory @<:@HTMLDIR/api@:>@])],
 	[apidocdir="${with_apidocdir}"],
 	[apidocdir="\$(htmldir)/api"]
 )
