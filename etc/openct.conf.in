@@ -8,10 +8,10 @@ hotplug	= yes;
 # Path to ifdhandler
 ifdhandler {
 	program		= @sbindir@/ifdhandler;
-#	user		= openctd;
-#	groups = {
-#		usb,
-#	};
+@ENABLE_NON_PRIVILEGED@	user		= @daemon_user@;
+@ENABLE_NON_PRIVILEGED@	groups = {
+@ENABLE_NON_PRIVILEGED@		@daemon_groups@,
+@ENABLE_NON_PRIVILEGED@	};
 };
 
 #

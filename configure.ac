@@ -136,6 +136,13 @@ AC_ARG_ENABLE(
 	[test "${enableval}" = "yes" && AC_DEFINE(sunrayclient, 1, [Enable sunray client support.])]
 )
 
+AC_ARG_ENABLE(
+	[non-privileged],
+	[AC_HELP_STRING([--enable-non-privileged], [enable non privileged mode. @<:@disabled@:>@])],
+	[test "${enableval}" = "no" && ENABLE_NON_PRIVILEGED="#"],
+	[ENABLE_NON_PRIVILEGED="#"]
+)
+
 AC_ARG_WITH(
 	[bundle],
         [AC_HELP_STRING([--with-bundle=PATH], [install bundle file for pcsc-lite to PATH @<:@not installed@:>@])],
@@ -187,6 +194,20 @@ AC_ARG_WITH(
 	[AC_HELP_STRING([--with-apidocdir], [put API documents at this directory, default HTMLDIR/api])],
 	[apidocdir="${with_apidocdir}"],
 	[apidocdir="\$(htmldir)/api"]
+)
+
+AC_ARG_WITH(
+	[daemon-user],
+	[AC_HELP_STRING([--with-daemon-user=USER], [use this user for daemon @<:@openctd@:>@])],
+	[daemon_user="${withval}"],
+	[daemon_user="openctd"]
+)
+
+AC_ARG_WITH(
+	[daemon-groups],
+	[AC_HELP_STRING([--with-daemon-groups=GROUPS], [use these comma separated group list for daemon @<:@usb@:>@])],
+	[daemon_groups="${withval}"],
+	[daemon_groups="usb"]
 )
 
 dnl Checks for programs.
@@ -389,6 +410,8 @@ AC_SUBST([bundledir])
 AC_SUBST([ifddir])
 AC_SUBST([udevdir])
 AC_SUBST([hotplugdir])
+AC_SUBST([daemon_user])
+AC_SUBST([daemon_groups])
 AC_SUBST([OPENCT_VERSION_MAJOR])
 AC_SUBST([OPENCT_VERSION_MINOR])
 AC_SUBST([OPENCT_VERSION_FIX])
@@ -399,6 +422,7 @@ AC_SUBST([OPENCT_LT_OLDEST])
 AC_SUBST([OPTIONAL_LIBUSB_CFLAGS])
 AC_SUBST([OPTIONAL_LIBUSB_LIBS])
 AC_SUBST([OPENCT_SOCKET_PATH])
+AC_SUBST([ENABLE_NON_PRIVILEGED])
 
 AM_CONDITIONAL([SVN_CHECKOUT], [test "${svn_checkout}" = "yes"])
 AM_CONDITIONAL([ENABLE_DOC], [test "${enable_doc}" = "yes"])
@@ -440,6 +464,7 @@ doc support:             ${enable_doc}
 api doc support:         ${enable_api_doc}
 usb support:             ${enable_usb}
 pcsc support:            ${enable_pcsc}
+non-privileged support:  ${ENABLE_NON_PRIVILEGED}
 
 Host:                    ${host}
 Compiler:                ${CC}
@@ -457,6 +482,9 @@ bundledir:               ${bundledir}
 ifddir:                  ${ifddir}
 udevdir:                 ${udevdir}
 hotplugdir:              ${hotplugdir}
+
+daemon user:             ${daemon_user}
+daemon groups:           ${daemon_groups}
 
 EOF
 

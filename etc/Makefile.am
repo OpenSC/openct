@@ -38,5 +38,8 @@ install-exec-hook:	install-sysconfDATA openct.conf
 		-e 's|@libdir[@]|$(libdir)|g' \
 		-e 's|@udevdir[@]|$(udevdir)|g' \
 		-e 's|@localstatedir[@]|$(localstatedir)|g' \
-		-e 's|@OPENCT_SOCKET_PATH[@]|$(OPENCT_SOCKET_PATH)|g' \
+		-e 's|@OPENCT_SOCKET_PATH[@]|@OPENCT_SOCKET_PATH@|g' \
+		-e 's|@ENABLE_NON_PRIVILEGED[@]|@ENABLE_NON_PRIVILEGED@|g' \
+		-e 's|@daemon_user[@]|@daemon_user@|g' \
+		-e 's|@daemon_groups[@]|@daemon_groups@|g' \
 		< "$<" > "$@"
