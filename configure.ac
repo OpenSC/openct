@@ -492,7 +492,7 @@ if test "${enable_usb}" != "yes"; then
 
 cat <<EOF
 
-Without libusb coldplugging will not work.
+Without libusb coldplugging will work in basic way,
 To use usb devices, your hotplugging needs to be
 configured and you need to plug in any device
 after the system has started (i.e. the init script ran)
