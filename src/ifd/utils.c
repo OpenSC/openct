@@ -13,6 +13,9 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <pwd.h>
+#include <grp.h>
 
 #ifndef __GNUC__
 void ifd_debug(int level, const char *fmt, ...)
@@ -86,6 +89,7 @@ int ifd_spawn_handler(const char *driver, const char *devtype, int idx)
 	char *type, *device;
 	int argc, n;
 	pid_t pid;
+	char *user = NULL;
 
 	ifd_debug(1, "driver=%s, devtype=%s, index=%d", driver, devtype, idx);
 
@@ -140,6 +144,49 @@ int ifd_spawn_handler(const char *driver, const char *devtype, int idx)
 	n = getdtablesize();
 	while (--n > 2)
 		close(n);
+	
+	if ((n = ifd_conf_get_string_list("ifdhandler.groups", NULL, 0)) > 0) {
+		char **groups = (char **)calloc(n, sizeof(char *));
+		gid_t *gids = (gid_t *)calloc(n, sizeof(gid_t));
+		int j;
+		if (!groups || !gids) {
+			ct_error("out of memory");
+			exit(1);
+		}
+		n = ifd_conf_get_string_list("ifdhandler.groups", groups, n);
+		for (j = 0; j < n; j++) {
+			struct group *g = getgrnam(groups[j]);
+			if (g == NULL) {
+				ct_error("failed to parse group %s", groups[j]);
+				exit(1);
+			}
+			gids[j] = g->gr_gid;
+		}
+		if (setgroups(n-1, &gids[1]) == -1) {
+			ct_error("failed set groups %m");
+			exit(1);
+		}
+		if (setgid(gids[0]) == -1) {
+			ct_error("failed setgid %d %m", gids[0]);
+			exit(1);
+		}
+		free(groups);
+		free(gids);
+	}
+
+	if (ifd_conf_get_string("ifdhandler.user", &user) >= 0) {
+		struct passwd *p = getpwnam(user);
+
+		if (p == NULL) {
+			ct_error("failed to parse user %s", user);
+			exit(1);
+		}
+
+		if (setuid(p->pw_uid) == -1) {
+			ct_error("failed to set*uid user %s %m", user);
+			exit(1);
+		}
+	}
 
 	execv(ct_config.ifdhandler, (char **)argv);
 	ct_error("failed to execute %s: %m", ct_config.ifdhandler);

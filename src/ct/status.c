@@ -10,6 +10,8 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <pwd.h>
 #include <signal.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -61,9 +63,9 @@ static void *ct_map_status(int flags, size_t * size)
 	return addr;
 }
 
-int ct_status_clear(unsigned int count)
+int ct_status_clear(unsigned int count, const char *owner)
 {
-	int fd;
+	int fd = -1;
 	char status_path[PATH_MAX];
 
 	if (!ct_format_path(status_path, PATH_MAX, "status")) {
@@ -75,13 +77,31 @@ int ct_status_clear(unsigned int count)
 	    || ftruncate(fd, count * sizeof(ct_info_t)) < 0
 	    || fchmod(fd, 0644) < 0) {
 		ct_error("cannot create %s: %m", status_path);
-		unlink(status_path);
-		if (fd >= 0)
-			close(fd);
-		return -1;
+		goto error;
+	}
+
+	if (owner != NULL) {
+		struct passwd *p = getpwnam(owner);
+
+		if (p == NULL) {
+			ct_error("cannot parse user %s", owner);
+			goto error;
+		}
+
+		if (fchown(fd, p->pw_uid, -1) == -1) {
+			ct_error("cannot chown %s to %s: %m", status_path, owner);
+			goto error;
+		}
 	}
 
 	return 0;
+
+error:
+
+	unlink(status_path);
+	if (fd >= 0)
+		close(fd);
+	return -1;
 }
 
 int ct_status(const ct_info_t ** result)

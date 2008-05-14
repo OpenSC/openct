@@ -93,13 +93,19 @@ int main(int argc, char **argv)
 
 static int mgr_init(int argc, char **argv)
 {
+	char *ifdhandler_user = NULL;
+	char *sval;
 	int n;
 
 	if (argc != 1)
 		usage(1);
 
+	/* Get the ifdhandler user so we can set ownership */
+	if (ifd_conf_get_string("ifdhandler.user", &sval) >= 0)
+		ifdhandler_user = sval;
+
 	/* Zap the status file */
-	ct_status_clear(OPENCT_MAX_READERS);
+	ct_status_clear(OPENCT_MAX_READERS, ifdhandler_user);
 
 	/* Initialize IFD library */
 	ifd_init();

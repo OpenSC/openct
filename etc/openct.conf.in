@@ -3,9 +3,16 @@ debug	= 0;
 #
 # Enable hot plugging
 hotplug	= yes;
+
 #
 # Path to ifdhandler
-ifdhandler = SBINDIR/ifdhandler;
+ifdhandler {
+	program		= SBINDIR/ifdhandler;
+#	user		= openctd;
+#	groups = {
+#		usb,
+#	};
+};
 
 #
 # Configuration for ifdproxy (if you use it)

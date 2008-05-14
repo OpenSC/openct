@@ -61,7 +61,7 @@ int ifd_init(void)
 	if (ifd_conf_get_integer("debug", &ival) >= 0 && ival > ct_config.debug)
 		ct_config.debug = ival;
 
-	if (ifd_conf_get_string("ifdhandler", &sval) >= 0)
+	if (ifd_conf_get_string("ifdhandler.program", &sval) >= 0)
 		ct_config.ifdhandler = sval;
 
 	/* Register all driver information (use hotplug ids) */
