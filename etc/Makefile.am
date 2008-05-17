@@ -1,20 +1,26 @@
 MAINTAINERCLEANFILES = $(srcdir)/Makefile.in
 
-CLEANFILES = openct.conf init-script openct.hald reader.conf \
-		openct_usb openct_usb.mdev openct_pcmcia openct_serial
-
 SUFFIXES = .in
 
-noinst_SCRIPTS = init-script openct.hald openct_usb.mdev
-dist_noinst_DATA = Info.plist \
-	openct.udev.in openct.udev.modalias.in openct.udev.compat \
-	openct.conf.in init-script.in openct.hald.in reader.conf.in \
-	openct_usb.in openct_usb.mdev.in openct_pcmcia.in openct_serial.in openct.fdi
+sources = openct.udev.in openct.udev.modalias.in openct.udev.compat openct_usb.mdev.in \
+	openct.conf.in openct.hald.in reader.conf.in \
+	init-script.in openct.hald.in openct_usb.mdev.in \
+	openct_usb.in openct_pcmcia.in openct_serial.in
+generated_data = openct.udev openct.udev.modalias openct.udev.compat openct_usb.mdev \
+	openct.conf openct.hald reader.conf 
+noinst_generated_scripts = init-script openct.hald openct_usb.mdev
+udev_generated_scripts = openct_usb openct_pcmcia openct_serial
+
+CLEANFILES = $(generated_data) $(noinst_generated_scripts) $(udev_generated_scripts)
+
+nodist_noinst_SCRIPTS = $(noinst_generated_scripts)
+dist_noinst_DATA = Info.plist openct.fdi $(sources)
+nodist_noinst_DATA = $(generated_data)
 
 if ENABLE_UDEV
-nodist_udev_SCRIPTS = openct_usb openct_pcmcia openct_serial
+nodist_udev_SCRIPTS = $(udev_generated_scripts)
 else
-nodist_noinst_SCRIPTS = openct_usb openct_pcmcia openct_serial
+nodist_noinst_SCRIPTS += $(udev_generated_scripts)
 endif
 
 if ENABLE_HOTPLUG
