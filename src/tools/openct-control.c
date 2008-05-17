@@ -157,6 +157,8 @@ static int mgr_shutdown(int argc, char **argv)
 			killed++;
 	}
 
+ 	ct_status_destroy();
+
 	printf("%d process%s killed.\n", killed, (killed == 1) ? "" : "es");
 	return 0;
 }

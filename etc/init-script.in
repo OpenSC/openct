@@ -33,7 +33,6 @@ case "$1" in
   stop)
 	echo -n "Stopping $DESC: $NAME "
 	$DAEMON shutdown
-	rm "@OPENCT_SOCKET_PATH@/status"
 	echo "."
 	;;
   #reload)

@@ -91,6 +91,7 @@ extern int		ct_card_write_memory(ct_handle *, unsigned int slot,
 				unsigned short address,
 				const void *send_buf, size_t send_len);
 
+extern int		ct_status_destroy(void);
 extern int		ct_status_clear(unsigned int, const char *);
 extern ct_info_t *	ct_status_alloc_slot(int *);
 extern int		ct_status_update(ct_info_t *);

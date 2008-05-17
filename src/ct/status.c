@@ -63,6 +63,17 @@ static void *ct_map_status(int flags, size_t * size)
 	return addr;
 }
 
+int ct_status_destroy(void)
+{
+	char status_path[PATH_MAX];
+
+	if (!ct_format_path(status_path, PATH_MAX, "status")) {
+		return -1;
+	}
+
+	return unlink(status_path);
+}
+
 int ct_status_clear(unsigned int count, const char *owner)
 {
 	int fd = -1;
