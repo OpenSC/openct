@@ -6,14 +6,15 @@ CLEANFILES = openct.conf init-script openct.hald reader.conf \
 SUFFIXES = .in
 
 noinst_SCRIPTS = init-script openct.hald openct_usb.mdev
-dist_noinst_DATA = Info.plist openct.udev openct.udev.modalias \
+dist_noinst_DATA = Info.plist \
+	openct.udev.in openct.udev.modalias.in openct.udev.compat \
 	openct.conf.in init-script.in openct.hald.in reader.conf.in \
 	openct_usb.in openct_usb.mdev.in openct_pcmcia.in openct_serial.in openct.fdi
 
 if ENABLE_UDEV
-udev_SCRIPTS = openct_usb openct_pcmcia openct_serial
+nodist_udev_SCRIPTS = openct_usb openct_pcmcia openct_serial
 else
-dist_noinst_SCRIPTS = openct_usb openct_pcmcia openct_serial
+nodist_noinst_SCRIPTS = openct_usb openct_pcmcia openct_serial
 endif
 
 if ENABLE_HOTPLUG
