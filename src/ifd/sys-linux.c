@@ -20,6 +20,7 @@
 #include <dirent.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -381,18 +382,21 @@ int ifd_sysdep_usb_open(const char *device)
 }
 
 #ifndef ENABLE_LIBUSB
-static int read_number (const char *base, const char *name, const char *file, const char *format) {
+static int read_number (const char *read_format, const char *format, ...) {
+	va_list args;
 	char full[PATH_MAX];
 	FILE *fp = NULL;
 	int n = -1;
 
-	snprintf (full, sizeof (full), "%s/%s/%s", base, name, file);
+	va_start(args, format);
+	vsnprintf (full, sizeof(full), format, args);
+	va_end(args);
 
 	if ((fp = fopen (full, "r")) == NULL) {
 		goto out;
 	}
 
-	fscanf (fp, format, &n);
+	fscanf (fp, read_format, &n);
 
 out:
 	if (fp != NULL) {
@@ -421,7 +425,7 @@ int ifd_scan_usb(void)
 	id.num = 2;
 	for (bus = usb_busses; bus; bus = bus->next) {
 		for (dev = bus->devices; dev; dev = dev->next) {
-			const char *driver;
+			const char *driver = NULL;
 			char typedev[PATH_MAX];
 			struct stat buf;
 
@@ -434,42 +438,37 @@ int ifd_scan_usb(void)
 
 			if (!(driver = ifd_driver_for_id(&id))) {
 				/* no driver found, check for interface class */
-				int ccid=0;
 				int conf;
- 				for (conf = 0; conf < 
-					dev->descriptor.bNumConfigurations;
+ 				for (conf = 0; conf < dev->descriptor.bNumConfigurations;
 					conf++) {
-				int interf;
-  				for (interf = 0; interf <
-					dev->config[conf].bNumInterfaces;
-					interf++) {
-				int alt;
-				for (alt = 0; alt < dev->config[conf].interface[interf].num_altsetting; alt++) {
-					if (dev->config[conf].interface[interf].altsetting[alt].bInterfaceClass == 0x0b) {
-					ccid=1;
+					int interf;
+					for (interf = 0; interf < dev->config[conf].bNumInterfaces;
+						interf++) {
+						int alt;
+						for (alt = 0; alt < dev->config[conf].interface[interf].num_altsetting; alt++) {
+							if (dev->config[conf].interface[interf].altsetting[alt].bInterfaceClass == 0x0b) {
+								driver = "ccid";
+							}
+						}
+					}	
 				}
-				}
-				}	
-				}
-					
-				/* not a ccid device */
-				if (!ccid)
-					continue;
 			}
 
-			snprintf(typedev, sizeof(typedev),
-				 "/dev/bus/usb/%s/%s",
-				 bus->dirname, dev->filename);
-			if (stat(typedev, &buf) == 0) {
+			if (driver != NULL) {
 				snprintf(typedev, sizeof(typedev),
-				 	"usb:/dev/bus/usb/%s/%s",
-				 	bus->dirname, dev->filename);
-				ifd_spawn_handler(driver, typedev, -1);
-			} else {
-				snprintf(typedev, sizeof(typedev),
-				 	"usb:/proc/bus/usb/%s/%s",
-				 	bus->dirname, dev->filename);
-				ifd_spawn_handler(driver, typedev, -1);
+					 "/dev/bus/usb/%s/%s",
+					 bus->dirname, dev->filename);
+				if (stat(typedev, &buf) == 0) {
+					snprintf(typedev, sizeof(typedev),
+						"usb:/dev/bus/usb/%s/%s",
+						bus->dirname, dev->filename);
+					ifd_spawn_handler(driver, typedev, -1);
+				} else {
+					snprintf(typedev, sizeof(typedev),
+						"usb:/proc/bus/usb/%s/%s",
+						bus->dirname, dev->filename);
+					ifd_spawn_handler(driver, typedev, -1);
+				}
 			}
 		}
 	}
@@ -478,30 +477,26 @@ int ifd_scan_usb(void)
 	DIR *dir = NULL;
 	struct dirent *ent;
 
-	dir = opendir (base);
-
-	if (dir == NULL) {
+	if ((dir = opendir (base)) == NULL) {
 		goto out;
 	}
 
 	while ((ent = readdir (dir)) != NULL) {
 		if (ent->d_name[0] != '.') {
-			char buffer[1024];
-			FILE *fp = NULL;
 			int idProduct = -1;
 			int idVendor = -1;
 			int busnum = -1;
 			int devnum = -1;
 
-			idProduct = read_number (base, ent->d_name, "idProduct", "%x");
-			idVendor = read_number (base, ent->d_name, "idVendor", "%x");
-			busnum = read_number (base, ent->d_name, "busnum", "%d");
-			devnum = read_number (base, ent->d_name, "devnum", "%d");
+			idProduct = read_number ("%x", "%s/%s/%s", base, ent->d_name, "idProduct");
+			idVendor = read_number ("%x", "%s/%s/%s", base, ent->d_name, "idVendor");
+			busnum = read_number ("%d", "%s/%s/%s", base, ent->d_name, "busnum");
+			devnum = read_number ("%d", "%s/%s/%s", base, ent->d_name, "devnum");
 
 			ifd_debug (6, "coldplug: %s usb: %04x:%04x bus: %03d:%03d\n", ent->d_name, idProduct, idVendor, busnum, devnum);
 
 			if (idProduct != -1 && idVendor != -1 && busnum != -1 && devnum != -1) {
-				const char *driver;
+				const char *driver = NULL;
 				ifd_devid_t id;
 
 				id.type = IFD_DEVICE_TYPE_USB;
@@ -509,7 +504,28 @@ int ifd_scan_usb(void)
 				id.val[0] = idVendor;
 				id.val[1] = idProduct;
 
-				if ((driver = ifd_driver_for_id(&id)) != NULL) {
+				if ((driver = ifd_driver_for_id(&id)) == NULL) {
+					DIR *dir1 = NULL;
+					struct dirent *ent1;
+
+					if ((dir1 = opendir (base)) != NULL) {
+						while ((ent1 = readdir (dir1)) != NULL && driver == NULL) {
+							/* skip all none bus elements */
+							if (strncmp (ent->d_name, ent1->d_name, strlen (ent->d_name))) {
+								continue;
+							}
+
+							int bInterfaceClass = read_number ("%x", "%s/%s/%s/%s", base, ent->d_name, ent1->d_name, "bInterfaceClass");
+
+							if (bInterfaceClass == 0x0b) {
+								driver = "ccid";
+							}
+						}
+						closedir (dir1);
+					}
+				}
+
+				if (driver != NULL) {
 					char typedev[1024];
 
 					snprintf(typedev, sizeof(typedev),
