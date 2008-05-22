@@ -13,7 +13,11 @@
 #include "internal.h"
 #if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__FreeBSD_kernel__) || defined(__DragonFly__)
 #include <sys/types.h>
+#if defined(__DragonFly__)
+#include <bus/usb/usb.h>
+#else
 #include <dev/usb/usb.h>
+#endif
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/poll.h>
@@ -63,7 +67,11 @@ int open_ep(char *name, int interface, int endpoint, int flags)
 		return 0;
 	}
 
-	sprintf((char *)&filename, "%s.%d", name, endpoint);
+#ifdef __OpenBSD__
+	snprintf(filename, sizeof(filename), "%s.%02d", name, endpoint);
+#else
+	snprintf(filename, sizeof(filename), "%s.%d", name, endpoint);
+#endif /* __OpenBSD__ */
 
 	if ((interfaces[interface][endpoint].ep_fd = open(filename, flags)) < 0) {
 		ifd_debug(6, "open_ep: error opening \"%s\": %s", filename,
@@ -94,11 +102,20 @@ int ifd_sysdep_usb_bulk(ifd_device_t * dev, int ep, void *buffer, size_t len,
 
 	ct_debug("ifd_sysdep_usb_bulk: endpoint=%d direction=%d", endpoint,
 		 direction);
-	if (open_ep(dev->name, 0, endpoint, O_RDWR | O_NONBLOCK)) {
-		ct_debug("ifd_sysdep_usb_bulk: opening endpoint failed");
-		return -1;
-	}
 	if (direction) {
+		int one = 1;
+
+		if (open_ep(dev->name, 0, endpoint, O_RDONLY | O_NONBLOCK)) {
+			ct_debug("ifd_sysdep_usb_bulk: opening endpoint failed");
+			return -1;
+		}
+
+		if (ioctl(interfaces[0][endpoint].ep_fd, USB_SET_SHORT_XFER,
+		    &one) < 0) {
+			ifd_debug(6, "ifd_sysdep_usb_bulk: USB_SET_SHORT_XFER"
+				  " failed: %s", strerror(errno));
+			ct_error("usb_bulk read failed: %s", strerror(errno));
+		}
 		if ((bytes_to_process =
 		     read(interfaces[0][endpoint].ep_fd, buffer, len)) < 0) {
 			ifd_debug(6, "ifd_sysdep_usb_bulk: read failed: %s",
@@ -110,6 +127,11 @@ int ifd_sysdep_usb_bulk(ifd_device_t * dev, int ep, void *buffer, size_t len,
 			 bytes_to_process);
 		return bytes_to_process;
 	} else {
+		if (open_ep(dev->name, 0, endpoint, O_WRONLY | O_NONBLOCK)) {
+			ct_debug("ifd_sysdep_usb_bulk: opening endpoint failed");
+			return -1;
+		}
+
 		bytes_to_process = len;
 		if ((bytes_processed =
 		     write(interfaces[0][endpoint].ep_fd, buffer,
@@ -314,7 +336,15 @@ int ifd_sysdep_usb_release_interface(ifd_device_t * dev, int interface)
 
 int ifd_sysdep_usb_open(const char *device)
 {
+#ifdef __OpenBSD__
+	char path[256];
+
+	if (snprintf(&path, sizeof(path), "%s.00", device) < 0)
+		return -1;
+	return open(path, O_RDWR);
+#else
 	return open(device, O_RDWR);
+#endif /* __OpenBSD__ */
 }
 
 int ifd_sysdep_usb_reset(ifd_device_t * dev)
@@ -384,13 +414,8 @@ int ifd_scan_usb(void)
 
 			if (!(driver = ifd_driver_for_id(&id)))
 				continue;
-#ifdef __OpenBSD__
-			snprintf(typedev, sizeof(typedev),
-				 "usb:/dev/%s.00", device_info.udi_devnames[0]);
-#else
 			snprintf(typedev, sizeof(typedev),
 				 "usb:/dev/%s", device_info.udi_devnames[0]);
-#endif				/* __OpenBSD__ */
 
 			ifd_spawn_handler(driver, typedev, -1);
 		}
