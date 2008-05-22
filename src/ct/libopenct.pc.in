@@ -2,11 +2,10 @@ prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
-sysincludedir=@sysincludedir@
 
 Name: libopenct
 Description: libopenct
 Version: @VERSION@
-Libs: -L${libdir} @LIBS@ -lopenct
-Cflags: -I${sysincludedir} -I${includedir}
+Libs: -L${libdir} -lopenct
+Cflags: -I${includedir}
 
