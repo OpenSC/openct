@@ -488,9 +488,12 @@ daemon groups:           ${daemon_groups}
 
 EOF
 
-if test "${enable_usb}" != "yes"; then
+# Only Linux uses libusb
+case "${host}" in
+*-*-linux*)
+	if test "${enable_usb}" != "yes"; then
 
-cat <<EOF
+	cat <<EOF
 
 Without libusb coldplugging will work in basic way,
 To use usb devices, your hotplugging needs to be
@@ -499,4 +502,6 @@ after the system has started (i.e. the init script ran)
 
 EOF
 
-fi
+	fi
+;;
+esac
