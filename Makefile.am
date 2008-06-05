@@ -8,10 +8,13 @@ MAINTAINERCLEANFILES = \
 	$(srcdir)/install-sh $(srcdir)/ltmain.sh $(srcdir)/missing \
 	$(srcdir)/depcomp $(srcdir)/aclocal.m4 $(srcdir)/compile \
 	$(srcdir)/config.guess $(srcdir)/config.sub \
+	$(srcdir)/aclocal/ltsugar.m4 $(srcdir)/aclocal/libtool.m4 \
+	$(srcdir)/aclocal/ltversion.m4 $(srcdir)/aclocal/lt~obsolete.m4 \
+	$(srcdir)/aclocal/ltoptions.m4 \
 	$(srcdir)/packaged
 EXTRA_DIST = svnignore
 
-SUBDIRS = aclocal etc macos src doc
+SUBDIRS = etc macos src doc
 
 dist_noinst_SCRIPTS = bootstrap
 dist_noinst_DATA = LGPL-2.1 TODO \

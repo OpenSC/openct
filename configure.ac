@@ -1,14 +1,15 @@
 dnl -*- mode: m4; -*-
 
-AC_PREREQ([2.60])
+AC_PREREQ(2.60)
 
 define([PACKAGE_VERSION_MAJOR], [0])
 define([PACKAGE_VERSION_MINOR], [6])
 define([PACKAGE_VERSION_FIX], [14])
 
-AC_INIT([openct], [PACKAGE_VERSION_MAJOR.PACKAGE_VERSION_MINOR.PACKAGE_VERSION_FIX-svn])
+AC_INIT([openct],[PACKAGE_VERSION_MAJOR.PACKAGE_VERSION_MINOR.PACKAGE_VERSION_FIX-svn])
 AC_CONFIG_AUX_DIR([.])
-AM_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([${PACKAGE_NAME}], [${PACKAGE_VERSION}])
 
 OPENCT_VERSION_MAJOR="PACKAGE_VERSION_MAJOR"
@@ -78,74 +79,74 @@ full_localstatedir=`eval eval eval eval eval echo "${localstatedir}" | sed "s#NO
 
 AC_ARG_ENABLE(
 	[strict],
-	[AC_HELP_STRING([--enable-strict], [enable strict compile mode @<:@disabled@:>@])],
+	[AS_HELP_STRING([--enable-strict],[enable strict compile mode @<:@disabled@:>@])],
 	,
 	[enable_strict="no"]
 )
 
 AC_ARG_ENABLE(
 	[pedantic],
-	[AC_HELP_STRING([--enable-pedantic], [enable pedantic compile mode @<:@disabled@:>@])],
+	[AS_HELP_STRING([--enable-pedantic],[enable pedantic compile mode @<:@disabled@:>@])],
 	,
 	[enable_pedantic="no"]
 )
 
 AC_ARG_ENABLE(
 	[doc],
-	[AC_HELP_STRING([--enable-doc], [enable installation of documents @<:@disabled@:>@])],
+	[AS_HELP_STRING([--enable-doc],[enable installation of documents @<:@disabled@:>@])],
 	,
 	[enable_doc="no"]
 )
 
 AC_ARG_ENABLE(
 	[api-doc],
-	[AC_HELP_STRING([--enable-api-doc], [enable generation and installation of api documents @<:@disabled@:>@])],
+	[AS_HELP_STRING([--enable-api-doc],[enable generation and installation of api documents @<:@disabled@:>@])],
 	,
 	[enable_api_doc="no"]
 )
 
 AC_ARG_ENABLE(
 	[pcsc],
-	[AC_HELP_STRING([--enable-pcsc], [enable pcsc support @<:@disabled@:>@])],
+	[AS_HELP_STRING([--enable-pcsc],[enable pcsc support @<:@disabled@:>@])],
 	,
 	[enable_pcsc="no"]
 )
 
 AC_ARG_ENABLE(
 	[usb],
-	[AC_HELP_STRING([--enable-usb], [enable usb support @<:@disabled@:>@])],
+	[AS_HELP_STRING([--enable-usb],[enable usb support @<:@disabled@:>@])],
 	,
 	[enable_usb="no"]
 )
 
 AC_ARG_ENABLE(
 	[debug],
-	[AC_HELP_STRING([--enable-debug], [enable debug messages @<:@disabled@:>@])],
+	[AS_HELP_STRING([--enable-debug],[enable debug messages @<:@disabled@:>@])],
 	[test "${enableval}" = "yes" && AC_DEFINE([DEBUG], [1], [Enable debug messages.])]
 )
 
 AC_ARG_ENABLE(
 	[sunray],
-	[AC_HELP_STRING([--enable-sunray], [enable sunray support @<:@disabled@:>@])],
+	[AS_HELP_STRING([--enable-sunray],[enable sunray support @<:@disabled@:>@])],
 	[test "${enableval}" = "yes" && AC_DEFINE([sunray], [1], [Enable sunray support.])]
 )
 
 AC_ARG_ENABLE(
 	[sunrayclient],
-	[AC_HELP_STRING([--enable-sunrayclient], [enable sunray client support @<:@disabled@:>@])],
+	[AS_HELP_STRING([--enable-sunrayclient],[enable sunray client support @<:@disabled@:>@])],
 	[test "${enableval}" = "yes" && AC_DEFINE(sunrayclient, 1, [Enable sunray client support.])]
 )
 
 AC_ARG_ENABLE(
 	[non-privileged],
-	[AC_HELP_STRING([--enable-non-privileged], [enable non privileged mode @<:@disabled@:>@])],
+	[AS_HELP_STRING([--enable-non-privileged],[enable non privileged mode @<:@disabled@:>@])],
 	[test "${enableval}" = "no" && ENABLE_NON_PRIVILEGED="#"],
 	[ENABLE_NON_PRIVILEGED="#"]
 )
 
 AC_ARG_WITH(
 	[bundle],
-        [AC_HELP_STRING([--with-bundle=PATH], [install bundle file for pcsc-lite to PATH @<:@not installed@:>@])],
+        [AS_HELP_STRING([--with-bundle=PATH],[install bundle file for pcsc-lite to PATH @<:@not installed@:>@])],
         [
 		if test "${withval}" = "yes"; then
 			bundledir="\$(libdir)"
@@ -158,7 +159,7 @@ AC_ARG_WITH(
 
 AC_ARG_WITH(
 	[udev],
-        [AC_HELP_STRING([--with-udev=PATH], [install udev files into PATH @<:@not installed@:>@])],
+        [AS_HELP_STRING([--with-udev=PATH],[install udev files into PATH @<:@not installed@:>@])],
         [
 		if test "${withval}" = "yes"; then
 			udevdir="\$(libdir)/udev"
@@ -171,7 +172,7 @@ AC_ARG_WITH(
 
 AC_ARG_WITH(
 	[hotplug],
-        [AC_HELP_STRING([--with-hotplug=PATH], [install hotplug files into PATH @<:@not installed@:>@])],
+        [AS_HELP_STRING([--with-hotplug=PATH],[install hotplug files into PATH @<:@not installed@:>@])],
         [
 		if test "${withval}" = "yes"; then
 			hotplugdir="\$(sysconfdir)/hotplug/usb"
@@ -184,28 +185,28 @@ AC_ARG_WITH(
 
 AC_ARG_WITH(
 	[ifddir],
-	[AC_HELP_STRING([--with-ifddir], [ifd directory @<:@/usr/lib/ifd@:>@])],
+	[AS_HELP_STRING([--with-ifddir],[ifd directory @<:@/usr/lib/ifd@:>@])],
 	[ifddir="${withval}"],
 	[ifddir="${usrlibdir}/ifd"]
 )
 
 AC_ARG_WITH(
 	[apidocdir],
-	[AC_HELP_STRING([--with-apidocdir], [put API documents at this directory @<:@HTMLDIR/api@:>@])],
+	[AS_HELP_STRING([--with-apidocdir],[put API documents at this directory @<:@HTMLDIR/api@:>@])],
 	[apidocdir="${with_apidocdir}"],
 	[apidocdir="\$(htmldir)/api"]
 )
 
 AC_ARG_WITH(
 	[daemon-user],
-	[AC_HELP_STRING([--with-daemon-user=USER], [use this user for daemon @<:@openctd@:>@])],
+	[AS_HELP_STRING([--with-daemon-user=USER],[use this user for daemon @<:@openctd@:>@])],
 	[daemon_user="${withval}"],
 	[daemon_user="openctd"]
 )
 
 AC_ARG_WITH(
 	[daemon-groups],
-	[AC_HELP_STRING([--with-daemon-groups=GROUPS], [use these comma separated group list for daemon @<:@usb@:>@])],
+	[AS_HELP_STRING([--with-daemon-groups=GROUPS],[use these comma separated group list for daemon @<:@usb@:>@])],
 	[daemon_groups="${withval}"],
 	[daemon_groups="usb"]
 )
@@ -221,6 +222,8 @@ AC_PROG_MAKE_SET
 dnl Add libtool support.
 AM_PROG_CC_C_O
 AM_PROG_LIBTOOL
+#LT_INIT([win32-dll])
+#LT_LANG([Windows Resource])
 
 AC_CHECK_PROGS([DOXYGEN],[doxygen])
 test "${enable_api_doc}" = "yes" -a -z "${DOXYGEN}" && AC_MSG_ERROR([doxygen is required for api doc])
@@ -320,15 +323,17 @@ AC_CHECK_HEADER(
 CFLAGS="${saved_CFLAGS}"
 
 AC_MSG_CHECKING([struct sockaddr_storage::ss_family])
-AC_TRY_COMPILE(
-	[
+AC_COMPILE_IFELSE(
+	[AC_LANG_PROGRAM(
+		[[
 #include <sys/types.h>
 #include <sys/socket.h>
-	],
-	[
+		]],
+		[[
 struct sockaddr_storage s;
 s.ss_family = 1;
-	],
+		]]
+	)],
 	[AC_MSG_RESULT([ok])],
 	[AC_TRY_COMPILE(
 		[
@@ -432,9 +437,8 @@ AM_CONDITIONAL([ENABLE_UDEV], [test -n "${udevdir}"])
 AM_CONDITIONAL([ENABLE_HOTPLUG], [test -n "${hotplugdir}"])
 AM_CONDITIONAL([ENABLE_PCSC], [test "${enable_pcsc}" = "yes"])
 
-AC_OUTPUT([
+AC_CONFIG_FILES([
 	Makefile
-	m4/Makefile
 	doc/Makefile
 	doc/doxygen.conf
 	doc/nonpersistent/Makefile
@@ -451,6 +455,7 @@ AC_OUTPUT([
 	src/tools/Makefile
 	src/tools/openct-tool.1
 ])
+AC_OUTPUT
 
 cat <<EOF
 
