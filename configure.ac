@@ -434,7 +434,7 @@ AM_CONDITIONAL([ENABLE_PCSC], [test "${enable_pcsc}" = "yes"])
 
 AC_OUTPUT([
 	Makefile
-	aclocal/Makefile
+	m4/Makefile
 	doc/Makefile
 	doc/doxygen.conf
 	doc/nonpersistent/Makefile
