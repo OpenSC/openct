@@ -6,7 +6,7 @@ MAINTAINERCLEANFILES = \
 	$(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in $(srcdir)/config.h.in~ $(srcdir)/configure \
 	$(srcdir)/install-sh $(srcdir)/ltmain.sh $(srcdir)/missing \
-	$(srcdir)/depcomp $(srcdir)/m4.m4 $(srcdir)/compile \
+	$(srcdir)/depcomp $(srcdir)/aclocal.m4 $(srcdir)/compile \
 	$(srcdir)/config.guess $(srcdir)/config.sub \
 	$(srcdir)/m4/ltsugar.m4 $(srcdir)/m4/libtool.m4 \
 	$(srcdir)/m4/ltversion.m4 $(srcdir)/m4/lt~obsolete.m4 \
