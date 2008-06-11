@@ -223,10 +223,18 @@ AC_PROG_MKDIR_P
 AC_PROG_SED
 AC_PROG_MAKE_SET
 
-dnl Add libtool support.
 AM_PROG_CC_C_O
-AM_PROG_LIBTOOL
-#LT_INIT
+
+dnl Add libtool support.
+ifdef(
+	[LT_INIT],
+	[
+		LT_INIT
+	],
+	[
+		AC_PROG_LIBTOOL
+	]
+)
 
 AC_CHECK_PROGS([DOXYGEN],[doxygen])
 test "${enable_api_doc}" = "yes" -a -z "${DOXYGEN}" && AC_MSG_ERROR([doxygen is required for api doc])
