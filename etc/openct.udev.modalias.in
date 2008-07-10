@@ -17,7 +17,7 @@ ACTION!="add", GOTO="openct_usb_rules_end"
 ENV{MODALIAS}=="usb:v0973p0001*", RUN+="@udevdir@/openct_usb"
 # eToken
 ENV{MODALIAS}=="usb:v0529p050C*", RUN+="@udevdir@/openct_usb"
-ENV{MODALIAS}=="usb:v0529p0514", RUN+="@udevdir@/openct_usb"
+ENV{MODALIAS}=="usb:v0529p0514*", RUN+="@udevdir@/openct_usb"
 # eToken 64
 ENV{MODALIAS}=="usb:v0529p0600*", RUN+="@udevdir@/openct_usb"
 ENV{MODALIAS}=="usb:v0529p0700*", RUN+="@udevdir@/openct_usb"
