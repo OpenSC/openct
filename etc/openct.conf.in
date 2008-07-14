@@ -132,6 +132,8 @@ driver pertosmart1030 {
 driver pertosmart1038 {
 	ids = {
 		usb:072f/9000,
+		usb:072f/9006, # ACS CryptoMate Token
+		usb:072f/9007, # ACS ACR 100 SIMFlash
 		usb:072f/90d0,
 	};
 };

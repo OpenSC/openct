@@ -44,6 +44,8 @@ ENV{MODALIAS}=="usb:v072Fp0001*", RUN+="@udevdir@/openct_usb"
 ENV{MODALIAS}=="usb:v072Fp8009*", RUN+="@udevdir@/openct_usb"
 # pertosmart1038
 ENV{MODALIAS}=="usb:v072Fp9000*", RUN+="@udevdir@/openct_usb"
+ENV{MODALIAS}=="usb:v072Fp9006*", RUN+="@udevdir@/openct_usb"
+ENV{MODALIAS}=="usb:v072Fp9007*", RUN+="@udevdir@/openct_usb"
 ENV{MODALIAS}=="usb:v072Fp90D0*", RUN+="@udevdir@/openct_usb"
 # wbeiuu - driver not working yet
 #ENV{MODALIAS}=="usb:v104Fp0004*", RUN+="@udevdir@/openct_usb"

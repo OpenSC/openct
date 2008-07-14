@@ -102,6 +102,19 @@
       </match>
 
       <match key="usb.vendor_id" int="0x072f">
+	<match key="usb.product_id" int="0x9006">
+	  <merge key="info.category" type="string">smart_card_reader</merge>
+	  <append key="info.addons" type="strlist">hald-addon-openct</append>
+	</match>
+      </match>
+
+      <match key="usb.vendor_id" int="0x072f">
+	<match key="usb.product_id" int="0x9007">
+	  <merge key="info.category" type="string">smart_card_reader</merge>
+	  <append key="info.addons" type="strlist">hald-addon-openct</append>
+	</match>
+      </match>
+      <match key="usb.vendor_id" int="0x072f">
 	<match key="usb.product_id" int="0x90d0">
 	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <append key="info.addons" type="strlist">hald-addon-openct</append>
