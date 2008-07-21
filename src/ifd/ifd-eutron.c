@@ -170,12 +170,12 @@ static int eutron_recv(ifd_reader_t * reader, unsigned int dad,
 
 	/* move the data to the beginning of the buffer, so there's a big
 	 * contiguous chunk */
-	memcpy(priv->readbuffer, &priv->readbuffer[priv->tail],
+	memmove(priv->readbuffer, &priv->readbuffer[priv->tail],
 	       priv->head - priv->tail);
 	priv->head -= priv->tail;
 	/* since we set tail=0 here, the rest of the function can ignore it */
 	priv->tail = 0;
-	for (c = 0; c < 20; c++) {
+	for (c = 0; c < 30; c++) {
 		rbs = 499 - priv->head;
 		if (rbs == 0)
 			break;
@@ -193,7 +193,7 @@ static int eutron_recv(ifd_reader_t * reader, unsigned int dad,
 		usleep(100000);
 	}
 	if (len > priv->head)
-		len = priv->head;
+		return -1;
 	memcpy(buffer, priv->readbuffer, len);
 	priv->tail += len;
 	if (priv->head - priv->tail)
