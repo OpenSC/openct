@@ -1,12 +1,15 @@
 NEWS for OpenCT -- History of user visible changes
 
 New in 0.6.15; ????-??-??; ?????
+* Build system rewritten (NOTICE: configure options was modified). 
 * None privileged configuration added, as a result /etc/openct.conf ifdhandler
   was modified, please review sample at etc/openct.conf before upgrade.
 * The usb device add (/dev/bus/usb/$env{BUSNUM}/$env{DEVNUM}) udev rule is now
   available in separate file, as it should be available at most distributions,
   and may conflict. Install this only if you are using old udev that miss this
   statement.
+* Basic coldplug support on Linux is available without libusb dependency.
+* CCID-1.10 is now supported.
 
 New in 0.6.14; 2007-08-30; Andreas Jellinghaus
 * further fixes to udev script by Kay Sievers
