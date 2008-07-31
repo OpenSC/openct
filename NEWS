@@ -1,6 +1,7 @@
 NEWS for OpenCT -- History of user visible changes
 
-New in 0.6.15; ????-??-??; ?????
+New in 0.6.15; 2008-07-31; Andreas Jellinghaus
+* Build system rewritten (NOTICE: configure options was modified). 
 * Build system rewritten (NOTICE: configure options was modified). 
 * None privileged configuration added, as a result /etc/openct.conf ifdhandler
   was modified, please review sample at etc/openct.conf before upgrade.
