@@ -39,6 +39,7 @@ ENV{MODALIAS}=="usb:*ic0Bisc00*", RUN+="@udevdir@/openct_usb"
 
 # spr 532 - ccid, but with wrong interface class (vendor) :(
 ENV{MODALIAS}=="usb:v04E6p0003*", RUN+="@udevdir@/openct_usb"
+ENV{MODALIAS}=="usb:v04E6pE003*", RUN+="@udevdir@/openct_usb"
 # pertosmart1030
 ENV{MODALIAS}=="usb:v072Fp0001*", RUN+="@udevdir@/openct_usb"
 ENV{MODALIAS}=="usb:v072Fp8009*", RUN+="@udevdir@/openct_usb"

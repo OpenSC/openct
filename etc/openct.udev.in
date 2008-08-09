@@ -45,6 +45,7 @@ SYSFS{bInterfaceClass}=="0b", SYSFS{bInterfaceSubClass}=="00", SYSFS{bInterfaceP
 
 # spr 532 - ccid, but with wrong interface class (vendor) :(
 SYSFS{idVendor}=="04e6", SYSFS{idProduct}=="0003", RUN+="@udevdir@/openct_usb"
+SYSFS{idVendor}=="04e6", SYSFS{idProduct}=="E003", RUN+="@udevdir@/openct_usb"
 # pertosmart1030
 SYSFS{idVendor}=="072f", SYSFS{idProduct}=="0001", RUN+="@udevdir@/openct_usb"
 SYSFS{idVendor}=="072f", SYSFS{idProduct}=="8009", RUN+="@udevdir@/openct_usb"
