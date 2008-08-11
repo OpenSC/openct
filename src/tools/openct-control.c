@@ -148,7 +148,7 @@ static int mgr_shutdown(int argc, char **argv)
 	if ((num = ct_status(&status)) < 0) {
 		fprintf(stderr,
 			"cannot access status file; no readers killed\n");
-		return 1;
+		return 0;
 	}
 
 	while (num--) {
