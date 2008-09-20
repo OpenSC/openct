@@ -27,4 +27,4 @@ dist_doc_DATA = NEWS
 
 # Allow detection of packaged tarball
 packaged:
-	echo > "$(distdir)/packaged"
+	echo > packaged
