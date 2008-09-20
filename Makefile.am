@@ -26,5 +26,5 @@ dist_noinst_DATA = LGPL-2.1 TODO \
 dist_doc_DATA = NEWS
 
 # Allow detection of packaged tarball
-dist-hook:
+packaged:
 	echo > "$(distdir)/packaged"
