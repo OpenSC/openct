@@ -12,7 +12,7 @@ MAINTAINERCLEANFILES = \
 	$(srcdir)/m4/ltversion.m4 $(srcdir)/m4/lt~obsolete.m4 \
 	$(srcdir)/m4/ltoptions.m4 \
 	$(srcdir)/packaged
-EXTRA_DIST = svnignore packaged
+EXTRA_DIST = svnignore
 
 SUBDIRS = etc macos src doc
 
@@ -26,5 +26,5 @@ dist_noinst_DATA = LGPL-2.1 TODO \
 dist_doc_DATA = NEWS
 
 # Allow detection of packaged tarball
-packaged:
-	echo > packaged
+dist-hook:
+	echo > "$(distdir)/packaged"

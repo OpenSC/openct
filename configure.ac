@@ -37,7 +37,7 @@ PKG_PROG_PKG_CONFIG
 AC_C_BIGENDIAN
 
 AC_MSG_CHECKING([svn checkout])
-if test -e $srcdir/packaged; then
+if test -e packaged; then
 	svn_checkout="no"
 else
 	svn_checkout="yes"
