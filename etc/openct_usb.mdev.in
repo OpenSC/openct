@@ -6,16 +6,15 @@
 # .* 0:0 0660 @/lib/mdev/openct_usb
 # For some strange reason "usb.*" does not catch the event.
 #
+[ -n "${DEVPATH}" ] || exit 0
+[ "${ACTION}" = "add" ] || exit 0
+[ "${DEVTYPE}" = "usb_device" ] || exit 0
 
-[ -n "$DEVPATH" ] || exit 0
-[ "$ACTION" = "add" ] || exit 0
-[ "$DEVTYPE" = "usb_device" ] || exit 0
-
-DEVICE="$(echo "${DEVICE}" | sed 's/proc/dev/')"
+DEVICE="/dev/bus/usb/${BUSNUM}/${DEVNUM}"
 
 if ! [ -e "${DEVICE}" ]; then
 	mkdir -p "$(dirname "${DEVICE}")"
-	mknod "${DEVICE}" c $MAJOR $MINOR
+	mknod "${DEVICE}" c ${MAJOR} ${MINOR}
 fi
 
 [ -e "@OPENCT_SOCKET_PATH@/status" ] || exit 0
