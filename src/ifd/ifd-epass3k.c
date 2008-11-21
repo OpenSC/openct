@@ -46,7 +46,7 @@ static int epass3k_open(ifd_reader_t * reader, const char *device_name)
 	ifd_device_params_t params;
 	ifd_debug(1, "%s:%d epass3k_open()", __FILE__, __LINE__);
 
-	reader->name = "FT SCR2000A";	//ePass3000 reader name
+	reader->name = "FT SCR2000A";	/* ePass3000 reader name */
 	reader->nslots = 1;
 	if (!(dev = ifd_device_open(device_name)))
 		return -1;
