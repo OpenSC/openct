@@ -60,6 +60,8 @@ SYSFS{idVendor}=="072f", SYSFS{idProduct}=="90d0", RUN+="@udevdir@/openct_usb"
 SYSFS{idVendor}=="0c4b", SYSFS{idProduct}=="0100", RUN+="@udevdir@/openct_usb"
 # rutoken
 SYSFS{idVendor}=="0a89", SYSFS{idProduct}=="0020", RUN+="@udevdir@/openct_usb"
+# ePass3000
+SYSFS{idVendor}=="096e", SYSFS{idProduct}=="0401", RUN+="@udevdir@/openct_usb"
 
 LABEL="openct_usb_rules_end"
 

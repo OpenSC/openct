@@ -58,6 +58,13 @@ driver	egate {
 		usb:0973/0001,
 	};
 };
+
+driver	ePass3000 {
+	ids = {
+		usb:096e/0401,
+	};
+};
+
 driver	etoken {
 	ids = {
 		usb:0529/050c,

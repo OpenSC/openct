@@ -50,6 +50,8 @@ ENV{MODALIAS}=="usb:v072Fp9007*", RUN+="@udevdir@/openct_usb"
 ENV{MODALIAS}=="usb:v072Fp90D0*", RUN+="@udevdir@/openct_usb"
 # wbeiuu - driver not working yet
 #ENV{MODALIAS}=="usb:v104Fp0004*", RUN+="@udevdir@/openct_usb"
+# ePass3000
+ENV{MODALIAS}=="usb:v096ep0401*", RUN+="@udevdir@/openct_usb"
 
 LABEL="openct_usb_rules_end"
 

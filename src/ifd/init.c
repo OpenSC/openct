@@ -27,6 +27,7 @@ int ifd_init(void)
 	ifd_cardman_register();
 	ifd_cm4000_register();
 	ifd_egate_register();
+	ifd_epass3k_register();
 	ifd_etoken_register();
 	ifd_etoken64_register();
 	ifd_eutron_register();

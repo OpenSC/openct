@@ -120,6 +120,7 @@ extern void ifd_cardman_register(void);
 extern void ifd_ccid_register(void);
 extern void ifd_cm4000_register(void);
 extern void ifd_egate_register(void);
+extern void ifd_epass3k_register(void);
 extern void ifd_etoken_register(void);
 extern void ifd_etoken64_register(void);
 extern void ifd_eutron_register(void);

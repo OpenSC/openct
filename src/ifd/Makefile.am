@@ -13,7 +13,7 @@ libifd_la_SOURCES = \
 	ifd-etoken.c ifd-etoken64.c ifd-eutron.c ifd-gempc.c ifd-ikey2k.c \
 	ifd-ikey3k.c ifd-kaan.c ifd-pertosmart1030.c ifd-pertosmart1038.c \
 	ifd-smartboard.c ifd-smph.c ifd-starkey.c ifd-towitoko.c cardman.h \
-	ifd-cyberjack.c ifd-rutoken.c \
+	ifd-cyberjack.c ifd-rutoken.c ifd-epass3k.c \
 	\
 	proto-gbp.c proto-sync.c proto-t0.c proto-t1.c \
 	proto-trans.c proto-escape.c \
