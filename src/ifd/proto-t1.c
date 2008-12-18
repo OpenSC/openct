@@ -323,10 +323,9 @@ static int t1_transceive(ifd_protocol_t * prot, int dad, const void *snd_buf,
 			case T1_S_RESYNC:
 				/* the card is not allowed to send a resync. */
 				goto resync;
-				break;
 			case T1_S_ABORT:
 				ifd_debug(1, "abort requested");
-				goto resync;
+				break;
 			case T1_S_IFS:
 				ifd_debug(1, "CT sent S-block with ifs=%u",
 					  sdata[3]);
