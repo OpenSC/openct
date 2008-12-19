@@ -367,7 +367,8 @@ static int cyberjack_activate(ifd_reader_t *reader)
     unsigned char read_buffer[64];
     ifd_device_t * const dev = reader->device;
   	int ret;
-  	struct cyberjack_t1_state *state;
+	int result = -1;
+  	struct cyberjack_t1_state *state = NULL;
   
 	cyberjack_ifd_debug(1, 40, "called (dev = 0x%x).", reader->device);
 
@@ -379,7 +380,7 @@ static int cyberjack_activate(ifd_reader_t *reader)
 
 	state = calloc( 1, sizeof(struct cyberjack_t1_state) );
 	if( state == NULL )
-		return -1;
+		goto cleanup;
 		
 	state->dev = dev;
 	
@@ -387,30 +388,30 @@ static int cyberjack_activate(ifd_reader_t *reader)
 	    ifd_device_send( dev, (unsigned char*)"\x00\x04\x00" "\xe2\xc0\x00\x22", 7 ) != 7 )
 	{
 		cyberjack_ct_error(80, "cyberjack: failed to activate 1");
-		return -1;
+		goto cleanup;
 	}
 	
 	ifd_msleep( 100 );
 	if( (ret=cyberjack_recv_t1( state, 0xe2, read_buffer ))!=4 || memcmp( read_buffer, "\x2e\xe0\x00\xce", 4 )!=0 )  {
 		cyberjack_ct_error(80, "cyberjack: failed to activate 2: no cookie");
-		return -1;
+		goto cleanup;
 	}
 
 	// send 20 11 00 00 
 	if( cyberjack_send_t1( state, "\x12\x00\x04" "\x20\x11\x00\x00", 7 ) != 7 )  {
 		cyberjack_ct_error(80, "cyberjack: failed to activate 5");		
-		return -1;
+		goto cleanup;
 	}
 	ret = cyberjack_recv_t1( state, 0x12, read_buffer );
 	if( ret < 0 )  {
 		cyberjack_ct_error(80, "cyberjack: failed to activate 5.1");		
-		return -1;
+		goto cleanup;
 	}
 	cyberjack_ifd_debug(1, 80+ret*3, "cyberjack: t1 response is : %s", 
 			ct_hexdump( read_buffer, ret ));
 	if( ret < 6 )  {
 		cyberjack_ifd_debug(1, 80, "cyberjack: response is short 6.1");
-		return -1;
+		goto cleanup;
 	}
 	if( ret != 6 || read_buffer[3]!=0x90 || read_buffer[4]!=0 )
 	{
@@ -418,7 +419,7 @@ static int cyberjack_activate(ifd_reader_t *reader)
 			ct_hexdump( read_buffer, 6 ));
 		// could neever recover from this
 		cyberjack_ct_error(80, "cyberjack: failed to activate: failed to reset the reader");		
-		return -1;
+		goto cleanup;
 	}
 
 	// The following is needed to transition from our protocol to 
@@ -431,16 +432,25 @@ static int cyberjack_activate(ifd_reader_t *reader)
 	ret = cyberjack_recv_t1( state, 0x2e, read_buffer );
 	if( ret < 3 || memcmp(read_buffer, "\x2e\xe0\x00", 3 )!=0 )  {
 		cyberjack_ct_error(80, "cyberjack: failed to activate 7.1");		
-		return -1;
+		goto cleanup;
 	}
 	
 	reader->driver_data = state;
+	state = NULL;
 	
-	cyberjack_init_proto( reader, state );
+	cyberjack_init_proto( reader, (struct cyberjack_t1_state *)reader->driver_data );
 	
-	cyberjack_ifd_debug(1, 80, "cyberjack: activated OK, ns=%d", state->ns);
+	cyberjack_ifd_debug(1, 80, "cyberjack: activated OK, ns=%d",
+		((struct cyberjack_t1_state *)reader->driver_data)->ns);
 	
-	return 0;
+	result = 0;
+
+cleanup:
+	if (state != NULL) {
+		free(state);
+	}
+
+	return result;
 }
 
 static int cyberjack_deactivate(ifd_reader_t * reader)
