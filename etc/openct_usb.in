@@ -6,7 +6,16 @@
 
 # try to get the device node from the parent device
 if [ -z "$DEVNAME" ]; then
-	DEVNAME=/dev/$(udevinfo --query=name --path=$(dirname $DEVPATH))
+	#
+	# Guess udev info interface.
+	# Newer udev uses udevadm
+	#
+	if which udevinfo > /dev/null 2>&1; then
+		UDEVINFO="udevinfo"
+	else
+		UDEVINFO="udevadm info"
+	fi
+	DEVNAME=/dev/$($UDEVINFO --query=name --path=$(dirname $DEVPATH))
 fi
 
 # if udev supplied a device node directly from the usb-device, we use it,
