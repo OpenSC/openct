@@ -31,7 +31,7 @@ static int rutoken_open(ifd_reader_t * reader, const char *device_name)
 	ifd_device_t *dev;
 	ifd_device_params_t params;
 
-	ifd_debug(1, "rutoken_open - %s\n", device_name);
+	ifd_debug(1, "rutoken_open - %s", device_name);
 	ifd_debug(1, "%s:%d rutoken_open()", __FILE__, __LINE__);
 
 	reader->name = "ruToken driver";
@@ -105,16 +105,16 @@ static int rutoken_card_reset(ifd_reader_t * reader, int slot, void *atr,
 	ifd_debug(1, "%s:%d rutoken_card_reset()", __FILE__, __LINE__);
 
 	int nLen = 0, i;
-	ifd_debug(1, "rutoken_card_reset, slot = %X\n", slot);
+	ifd_debug(1, "rutoken_card_reset, slot = %X", slot);
 	if(ifd_usb_control(reader->device, 0x41, USB_ICC_POWER_OFF, 0, 0, 0, 0, -1) < 0)
 	{
-		ifd_debug(1, "error poweroff\n");
+		ifd_debug(1, "error poweroff");
 		return -1;
 	}
 	unsigned char status;
 	if( rutoken_getstatus(reader, &status) < 0)
 	{
-		ifd_debug(1, "error get status\n");
+		ifd_debug(1, "error get status");
 		return -1;
 	}
 	if( status == ICC_STATUS_READY_DATA ) {
@@ -125,7 +125,7 @@ static int rutoken_card_reset(ifd_reader_t * reader, int slot, void *atr,
 				buf, OUR_ATR_LEN, 1000);
 		if( nLen < 0 )
 		{
-			ifd_debug(1, "error poewron\n");
+			ifd_debug(1, "error poewron");
 			return -1;
 		}
 
@@ -135,7 +135,7 @@ static int rutoken_card_reset(ifd_reader_t * reader, int slot, void *atr,
 		return nLen;
 	}
 
-	ifd_debug(1, "error bad status\n");
+	ifd_debug(1, "error bad status");
 	return -1;
 }
 
@@ -401,7 +401,6 @@ static struct ifd_driver_ops rutoken_driver;
 
 void ifd_rutoken_register(void)
 {
-	ifd_debug(1, "ifd_rutoken_register()\n");
 	rutoken_driver.open = rutoken_open;
 	rutoken_driver.activate = rutoken_activate;
 	rutoken_driver.deactivate = rutoken_deactivate;
