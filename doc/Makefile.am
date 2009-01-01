@@ -13,8 +13,8 @@ if ENABLE_API_DOC
 apidoc_DATA=api.out/html/*
 
 
-api.out/html/*: \
-		$(top_srcdir)/src/include/openct/*.h \
+api.out/html/*:	api.out
+api.out:	$(top_srcdir)/src/include/openct/*.h \
 		$(srcdir)/*.gif \
 		doxygen.conf
 	-rm -fr api.out
