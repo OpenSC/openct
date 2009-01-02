@@ -19,6 +19,10 @@ KERNEL=="[0-9]*:*", WAIT_FOR_SYSFS="bInterfaceProtocol"
 # sleep for 100ms - the wait_for_sysfs might not be enough
 PROGRAM="/bin/sleep 0.1"
 
+# ccid
+ENV{DEVTYPE}=="usb_interface", SYSFS{bInterfaceClass}=="0b", SYSFS{bInterfaceSubClass}=="00", SYSFS{bInterfaceProtocol}=="00" RUN+="@udevdir@/openct_usb"
+
+ENV{DEVTYPE}!="usb_device", GOTO="openct_usb_rules_end"
 # egate
 SYSFS{idVendor}=="0973", SYSFS{idProduct}=="0001", RUN+="@udevdir@/openct_usb"
 # eToken
@@ -39,9 +43,6 @@ SYSFS{idVendor}=="096e", SYSFS{idProduct}=="0005", RUN+="@udevdir@/openct_usb"
 #SYSFS{idVendor}=="076b", SYSFS{idProduct}=="0596", RUN+="@udevdir@/openct_usb"
 #SYSFS{idVendor}=="076b", SYSFS{idProduct}=="1784", RUN+="@udevdir@/openct_usb"
 #SYSFS{idVendor}=="08d4", SYSFS{idProduct}=="0009", RUN+="@udevdir@/openct_usb"
-
-# ccid
-SYSFS{bInterfaceClass}=="0b", SYSFS{bInterfaceSubClass}=="00", SYSFS{bInterfaceProtocol}=="00" RUN+="@udevdir@/openct_usb"
 
 # spr 532 - ccid, but with wrong interface class (vendor) :(
 SYSFS{idVendor}=="04e6", SYSFS{idProduct}=="0003", RUN+="@udevdir@/openct_usb"
