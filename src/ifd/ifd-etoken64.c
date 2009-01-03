@@ -128,6 +128,31 @@ static int et64_recv(ifd_reader_t * reader, unsigned int dad,
 			       buffer, len, timeout);
 }
 
+static int et64_get_eventfd(ifd_reader_t * reader)
+{
+	ifd_debug(1, "called.");
+
+	return ifd_device_get_eventfd(reader->device);
+}
+
+static int et64_event(ifd_reader_t * reader, int *status, size_t status_size)
+{
+	(void)reader;
+	(void)status;
+	(void)status_size;
+
+	ifd_debug(1, "called.");
+}
+
+static int et64_error(ifd_reader_t * reader)
+{
+	(void)reader;
+
+	ifd_debug(1, "called.");
+
+	return IFD_ERROR_DEVICE_DISCONNECTED;
+}
+
 /*
  * Driver operations
  */
@@ -145,6 +170,9 @@ void ifd_etoken64_register(void)
 	etoken64_driver.card_reset = et64_card_reset;
 	etoken64_driver.send = et64_send;
 	etoken64_driver.recv = et64_recv;
+	etoken64_driver.get_eventfd = et64_get_eventfd;
+	etoken64_driver.event = et64_event;
+	etoken64_driver.error = et64_error;
 
 	ifd_driver_register("etoken64", &etoken64_driver);
 }
