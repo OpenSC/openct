@@ -332,8 +332,10 @@ static int ccid_command(ifd_reader_t * reader, const unsigned char *cmd,
 		ifd_debug(3, "sending:%s", ct_hexdump(cmd, cmd_len));
 
 	rc = ifd_device_send(reader->device, cmd, cmd_len);
-	if (rc < 0)
+	if (rc < 0) {
+		ifd_debug(1, "ifd_device_send failed %d", rc);
 		return rc;
+	}
 	while (1) {
 		rc = ifd_device_recv(reader->device, res, req_len, 10000);
 		if (rc < 0)
