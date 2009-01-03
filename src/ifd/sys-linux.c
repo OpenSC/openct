@@ -145,6 +145,8 @@ struct usbdevfs_hub_portinfo {
 
 /* end of import from usbdevice_fs.h */
 
+#define USB_DISCONNECT_SIGNAL (SIGRTMIN)
+
 /*
  * Poll for presence of USB device
  */
@@ -155,6 +157,14 @@ int ifd_sysdep_usb_poll_presence(ifd_device_t * dev, struct pollfd *pfd)
 	pfd->fd = dev->fd;
 	pfd->events = POLLHUP;
 	return 1;
+}
+
+/*
+ * Event fd to use.
+ */
+int ifd_sysdep_usb_get_eventfd(ifd_device_t * dev)
+{
+	return dev->fd;
 }
 
 /*
@@ -301,10 +311,52 @@ int ifd_sysdep_usb_begin_capture(ifd_device_t * dev, int type, int endpoint,
 	return 0;
 }
 
+int ifd_sysdep_usb_capture_event(ifd_device_t * dev, ifd_usb_capture_t * cap,
+			   void *buffer, size_t len)
+{
+	struct usbdevfs_urb *purb;
+	size_t copied = 0;
+	int rc = 0;
+
+	purb = NULL;
+	rc = ioctl(dev->fd, USBDEVFS_REAPURBNDELAY, &purb);
+	if (rc < 0) {
+		if (errno == EAGAIN)
+			return 0;
+		ct_error("usb_reapurb failed: %m");
+		return IFD_ERROR_COMM_ERROR;
+	}
+
+	if (purb != &cap->urb) {
+		ifd_debug(2, "reaped usb urb %p", purb);
+		return 0;
+	}
+
+	if (purb->status == -1) {
+		return IFD_ERROR_COMM_ERROR;
+	}
+
+	if (purb->actual_length) {
+		ifd_debug(6, "usb reapurb: len=%u",
+			  purb->actual_length);
+		if ((copied = purb->actual_length) > len)
+			copied = len;
+		if (copied && buffer)
+			memcpy(buffer, purb->buffer, copied);
+	}
+	else {
+		usleep(10000);
+	}
+
+	/* Re-submit URB */
+	usb_submit_urb(dev->fd, cap);
+
+	return copied;
+}
+
 int ifd_sysdep_usb_capture(ifd_device_t * dev, ifd_usb_capture_t * cap,
 			   void *buffer, size_t len, long timeout)
 {
-	struct usbdevfs_urb *purb;
 	struct timeval begin;
 	size_t copied;
 	int rc = 0;
@@ -325,33 +377,11 @@ int ifd_sysdep_usb_capture(ifd_device_t * dev, ifd_usb_capture_t * cap,
 		if (poll(&pfd, 1, wait) != 1)
 			continue;
 
-		purb = NULL;
-		rc = ioctl(dev->fd, USBDEVFS_REAPURBNDELAY, &purb);
+		rc = ifd_sysdep_usb_capture_event(dev, cap, buffer, len);
 		if (rc < 0) {
-			if (errno == EAGAIN)
-				continue;
-			ct_error("usb_reapurb failed: %m");
-			return IFD_ERROR_COMM_ERROR;
+			return rc;
 		}
-
-		if (purb != &cap->urb) {
-			ifd_debug(2, "reaped usb urb %p", purb);
-			continue;
-		}
-
-		if (purb->actual_length) {
-			ifd_debug(6, "usb reapurb: len=%u",
-				  purb->actual_length);
-			if ((copied = purb->actual_length) > len)
-				copied = len;
-			if (copied && buffer)
-				memcpy(buffer, purb->buffer, copied);
-		} else {
-			usleep(10000);
-		}
-
-		/* Re-submit URB */
-		usb_submit_urb(dev->fd, cap);
+		copied = (size_t)rc;
 	} while (!copied);
 
 	return copied;
@@ -378,7 +408,46 @@ int ifd_sysdep_usb_end_capture(ifd_device_t * dev, ifd_usb_capture_t * cap)
 
 int ifd_sysdep_usb_open(const char *device)
 {
-        return open(device, O_RDWR);
+	struct usbdevfs_disconnectsignal ds;
+	struct sigaction act;
+	int fd = -1;
+	int ret = -1;
+
+	fd = open(device, O_RDWR);
+	if (fd == -1) {
+		goto cleanup;
+	}
+
+	/*
+	 * The following will send signal
+	 * to the process when device is disconnected
+	 * even if the signal is ignored the blocking
+	 * call will exit.
+	 * <linux.2.6.28 - This code will have no affect.
+	 * =linux-2.6.28 - CONFIG_USB_DEVICEFS must be on.
+	 * >=linux-2.6.29 - works.
+	 */
+	memset(&act, 0, sizeof(act));
+	act.sa_handler = SIG_IGN;
+	if (sigaction(USB_DISCONNECT_SIGNAL, &act, NULL) == -1) {
+		goto cleanup;
+	}
+
+	memset(&ds, 0, sizeof(ds));
+	ds.signr = USB_DISCONNECT_SIGNAL;
+	if (ioctl(fd, USBDEVFS_DISCSIGNAL, &ds) == -1) {
+		goto cleanup;
+	}
+
+	ret = fd;
+	fd = -1;
+
+cleanup:
+	if (fd != -1) {
+		close(fd);
+	}
+
+	return ret;
 }
 
 #ifndef ENABLE_LIBUSB

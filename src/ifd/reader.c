@@ -559,3 +559,121 @@ void ifd_close(ifd_reader_t * reader)
 	memset(reader, 0, sizeof(*reader));
 	free(reader);
 }
+
+/*
+ * Before command
+ */
+int ifd_before_command(ifd_reader_t *reader)
+{
+	if (reader->driver->ops->before_command)
+		return reader->driver->ops->before_command(reader);
+	else
+		return 0;
+}
+
+/*
+ * After command
+ */
+int ifd_after_command(ifd_reader_t *reader)
+{
+	if (reader->driver->ops->after_command)
+		return reader->driver->ops->after_command(reader);
+	else
+		return 0;
+}
+
+/*
+ * Get eventfd
+ */
+int ifd_get_eventfd(ifd_reader_t *reader)
+{
+	if (reader->driver->ops->get_eventfd) {
+		return reader->driver->ops->get_eventfd(reader);
+	}
+	else {
+		return -1;
+	}
+}
+
+static void ifd_slot_status_update(ifd_reader_t *reader, int slot, int status)
+{
+	static unsigned int card_seq = 1;
+
+	ct_info_t *info = reader->status;
+	unsigned int prev_seq, new_seq;
+
+	new_seq = prev_seq = info->ct_card[slot];
+
+	if (!(status & IFD_CARD_PRESENT)) {
+		new_seq = 0;
+	}
+	else if (!prev_seq || (status & IFD_CARD_STATUS_CHANGED)) {
+		new_seq = card_seq++;
+	}
+
+	if (prev_seq != new_seq) {
+		ifd_debug(1, "card status change slot %d: %u -> %u",
+			  slot, prev_seq, new_seq);
+		info->ct_card[slot] = new_seq;
+		ct_status_update(info);
+	}
+}
+
+void ifd_poll(ifd_reader_t *reader)
+{
+	unsigned slot;
+
+	/* Check if the card status changed */
+	for (slot = 0; slot < reader->nslots; slot++) {
+		time_t now;
+		int status;
+
+		time(&now);
+		if (now < reader->slot[slot].next_update)
+			continue;
+
+		/* Poll card status at most once a second
+		 * XXX: make this configurable */
+		reader->slot[slot].next_update = now + 1;
+
+		if (ifd_card_status(reader, slot, &status) < 0) {
+			/* Don't return error; let the hotplug test
+			 * pick up the detach
+			 if (rc == IFD_ERROR_DEVICE_DISCONNECTED)
+			 return rc;
+			 */
+			continue;
+		}
+
+		ifd_slot_status_update(reader, slot, status);
+	}
+}
+
+int ifd_error(ifd_reader_t *reader)
+{
+	if (reader->driver->ops->error == NULL) {
+		return IFD_ERROR_NOT_SUPPORTED;
+	}
+
+	return reader->driver->ops->error(reader);
+}
+
+int ifd_event(ifd_reader_t *reader)
+{
+	int status[OPENCT_MAX_SLOTS];
+	unsigned slot;
+	int rc;
+
+	if (reader->driver->ops->event == NULL) {
+		return IFD_ERROR_NOT_SUPPORTED;
+	}
+
+	rc = reader->driver->ops->event(reader, status, reader->nslots);
+
+	for (slot=0;slot<reader->nslots;slot++) {
+		ifd_slot_status_update(reader, slot, status[slot]);
+	}
+
+	return rc;
+}
+

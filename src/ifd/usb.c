@@ -62,6 +62,28 @@ int ifd_usb_begin_capture(ifd_device_t * dev, int type, int endpoint,
 					    capret);
 }
 
+int ifd_usb_capture_event(ifd_device_t * dev, ifd_usb_capture_t * cap, void *buffer,
+		    size_t len)
+{
+	int rc;
+
+	if (dev->type != IFD_DEVICE_TYPE_USB)
+		return -1;
+
+	ifd_debug(5, "called.");
+	rc = ifd_sysdep_usb_capture_event(dev, cap, buffer, len);
+	if (ct_config.debug >= 3) {
+		if (rc < 0)
+			ifd_debug(1, "usb event capture: %s", ct_strerror(rc));
+		if (rc > 0)
+			ifd_debug(5, "usb event capture: recv %s",
+				  ct_hexdump(buffer, rc));
+		if (rc == 0)
+			ifd_debug(5, "usb event capture: rc=%d (timeout?)", rc);
+	}
+	return rc;
+}
+
 int ifd_usb_capture(ifd_device_t * dev, ifd_usb_capture_t * cap, void *buffer,
 		    size_t len, long timeout)
 {
@@ -86,6 +108,8 @@ int ifd_usb_capture(ifd_device_t * dev, ifd_usb_capture_t * cap, void *buffer,
 
 int ifd_usb_end_capture(ifd_device_t * dev, ifd_usb_capture_t * cap)
 {
+	ifd_debug(5, "called.");
+
 	if (dev->type != IFD_DEVICE_TYPE_USB)
 		return -1;
 	return ifd_sysdep_usb_end_capture(dev, cap);
@@ -175,6 +199,15 @@ static int usb_reset(ifd_device_t * dev)
 	return rc;
 }
 
+static int usb_get_eventfd(ifd_device_t * dev)
+{
+	int rc;
+
+	rc = ifd_sysdep_usb_get_eventfd(dev);
+
+	return rc;
+}
+
 static struct ifd_device_ops ifd_usb_ops;
 
 /*
@@ -195,6 +228,7 @@ ifd_device_t *ifd_open_usb(const char *device)
 	ifd_usb_ops.send = usb_send;
 	ifd_usb_ops.recv = usb_recv;
 	ifd_usb_ops.reset = usb_reset;
+	ifd_usb_ops.get_eventfd = usb_get_eventfd;
 
 	dev = ifd_device_new(device, &ifd_usb_ops, sizeof(*dev));
 	dev->type = IFD_DEVICE_TYPE_USB;

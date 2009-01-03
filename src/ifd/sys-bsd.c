@@ -147,6 +147,11 @@ int ifd_sysdep_usb_bulk(ifd_device_t * dev, int ep, void *buffer, size_t len,
 	}
 }
 
+int ifd_sysdep_usb_get_eventfd(ifd_device_t * dev)
+{
+	return -1;
+}
+
 /*
  * USB URB capture
  */
@@ -182,6 +187,12 @@ int ifd_sysdep_usb_begin_capture(ifd_device_t * dev, int type, int ep,
 	}
 	*capret = cap;
 	return 0;
+}
+
+int ifd_sysdep_usb_capture_event(ifd_device_t * dev, ifd_usb_capture_t * cap,
+			   void *buffer, size_t len)
+{
+	return IFD_ERROR_NOT_SUPPORTED;
 }
 
 int ifd_sysdep_usb_capture(ifd_device_t * dev, ifd_usb_capture_t * cap,

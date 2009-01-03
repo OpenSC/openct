@@ -90,6 +90,7 @@ extern int		ifd_device_send(ifd_device_t *, const unsigned char *, size_t);
 extern int		ifd_device_recv(ifd_device_t *, unsigned char *, size_t, long);
 extern int		ifd_device_control(ifd_device_t *, void *, size_t);
 extern void		ifd_device_set_hotplug(ifd_device_t *, int);
+extern int		ifd_device_get_eventfd(ifd_device_t *);
 extern int		ifd_device_poll_presence(ifd_device_t *,
 				struct pollfd *);
 
@@ -108,6 +109,9 @@ extern int		ifd_usb_begin_capture(ifd_device_t *,
 				int type, int endpoint,
 				size_t maxpacket,
 				ifd_usb_capture_t **);
+extern int		ifd_usb_capture_event(ifd_device_t *,
+				ifd_usb_capture_t *,
+				void *buffer, size_t len);
 extern int		ifd_usb_capture(ifd_device_t *,
 				ifd_usb_capture_t *,
 				void *buffer, size_t len,

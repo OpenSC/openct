@@ -54,6 +54,8 @@ static const char *get_cmd_name(unsigned int cmd)
 	return "<unknown>";
 }
 
+static int do_before_command(ifd_reader_t *);
+static int do_after_command(ifd_reader_t *);
 static int do_status(ifd_reader_t *, int,
 		     ct_tlv_parser_t *, ct_tlv_builder_t *);
 static int do_output(ifd_reader_t *, int,
@@ -100,6 +102,10 @@ int ifdhandler_process(ct_socket_t * sock, ifd_reader_t * reader,
 		     ifdhandler_check_lock(sock, unit, IFD_LOCK_EXCLUSIVE)) < 0)
 			return rc;
 		return do_transact_old(reader, unit, argbuf, resbuf);
+	}
+
+	if ((rc = do_before_command(reader)) < 0) {
+		return rc;
 	}
 
 	memset(&args, 0, sizeof(args));
@@ -161,7 +167,28 @@ int ifdhandler_process(ct_socket_t * sock, ifd_reader_t * reader,
 	if (rc >= 0)
 		rc = resp.error;
 
+	/*
+	 * TODO consider checking error
+	 */
+	do_after_command(reader);
+
 	return rc;
+}
+
+/*
+ * Before command
+ */
+static int do_before_command(ifd_reader_t * reader)
+{
+	return ifd_before_command(reader);
+}
+
+/*
+ * After command
+ */
+static int do_after_command(ifd_reader_t * reader)
+{
+	return ifd_after_command(reader);
 }
 
 /*

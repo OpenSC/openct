@@ -41,6 +41,7 @@ typedef struct ct_socket {
 
 	void *		user_data;
 	int		(*poll)(struct ct_socket *, struct pollfd *);
+	int		(*error)(struct ct_socket *);
 	int		(*recv)(struct ct_socket *);
 	int		(*send)(struct ct_socket *);
 	int		(*process)(struct ct_socket *, header_t *,

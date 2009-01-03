@@ -251,6 +251,14 @@ int ifd_sysdep_usb_poll_presence(ifd_device_t * dev, struct pollfd *pfd)
 }
 
 /*
+ * Event fd
+ */
+int ifd_sysdep_usb_get_eventfd(ifd_device_t * dev)
+{
+	return -1;
+}
+
+/*
  * USB control command
  */
 int
@@ -447,6 +455,12 @@ ifd_sysdep_usb_begin_capture(ifd_device_t * dev,
 	}
 	*capret = cap;
 	return 0;
+}
+
+int ifd_sysdep_usb_capture_event(ifd_device_t * dev, ifd_usb_capture_t * cap,
+			   void *buffer, size_t len)
+{
+	return IFD_ERROR_NOT_SUPPORTED;
 }
 
 int

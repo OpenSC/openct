@@ -170,6 +170,15 @@ int ifd_device_poll_presence(ifd_device_t * dev, struct pollfd *pfd)
 	return dev->ops->poll_presence(dev, pfd);
 }
 
+int ifd_device_get_eventfd(ifd_device_t * dev)
+{
+	if (!dev || !dev->ops)
+		return -1;
+	if (!dev->ops->get_eventfd)
+		return -1;
+	return dev->ops->get_eventfd(dev);
+}
+
 void ifd_device_close(ifd_device_t * dev)
 {
 	if (!dev)

@@ -128,6 +128,12 @@ void workaround_timeout(int sig)
 }
 #endif
 
+int ifd_sysdep_usb_capture_event(ifd_device_t * dev, ifd_usb_capture_t * cap,
+			   void *buffer, size_t len)
+{
+	return IFD_ERROR_NOT_SUPPORTED;
+}
+
 int ifd_sysdep_usb_capture(ifd_device_t * dev, ifd_usb_capture_t * cap,
 			   void *buffer, size_t len, long timeout)
 {
@@ -168,6 +174,14 @@ int ifd_sysdep_usb_end_capture(ifd_device_t * dev, ifd_usb_capture_t * cap)
 	if (cap)
 		free(cap);
 	return 0;
+}
+
+/*
+ * Event fd
+ */
+int ifd_sysdep_usb_get_eventfd(ifd_device_t * dev)
+{
+	return -1;
 }
 
 /*

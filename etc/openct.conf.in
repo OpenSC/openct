@@ -8,6 +8,14 @@ hotplug	= yes;
 # Path to ifdhandler
 ifdhandler {
 	program		= @sbindir@/ifdhandler;
+	#
+	# Safe to disable force_poll:
+	#  =linux-2.6.28 with CONFIG_USB_DEVICEFS
+	# >=linux-2.6.29
+	#
+	# Also safe if you use only ccid driver.
+	#
+	force_poll	= 1;
 @ENABLE_NON_PRIVILEGED@	user		= @daemon_user@;
 @ENABLE_NON_PRIVILEGED@	groups = {
 @ENABLE_NON_PRIVILEGED@		@daemon_groups@,

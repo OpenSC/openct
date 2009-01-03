@@ -43,6 +43,7 @@ void ct_mainloop(void)
 		ct_socket_t *sock, *next;
 		unsigned int nsockets = 0, npoll = 0;
 		unsigned int n = 0, listening;
+		int have_driver_with_poll = 0;
 		int rc;
 
 		/* Zap poll structure */
@@ -65,6 +66,7 @@ void ct_mainloop(void)
 		for (sock = sock_head.next; sock; sock = sock->next) {
 			poll_socket[npoll] = sock;
 			if (sock->poll) {
+				have_driver_with_poll = 1;
 				if (sock->poll(sock, &pfd[npoll]) == 1)
 					npoll++;
 			} else {
@@ -80,7 +82,7 @@ void ct_mainloop(void)
 		if (npoll == 0)
 			break;
 
-		rc = poll(pfd, npoll, 1000);
+		rc = poll(pfd, npoll, have_driver_with_poll ? 1000 : -1);
 		if (rc < 0) {
 			if (errno == EINTR)
 				continue;
@@ -98,6 +100,12 @@ void ct_mainloop(void)
 				continue;
 			}
 
+			if (pfd[n].revents & POLLERR) {
+				if (sock->error(sock) < 0) {
+					ct_socket_free(sock);
+					continue;
+				}
+			}
 			if (pfd[n].revents & POLLOUT) {
 				if (sock->send(sock) < 0) {
 					ct_socket_free(sock);

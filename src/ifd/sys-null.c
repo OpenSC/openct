@@ -29,6 +29,11 @@ int ifd_sysdep_usb_poll_presence(ifd_device_t * dev, struct pollfd *pfd)
 #endif
 }
 
+int ifd_sysdep_usb_get_eventfd(ifd_device_t * dev)
+{
+	return -1;
+}
+
 int ifd_sysdep_usb_control(ifd_device_t * dev, unsigned int requesttype,
 			   unsigned int request, unsigned int value,
 			   unsigned int index, void *data, size_t len,
@@ -80,6 +85,12 @@ int ifd_sysdep_usb_begin_capture(ifd_device_t * dev, int type, int endpoint,
 				 size_t maxpacket, ifd_usb_capture_t ** capret)
 {
 	return -1;
+}
+
+int ifd_sysdep_usb_capture_event(ifd_device_t * dev, ifd_usb_capture_t * cap,
+			   void *buffer, size_t len)
+{
+	return IFD_ERROR_NOT_SUPPORTED;
 }
 
 int ifd_sysdep_usb_capture(ifd_device_t * dev, ifd_usb_capture_t * cap,

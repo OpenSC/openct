@@ -323,6 +323,55 @@ struct ifd_driver_ops {
 	int		(*escape)(ifd_reader_t *reader, int slot,
 				const void *sbuf, const size_t slen,
 				void *rbuf, size_t rlen);
+
+	/**
+	 * Execute before command.
+	 *
+	 * Provides a chance to setup device to accept new commands.
+	 *
+	 * @return Error code <0 if failure, 0 if success.
+	 */
+	int (*before_command) (ifd_reader_t *);
+
+	/**
+	 * Execute after command.
+	 *
+	 * Provides a chance to setup device to accept events.
+	 *
+	 * @return Error code <0 if failure, 0 if success.
+	 */
+	int (*after_command) (ifd_reader_t *);
+
+	/**
+	 * Get event fd.
+	 *
+	 * This will allow the mainloop to wait for event instead of polling.
+	 * May be NULL if unsupported.
+	 *
+	 * @return fd.
+	 */
+	int (*get_eventfd) (ifd_reader_t *);
+
+	/**
+	 * Event callback.
+	 *
+	 * Will be called if an event is set.
+	 * May be NULL if unsupported.
+	 *
+	 * @return Error code <0 if failure, 0 if success.
+	 */
+	int (*event) (ifd_reader_t *, int *status, size_t status_size);
+
+	/**
+	 * Error callback.
+	 *
+	 * Will be called if an error is set on event fd.
+	 * May be NULL if unsupported.
+	 *
+	 * @return Error code <0 if failure, 0 if success. If reader
+	 * should be freed, return an error.
+	 */
+	int (*error) (ifd_reader_t *);
 };
 
 extern void		ifd_driver_register(const char *,
