@@ -217,6 +217,9 @@ typedef struct ccid_status {
 	unsigned char *sbuf[OPENCT_MAX_SLOTS];
 	size_t slen[OPENCT_MAX_SLOTS];
 	unsigned char seq;
+	int support_events;
+	int events_active;
+	ifd_usb_capture_t *event_cap;
 } ccid_status_t;
 
 static int ccid_checkresponse(void *status, int r)
@@ -485,6 +488,7 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 	struct force_parse_device_st *force_dev;
 	unsigned char *_class;
 	unsigned char *p;
+	int support_events = 0;
 
 	if (ifd_usb_get_device(dev, &de)) {
 		ct_error("ccid: device descriptor not found");
@@ -537,6 +541,9 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 				if (intf->bNumEndpoints == 2) {
 					params.usb.ep_intr = 0;
 					ok |= 4;
+				}
+				if (intf->bNumEndpoints == 3) {
+					support_events = 1;
 				}
 				for (i = 0; i < intf->bNumEndpoints; i++) {
 					if (((intf->endpoint[i].bmAttributes &
@@ -758,7 +765,10 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 		reader->nslots++;	/* one virtual slot for RFID escape */
 		st->proto_support |= SUPPORT_ESCAPE;
 	}
-	ifd_debug(3, "Accepted %04x:%04x with features 0x%x and protocols 0x%x", de.idVendor, de.idProduct, ccid.dwFeatures, ccid.dwProtocols);
+
+	st->support_events = support_events;
+
+	ifd_debug(3, "Accepted %04x:%04x with features 0x%x and protocols 0x%x events=%d", de.idVendor, de.idProduct, ccid.dwFeatures, ccid.dwProtocols, st->support_events);
 	return 0;
 }
 
@@ -808,6 +818,23 @@ static int ccid_open(ifd_reader_t * reader, const char *device_name)
 		ifd_device_close(dev);
 		return -1;
 	}
+}
+
+/*
+ * Close the device
+ */
+static int ccid_close(ifd_reader_t * reader)
+{
+	ccid_status_t *st = (ccid_status_t *) reader->driver_data;
+	
+	ifd_debug(1, "called.");
+
+	if (st->event_cap != NULL) {
+		ifd_usb_end_capture(reader->device, st->event_cap);
+		st->event_cap = NULL;
+	}
+
+	return 0;
 }
 
 static int ccid_activate(ifd_reader_t * reader)
@@ -1296,6 +1323,117 @@ static int ccid_recv(ifd_reader_t * reader, unsigned int dad,
 	return r;
 }
 
+static int ccid_before_command(ifd_reader_t * reader)
+{
+	ccid_status_t *st = (ccid_status_t *) reader->driver_data;
+	int rc;
+
+	ifd_debug(1, "called.");
+
+	if (!st->events_active) {
+		return 0;
+	}
+
+	if (st->event_cap == NULL) {
+		return 0;
+	}
+
+	rc = ifd_usb_end_capture(reader->device, st->event_cap);
+	st->event_cap = NULL;
+
+	return rc;
+}
+
+static int ccid_after_command(ifd_reader_t * reader)
+{
+	ccid_status_t *st = (ccid_status_t *) reader->driver_data;
+
+	ifd_debug(1, "called.");
+
+	if (!st->events_active) {
+		return 0;
+	}
+
+	if (st->event_cap != NULL) {
+		return 0;
+	}
+
+	return ifd_usb_begin_capture(
+		reader->device,
+		IFD_USB_URB_TYPE_INTERRUPT,
+		reader->device->settings.usb.ep_intr,
+		8, &st->event_cap
+	);
+}
+
+static int ccid_get_eventfd(ifd_reader_t * reader)
+{
+	ccid_status_t *st = (ccid_status_t *) reader->driver_data;
+	int fd;
+
+	ifd_debug(1, "called.");
+
+	if (!st->support_events) {
+		return -1;
+	}
+
+	fd = ifd_device_get_eventfd(reader->device);
+
+	if (fd != -1) {
+		st->events_active = 1;
+	}
+
+	return fd;
+}
+
+static int ccid_event(ifd_reader_t * reader, int *status, size_t status_size)
+{
+	ccid_status_t *st = (ccid_status_t *) reader->driver_data;
+	unsigned char ret[20];
+	int bytes;
+
+	ifd_debug(1, "called.");
+
+	if (status_size < reader->nslots) {
+		return IFD_ERROR_BUFFER_TOO_SMALL;
+	}
+
+	bytes = ifd_usb_capture_event(reader->device, st->event_cap, ret, 8);
+	if (bytes < 0) {
+		return bytes;
+	}
+
+	if (bytes > 0 && ret[0] == 0x50) {
+		int slot;
+		ifd_debug(3, "status received:%s", ct_hexdump(ret, bytes));
+		for (slot=0;slot<reader->nslots;slot++) {
+			if (1 + (slot / 4) < bytes) {
+				int bits = (ret[1 + (slot / 4)] >> (2 * (slot % 4))) & 0x3;
+				if (bits & 2)
+					status[slot] |= IFD_CARD_STATUS_CHANGED;
+				if (bits & 1)
+					status[slot] |= IFD_CARD_PRESENT;
+				else
+					status[slot] &= ~IFD_CARD_PRESENT;
+
+				ifd_debug(1, "slot %d event result: %08x", slot, status[slot]);
+				st->icc_present[slot] = status[slot] & IFD_CARD_PRESENT;
+			}
+		}
+	}
+
+	return 0;
+}
+
+static int ccid_error(ifd_reader_t * reader)
+{
+	(void)reader;
+
+	ifd_debug(1, "called.");
+
+	return IFD_ERROR_DEVICE_DISCONNECTED;
+}
+
 /*
  * Driver operations
  */
@@ -1307,6 +1445,7 @@ static struct ifd_driver_ops ccid_driver;
 void ifd_ccid_register(void)
 {
 	ccid_driver.open = ccid_open;
+	ccid_driver.close = ccid_close;
 	ccid_driver.activate = ccid_activate;
 	ccid_driver.deactivate = ccid_deactivate;
 	ccid_driver.card_status = ccid_card_status;
@@ -1316,6 +1455,11 @@ void ifd_ccid_register(void)
 	ccid_driver.send = ccid_send;
 	ccid_driver.recv = ccid_recv;
 	ccid_driver.escape = ccid_escape;
+	ccid_driver.before_command = ccid_before_command;
+	ccid_driver.after_command = ccid_after_command;
+	ccid_driver.get_eventfd = ccid_get_eventfd;
+	ccid_driver.event = ccid_event;
+	ccid_driver.error = ccid_error;
 
 	ifd_driver_register("ccid", &ccid_driver);
 }
