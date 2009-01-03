@@ -886,20 +886,29 @@ static int ccid_card_status(ifd_reader_t * reader, int slot, int *status)
 			return 0;
 		}
 	}
+
 	r = ccid_prepare_cmd(reader, cmdbuf, 10, 0, CCID_CMD_GETSLOTSTAT,
 			     NULL, NULL, 0);
 	if (r < 0)
 		return r;
 	r = ccid_command(reader, cmdbuf, 10, ret, 10);
-	if (r < 0)
-		return r;
-	switch (ret[7] & 3) {
-	case 2:
+	if (r == IFD_ERROR_NO_CARD) {
 		stat = 0;
-		break;
-	default:
-		stat = IFD_CARD_PRESENT;
 	}
+	else if (r < 0) {
+		return r;
+	}
+	else {
+		switch (ret[7] & 3) {
+		case 2:
+			stat = 0;
+			break;
+		default:
+			stat = IFD_CARD_PRESENT;
+			break;
+		}
+	}
+
 	ifd_debug(1, "probed result: %d", IFD_CARD_STATUS_CHANGED | stat);
 
 	*status = IFD_CARD_STATUS_CHANGED | stat;
