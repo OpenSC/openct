@@ -145,6 +145,31 @@ static int et_recv(ifd_reader_t * reader, unsigned int dad,
 			       buffer, len, timeout);
 }
 
+static int et_get_eventfd(ifd_reader_t * reader)
+{
+	ifd_debug(1, "called.");
+
+	return ifd_device_get_eventfd(reader->device);
+}
+
+static int et_event(ifd_reader_t * reader, int *status, size_t status_size)
+{
+	(void)reader;
+	(void)status;
+	(void)status_size;
+
+	ifd_debug(1, "called.");
+}
+
+static int et_error(ifd_reader_t * reader)
+{
+	(void)reader;
+
+	ifd_debug(1, "called.");
+
+	return IFD_ERROR_DEVICE_DISCONNECTED;
+}
+
 /*
  * Driver operations
  */
@@ -162,6 +187,9 @@ void ifd_etoken_register(void)
 	etoken_driver.card_reset = et_card_reset;
 	etoken_driver.send = et_send;
 	etoken_driver.recv = et_recv;
+	etoken_driver.get_eventfd = et_get_eventfd;
+	etoken_driver.event = et_event;
+	etoken_driver.error = et_error;
 
 	ifd_driver_register("etoken", &etoken_driver);
 }
