@@ -476,7 +476,7 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 {
 	ccid_status_t *st;
 	ifd_device_params_t params;
-	int r, i, c, ifc, alt;
+	int r, i, c, ifc, alt, num_alt;
 	struct ifd_usb_device_descriptor de;
 	struct ifd_usb_config_descriptor conf;
 	struct ifd_usb_interface_descriptor *intf;
@@ -514,8 +514,8 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 			continue;
 
 		for (ifc = 0; ifc < conf.bNumInterfaces; ifc++) {
-			for (alt = 0; alt < conf.interface[ifc].num_altsetting;
-			     alt++) {
+			num_alt = conf.interface[ifc].num_altsetting;
+			for (alt = 0; alt < num_alt; alt++) {
 				int typeok = 0;
 				int ok = 0;
 				intf = &conf.interface[ifc].altsetting[alt];
@@ -641,7 +641,10 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 		params.usb.configuration = -1;
 
 	params.usb.interface = intf->bInterfaceNumber;
-	params.usb.altsetting = intf->bAlternateSetting;
+	if (num_alt > 1 || intf->bAlternateSetting > 0)
+		params.usb.altsetting = intf->bAlternateSetting;
+	else
+		params.usb.altsetting = -1;
 
 	r = ccid_parse_descriptor(&ccid, p, r - i);
 	ifd_usb_free_configuration(&conf);
