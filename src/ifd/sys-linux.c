@@ -515,9 +515,16 @@ int ifd_scan_usb(void)
 								continue;
 							}
 
-							int bInterfaceClass = read_number ("%x", "%s/%s/%s/%s", base, ent->d_name, ent1->d_name, "bInterfaceClass");
-
-							if (bInterfaceClass == 0x0b) {
+							if (
+								read_number (
+									"%x",
+									"%s/%s/%s/%s",
+									base,
+									ent->d_name,
+									ent1->d_name,
+									"bInterfaceClass"
+								) == 0x0b
+							) {
 								driver = "ccid";
 							}
 						}
