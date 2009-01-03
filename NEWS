@@ -1,5 +1,13 @@
 NEWS for OpenCT -- History of user visible changes
 
+New in 0.6.16, ????-??-??; Andreas Jellinghaus
+* For ccid, etoken* drivers remove polling loop, review the force_poll
+  configuration option, this reduces power consumption and CPU load.
+* Fix some issues caused by newer udev version.
+* Handle T1 abort better.
+* Some build system fixes.
+* Some minor fixes.
+
 New in 0.6.15; 2008-07-31; Andreas Jellinghaus
 * Build system rewritten (NOTICE: configure options was modified). 
 * Build system rewritten (NOTICE: configure options was modified). 
