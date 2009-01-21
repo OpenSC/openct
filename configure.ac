@@ -76,9 +76,8 @@ case "${host}" in
 	;;
 esac
 
-usrlibdir="/usr/lib${libdir##*/lib}"
-usrsbindir="/usr/sbin${libdir##*/sbin}"
-
+full_libdir=`eval eval eval eval eval echo "${libdir}" | sed "s#NONE#${prefix}#" | sed "s#NONE#${ac_default_prefix}#"`
+full_sbindir=`eval eval eval eval eval echo "${sbindir}" | sed "s#NONE#${prefix}#" | sed "s#NONE#${ac_default_prefix}#"`
 full_sysconfdir=`eval eval eval eval eval echo "${sysconfdir}" | sed "s#NONE#${prefix}#" | sed "s#NONE#${ac_default_prefix}#"`
 full_localstatedir=`eval eval eval eval eval echo "${localstatedir}" | sed "s#NONE#${prefix}#" | sed "s#NONE#${ac_default_prefix}#"`
 
@@ -192,7 +191,7 @@ AC_ARG_WITH(
 	[ifddir],
 	[AS_HELP_STRING([--with-ifddir],[ifd directory @<:@/usr/lib/ifd@:>@])],
 	[ifddir="${withval}"],
-	[ifddir="${usrlibdir}/ifd"]
+	[ifddir="${full_libdir}/ifd"]
 )
 
 AC_ARG_WITH(
@@ -405,7 +404,7 @@ AC_DEFINE_UNQUOTED([OPENCT_CONF_PATH], ["${full_sysconfdir}/openct.conf"], [defa
 AC_DEFINE_UNQUOTED([OPENCT_MODULES_PATH], ["${ifddir}"], [modules path for libopenct])
 OPENCT_SOCKET_PATH="${full_localstatedir}/run/openct"
 AC_DEFINE_UNQUOTED([OPENCT_SOCKET_PATH], ["${OPENCT_SOCKET_PATH}"], [socket path for libopenct])
-AC_DEFINE_UNQUOTED([OPENCT_IFDHANDLER_PATH], ["${usrsbindir}/ifdhandler"], [ifdhandler path for libopenct])
+AC_DEFINE_UNQUOTED([OPENCT_IFDHANDLER_PATH], ["${full_sbindir}/ifdhandler"], [ifdhandler path for libopenct])
 
 AC_CREATE_STDINT_H([src/include/openct/types.h])
 
