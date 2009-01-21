@@ -159,6 +159,8 @@ static int et_event(ifd_reader_t * reader, int *status, size_t status_size)
 	(void)status_size;
 
 	ifd_debug(1, "called.");
+
+	return 0;
 }
 
 static int et_error(ifd_reader_t * reader)
