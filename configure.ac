@@ -76,11 +76,6 @@ case "${host}" in
 	;;
 esac
 
-full_libdir=`eval eval eval eval eval echo "${libdir}" | sed "s#NONE#${prefix}#" | sed "s#NONE#${ac_default_prefix}#"`
-full_sbindir=`eval eval eval eval eval echo "${sbindir}" | sed "s#NONE#${prefix}#" | sed "s#NONE#${ac_default_prefix}#"`
-full_sysconfdir=`eval eval eval eval eval echo "${sysconfdir}" | sed "s#NONE#${prefix}#" | sed "s#NONE#${ac_default_prefix}#"`
-full_localstatedir=`eval eval eval eval eval echo "${localstatedir}" | sed "s#NONE#${prefix}#" | sed "s#NONE#${ac_default_prefix}#"`
-
 AC_ARG_ENABLE(
 	[strict],
 	[AS_HELP_STRING([--enable-strict],[enable strict compile mode @<:@disabled@:>@])],
@@ -191,7 +186,7 @@ AC_ARG_WITH(
 	[ifddir],
 	[AS_HELP_STRING([--with-ifddir],[ifd directory @<:@/usr/lib/ifd@:>@])],
 	[ifddir="${withval}"],
-	[ifddir="${full_libdir}/ifd"]
+	[ifddir="\${libdir}/ifd"]
 )
 
 AC_ARG_WITH(
@@ -400,11 +395,16 @@ if test "${enable_usb}" = "yes"; then
 	OPTIONAL_LIBUSB_LIBS="${LIBUSB_LIBS}"
 fi
 
-AC_DEFINE_UNQUOTED([OPENCT_CONF_PATH], ["${full_sysconfdir}/openct.conf"], [default config file for libopenct])
-AC_DEFINE_UNQUOTED([OPENCT_MODULES_PATH], ["${ifddir}"], [modules path for libopenct])
-OPENCT_SOCKET_PATH="${full_localstatedir}/run/openct"
-AC_DEFINE_UNQUOTED([OPENCT_SOCKET_PATH], ["${OPENCT_SOCKET_PATH}"], [socket path for libopenct])
-AC_DEFINE_UNQUOTED([OPENCT_IFDHANDLER_PATH], ["${full_sbindir}/ifdhandler"], [ifdhandler path for libopenct])
+OPENCT_SOCKET_PATH='${localstatedir}/run/openct'
+CPPFLAGS_OPENCT_SOCKET_PATH='-DOPENCT_SOCKET_PATH="\"${OPENCT_SOCKET_PATH}\""'
+CPPFLAGS_OPENCT_CONF_PATH='-DOPENCT_CONF_PATH="\"${sysconfdir}/ifdhandler\""'
+CPPFLAGS_OPENCT_MODULES_PATH='-DOPENCT_MODULES_PATH="\"${ifddir}\""'
+CPPFLAGS_OPENCT_IFDHANDLER_PATH='-DOPENCT_IFDHANDLER_PATH="\"${sbindir}/ifdhandler\""'
+CPPFLAGS="${CPPFLAGS} \
+	${CPPFLAGS_OPENCT_CONF_PATH} \
+	${CPPFLAGS_OPENCT_SOCKET_PATH} \
+	${CPPFLAGS_OPENCT_MODULES_PATH} \
+	${CPPFLAGS_OPENCT_IFDHANDLER_PATH}"
 
 AC_CREATE_STDINT_H([src/include/openct/types.h])
 
