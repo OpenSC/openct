@@ -57,6 +57,11 @@ typedef struct {
 
 #define T1_BUFFER_SIZE		(3 + 254 + 2)
 
+#define NAD 0
+#define PCB 1
+#define LEN 2
+#define DATA 3
+
 /* internal state, do not mess with it. */
 /* should be != DEAD after reset/init */
 enum {
@@ -235,7 +240,7 @@ static int t1_transceive(ifd_protocol_t * prot, int dad, const void *snd_buf,
 			continue;
 		}
 
-		pcb = sdata[1];
+		pcb = sdata[PCB];
 		switch (t1_block_type(pcb)) {
 		case T1_R_BLOCK:
 			if (T1_IS_ERROR(pcb)) {
@@ -292,7 +297,7 @@ static int t1_transceive(ifd_protocol_t * prot, int dad, const void *snd_buf,
 
 			t1->nr ^= 1;
 
-			if (ct_buf_put(&rbuf, sdata + 3, sdata[2]) < 0)
+			if (ct_buf_put(&rbuf, sdata + 3, sdata[LEN]) < 0)
 				goto error;
 
 			if ((pcb & T1_MORE_BLOCKS) == 0)
@@ -328,19 +333,19 @@ static int t1_transceive(ifd_protocol_t * prot, int dad, const void *snd_buf,
 				break;
 			case T1_S_IFS:
 				ifd_debug(1, "CT sent S-block with ifs=%u",
-					  sdata[3]);
-				if (sdata[3] == 0)
+					  sdata[DATA]);
+				if (sdata[DATA] == 0)
 					goto resync;
-				t1->ifsc = sdata[3];
-				ct_buf_putc(&tbuf, sdata[3]);
+				t1->ifsc = sdata[DATA];
+				ct_buf_putc(&tbuf, sdata[DATA]);
 				break;
 			case T1_S_WTX:
 				/* We don't handle the wait time extension
 				 * yet */
 				ifd_debug(1, "CT sent S-block with wtx=%u",
-					  sdata[3]);
-				t1->wtx = sdata[3];
-				ct_buf_putc(&tbuf, sdata[3]);
+					  sdata[DATA]);
+				t1->wtx = sdata[DATA];
+				ct_buf_putc(&tbuf, sdata[DATA]);
 				break;
 			default:
 				ct_error("T=1: Unknown S block type 0x%02x",
@@ -621,7 +626,7 @@ int t1_negotiate_ifsd(ifd_protocol_t * proto, unsigned int dad, int ifsd)
 		pcb = sdata[1];
 		if (t1_block_type(pcb) == T1_S_BLOCK &&
 		    T1_S_TYPE(pcb) == T1_S_IFS && T1_S_IS_RESPONSE(pcb)) {
-			if (sdata[2] != 1 || sdata[3] != ifsd)
+			if (sdata[LEN] != 1 || sdata[DATA] != ifsd)
 				goto error;
 			break;
 		}
