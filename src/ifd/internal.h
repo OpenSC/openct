@@ -145,8 +145,6 @@ extern int ifd_send_command(ifd_protocol_t *, const void *, size_t);
 extern int ifd_recv_response(ifd_protocol_t *, void *, size_t, long);
 
 /* driver.c */
-extern void ifd_driver_register(const char *, struct ifd_driver_ops *);
-extern const ifd_driver_t *ifd_driver_get(const char *);
 extern unsigned int ifd_drivers_list(const char **, size_t);
 
 /* device.c */
