@@ -590,8 +590,36 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 			if (!intf)
 				continue;
 			if (!intf->extralen) {
-				intf = NULL;
-				continue;
+				int i;
+				/* Buggy O2 Micro CCID SC Reader has zero extra len at interface level but not endpoint descriptor.
+				 * Patch the interface level field and proceed.
+				 * ProdID 7762 reader is in Dell Latitude D620 and 7772 is in D630.
+				 */
+        			if( de.idVendor == 0x0b97 && (de.idProduct == 0x7762 || de.idProduct == 0x7772) )  {
+					ct_error("ccid: extra len is zero, patching O2 Micro support");
+					for (i=0; i<intf->bNumEndpoints; i++)  {
+						/* find the extra[] array */
+						if( intf->endpoint[i].extralen == 54 )  {
+							/* get the extra[] from the endpoint */
+							intf->extralen = 54;
+							/* avoid double free on close, allocate here */
+							intf->extra = malloc(54);
+							if( intf->extra )  {
+								memcpy( intf->extra, intf->endpoint[i].extra, 54 );
+								break;
+							}
+							else  {
+								intf = NULL;
+								continue;
+							}
+						}
+					}
+				}
+				else  {
+					intf = NULL;
+					ct_error("ccid: extra len is zero, continuing");
+					continue;
+				}
 			}
 
 			r = intf->extralen;
