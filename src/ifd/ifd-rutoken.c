@@ -32,15 +32,14 @@ static int rutoken_open(ifd_reader_t * reader, const char *device_name)
 	ifd_device_params_t params;
 
 	ifd_debug(1, "rutoken_open - %s", device_name);
-	ifd_debug(1, "%s:%d rutoken_open()", __FILE__, __LINE__);
 
-	reader->name = "ruToken driver";
+	reader->name = "Rutoken S driver";
 	reader->nslots = 1;
 	if (!(dev = ifd_device_open(device_name)))
 		return -1;
 
 	if (ifd_device_type(dev) != IFD_DEVICE_TYPE_USB) {
-		ct_error("ruToken driver: device %s is not a USB device", device_name);
+		ct_error("Rutoken: device %s is not a USB device", device_name);
 		ifd_device_close(dev);
 		return -1;
 	}
@@ -48,7 +47,7 @@ static int rutoken_open(ifd_reader_t * reader, const char *device_name)
 	params = dev->settings;
 	params.usb.interface = 0;
 	if (ifd_device_set_parameters(dev, &params) < 0) {
-		ct_error("ruToken driver: setting parameters failed", device_name);
+		ct_error("Rutoken: setting parameters failed", device_name);
 		ifd_device_close(dev);
 		return -1;
 	}
@@ -56,25 +55,24 @@ static int rutoken_open(ifd_reader_t * reader, const char *device_name)
 	reader->device = dev;
 	dev->timeout = 1000;
 
-	ifd_debug(1, "%s:%d Checkpoint", __FILE__, __LINE__);
+	ifd_debug(1, "rutoken_open - %s - successful", device_name);
 	return 0;
 }
 
 static int rutoken_activate(ifd_reader_t * reader)
 {
-	ifd_debug(1, "%s:%d rutoken_activate()", __FILE__, __LINE__);
+	ifd_debug(1, "called.");
 	return 0;
 }
 
 static int rutoken_deactivate(ifd_reader_t * reader)
 {
-	ifd_debug(1, "%s:%d rutoken_deactivate()", __FILE__, __LINE__);
+	ifd_debug(1, "called.");
 	return -1;
 }
 
 static int rutoken_getstatus(ifd_reader_t * reader, unsigned char *status)
 {
-	//ifd_debug(1, "");
 	if(ifd_usb_control(reader->device, 0xc1, USB_ICC_GET_STATUS, 
 				0, 0, status, 1, 1000) < 0 )
 		return -1;
@@ -102,8 +100,6 @@ static int rutoken_getstatus(ifd_reader_t * reader, unsigned char *status)
 static int rutoken_card_reset(ifd_reader_t * reader, int slot, void *atr,
 		size_t atr_len)
 {
-	ifd_debug(1, "%s:%d rutoken_card_reset()", __FILE__, __LINE__);
-
 	int nLen = 0, i;
 	ifd_debug(1, "rutoken_card_reset, slot = %X", slot);
 	if(ifd_usb_control(reader->device, 0x41, USB_ICC_POWER_OFF, 0, 0, 0, 0, -1) < 0)
@@ -150,8 +146,6 @@ static int rutoken_restart(ifd_reader_t * reader)
  */
 static int rutoken_set_protocol(ifd_reader_t * reader, int nslot, int proto)
 {
-	ifd_debug(1, "set protocol: {%d}", proto);
-
 	ifd_slot_t *slot;
 	ifd_protocol_t *p;
 
@@ -178,7 +172,6 @@ static int rutoken_set_protocol(ifd_reader_t * reader, int nslot, int proto)
 static int rutoken_card_status(ifd_reader_t * reader, int slot,
 		int *status)
 {
-	//ifd_debug(1, "");
 	*status = IFD_CARD_PRESENT;
 	return 0;
 }
@@ -397,6 +390,33 @@ static int rutoken_transparent( ifd_reader_t * reader, int dad,
 	return -1;
 }
 
+static int rutoken_get_eventfd(ifd_reader_t * reader)
+{
+	ifd_debug(1, "called.");
+
+	return ifd_device_get_eventfd(reader->device);
+}
+
+static int rutoken_event(ifd_reader_t * reader, int *status, size_t status_size)
+{
+	(void)reader;
+	(void)status;
+	(void)status_size;
+
+	ifd_debug(1, "called.");
+
+	return 0;
+}
+
+static int rutoken_error(ifd_reader_t * reader)
+{
+	(void)reader;
+
+	ifd_debug(1, "called.");
+
+	return IFD_ERROR_DEVICE_DISCONNECTED;
+}
+
 static struct ifd_driver_ops rutoken_driver;
 
 void ifd_rutoken_register(void)
@@ -408,6 +428,9 @@ void ifd_rutoken_register(void)
 	rutoken_driver.card_status = rutoken_card_status;
 	rutoken_driver.set_protocol = rutoken_set_protocol;
 	rutoken_driver.transparent = rutoken_transparent;
+	rutoken_driver.get_eventfd = rutoken_get_eventfd;
+	rutoken_driver.event = rutoken_event;
+	rutoken_driver.error = rutoken_error;
 
 	ifd_driver_register("rutoken", &rutoken_driver);
 }
