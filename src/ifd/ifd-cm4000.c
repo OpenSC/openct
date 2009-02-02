@@ -146,6 +146,33 @@ static int cm_recv(ifd_reader_t * reader, unsigned int dad,
 	return read(dev->fd, buffer, len);
 }
 
+static int cm_get_eventfd(ifd_reader_t * reader)
+{
+	ifd_debug(1, "called.");
+
+	return ifd_device_get_eventfd(reader->device);
+}
+
+static int cm_event(ifd_reader_t * reader, int *status, size_t status_size)
+{
+	(void)reader;
+	(void)status;
+	(void)status_size;
+
+	ifd_debug(1, "called.");
+
+	return IFD_ERROR_DEVICE_DISCONNECTED;
+}
+
+static int cm_error(ifd_reader_t * reader)
+{
+	(void)reader;
+
+	ifd_debug(1, "called.");
+
+	return IFD_ERROR_DEVICE_DISCONNECTED;
+}
+
 /*
  * Driver operations
  */
@@ -163,6 +190,9 @@ void ifd_cm4000_register(void)
 	cm4000_driver.card_status = cm_card_status;
 	cm4000_driver.send = cm_send;
 	cm4000_driver.recv = cm_recv;
+	cm4000_driver.get_eventfd = cm_get_eventfd;
+	cm4000_driver.event = cm_event;
+	cm4000_driver.error = cm_error;
 
 	ifd_driver_register("cm4000", &cm4000_driver);
 }

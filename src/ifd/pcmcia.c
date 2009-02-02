@@ -109,6 +109,13 @@ static void ifd_pcmcia_close(ifd_device_t * dev)
 	dev->fd = -1;
 }
 
+static int ifd_pcmcia_get_eventfd(ifd_device_t * dev)
+{
+	int rc;
+
+	return dev->fd;
+}
+
 static struct ifd_device_ops ifd_pcmcia_ops;
 
 /*
@@ -128,6 +135,7 @@ ifd_device_t *ifd_open_pcmcia(const char *name)
 	ifd_pcmcia_ops.recv = ifd_pcmcia_recv;
 	ifd_pcmcia_ops.set_params = ifd_pcmcia_set_params;
 	ifd_pcmcia_ops.close = ifd_pcmcia_close;
+	ifd_pcmcia_ops.get_eventfd = ifd_pcmcia_get_eventfd;
 
 	dev = ifd_device_new(name, &ifd_pcmcia_ops, sizeof(*dev));
 	dev->timeout = 1000;	/* acceptable? */

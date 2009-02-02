@@ -10,10 +10,8 @@ ifdhandler {
 	program		= @sbindir@/ifdhandler;
 	#
 	# Safe to disable force_poll:
-	#  =linux-2.6.28 with CONFIG_USB_DEVICEFS
-	# >=linux-2.6.29
-	#
-	# Also safe if you use only ccid driver.
+	#  >=linux-2.6.27.14
+	#  >=linux-2.6.28.3
 	#
 	force_poll	= 1;
 @ENABLE_NON_PRIVILEGED@	user		= @daemon_user@;
