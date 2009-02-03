@@ -1179,7 +1179,7 @@ static int ccid_set_protocol(ifd_reader_t * reader, int s, int proto)
 	}
 
 	if ((st->flags & FLAG_NO_SETPARAM) == 0 &&
-		((st->flags & FLAG_AUTO_ATRPARSE) == 0 |
+		((st->flags & FLAG_AUTO_ATRPARSE) == 0 ||
 		proto != IFD_PROTOCOL_T0)) {
 
 		/* if FLAG_AUTO_ATRPARSE, only set the protocol. */
