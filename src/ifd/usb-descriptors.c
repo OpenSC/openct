@@ -220,20 +220,6 @@ static int ifd_usb_parse_interface(struct ifd_usb_interface *interface,
 			if (retval < 0)
 				return retval;
 
-			if (ifp->endpoint[i].extra != NULL) {
-				ifp->extra =
-				    (unsigned char *)malloc(ifp->endpoint[i].
-							    extralen);
-				if (!ifp->extra) {
-					ct_error("out of memory");
-					ifp->extralen = 0;
-					return -1;
-				}
-				memcpy(ifp->extra, ifp->endpoint[i].extra,
-				       ifp->endpoint[i].extralen);
-				ifp->extralen = ifp->endpoint[i].extralen;
-			}
-
 			buffer += retval;
 			parsed += retval;
 			size -= retval;
