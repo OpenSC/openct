@@ -15,6 +15,8 @@
 #include "atr.h"
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #define CCID_ERR_ABORTED	0xFF	/* CMD ABORTED */
 #define CCID_ERR_ICC_MUTE	0xFE
@@ -489,6 +491,13 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 	unsigned char *_class;
 	unsigned char *p;
 	int support_events = 0;
+
+#define PCSCLITE_FILE "/var/run/pcscd/pcscd.comm"
+	struct stat buf;
+
+	/* give priority to pcsc-lite for CCID devices */
+	if (0 == stat(PCSCLITE_FILE, &buf))
+		sleep(3);
 
 	if (ifd_usb_get_device(dev, &de)) {
 		ct_error("ccid: device descriptor not found");
