@@ -390,11 +390,11 @@ static int rutoken_transparent( ifd_reader_t * reader, int dad,
 	return -1;
 }
 
-static int rutoken_get_eventfd(ifd_reader_t * reader)
+static int rutoken_get_eventfd(ifd_reader_t * reader, short *events)
 {
 	ifd_debug(1, "called.");
 
-	return ifd_device_get_eventfd(reader->device);
+	return ifd_device_get_eventfd(reader->device, events);
 }
 
 static int rutoken_event(ifd_reader_t * reader, int *status, size_t status_size)

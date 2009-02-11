@@ -236,7 +236,7 @@ static void ifdhandler_run(ifd_reader_t * reader)
 		sock->fd = -1;
 	}
 	else {
-		sock->fd = ifd_get_eventfd(reader);
+		sock->fd = ifd_get_eventfd(reader, &sock->events);
 	}
 	if (sock->fd == -1) {
 		ifd_debug(1, "events inactive for reader %s", reader->name);
@@ -247,7 +247,6 @@ static void ifdhandler_run(ifd_reader_t * reader)
 		ifd_debug(1, "events active for reader %s", reader->name);
 		sock->error = ifdhandler_error;
 		sock->send = ifdhandler_event;
-		sock->events = POLLOUT;
 		ifd_before_command(reader);
 		ifd_poll(reader);
 		ifd_after_command(reader);

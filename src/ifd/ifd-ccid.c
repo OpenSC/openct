@@ -1403,7 +1403,7 @@ static int ccid_after_command(ifd_reader_t * reader)
 	);
 }
 
-static int ccid_get_eventfd(ifd_reader_t * reader)
+static int ccid_get_eventfd(ifd_reader_t * reader, short *events)
 {
 	ccid_status_t *st = (ccid_status_t *) reader->driver_data;
 	int fd;
@@ -1414,7 +1414,7 @@ static int ccid_get_eventfd(ifd_reader_t * reader)
 		return -1;
 	}
 
-	fd = ifd_device_get_eventfd(reader->device);
+	fd = ifd_device_get_eventfd(reader->device, events);
 
 	if (fd != -1) {
 		st->events_active = 1;

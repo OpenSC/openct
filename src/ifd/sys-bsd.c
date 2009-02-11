@@ -147,7 +147,7 @@ int ifd_sysdep_usb_bulk(ifd_device_t * dev, int ep, void *buffer, size_t len,
 	}
 }
 
-int ifd_sysdep_usb_get_eventfd(ifd_device_t * dev)
+int ifd_sysdep_usb_get_eventfd(ifd_device_t * dev, short *events)
 {
 	return -1;
 }

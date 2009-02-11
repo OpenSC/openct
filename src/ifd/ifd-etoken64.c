@@ -128,11 +128,11 @@ static int et64_recv(ifd_reader_t * reader, unsigned int dad,
 			       buffer, len, timeout);
 }
 
-static int et64_get_eventfd(ifd_reader_t * reader)
+static int et64_get_eventfd(ifd_reader_t * reader, short *events)
 {
 	ifd_debug(1, "called.");
 
-	return ifd_device_get_eventfd(reader->device);
+	return ifd_device_get_eventfd(reader->device, events);
 }
 
 static int et64_event(ifd_reader_t * reader, int *status, size_t status_size)

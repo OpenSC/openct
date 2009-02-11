@@ -66,7 +66,7 @@ struct ifd_device_ops {
 
 	void (*close) (ifd_device_t *);
 
-	int (*get_eventfd) (ifd_device_t *);
+	int (*get_eventfd) (ifd_device_t *, short *events);
 
 	/* Poll for device presence. This function is called
 	 * prior to the poll call (with revents == 0), in this
@@ -164,7 +164,7 @@ extern unsigned int csum_crc_compute(const uint8_t *, size_t, unsigned char *);
 
 /* Internal system dependent device functions */
 extern int ifd_sysdep_usb_poll_presence(ifd_device_t *, struct pollfd *);
-extern int ifd_sysdep_usb_get_eventfd(ifd_device_t *);
+extern int ifd_sysdep_usb_get_eventfd(ifd_device_t *, short *events);
 extern int ifd_sysdep_usb_control(ifd_device_t *,
 				  unsigned int,
 				  unsigned int,

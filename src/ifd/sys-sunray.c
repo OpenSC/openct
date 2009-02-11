@@ -179,7 +179,7 @@ int ifd_sysdep_usb_end_capture(ifd_device_t * dev, ifd_usb_capture_t * cap)
 /*
  * Event fd
  */
-int ifd_sysdep_usb_get_eventfd(ifd_device_t * dev)
+int ifd_sysdep_usb_get_eventfd(ifd_device_t * dev, short *events)
 {
 	return -1;
 }

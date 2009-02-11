@@ -253,7 +253,7 @@ int ifd_sysdep_usb_poll_presence(ifd_device_t * dev, struct pollfd *pfd)
 /*
  * Event fd
  */
-int ifd_sysdep_usb_get_eventfd(ifd_device_t * dev)
+int ifd_sysdep_usb_get_eventfd(ifd_device_t * dev, short *events)
 {
 	return -1;
 }

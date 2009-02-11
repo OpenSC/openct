@@ -179,7 +179,7 @@ extern int			ifd_protocol_write_memory(ifd_protocol_t *,
 extern void			ifd_protocol_free(ifd_protocol_t *);
 extern int			ifd_before_command(ifd_reader_t *);
 extern int			ifd_after_command(ifd_reader_t *);
-extern int			ifd_get_eventfd(ifd_reader_t *);
+extern int			ifd_get_eventfd(ifd_reader_t *, short *);
 extern void			ifd_poll(ifd_reader_t *);
 extern int			id_event(ifd_reader_t *);
 

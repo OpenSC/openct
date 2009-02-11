@@ -585,10 +585,10 @@ int ifd_after_command(ifd_reader_t *reader)
 /*
  * Get eventfd
  */
-int ifd_get_eventfd(ifd_reader_t *reader)
+int ifd_get_eventfd(ifd_reader_t *reader, short *events)
 {
 	if (reader->driver->ops->get_eventfd) {
-		return reader->driver->ops->get_eventfd(reader);
+		return reader->driver->ops->get_eventfd(reader, events);
 	}
 	else {
 		return -1;

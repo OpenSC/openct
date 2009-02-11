@@ -199,11 +199,11 @@ static int usb_reset(ifd_device_t * dev)
 	return rc;
 }
 
-static int usb_get_eventfd(ifd_device_t * dev)
+static int usb_get_eventfd(ifd_device_t * dev, short *events)
 {
 	int rc;
 
-	rc = ifd_sysdep_usb_get_eventfd(dev);
+	rc = ifd_sysdep_usb_get_eventfd(dev, events);
 
 	return rc;
 }

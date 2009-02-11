@@ -350,7 +350,7 @@ struct ifd_driver_ops {
 	 *
 	 * @return fd.
 	 */
-	int (*get_eventfd) (ifd_reader_t *);
+	int (*get_eventfd) (ifd_reader_t *, short *events);
 
 	/**
 	 * Event callback.
