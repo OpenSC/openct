@@ -511,10 +511,16 @@ case "${host}" in
 
 	cat <<EOF
 
+Linux note:
+===========
 Without libusb coldplugging will work in basic way,
 To use usb devices, your hotplugging needs to be
 configured and you need to plug in any device
 after the system has started (i.e. the init script ran)
+
+BSD note:
+==========
+Without libusb, FreeBSD 8.0 will probably not work.
 
 EOF
 
