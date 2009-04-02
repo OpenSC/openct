@@ -209,6 +209,7 @@ int ct_status_update(ct_info_t * status)
 static int ct_status_lock(void)
 {
 	int fd, retries = 10;
+	int ret = -1;
 	char status_lock_path[PATH_MAX];
 	char status_temp_path[PATH_MAX];
 
@@ -224,15 +225,14 @@ static int ct_status_lock(void)
 
 	while (retries--) {
 		if (link(status_temp_path, status_lock_path) >= 0) {
-			close(fd);
-			unlink(status_lock_path);
-			return 0;
+			ret = 0;
+			break;
 		}
 	}
 
 	close(fd);
-	unlink(status_lock_path);
-	return -1;
+	unlink(status_temp_path);
+	return ret;
 }
 
 static void ct_status_unlock(void)
