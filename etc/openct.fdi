@@ -141,6 +141,12 @@
        <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
       </match>
 
+      <match key="smart_card_reader.openct_capable" bool="true">
+	<merge key="info.category" type="string">smart_card_reader</merge>
+	<merge key="smart_card_reader.device_file" type="copy_property">@info.parent:linux.device_file</merge>
+	<append key="info.capabilities" type="strlist">smart_card_reader</append>
+      </match>
+
     </match>
   </device>
 </deviceinfo>
