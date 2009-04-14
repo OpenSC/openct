@@ -3,14 +3,11 @@
 PRODUCT="`printf %x/%x/%x $HAL_PROP_USB_VENDOR_ID $HAL_PROP_USB_PRODUCT_ID \
 	$HAL_PROP_USB_DEVICE_REVISION_BCD`"
 
-DEVICE="`printf /dev/bus/usb/%03u/%03u \
-	$HAL_PROP_USB_BUS_NUMBER $HAL_PROP_USB_LINUX_DEVICE_NUMBER`"
+# NOTE: Minor race condidion. udev creates nodes with o+r.
+chmod o-r $HAL_PROP_SMART_CARD_READER_DEVICE_FILE
+chown @USER@:@GROUP@ $HAL_PROP_SMART_CARD_READER_DEVICE_FILE
 
-if test -e $DEVICE
+if test -e "$HAL_PROP_SMART_CARD_READER_DEVICE_FILE"
 then
-	exec @sbindir@/openct-control attach usb:$PRODUCT usb $DEVICE
+	exec @sbindir@/openct-control attach usb:$PRODUCT usb $HAL_PROP_SMART_CARD_READER_DEVICE_FILE
 fi
-
-DEVICE="`printf /proc/bus/usb/%03u/%03u \
-	$HAL_PROP_USB_BUS_NUMBER $HAL_PROP_USB_LINUX_DEVICE_NUMBER`"
-exec @sbindir@/openct-control attach usb:$PRODUCT usb $DEVICE
