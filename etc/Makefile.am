@@ -14,7 +14,7 @@ udev_generated_scripts = openct_usb openct_pcmcia openct_serial
 CLEANFILES = $(generated_data) $(noinst_generated_scripts) $(udev_generated_scripts)
 
 nodist_noinst_SCRIPTS = $(noinst_generated_scripts)
-dist_noinst_DATA = Info.plist openct.fdi $(sources)
+dist_noinst_DATA = Info.plist openct.fdi openct-policy.fdi $(sources)
 nodist_noinst_DATA = $(generated_data)
 
 if ENABLE_UDEV
