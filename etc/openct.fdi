@@ -135,6 +135,12 @@
 	</match>
       </match>
 
+ 
+      <match key="usb.interface.class" int="0x0b">
+       <merge key="info.category" type="string">smart_card_reader</merge>
+       <append key="info.addons" type="strlist">hald-addon-openct</append>
+      </match>
+
     </match>
   </device>
 </deviceinfo>
