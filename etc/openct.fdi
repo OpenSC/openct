@@ -5,139 +5,119 @@
 
       <match key="usb.vendor_id" int="0x0973">
 	<match key="usb.product_id" int="0x0001">
-	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
 	</match>
       </match>
 
       <match key="usb.vendor_id" int="0x0529">
 	<match key="usb.product_id" int="0x050c">
-	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
 	</match>
       </match>
 
       <match key="usb.vendor_id" int="0x0529">
 	<match key="usb.product_id" int="0x0514">
-	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
 	</match>
       </match>
 
       <match key="usb.vendor_id" int="0x0529">
 	<match key="usb.product_id" int="0x0600">
-	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
 	</match>
       </match>
 
       <match key="usb.vendor_id" int="0x0529">
 	<match key="usb.product_id" int="0x0700">
-	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
 	</match>
       </match>
 
       <match key="usb.vendor_id" int="0x073d">
 	<match key="usb.product_id" int="0x0005">
-	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
 	</match>
       </match>
 
       <match key="usb.vendor_id" int="0x04b9">
 	<match key="usb.product_id" int="0x1200">
-	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
 	</match>
       </match>
 
       <match key="usb.vendor_id" int="0x04b9">
 	<match key="usb.product_id" int="0x1300">
-	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
 	</match>
       </match>
 
       <match key="usb.vendor_id" int="0x096e">
 	<match key="usb.product_id" int="0x0005">
-	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
 	</match>
       </match>
 
       <match key="usb.vendor_id" int="0x096e">
 	<match key="usb.product_id" int="0x0401">
-	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
 	</match>
       </match>
 
       <match key="usb.interface.class" int="0xb">
 	<match key="usb.interface.subclass" int="0x0">
-	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
 	</match>
       </match>
 
       <match key="usb.vendor_id" int="0x04e6">
 	<match key="usb.product_id" int="0x0003">
-	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
 	</match>
       </match>
 
       <match key="usb.vendor_id" int="0x04e6">
 	<match key="usb.product_id" int="0xE003">
-	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
 	</match>
       </match>
 
       <match key="usb.vendor_id" int="0x072f">
 	<match key="usb.product_id" int="0x0001">
-	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
 	</match>
       </match>
 
       <match key="usb.vendor_id" int="0x072f">
 	<match key="usb.product_id" int="0x8009">
-	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
 	</match>
       </match>
 
       <match key="usb.vendor_id" int="0x072f">
 	<match key="usb.product_id" int="0x9000">
-	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
 	</match>
       </match>
 
       <match key="usb.vendor_id" int="0x072f">
 	<match key="usb.product_id" int="0x9006">
-	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
 	</match>
       </match>
 
       <match key="usb.vendor_id" int="0x072f">
 	<match key="usb.product_id" int="0x9007">
-	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
 	</match>
       </match>
       <match key="usb.vendor_id" int="0x072f">
 	<match key="usb.product_id" int="0x90d0">
-	  <merge key="info.category" type="string">smart_card_reader</merge>
 	  <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
 	</match>
       </match>
 
  
       <match key="usb.interface.class" int="0x0b">
-       <merge key="info.category" type="string">smart_card_reader</merge>
        <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
       </match>
 
