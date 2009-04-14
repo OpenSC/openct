@@ -3,9 +3,21 @@
 PRODUCT="`printf %x/%x/%x $HAL_PROP_USB_VENDOR_ID $HAL_PROP_USB_PRODUCT_ID \
 	$HAL_PROP_USB_DEVICE_REVISION_BCD`"
 
+# this script is run by root, so you can use it to modify
+# owner, group and permissions of the device file.
+# 
 # NOTE: Minor race condidion. udev creates nodes with o+r.
-chmod o-r $HAL_PROP_SMART_CARD_READER_DEVICE_FILE
-chown @USER@:@GROUP@ $HAL_PROP_SMART_CARD_READER_DEVICE_FILE
+#
+# commented out for now, every administrator/distribution
+# should apply the security policy it prefers.
+#
+# usualy openct is run as root.root, thus no changes are
+# necessary (well, a chmod o-r would be good). but if
+# you choose to run openct as a different user or group.
+# you need to setup permissions here.
+#
+#chmod o-r $HAL_PROP_SMART_CARD_READER_DEVICE_FILE
+#chown @USER@:@GROUP@ $HAL_PROP_SMART_CARD_READER_DEVICE_FILE
 
 if test -e "$HAL_PROP_SMART_CARD_READER_DEVICE_FILE"
 then
