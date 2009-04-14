@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?> <!-- -*- SGML -*- -->
+<deviceinfo version="0.2">
+  <device>
+    <match key="smart_card_reader.openct_capable" bool="true">
+      <remove key="info.addons" type="strlist">hald-addon-openct</remove>
+    </match>
+  </device>
+</deviceinfo>
