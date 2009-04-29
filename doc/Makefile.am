@@ -7,10 +7,9 @@ DIST_SUBDIRS = nonpersistent
 
 dist_doc_DATA = README
 dist_noinst_DATA = $(srcdir)/doxygen-footer.html $(srcdir)/*.gif
+dist_apidoc_DATA=api.out/html/*
 
 if ENABLE_API_DOC
-
-apidoc_DATA=api.out/html/*
 
 api.out/html/*:	api.out
 api.out:	$(top_srcdir)/src/include/openct/*.h \
@@ -19,7 +18,10 @@ api.out:	$(top_srcdir)/src/include/openct/*.h \
 	-rm -fr api.out
 	$(DOXYGEN) doxygen.conf
 	cp "$(srcdir)"/*.gif api.out/html
-
+else
+api.out/html/*:     $(abs_builddir)/api.out
+$(abs_builddir)/api.out:
+	$(LN_S) "$(srcdir)/api.out" api.out
 endif
 
 clean-local:
