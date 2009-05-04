@@ -31,7 +31,7 @@ static int rutoken_open(ifd_reader_t * reader, const char *device_name)
 	ifd_device_t *dev;
 	ifd_device_params_t params;
 
-	ifd_debug(1, "rutoken_open - %s", device_name);
+	ifd_debug(6, "rutoken_open - %s", device_name);
 
 	reader->name = "Rutoken S driver";
 	reader->nslots = 1;
@@ -55,19 +55,19 @@ static int rutoken_open(ifd_reader_t * reader, const char *device_name)
 	reader->device = dev;
 	dev->timeout = 1000;
 
-	ifd_debug(1, "rutoken_open - %s - successful", device_name);
+	ifd_debug(6, "rutoken_open - %s - successful", device_name);
 	return 0;
 }
 
 static int rutoken_activate(ifd_reader_t * reader)
 {
-	ifd_debug(1, "called.");
+	ifd_debug(6, "called.");
 	return 0;
 }
 
 static int rutoken_deactivate(ifd_reader_t * reader)
 {
-	ifd_debug(1, "called.");
+	ifd_debug(6, "called.");
 	return -1;
 }
 
@@ -101,16 +101,16 @@ static int rutoken_card_reset(ifd_reader_t * reader, int slot, void *atr,
 		size_t atr_len)
 {
 	int nLen = 0, i;
-	ifd_debug(1, "rutoken_card_reset, slot = %X", slot);
+	ifd_debug(6, "rutoken_card_reset, slot = %X", slot);
 	if(ifd_usb_control(reader->device, 0x41, USB_ICC_POWER_OFF, 0, 0, 0, 0, -1) < 0)
 	{
-		ifd_debug(1, "error poweroff");
+		ifd_debug(6, "error poweroff");
 		return -1;
 	}
 	unsigned char status;
 	if( rutoken_getstatus(reader, &status) < 0)
 	{
-		ifd_debug(1, "error get status");
+		ifd_debug(6, "error get status");
 		return -1;
 	}
 	if( status == ICC_STATUS_READY_DATA ) {
@@ -121,17 +121,17 @@ static int rutoken_card_reset(ifd_reader_t * reader, int slot, void *atr,
 				buf, OUR_ATR_LEN, 1000);
 		if( nLen < 0 )
 		{
-			ifd_debug(1, "error poewron");
+			ifd_debug(6, "error poewron");
 			return -1;
 		}
 
-		ifd_debug(1, "returned len = %d", nLen);
-		for(i = 0; i < OUR_ATR_LEN; i++) ifd_debug(1, "%c", buf[i]);
+		ifd_debug(6, "returned len = %d", nLen);
+		for(i = 0; i < OUR_ATR_LEN; i++) ifd_debug(6, "%c", buf[i]);
 		memcpy(atr, buf, nLen);
 		return nLen;
 	}
 
-	ifd_debug(1, "error bad status");
+	ifd_debug(6, "error bad status");
 	return -1;
 }
 
@@ -149,7 +149,7 @@ static int rutoken_set_protocol(ifd_reader_t * reader, int nslot, int proto)
 	ifd_slot_t *slot;
 	ifd_protocol_t *p;
 
-	ifd_debug(1, "proto=%d", proto);
+	ifd_debug(6, "proto=%d", proto);
 	if (proto != IFD_PROTOCOL_T0 && proto != IFD_PROTOCOL_TRANSPARENT) {
 		ct_error("%s: protocol %d not supported", reader->name, proto);
 		return IFD_ERROR_NOT_SUPPORTED;
@@ -165,7 +165,7 @@ static int rutoken_set_protocol(ifd_reader_t * reader, int nslot, int proto)
 		slot->proto = NULL;
 	}
 	slot->proto = p;
-	ifd_debug(1, "success");
+	ifd_debug(6, "success");
 	return 0;
 }
 
@@ -188,7 +188,7 @@ static int rutoken_send(ifd_reader_t * reader, unsigned int dad,
 	if (rutoken_getstatus(reader, &status) < 0)
 	{
 		ret = -1;
-		ifd_debug(1, "error get status");
+		ifd_debug(6, "error get status");
 	}
 	return ret;
 }
@@ -204,7 +204,7 @@ static int rutoken_recv(ifd_reader_t * reader, unsigned int dad,
 		if (rutoken_getstatus(reader, &status) < 0)
 		{
 			ret = -1;
-			ifd_debug(1, "error get status, %0x", status);
+			ifd_debug(6, "error get status, %0x", status);
 		}
 	ifd_debug(3, "usd recv %s len %d", ct_hexdump(buffer, ret), ret);
 	return ret;
@@ -215,15 +215,15 @@ static int rutoken_recv_sw(ifd_reader_t * reader, int dad, unsigned char *sw)
 	unsigned char status;
 	if(rutoken_getstatus(reader, &status) == ICC_STATUS_MUTE)
 	{  //If device not responsive
-		ifd_debug(1, "status = ICC_STATUS_MUTE");
+		ifd_debug(6, "status = ICC_STATUS_MUTE");
 		return(rutoken_restart(reader));
 	}
 	if(status == ICC_STATUS_READY_SW)
 	{
-		ifd_debug(1, "status = ICC_STATUS_READY_SW;");
+		ifd_debug(6, "status = ICC_STATUS_READY_SW;");
 		if(rutoken_recv(reader, 0, sw, 2, 10000) < 0)
 			return -5;
-		ifd_debug(1, "Get SW %x %x", sw[0], sw[1]);
+		ifd_debug(6, "Get SW %x %x", sw[0], sw[1]);
 		return 2;
 	}
 	return -1;
@@ -235,7 +235,7 @@ static int rutoken_recv_sw(ifd_reader_t * reader, int dad, unsigned char *sw)
 static int rutoken_send_tpducomand(ifd_reader_t * reader, int dad, const void *sbuf, 
 		size_t slen, void *rbuf, size_t rlen, int iscase4)
 {
-	ifd_debug(1, "send tpdu command %s, len: %d", ct_hexdump(sbuf, slen), slen);
+	ifd_debug(6, "send tpdu command %s, len: %d", ct_hexdump(sbuf, slen), slen);
 	int rrecv = 0;
 	unsigned char status;
 	unsigned char sw[2];
@@ -246,12 +246,12 @@ static int rutoken_send_tpducomand(ifd_reader_t * reader, int dad, const void *s
 	switch(iso.cse){
 		case	IFD_APDU_CASE_1:
 			// {cla, ins, p1, p2, 0};
-			ifd_debug(1, "case 1");
+			ifd_debug(6, "case 1");
 			break;
 		case    IFD_APDU_CASE_2S:
 			// {cla, ins, p1, p2, le};
 			// Rutoken Bug!!!
-			ifd_debug(1, "case 2");
+			ifd_debug(6, "case 2");
 			if(iso.ins == 0xa4){
 				hdr[4] = 0x20;
 				iso.le = 0x20;
@@ -262,7 +262,7 @@ static int rutoken_send_tpducomand(ifd_reader_t * reader, int dad, const void *s
 			break;
 		case    IFD_APDU_CASE_3S:
 			// {cla, ins, p1, p2, lc};
-			ifd_debug(1, "case 3");
+			ifd_debug(6, "case 3");
 			hdr[4] = iso.lc;
 			break;
 		default:
@@ -280,13 +280,13 @@ static int rutoken_send_tpducomand(ifd_reader_t * reader, int dad, const void *s
 			break;
 		case    IFD_APDU_CASE_2S:
 			// get answere
-			ifd_debug(1, "Get Data %d", iso.le);
+			ifd_debug(6, "Get Data %d", iso.le);
 			if(rutoken_getstatus(reader, &status) == ICC_STATUS_READY_DATA)
 			{
 				rrecv = rutoken_recv(reader, 0, rbuf, iso.le, 10000);
 				if (rrecv < 0)
 					return -2;
-				ifd_debug(1, "Get TPDU Anser %s", 
+				ifd_debug(6, "Get TPDU Anser %s", 
 						ct_hexdump(rbuf, iso.le));
 			}
 			if (rutoken_recv_sw(reader, 0, sw) < 0)
@@ -305,10 +305,10 @@ static int rutoken_send_tpducomand(ifd_reader_t * reader, int dad, const void *s
 			break;
 		case    IFD_APDU_CASE_3S:
 			// send data
-			ifd_debug(1, "Send Data %d", iso.lc);
+			ifd_debug(6, "Send Data %d", iso.lc);
 			if(rutoken_getstatus(reader, &status) == ICC_STATUS_READY_DATA)
 			{
-				ifd_debug(1, "Send TPDU Data %s", 
+				ifd_debug(6, "Send TPDU Data %s", 
 						ct_hexdump(iso.data, iso.lc));
 				if (rutoken_send(reader, 0, iso.data, iso.lc) < 0)
 					return -4;
@@ -357,7 +357,7 @@ static int rutoken_send_tpducomand(ifd_reader_t * reader, int dad, const void *s
 	// Add SW to respond
 	memcpy(((char *)rbuf)+rrecv, sw, 2);
 	rrecv+=2;
-	ifd_debug(1, "Recv %d bytes", rrecv);
+	ifd_debug(6, "Recv %d bytes", rrecv);
 	return rrecv;
 }
 
@@ -367,10 +367,10 @@ static int rutoken_transparent( ifd_reader_t * reader, int dad,
 {
 	int rrecv = 0;
 	ifd_iso_apdu_t iso;
-	ifd_debug(1, "buffer %s rlen = %d", ct_hexdump(sbuf, slen), rlen);
+	ifd_debug(6, "buffer %s rlen = %d", ct_hexdump(sbuf, slen), rlen);
 	if ( ifd_iso_apdu_parse(sbuf, slen, &iso) < 0)
 		return -1;
-	ifd_debug(1, "iso.le = %d", iso.le);
+	ifd_debug(6, "iso.le = %d", iso.le);
 	switch(iso.cse){
 		case	IFD_APDU_CASE_1:
 		case    IFD_APDU_CASE_2S:
@@ -392,7 +392,7 @@ static int rutoken_transparent( ifd_reader_t * reader, int dad,
 
 static int rutoken_get_eventfd(ifd_reader_t * reader, short *events)
 {
-	ifd_debug(1, "called.");
+	ifd_debug(6, "called.");
 
 	return ifd_device_get_eventfd(reader->device, events);
 }
@@ -403,7 +403,7 @@ static int rutoken_event(ifd_reader_t * reader, int *status, size_t status_size)
 	(void)status;
 	(void)status_size;
 
-	ifd_debug(1, "called.");
+	ifd_debug(6, "called.");
 
 	return 0;
 }
@@ -412,7 +412,7 @@ static int rutoken_error(ifd_reader_t * reader)
 {
 	(void)reader;
 
-	ifd_debug(1, "called.");
+	ifd_debug(6, "called.");
 
 	return IFD_ERROR_DEVICE_DISCONNECTED;
 }
