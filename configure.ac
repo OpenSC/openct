@@ -4,7 +4,7 @@ AC_PREREQ(2.60)
 
 define([PACKAGE_VERSION_MAJOR], [0])
 define([PACKAGE_VERSION_MINOR], [6])
-define([PACKAGE_VERSION_FIX], [15])
+define([PACKAGE_VERSION_FIX], [16])
 define([PACKAGE_SUFFIX], [-svn])
 
 AC_INIT([openct],[PACKAGE_VERSION_MAJOR.PACKAGE_VERSION_MINOR.PACKAGE_VERSION_FIX[]PACKAGE_SUFFIX])
@@ -503,27 +503,3 @@ daemon user:             ${daemon_user}
 daemon groups:           ${daemon_groups}
 
 EOF
-
-# Only Linux uses libusb
-case "${host}" in
-*-*-linux*)
-	if test "${enable_usb}" != "yes"; then
-
-	cat <<EOF
-
-Linux note:
-===========
-Without libusb coldplugging will work in basic way,
-To use usb devices, your hotplugging needs to be
-configured and you need to plug in any device
-after the system has started (i.e. the init script ran)
-
-BSD note:
-==========
-Without libusb, FreeBSD 8.0 will probably not work.
-
-EOF
-
-	fi
-;;
-esac
