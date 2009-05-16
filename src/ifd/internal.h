@@ -141,6 +141,8 @@ extern void ifd_cyberjack_register(void);
 extern void ifd_rutoken_register(void);
 
 /* reader.c */
+extern int ifd_error(ifd_reader_t *);
+extern int ifd_event(ifd_reader_t *);
 extern int ifd_send_command(ifd_protocol_t *, const void *, size_t);
 extern int ifd_recv_response(ifd_protocol_t *, void *, size_t, long);
 
