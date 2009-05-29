@@ -231,19 +231,19 @@ ifdef(
 	]
 )
 
-AC_CHECK_PROGS([DOXYGEN],[doxygen])
-test "${enable_api_doc}" = "yes" -a -z "${DOXYGEN}" && AC_MSG_ERROR([doxygen is required for api doc])
-
 dnl These required for svn checkout
 AC_ARG_VAR([XSLTPROC], [xsltproc utility])
 AC_ARG_VAR([SVN], [subversion utility])
 AC_ARG_VAR([WGET], [wget utility])
 AC_ARG_VAR([WGET_OPTS], [wget options])
 AC_ARG_VAR([TR], [tr utility])
+AC_ARG_VAR([DOXYGEN], [tr utility])
 AC_CHECK_PROGS([XSLTPROC],[xsltproc])
 AC_CHECK_PROGS([SVN],[svn])
 AC_CHECK_PROGS([WGET],[wget])
 AC_CHECK_PROGS([TR],[tr])
+AC_CHECK_PROGS([DOXYGEN],[doxygen])
+
 test -z "${WGET_OPTS}" && WGET_OPTS="-nv"
 
 dnl svn checkout dependencies
@@ -254,6 +254,17 @@ if test "${svn_checkout}" = "yes"; then
 	else
 		if test "${enable_doc}" = "yes"; then
 			AC_MSG_ERROR([Missing XSLTPROC svn build with doc])
+		else
+			AC_MSG_WARN(["make dist" will not work])
+		fi
+	fi
+
+	AC_MSG_CHECKING([DOXYGEN requirement])
+	if test -n "${DOXYGEN}"; then
+		AC_MSG_RESULT([ok])
+	else
+		if test "${enable_api_doc}" = "yes"; then
+			AC_MSG_ERROR([Missing DOXYGEN svn build with api doc])
 		else
 			AC_MSG_WARN(["make dist" will not work])
 		fi

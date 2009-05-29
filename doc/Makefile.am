@@ -7,10 +7,13 @@ DIST_SUBDIRS = nonpersistent
 
 dist_doc_DATA = README
 dist_noinst_DATA = $(srcdir)/doxygen-footer.html $(srcdir)/*.gif
-dist_apidoc_DATA=api.out/html/*
-
 if ENABLE_API_DOC
+dist_apidoc_DATA=api.out/html/*
+else
+dist_noinst_DATA+=api.out/html/*
+endif
 
+if SVN_CHECKOUT
 api.out/html/*:	api.out
 api.out:	$(top_srcdir)/src/include/openct/*.h \
 		$(srcdir)/*.gif \
