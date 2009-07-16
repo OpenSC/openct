@@ -727,8 +727,13 @@ static int ccid_open_usb(ifd_device_t * dev, ifd_reader_t * reader)
 /* "When a CCID doesn't declare the values 00000010h and 00000020h, the
  * frequency or the baud rate must be made via manufacturer proprietary
  * PC_to_RDR_Escape command." - ccid class specification v1.00
+ * 
+ * "The value of the lower word (=0840) indicates that the host will only
+ * send requests that are valid for the USB-ICC." - ISO/IEC 7816-12:2005
+ * 7.2/Table 8
  */
-	if (~ccid.dwFeatures & (0x10 | 0x20)) {
+	if ((ccid.dwFeatures & 0xFFFF) != 0x0840
+	    && ~ccid.dwFeatures & (0x10 | 0x20)) {
 		ct_error("ccid: required card initialization features missing");
 		free(st);
 		ifd_device_close(dev);
