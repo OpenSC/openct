@@ -1,5 +1,9 @@
 NEWS for OpenCT -- History of user visible changes
 
+New in 0.6.17, 2009-07-29; Andreas Jellinghaus
+* add support for Rutoken ECP (ccid driver)
+* small bugfixes
+
 New in 0.6.16, 2009-05-04; Andreas Jellinghaus
 * For ccid, etoken* drivers remove polling loop, review the force_poll
   configuration option, this reduces power consumption and CPU load.
