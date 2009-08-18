@@ -2,6 +2,7 @@ NEWS for OpenCT -- History of user visible changes
 
 New in 0.6.18; 
 * USB code for BSD fixed by Emmanuel Dreyfus
+* Add support for Rutoken S by  Aktiv Co. / Aleksey Samsonov
 
 New in 0.6.17; 2009-07-29; Andreas Jellinghaus
 * add support for Rutoken ECP (ccid driver)
