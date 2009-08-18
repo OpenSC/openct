@@ -317,6 +317,7 @@ int ifd_sysdep_usb_control(ifd_device_t * dev, unsigned int requesttype,
 	return rc;
 #else
 	struct usb_ctl_request ctrl;
+	int retries;
 
 	ifd_debug(1, "BSD: ifd_sysdep_usb_control(0x%x)", request);
 	memset(&ctrl, 0, sizeof(ctrl));
@@ -344,11 +345,12 @@ int ifd_sysdep_usb_control(ifd_device_t * dev, unsigned int requesttype,
 		return IFD_ERROR_COMM_ERROR;
 	}
 
-	if ((rc = ioctl(dev->fd, USB_DO_REQUEST, &ctrl)) < 0) {
+	retries = 5;
+	while ((rc = ioctl(dev->fd, USB_DO_REQUEST, &ctrl)) < 0 && retries > 0) {
 		ifd_debug(1, "USB_DO_REQUEST failed: %d", rc);
 		ct_error("usb_do_request failed: %s (%d)",
 			 strerror(errno), errno);
-		return IFD_ERROR_COMM_ERROR;
+		retries--;
 	}
 
 	if (ctrl.ucr_data == NULL)
