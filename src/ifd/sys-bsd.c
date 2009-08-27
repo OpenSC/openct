@@ -351,6 +351,8 @@ int ifd_sysdep_usb_control(ifd_device_t * dev, unsigned int requesttype,
 		ct_error("usb_do_request failed: %s (%d)",
 			 strerror(errno), errno);
 		retries--;
+		if ((retries == 0) || (errno != EIO)) 
+			return IFD_ERROR_COMM_ERROR;
 	}
 
 	if (ctrl.ucr_data == NULL)
