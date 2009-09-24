@@ -29,6 +29,8 @@
 		<string>0x04e6</string>
 		<string>0x04e6</string>
 		<string>0x04e6</string>
+		<string>0x073d</string>
+		<string>0x076b</string>
 		<string>0x076b</string>
 		<string>0x076b</string>
 		<string>0x076b</string>
@@ -40,14 +42,16 @@
 		<string>0x0b97</string>
 		<string>0x0b97</string>
 		<string>0x0bf8</string>
-		<string>0x072f</string>
-		<string>0x072f</string>
+		<string>0x0dc3</string>
 		<string>0x0a89</string>
 		<string>0x072f</string>
 		<string>0x072f</string>
 		<string>0x072f</string>
 		<string>0x072f</string>
+		<string>0x072f</string>
+		<string>0x072f</string>
 		<string>0x104f</string>
+		<string>0x0c4b</string>
 		<string>0x0a89</string>
 	</array>
 
@@ -58,6 +62,9 @@
 		<string>0x0514</string>
 		<string>0x0600</string>
 		<string>0x0700</string>
+		<string>0x0005</string>
+		<string>0x1202</string>
+		<string>0x1300</string>
 		<string>0x0005</string>
 		<string>0x1024</string>
 		<string>0x0010</string>
@@ -70,8 +77,8 @@
 		<string>0x0c00</string>
 		<string>0x1021</string>
 		<string>0x3021</string>
-		<string>0x3021</string>
 		<string>0x5121</string>
+		<string>0x5321</string>
 		<string>0x6622</string>
 		<string>0x0003</string>
 		<string>0x3437</string>
@@ -80,14 +87,16 @@
 		<string>0x7762</string>
 		<string>0x7772</string>
 		<string>0x1006</string>
+		<string>0x1004</string>
+		<string>0x0030</string>
 		<string>0x0001</string>
 		<string>0x8009</string>
-		<string>0x0030</string>
 		<string>0x9000</string>
 		<string>0x9006</string>
 		<string>0x9007</string>
 		<string>0x90d0</string>
 		<string>0x0004</string>
+		<string>0x0100</string>
 		<string>0x0020</string>
 	</array>
 
@@ -122,10 +131,16 @@
 		<string>Generic CCID Reader</string>
 		<string>Generic CCID Reader</string>
 		<string>Generic CCID Reader</string>
+		<string>Generic CCID Reader</string>
+		<string>Generic CCID Reader</string>
+		<string>Generic CCID Reader</string>
+		<string>Pertosmart Card Reader</string>
+		<string>Pertosmart Card Reader</string>
 		<string>Pertosmart Card Reader</string>
 		<string>Pertosmart Card Reader</string>
 		<string>Pertosmart Card Reader</string>
 		<string>Pertosmart Card Reader</string>
 		<string>WB Electronics Inifinty USB Ulimited</string>
+		<string>Cyberjack Reader</string>
 		<string>Aktiv Rutoken S</string>
 	</array>
