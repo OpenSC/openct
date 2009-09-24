@@ -42,11 +42,13 @@
 		<string>0x0bf8</string>
 		<string>0x072f</string>
 		<string>0x072f</string>
+		<string>0x0a89</string>
 		<string>0x072f</string>
 		<string>0x072f</string>
 		<string>0x072f</string>
 		<string>0x072f</string>
 		<string>0x104f</string>
+		<string>0x0a89</string>
 	</array>
 
 	<key>ifdProductID</key>
@@ -80,11 +82,13 @@
 		<string>0x1006</string>
 		<string>0x0001</string>
 		<string>0x8009</string>
+		<string>0x0030</string>
 		<string>0x9000</string>
 		<string>0x9006</string>
 		<string>0x9007</string>
 		<string>0x90d0</string>
 		<string>0x0004</string>
+		<string>0x0020</string>
 	</array>
 
 	<key>ifdFriendlyName</key>
@@ -117,9 +121,11 @@
 		<string>Generic CCID Reader</string>
 		<string>Generic CCID Reader</string>
 		<string>Generic CCID Reader</string>
+		<string>Generic CCID Reader</string>
 		<string>Pertosmart Card Reader</string>
 		<string>Pertosmart Card Reader</string>
 		<string>Pertosmart Card Reader</string>
 		<string>Pertosmart Card Reader</string>
 		<string>WB Electronics Inifinty USB Ulimited</string>
+		<string>Aktiv Rutoken S</string>
 	</array>
