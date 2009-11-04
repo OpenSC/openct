@@ -23,7 +23,7 @@ int ifd_atr_parse(ifd_atr_info_t * info, const unsigned char *atr, size_t len)
 		info->TC[n] = -1;
 	}
 
-	if (len <= 2 + (atr[1] & 0x0f))
+	if (len < 2 + (atr[1] & 0x0f))
 		return IFD_ERROR_INVALID_ATR;
 
 	/* Ignore hysterical bytes */
