@@ -166,6 +166,7 @@ driver cyberjack {
 };
 driver rutoken {
 	ids = {
-		usb:0a89/0020,
+		usb:0a89/0020, # Aktiv Rutoken S
+		usb:0a89/0012, # Aktiv uaToken S
 	};
 };

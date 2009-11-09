@@ -122,6 +122,12 @@
 	</match>
       </match>
 
+      <match key="usb.vendor_id" int="0x0a89">
+	<match key="usb.product_id" int="0x0012">
+	  <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
+	</match>
+      </match>
+
 
       <match key="usb.interface.class" int="0x0b">
        <merge key="smart_card_reader.openct_capable" type="bool">true</merge>
