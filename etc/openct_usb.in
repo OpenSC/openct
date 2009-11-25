@@ -1,5 +1,10 @@
 #!/bin/sh
 
+# maybe udev passes the device name to us.
+if [ -n "$1" ]; then
+	DEVNAME="$1"
+fi
+
 [ -n "$DEVPATH" ] || exit 0
 [ "$ACTION" = "add" ] || exit 0
 [ -e "@OPENCT_SOCKET_PATH@/status" ] || exit 0

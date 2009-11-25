@@ -1,5 +1,9 @@
 # udev rules file for openct
-#
+
+# Update 2009-11-25
+# Thanks to Scott James Remnant and Martin Pitt for helping on irc
+# to figure out the new syntax / rules for udev.
+
 # COMPATIBILITY NOTES
 # new versions of udev want DRIVERS, older versions only support DRIVER
 # new versions of udev want SUBSYSTEMS, older versions only support BUS
@@ -14,56 +18,55 @@ SUBSYSTEM!="usb", GOTO="openct_usb_rules_end"
 ACTION!="add", GOTO="openct_usb_rules_end"
 
 # last file created by the kernel, if this is present everything should be
-KERNEL=="[0-9]*:*", WAIT_FOR_SYSFS="bInterfaceProtocol"
+KERNEL=="[0-9]*:*", WAIT_FOR_ATTR="bInterfaceProtocol"
 
 # sleep for 100ms - the wait_for_sysfs might not be enough
 PROGRAM="/bin/sleep 0.1"
 
 # ccid
-ENV{DEVTYPE}=="usb_interface", SYSFS{bInterfaceClass}=="0b", SYSFS{bInterfaceSubClass}=="00", SYSFS{bInterfaceProtocol}=="00" RUN+="@udevdir@/openct_usb"
+ATTR{bInterfaceClass}=="0b", ATTR{bInterfaceSubClass}=="00", ATTR{bInterfaceProtocol}=="00", ATTRS{idVendor}=="?*"  RUN+="@udevdir@/openct_usb /dev/$parent"
 
-ENV{DEVTYPE}!="usb_device", GOTO="openct_usb_rules_end"
 # egate
-SYSFS{idVendor}=="0973", SYSFS{idProduct}=="0001", RUN+="@udevdir@/openct_usb"
+ATTR{idVendor}=="0973", ATTR{idProduct}=="0001", RUN+="@udevdir@/openct_usb /dev/$name"
 # eToken
-SYSFS{idVendor}=="0529", SYSFS{idProduct}=="050c", RUN+="@udevdir@/openct_usb"
-SYSFS{idVendor}=="0529", SYSFS{idProduct}=="0514", RUN+="@udevdir@/openct_usb"
+ATTR{idVendor}=="0529", ATTR{idProduct}=="050c", RUN+="@udevdir@/openct_usb /dev/$name"
+ATTR{idVendor}=="0529", ATTR{idProduct}=="0514", RUN+="@udevdir@/openct_usb /dev/$name"
 # eToken 64
-SYSFS{idVendor}=="0529", SYSFS{idProduct}=="0600", RUN+="@udevdir@/openct_usb"
-SYSFS{idVendor}=="0529", SYSFS{idProduct}=="0700", RUN+="@udevdir@/openct_usb"
+ATTR{idVendor}=="0529", ATTR{idProduct}=="0600", RUN+="@udevdir@/openct_usb /dev/$name"
+ATTR{idVendor}=="0529", ATTR{idProduct}=="0700", RUN+="@udevdir@/openct_usb /dev/$name"
 # eutron
-SYSFS{idVendor}=="073d", SYSFS{idProduct}=="0005", RUN+="@udevdir@/openct_usb"
+ATTR{idVendor}=="073d", ATTR{idProduct}=="0005", RUN+="@udevdir@/openct_usb /dev/$name"
 # ikey2k
-SYSFS{idVendor}=="04b9", SYSFS{idProduct}=="1200", RUN+="@udevdir@/openct_usb"
+ATTR{idVendor}=="04b9", ATTR{idProduct}=="1200", RUN+="@udevdir@/openct_usb /dev/$name"
 # ikey3k
-SYSFS{idVendor}=="04b9", SYSFS{idProduct}=="1300", RUN+="@udevdir@/openct_usb"
+ATTR{idVendor}=="04b9", ATTR{idProduct}=="1300", RUN+="@udevdir@/openct_usb /dev/$name"
 # starkey
-SYSFS{idVendor}=="096e", SYSFS{idProduct}=="0005", RUN+="@udevdir@/openct_usb"
+ATTR{idVendor}=="096e", ATTR{idProduct}=="0005", RUN+="@udevdir@/openct_usb /dev/$name"
 # cardman
-#SYSFS{idVendor}=="076b", SYSFS{idProduct}=="0596", RUN+="@udevdir@/openct_usb"
-#SYSFS{idVendor}=="076b", SYSFS{idProduct}=="1784", RUN+="@udevdir@/openct_usb"
-#SYSFS{idVendor}=="08d4", SYSFS{idProduct}=="0009", RUN+="@udevdir@/openct_usb"
+#ATTR{idVendor}=="076b", ATTR{idProduct}=="0596", RUN+="@udevdir@/openct_usb /dev/$name"
+#ATTR{idVendor}=="076b", ATTR{idProduct}=="1784", RUN+="@udevdir@/openct_usb /dev/$name"
+#ATTR{idVendor}=="08d4", ATTR{idProduct}=="0009", RUN+="@udevdir@/openct_usb /dev/$name"
 
 # spr 532 - ccid, but with wrong interface class (vendor) :(
-SYSFS{idVendor}=="04e6", SYSFS{idProduct}=="0003", RUN+="@udevdir@/openct_usb"
-SYSFS{idVendor}=="04e6", SYSFS{idProduct}=="E003", RUN+="@udevdir@/openct_usb"
+ATTR{idVendor}=="04e6", ATTR{idProduct}=="0003", RUN+="@udevdir@/openct_usb /dev/$name"
+ATTR{idVendor}=="04e6", ATTR{idProduct}=="E003", RUN+="@udevdir@/openct_usb /dev/$name"
 # pertosmart1030
-SYSFS{idVendor}=="072f", SYSFS{idProduct}=="0001", RUN+="@udevdir@/openct_usb"
-SYSFS{idVendor}=="072f", SYSFS{idProduct}=="8009", RUN+="@udevdir@/openct_usb"
+ATTR{idVendor}=="072f", ATTR{idProduct}=="0001", RUN+="@udevdir@/openct_usb /dev/$name"
+ATTR{idVendor}=="072f", ATTR{idProduct}=="8009", RUN+="@udevdir@/openct_usb /dev/$name"
 # pertosmart1038
-SYSFS{idVendor}=="072f", SYSFS{idProduct}=="9000", RUN+="@udevdir@/openct_usb"
-SYSFS{idVendor}=="072f", SYSFS{idProduct}=="9006", RUN+="@udevdir@/openct_usb"
-SYSFS{idVendor}=="072f", SYSFS{idProduct}=="9007", RUN+="@udevdir@/openct_usb"
-SYSFS{idVendor}=="072f", SYSFS{idProduct}=="90d0", RUN+="@udevdir@/openct_usb"
+ATTR{idVendor}=="072f", ATTR{idProduct}=="9000", RUN+="@udevdir@/openct_usb /dev/$name"
+ATTR{idVendor}=="072f", ATTR{idProduct}=="9006", RUN+="@udevdir@/openct_usb /dev/$name"
+ATTR{idVendor}=="072f", ATTR{idProduct}=="9007", RUN+="@udevdir@/openct_usb /dev/$name"
+ATTR{idVendor}=="072f", ATTR{idProduct}=="90d0", RUN+="@udevdir@/openct_usb /dev/$name"
 # wbeiuu	- driver not working yet.
-#SYSFS{idVendor}=="104f", SYSFS{idProduct}=="0004", RUN+="@udevdir@/openct_usb"
+#ATTR{idVendor}=="104f", ATTR{idProduct}=="0004", RUN+="@udevdir@/openct_usb /dev/$name"
 # cyberjack
-SYSFS{idVendor}=="0c4b", SYSFS{idProduct}=="0100", RUN+="@udevdir@/openct_usb"
+ATTR{idVendor}=="0c4b", ATTR{idProduct}=="0100", RUN+="@udevdir@/openct_usb /dev/$name"
 # rutoken
-SYSFS{idVendor}=="0a89", SYSFS{idProduct}=="0020", RUN+="@udevdir@/openct_usb"
-SYSFS{idVendor}=="0a89", SYSFS{idProduct}=="0012", RUN+="@udevdir@/openct_usb"
+ATTR{idVendor}=="0a89", ATTR{idProduct}=="0020", RUN+="@udevdir@/openct_usb /dev/$name"
+ATTR{idVendor}=="0a89", ATTR{idProduct}=="0012", RUN+="@udevdir@/openct_usb /dev/$name"
 # ePass3000
-SYSFS{idVendor}=="096e", SYSFS{idProduct}=="0401", RUN+="@udevdir@/openct_usb"
+ATTR{idVendor}=="096e", ATTR{idProduct}=="0401", RUN+="@udevdir@/openct_usb /dev/$name"
 
 LABEL="openct_usb_rules_end"
 
@@ -73,9 +76,9 @@ SUBSYSTEMS!="pcmcia", GOTO="openct_pcmcia_rules_end"
 ACTION!="add", GOTO="openct_pcmcia_rules_end"
 
 # omnikey cardman 4040
-SUBSYSTEM=="cardman_4040", RUN+="@udevdir@/openct_pcmcia"
+SUBSYSTEM=="cardman_4040", RUN+="@udevdir@/openct_pcmcia /dev/$name"
 
 # Gemplus PCMCIA Card
-DRIVERS=="serial_cs", SYSFS{prod_id1}=="Gemplus", SYSFS{prod_id2}=="SerialPort", SYSFS{prod_id3}=="GemPC Card", RUN+="@udevdir@/openct_serial"
+DRIVERS=="serial_cs", ATTR{prod_id1}=="Gemplus", ATTR{prod_id2}=="SerialPort", ATTR{prod_id3}=="GemPC Card", RUN+="@udevdir@/openct_serial /dev/$name"
 
 LABEL="openct_pcmcia_rules_end"

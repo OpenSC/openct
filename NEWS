@@ -1,6 +1,8 @@
 NEWS for OpenCT -- History of user visible changes
 
 New in 0.6.19; 
+* update on udev rules. Please now use udev instead of hal,
+  as distributions are deprecating hal in favor for udev.
 
 New in 0.6.18; 2009-09-25; Andreas Jellinghaus
 * USB code for BSD fixed by Emmanuel Dreyfus
