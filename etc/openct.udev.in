@@ -18,7 +18,8 @@ SUBSYSTEM!="usb", GOTO="openct_usb_rules_end"
 ACTION!="add", GOTO="openct_usb_rules_end"
 
 # last file created by the kernel, if this is present everything should be
-KERNEL=="[0-9]*:*", WAIT_FOR_ATTR="bInterfaceProtocol"
+# KERNEL=="[0-9]*:*", WAIT_FOR_ATTR="bInterfaceProtocol"
+# 2010-01-06 removed, as latest udev doesn't know WAIT_FOR_ATTR any more.
 
 # sleep for 100ms - the wait_for_sysfs might not be enough
 PROGRAM="/bin/sleep 0.1"

@@ -1,8 +1,9 @@
 NEWS for OpenCT -- History of user visible changes
 
-New in 0.6.19; 
+New in 0.6.19; 2010-01-07; Andreas Jellinghaus
 * update on udev rules. Please now use udev instead of hal,
   as distributions are deprecating hal in favor for udev.
+* Thanks to Daniel Kahn Gillmor for testing on debian.
 
 New in 0.6.18; 2009-09-25; Andreas Jellinghaus
 * USB code for BSD fixed by Emmanuel Dreyfus
@@ -109,7 +110,7 @@ New in 0.6.7; 2006-05-01; Andreas Jellinghaus
 * improved eutron driver by Chaskiel Grundman
 * OPENCT_SOCKETDIR environment can point to any dir for the sockets so
   users can use it without being root.
-* samle confi files for both hald and udev.
+* sample config files for both hald and udev.
   we suggest udev as hotplug replacement. hald is not tested.
 * sample reader.conf included for pcsc-lite.
   remember to use opensc->openct or opensc->pcsc->openct but not both.
