@@ -1,5 +1,8 @@
 NEWS for OpenCT -- History of user visible changes
 
+New in 0.6.20;
+* Modify Rutoken S binary interfaces by Aktiv Co.
+
 New in 0.6.19; 2010-01-07; Andreas Jellinghaus
 * update on udev rules. Please now use udev instead of hal,
   as distributions are deprecating hal in favor for udev.
