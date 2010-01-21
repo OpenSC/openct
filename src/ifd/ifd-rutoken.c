@@ -253,13 +253,13 @@ static int rutoken_send_tpducomand(ifd_reader_t * reader, int dad, const void *s
 			// {cla, ins, p1, p2, le};
 			// Rutoken Bug!!!
 			ifd_debug(6, "case 2");
-			if(iso.ins == 0xa4){
-				hdr[4] = 0x20;
+			/* select file */
+			if (iso.cla == 0 && iso.ins == 0xa4)
 				iso.le = 0x20;
-			}
-			else{
-				hdr[4] = iso.le;
-			}
+			/* get_do_info */
+			else if (iso.cla == 0x80 && iso.ins == 0x30)
+				iso.le = 0xff;
+			hdr[4] = iso.le;
 			break;
 		case    IFD_APDU_CASE_3S:
 			// {cla, ins, p1, p2, lc};
