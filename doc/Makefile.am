@@ -28,4 +28,8 @@ $(abs_builddir)/api.out:
 endif
 
 clean-local:
+if SVN_CHECKOUT
 	-rm -fr api.out
+else
+	-rm -f api.out
+endif
