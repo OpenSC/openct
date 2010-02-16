@@ -1,7 +1,8 @@
 NEWS for OpenCT -- History of user visible changes
 
-New in 0.6.20;
+New in 0.6.20; 2010-02-16; Andreas Jellinghaus
 * Modify Rutoken S binary interfaces by Aktiv Co.
+* Makefiles fixed in doc/ directory
 
 New in 0.6.19; 2010-01-07; Andreas Jellinghaus
 * update on udev rules. Please now use udev instead of hal,
