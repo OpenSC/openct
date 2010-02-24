@@ -159,8 +159,13 @@ static int t0_transceive(ifd_protocol_t * prot, int dad, const void *sbuf,
 
 	if (lc) {
 		t0->state = SENDING;
-		if ((rc = t0_xcv(prot, sbuf, slen, rbuf, 2)) < 0)
+		if ((rc = t0_xcv(prot, sbuf, slen, rbuf, rlen)) < 0)
 			return rc;
+
+		if( rc > 2 ) {
+			//not 61XX but the data
+			goto done;
+		}
 
 		/* Can this happen? */
 		if (rc != 2)

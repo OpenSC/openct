@@ -1,7 +1,7 @@
 /*
  * OpenCT driver for ePass3000 device
  *
- * Copyright (C) 2008, EnterSafe <jingmin@FTsafe.com>
+ * Copyright (C) 2008, EnterSafe <dev@entersafe.com>
  */
 
 #include "internal.h"
