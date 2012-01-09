@@ -978,9 +978,15 @@ static int ccid_card_status(ifd_reader_t * reader, int slot, int *status)
 		}
 	}
 
-	ifd_debug(1, "probed result: %d", IFD_CARD_STATUS_CHANGED | stat);
+	ifd_debug(1, "probed result: %d, cached: %d", stat, st->icc_present[slot]);
 
-	*status = IFD_CARD_STATUS_CHANGED | stat;
+	*status = stat;
+	if (
+		st->icc_present[slot] == 0xFF ||
+		(stat&IFD_CARD_PRESENT) != (st->icc_present[slot]&IFD_CARD_PRESENT)
+	) {
+		*status |= IFD_CARD_STATUS_CHANGED;
+	}
 	st->icc_present[slot] = stat;
 	return 0;
 }
