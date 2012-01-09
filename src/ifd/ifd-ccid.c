@@ -227,60 +227,43 @@ typedef struct ccid_status {
 static int ccid_checkresponse(void *status, int r)
 {
 	unsigned char *p = (unsigned char *)status;
-	int ret;
 
-	if ((p[7] >> 6 & 3) == 0) {
-		ret = 0;
-	}
+	if ((p[7] >> 6 & 3) == 0)
+		return 0;
+
 	/* XXX */
-	else if ((p[7] >> 6 & 3) == 2) {
+	if ((p[7] >> 6 & 3) == 2) {
 		/*ct_error("card requests more time"); */
-		ret = -300;
-	}
-	else {
-		switch (p[8]) {
-		case CCID_ERR_ICC_MUTE:
-			ret = IFD_ERROR_NO_CARD;
-			break;
-		case CCID_ERR_XFR_PARITY:
-		case CCID_ERR_OVERRUN:
-			ret = IFD_ERROR_COMM_ERROR;
-			break;
-		case CCID_ERR_BAD_ATR_TS:
-		case CCID_ERR_BAD_ATR_TCK:
-			ret = IFD_ERROR_NO_ATR;
-			break;
-		case CCID_ERR_PROT_NOSUP:
-		case CCID_ERR_CLASS_NOSUP:
-			ret = IFD_ERROR_INCOMPATIBLE_DEVICE;
-			break;
-		case CCID_ERR_BAD_PROC_BYTE:
-			ret = IFD_ERROR_INVALID_ARG;
-			break;
-		case CCID_ERR_BUSY_AUTO_SEQ:
-		case CCID_ERR_SLOT_BUSY:
-			ret = IFD_ERROR_TIMEOUT;
-			break;
-		case CCID_ERR_PIN_TIMEOUT:
-			ret = IFD_ERROR_USER_TIMEOUT;
-			break;
-		case CCID_ERR_PIN_CANCELED:
-			ret = IFD_ERROR_USER_ABORT;
-			break;
-		case CCID_OFFSET_MSGTYPE:
-			ret = IFD_ERROR_NOT_SUPPORTED;
-			break;
-		case CCID_OFFSET_SLOT:
-			ret = IFD_ERROR_INVALID_SLOT;
-			break;
-		default:
-			ret = IFD_ERROR_GENERIC;
-			break;
-		}
+		return -300;
 	}
 
-	ifd_debug(1, "r: %d", ret);
-	return ret;
+	switch (p[8]) {
+	case CCID_ERR_ICC_MUTE:
+		return IFD_ERROR_NO_CARD;
+	case CCID_ERR_XFR_PARITY:
+	case CCID_ERR_OVERRUN:
+		return IFD_ERROR_COMM_ERROR;
+	case CCID_ERR_BAD_ATR_TS:
+	case CCID_ERR_BAD_ATR_TCK:
+		return IFD_ERROR_NO_ATR;
+	case CCID_ERR_PROT_NOSUP:
+	case CCID_ERR_CLASS_NOSUP:
+		return IFD_ERROR_INCOMPATIBLE_DEVICE;
+	case CCID_ERR_BAD_PROC_BYTE:
+		return IFD_ERROR_INVALID_ARG;
+	case CCID_ERR_BUSY_AUTO_SEQ:
+	case CCID_ERR_SLOT_BUSY:
+		return IFD_ERROR_TIMEOUT;
+	case CCID_ERR_PIN_TIMEOUT:
+		return IFD_ERROR_USER_TIMEOUT;
+	case CCID_ERR_PIN_CANCELED:
+		return IFD_ERROR_USER_ABORT;
+	case CCID_OFFSET_MSGTYPE:
+		return IFD_ERROR_NOT_SUPPORTED;
+	case CCID_OFFSET_SLOT:
+		return IFD_ERROR_INVALID_SLOT;
+	}
+	return IFD_ERROR_GENERIC;
 }
 
 static int ccid_prepare_cmd(ifd_reader_t * reader, unsigned char *out,
@@ -292,11 +275,9 @@ static int ccid_prepare_cmd(ifd_reader_t * reader, unsigned char *out,
 
 	if (slot >= reader->nslots)
 		return IFD_ERROR_INVALID_SLOT;
-	if (sendlen + 10 > outsz) {	/* this probably means the apdu is larger
+	if (sendlen + 10 > outsz)	/* this probably means the apdu is larger
 					   than the supported MaxMessageSize - 10  */
-		ifd_debug(1, "error: unsupported (apdu larger than max outsz: %d, sendlen: %d)", outsz, sendlen);
 		return IFD_ERROR_NOT_SUPPORTED;
-	}
 	*p++ = cmd;
 	*p++ = sendlen & 0xFF;
 	*p++ = (sendlen >> 8) & 0xFF;
@@ -1339,13 +1320,11 @@ ccid_transparent(ifd_reader_t * reader, int slot,
 {
 	ccid_status_t *st = (ccid_status_t *) reader->driver_data;
 
-	ifd_debug(1, "called. reader_type: %d, icc_proto[slot]=%d", st->reader_type, st->icc_proto[slot]);
+	ifd_debug(1, "called.");
 	if (st->reader_type == TYPE_APDU ||
 	    (st->reader_type == TYPE_TPDU &&
 	     st->icc_proto[slot] == IFD_PROTOCOL_T0))
 		return ccid_exchange(reader, slot, sbuf, slen, rbuf, rlen);
-
-	ifd_debug(1, "error: unsupported (slot settings)");
 	return IFD_ERROR_NOT_SUPPORTED;
 }
 
