@@ -386,7 +386,7 @@ static int do_verify(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 static int do_transact(ifd_reader_t * reader, int unit, ct_tlv_parser_t * args,
 		       ct_tlv_builder_t * resp)
 {
-	unsigned char replybuf[258];
+	unsigned char replybuf[258+256]; /* @ALON: added +256 as APDUs grew at some point */
 	unsigned char *data;
 	size_t data_len;
 	unsigned int timeout = 0;

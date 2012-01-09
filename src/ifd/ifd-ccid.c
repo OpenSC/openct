@@ -69,8 +69,9 @@
 /* maximum sensical size:
  *  10 bytes ccid header + 4 bytes command header +
  *  1 byte Lc + 255 bytes data + 1 byte Le = 271
+ *  @ALON: Added +256 as APDUs grew at some point
  */
-#define CCID_MAX_MSG_LEN	271
+#define CCID_MAX_MSG_LEN	(271+256)
 
 static int msg_expected[] = {
 	0,
