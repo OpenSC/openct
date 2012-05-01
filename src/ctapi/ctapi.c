@@ -597,18 +597,28 @@ char CT_init(unsigned short ctn, unsigned short pn)
 
 char CT_close(unsigned short ctn)
 {
-	struct CardTerminal **ct, *this;
+    struct CardTerminal *curr = cardTerminals,
+                        *prev = NULL;
 
-	for (ct = &cardTerminals; *ct && (*ct)->ctn != ctn; ct = &(*ct)->next) ;
-	this = *ct;
-	if (!this)
-		return ERR_INVALID;
-	ct_reader_disconnect(this->h);
-	ct = &(this->next);
+    while (curr)
+    {
+        if (curr->ctn == ctn)
+        {
+            if (prev)
+                prev->next = curr->next;
+            else
+                cardTerminals = curr->next;
 
-	this->next = NULL;
-	free(this);
-	return OK;
+            free(curr);
+        }
+        else
+        {
+            prev = curr;
+            curr = curr->next;
+        }
+    }
+
+    return OK;
 }
 
 char CT_data(unsigned short ctn, unsigned char *dad, unsigned char *sad,

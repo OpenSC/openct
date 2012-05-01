@@ -91,7 +91,7 @@ RESPONSECODE IFDHCreateChannel(DWORD Lun, DWORD Channel)
 		if (Channel > IFDH_MAX_READERS) {
 			pn = 0;
 		} else {
-			pn = ((Channel == 0) ? 0 : Channel - 1);
+			pn = Channel;
 		}
 		ret = CT_init(ctn, pn);
 
