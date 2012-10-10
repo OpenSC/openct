@@ -30,8 +30,8 @@ dist_noinst_DATA += openct.usermap
 endif
 
 
-sysconf_DATA=#required in order to create dir
-install-exec-hook:	install-sysconfDATA openct.conf
+install-exec-hook:	openct.conf
+	$(MKDIR_P) "$(DESTDIR)$(sysconfdir)"
 	if [ -f "$(DESTDIR)$(sysconfdir)/openct.conf" ]; then \
 		$(INSTALL_DATA) openct.conf "$(DESTDIR)$(sysconfdir)/openct.conf.new"; \
 	else \
