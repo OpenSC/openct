@@ -50,3 +50,6 @@ install-exec-hook:	openct.conf
 		-e 's|@daemon_user[@]|@daemon_user@|g' \
 		-e 's|@daemon_groups[@]|@daemon_groups@|g' \
 		< "$<" > "$@"
+
+uninstall-hook:
+	rm -f "$(DESTDIR)$(sysconfdir)/openct.conf"
