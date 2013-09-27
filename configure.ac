@@ -37,14 +37,6 @@ AC_PROG_CC
 PKG_PROG_PKG_CONFIG
 AC_C_BIGENDIAN
 
-AC_MSG_CHECKING([svn checkout])
-if test -e "${srcdir}/packaged"; then
-	svn_checkout="no"
-else
-	svn_checkout="yes"
-fi
-AC_MSG_RESULT([${svn_checkout}])
-
 dnl Check for some target-specific stuff
 case "${host}" in
 	*-*-hpux*)
@@ -88,13 +80,6 @@ AC_ARG_ENABLE(
 	[AS_HELP_STRING([--enable-pedantic],[enable pedantic compile mode @<:@disabled@:>@])],
 	,
 	[enable_pedantic="no"]
-)
-
-AC_ARG_ENABLE(
-	[doc],
-	[AS_HELP_STRING([--enable-doc],[enable installation of documents @<:@disabled@:>@])],
-	,
-	[enable_doc="no"]
 )
 
 AC_ARG_ENABLE(
@@ -231,57 +216,6 @@ ifdef(
 	]
 )
 
-dnl These required for svn checkout
-AC_ARG_VAR([XSLTPROC], [xsltproc utility])
-AC_ARG_VAR([SVN], [subversion utility])
-AC_ARG_VAR([WGET], [wget utility])
-AC_ARG_VAR([WGET_OPTS], [wget options])
-AC_ARG_VAR([TR], [tr utility])
-AC_ARG_VAR([DOXYGEN], [tr utility])
-AC_CHECK_PROGS([XSLTPROC],[xsltproc])
-AC_CHECK_PROGS([SVN],[svn])
-AC_CHECK_PROGS([WGET],[wget])
-AC_CHECK_PROGS([TR],[tr])
-AC_CHECK_PROGS([DOXYGEN],[doxygen])
-
-test -z "${WGET_OPTS}" && WGET_OPTS="-nv"
-
-dnl svn checkout dependencies
-if test "${svn_checkout}" = "yes"; then
-	AC_MSG_CHECKING([XSLTPROC requirement])
-	if test -n "${XSLTPROC}"; then
-		AC_MSG_RESULT([ok])
-	else
-		if test "${enable_doc}" = "yes"; then
-			AC_MSG_ERROR([Missing XSLTPROC svn build with doc])
-		else
-			AC_MSG_WARN(["make dist" will not work])
-		fi
-	fi
-
-	AC_MSG_CHECKING([DOXYGEN requirement])
-	if test -n "${DOXYGEN}"; then
-		AC_MSG_RESULT([ok])
-	else
-		if test "${enable_api_doc}" = "yes"; then
-			AC_MSG_ERROR([Missing DOXYGEN svn build with api doc])
-		else
-			AC_MSG_WARN(["make dist" will not work])
-		fi
-	fi
-
-	AC_MSG_CHECKING([svn doc build dependencies])
-	if test -n "${SVN}" -a -n "${TR}" -a -n "${WGET}"; then
-		AC_MSG_RESULT([ok])
-	else
-		if test "${enable_doc}" = "yes"; then
-			AC_MSG_ERROR([Missing SVN, TR or WGET for svn doc build])
-		else
-			AC_MSG_WARN(["make dist" will not work])
-		fi
-	fi
-fi
-
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
@@ -290,6 +224,10 @@ AC_CHECK_HEADERS([ \
 	strings.h sys/time.h unistd.h getopt.h \
 	dlfcn.h sys/poll.h
 ])
+
+AC_ARG_VAR([DOXYGEN], [doxygen utility])
+AC_CHECK_PROGS([DOXYGEN],[doxygen])
+test "${enable_api_doc}" = "yes" -a -z "${DOXYGEN}" && AC_MSG_ERROR([doxygen is required for api doc])
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -451,8 +389,6 @@ AC_SUBST([OPTIONAL_LIBUSB_LIBS])
 AC_SUBST([OPENCT_SOCKET_PATH])
 AC_SUBST([ENABLE_NON_PRIVILEGED])
 
-AM_CONDITIONAL([SVN_CHECKOUT], [test "${svn_checkout}" = "yes"])
-AM_CONDITIONAL([ENABLE_DOC], [test "${enable_doc}" = "yes"])
 AM_CONDITIONAL([ENABLE_API_DOC], [test "${enable_api_doc}" = "yes"])
 AM_CONDITIONAL([ENABLE_BUNDLES], [test -n "${bundledir}"])
 AM_CONDITIONAL([ENABLE_UDEV], [test -n "${udevdir}"])
@@ -463,7 +399,6 @@ AC_CONFIG_FILES([
 	Makefile
 	doc/Makefile
 	doc/doxygen.conf
-	doc/nonpersistent/Makefile
 	etc/Makefile
 	macos/Makefile
 	src/Makefile
@@ -487,7 +422,6 @@ OpenCT has been configured with the following options:
 Version:                 ${PACKAGE_VERSION}
 Libraries:               $(eval eval eval echo "${libdir}")
 
-doc support:             ${enable_doc}
 api doc support:         ${enable_api_doc}
 usb support:             ${enable_usb}
 pcsc support:            ${enable_pcsc}
