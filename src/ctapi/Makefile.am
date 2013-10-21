@@ -8,4 +8,4 @@ libopenctapi_la_LIBADD = $(top_builddir)/src/ct/libopenct.la
 libopenctapi_la_CFLAGS = $(AM_CFLAGS) \
 	-I$(top_srcdir)/src/include \
 	-I$(top_builddir)/src/include
-libopenctapi_la_LDFLAGS = -avoid-version -no-undefined --module
+libopenctapi_la_LDFLAGS = -avoid-version -no-undefined -module -shared

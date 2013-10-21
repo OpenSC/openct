@@ -5,7 +5,7 @@ lib_LTLIBRARIES = openct-ifd.la
 endif
 
 openct_ifd_la_SOURCES = pcsc.c
-openct_ifd_la_LDFLAGS = -module -avoid-version -no-undefined
+openct_ifd_la_LDFLAGS = -module -shared -avoid-version -no-undefined
 openct_ifd_la_LIBADD = $(PCSC_LIBS) $(top_builddir)/src/ctapi/libopenctapi.la
 openct_ifd_la_CFLAGS = $(AM_CFLAGS) \
 	-I$(top_srcdir)/src/include \
