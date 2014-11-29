@@ -13,6 +13,9 @@
 SUBSYSTEM!="usb", GOTO="openct_usb_rules_end"
 ACTION!="add", GOTO="openct_usb_rules_end"
 
+# Broadcom 5880
+ENV{MODALIAS}=="usb:v0A5Cp5800*", RUN+="@udevdir@/openct_usb"
+ENV{MODALIAS}=="usb:v0A5Cp5801*", RUN+="@udevdir@/openct_usb"
 # egate
 ENV{MODALIAS}=="usb:v0973p0001*", RUN+="@udevdir@/openct_usb"
 # eToken
