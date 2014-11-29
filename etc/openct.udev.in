@@ -27,6 +27,9 @@ PROGRAM="/bin/sleep 0.1"
 # ccid
 ATTR{bInterfaceClass}=="0b", ATTR{bInterfaceSubClass}=="00", ATTR{bInterfaceProtocol}=="00", ATTRS{idVendor}=="?*"  RUN+="@udevdir@/openct_usb /dev/$parent"
 
+# Broadcom 5880
+ATTR{idVendor}=="0A5C", ATTR{idProduct}=="5800", RUN+="@udevdir@/openct_usb /dev/$name"
+ATTR{idVendor}=="0A5C", ATTR{idProduct}=="5801", RUN+="@udevdir@/openct_usb /dev/$name"
 # egate
 ATTR{idVendor}=="0973", ATTR{idProduct}=="0001", RUN+="@udevdir@/openct_usb /dev/$name"
 # eToken
