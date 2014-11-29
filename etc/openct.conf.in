@@ -135,6 +135,8 @@ driver	ccid {
 		usb:0bf8/1006,	# fujitsu siemens 3.5" drive size reader
 		usb:0dc3/1004,	# Athena Smartcard Solutions, Inc. ASEKey
 		usb:0a89/0030,	# Aktiv Rutoken ECP
+		usb:0a5c/5800,  # Broadcom 5880 Smartcard/UPEK Reader
+		usb:0a5c/5801,  # Broadcom 5880 Smartcard/UPEK Reader
 	};
 };
 driver pertosmart1030 {
